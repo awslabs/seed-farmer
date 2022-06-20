@@ -1,4 +1,0 @@
-name: test-broken-deployspec-deploy
-groups:
-  - name: test
-    path: test/unit-test/mock_data/manifests/test-broken-deployspec-deploy/test-module.yaml

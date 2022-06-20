@@ -1,0 +1,2 @@
+project: "{{ cookiecutter.project_name }}"
+description: "{{ cookiecutter.project_short_description }}"

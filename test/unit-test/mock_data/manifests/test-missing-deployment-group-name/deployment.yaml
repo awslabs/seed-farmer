@@ -1,0 +1,4 @@
+name: test-missing-deployment-group-name
+groups:
+  - name: 
+    path: test/unit-test/mock_data/manifests/test-missing-deployment-group-name/test-module.yaml

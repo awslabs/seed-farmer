@@ -1,0 +1,19 @@
+deploy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+      - npm install -g aws-cdk@2.20.0
+    build:
+      commands:
+      - cdk deploy --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
+      - export ADDL_MODULE_METADATA=$(python -c "import json; file=open('cdk-exports.json'); print(json.load(file)['addl-${ADDL_DEPLOYMENT_NAME}-${ADDL_MODULE_NAME}']['metadata'])")
+destroy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+      - npm install -g aws-cdk@2.20.0
+    build:
+      commands:
+      - cdk destroy --force --app "python app.py"

@@ -1,0 +1,17 @@
+deploy:
+  phases:
+    install:
+      commands:
+      - echo "installing..."
+    build:
+      commands:
+      - echo "building..."
+destroy:
+  phases:
+    install:
+      commands:
+      - echo "Testing destroy build stage with no commands"
+    build:
+      commands:
+      # Test incomplete phase
+

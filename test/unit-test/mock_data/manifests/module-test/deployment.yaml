@@ -1,0 +1,4 @@
+name: example-test-dev
+groups:
+  - name: test
+    path: test/unit-test/mock_data/manifests/module-test/test-modules.yaml

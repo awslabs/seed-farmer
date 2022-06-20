@@ -1,0 +1,29 @@
+deploy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+    pre_build:
+      commands:
+      - echo "Prebuild stage"
+    build:
+      commands:
+       - echo "bash deploy.sh"
+    post_build:
+      commands:
+      - echo "Deploy successful"
+destroy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+    pre_build:
+      commands:
+      - echo "Prebuild stage"
+    build:
+      commands:
+      - echo "DESTROY!"
+    post_build:
+      commands:
+      - echo "Destroy successful"
+build_type: BUILD_GENERAL1_SMALL

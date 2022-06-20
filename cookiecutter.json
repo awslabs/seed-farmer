@@ -1,0 +1,11 @@
+{
+  "project_name": "new-project",
+  "project_slug": "{{ cookiecutter.project_name|lower|replace(' ', '-') }}",
+  "project_short_description": "A short description of the module.",
+  "module_name": "new-module",
+  "version": "0.1.0",
+  "open_source_license": ["MIT License", "GNU General Public License v3", "Apache Software License 2.0"],
+  "python_requires": "3.6",
+  "author": "author",
+  "organization_name": "Amazon.com, Inc."
+}

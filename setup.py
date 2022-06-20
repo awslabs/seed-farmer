@@ -42,7 +42,7 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "aws-codeseeder~=0.3.0",
-        "cookiecutter~=1.7.0",
+        "cookiecutter>=1.7,<2.2",
         "pyhumps~=3.5.0",
         "pydantic~=1.9.0",
         "executor~=23.2",

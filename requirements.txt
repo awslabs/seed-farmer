@@ -35,7 +35,7 @@ coloredlogs==15.0.1
     # via executor
 commonmark==0.9.1
     # via rich
-cookiecutter==1.7.3
+cookiecutter==2.1.1
     # via seed-farmer (setup.py)
 executor==23.2
     # via seed-farmer (setup.py)

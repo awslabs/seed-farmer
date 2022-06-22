@@ -24,7 +24,7 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 import seedfarmer.mgmt.module_init as minit
 from seedfarmer import DESCRIPTION, PROJECT, commands, utils
-from seedfarmer.output_utils import print_bolded, print_deployment_inventory, print_manifest_inventory
+from seedfarmer.output_utils import print_bolded, print_deployment_inventory, print_json, print_manifest_inventory
 
 DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
 DEBUG_LOGGING_FORMAT_REMOTE = "[%(filename)-13s:%(lineno)3d]%(message)s"
@@ -145,6 +145,58 @@ def store() -> None:
     pass
 
 
+@store.command(name="deployspec", help="Store/Update a deployspec of a currently deployed module")
+@click.option(
+    "--deployment",
+    "-d",
+    type=str,
+    help="The Deployment Name",
+    required=True,
+)
+@click.option(
+    "--group",
+    "-g",
+    type=str,
+    help="The Group Name",
+    required=True,
+)
+@click.option(
+    "--module",
+    "-m",
+    type=str,
+    help="The Module Name",
+    required=True,
+)
+@click.option(
+    "--path",
+    "-p",
+    type=str,
+    help="The relative module path (ex. modules/optionals/networking) -- *** DO NOT PASS IN filename `deployspec.yaml`",
+    required=True,
+)
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Enable detailed logging.",
+    show_default=True,
+)
+def store_deployspec(
+    deployment: str,
+    group: str,
+    module: str,
+    path: str,
+    debug: bool,
+) -> None:
+    if debug:
+        enable_debug(format=DEBUG_LOGGING_FORMAT)
+
+    _logger.debug(
+        f"""Storing deployspec for module {module} of group {group}
+        in deployment {deployment} located at {path}/deployspec.yaml"""
+    )
+    du.update_deployspec(deployment, group, module, path)
+
+
 @store.command(name="moduledata", help="CAT or pipe in a json or yaml object")
 @click.option(
     "--deployment",
@@ -250,6 +302,48 @@ def store_module_md5(
 def list() -> None:
     f"""List module data for {PROJECT.upper()}"""
     pass
+
+
+@list.command(name="deployspec", help="List the stored deployspec of a module")
+@click.option(
+    "--deployment",
+    "-d",
+    type=str,
+    help="The Deployment Name",
+    required=True,
+)
+@click.option(
+    "--group",
+    "-g",
+    type=str,
+    help="The Group Name",
+    required=True,
+)
+@click.option(
+    "--module",
+    "-m",
+    type=str,
+    help="The Module Name",
+    required=True,
+)
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Enable detailed logging.",
+    show_default=True,
+)
+def list_deployspec(
+    deployment: str,
+    group: str,
+    module: str,
+    debug: bool,
+) -> None:
+    if debug:
+        enable_debug(format=DEBUG_LOGGING_FORMAT)
+    _logger.debug(f"We are getting deployspec for {module} in {group} of {deployment}")
+
+    val = mi.get_deployspec(deployment=deployment, group=group, module=module)
+    print_json(val)
 
 
 @list.command(name="moduledata", help="Fetch the module metadata")

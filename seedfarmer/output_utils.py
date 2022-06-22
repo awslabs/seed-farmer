@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 from rich.table import Table
@@ -103,6 +103,18 @@ def print_manifest_json(dep: DeploymentManifest) -> None:
         The DeploymentManifest to be printed as json
     """ """"""
     console.print(dep.dict(), overflow="ignore", crop=False)
+
+
+def print_json(payload: Optional[Dict]) -> None:
+    """
+    Pretty-print to console a json representation of the DeploymentManifest
+
+    Parameters
+    ----------
+    dep : DeploymentManifest
+        The DeploymentManifest to be printed as json
+    """ """"""
+    console.print(payload, overflow="ignore", crop=False)
 
 
 def print_bolded(message: str, color: str = "yellow") -> None:

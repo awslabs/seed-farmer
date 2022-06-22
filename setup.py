@@ -46,7 +46,7 @@ setup(
         "pyhumps~=3.5.0",
         "pydantic~=1.9.0",
         "executor~=23.2",
-        "typing-extensions~=4.0.0",
+        "typing-extensions~=4.2.0",
         "checksumdir~=1.2.0",
         "rich~=12.4.0",
     ],

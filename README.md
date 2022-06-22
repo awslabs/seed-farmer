@@ -2,7 +2,7 @@
 
 Seed-Farmer (seedfarmer) in an opensource orchestration tool that works with AWS CodeSeeder (see [github](https://github.com/awslabs/aws-codeseeder) or [docs](https://aws-codeseeder.readthedocs.io/en/latest/)) and acts as an orchestration tool modeled after [GitOps deployments](https://www.gitops.tech/).  It has a CommandLine Interface (CLI) based in Python. 
 
-It leverages modular code deployments ([see modules](docs/module_development.md)) leveraging [manifests](docs/manifests.md) and [deployspecs](docs/deployspec.md), keeping track of changes and applying changes as need / detected.
+It leverages modular code deployments ([see modules](docs/source/module_development.md)) leveraging [manifests](docs/source/manifests.md) and [deployspecs](docs/source/deployspec.md), keeping track of changes and applying changes as need / detected.
 
 
 ## Architecture

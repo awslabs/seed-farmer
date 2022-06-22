@@ -74,3 +74,4 @@ if USE_CODESEEDER:
             'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
         ]
         configuration.python_modules = [f"seed-farmer=={__version__}"]
+        configuration.runtime_versions = {"nodejs": "14", "python": "3.9", "docker": "20"}

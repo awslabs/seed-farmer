@@ -1,0 +1,41 @@
+name: Static Checking
+
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+
+  seedfarmer-cli:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+    defaults:
+      run:
+        working-directory: seedfarmer
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Mypy Check
+        run: mypy --ignore-missing-imports .
+      - name: Flake8 Check
+        run: flake8 .
+      - name: Black Check
+        run: black --check .
+      - name: Isort Check
+        run: isort --check .

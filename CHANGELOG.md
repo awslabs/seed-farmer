@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 
 ---
-## 0.1.1.dev0 -- Unreleased
+## Unreleased
 
 ### New
  - feature - added CLI ability to list deployspec of deployed module
@@ -17,11 +17,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - change - enforce runtime versions of CodeSeeder
+- lock versions in requirements-dev.in
 
 ### Fixes
 
 ---
-## 0.1.0 -- (2022-06-20)
+## v0.1.0  (2022-06-20)
 
 
 ### New

@@ -163,7 +163,9 @@ def _deploy_deployment_is_not_dry_run(
     if groups_to_deploy:
         deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
-            f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}", deployment_manifest_wip, True
+            f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
+            deployment_manifest_wip,
+            True,
         )
         _logger.debug(f"DeploymentManifest for deploy after filter = {json.dumps(deployment_manifest_wip.dict())}")
         for _group in deployment_manifest_wip.groups:
@@ -242,7 +244,9 @@ def destroy_deployment(
         destroy_manifest.docker_credentials_secret if destroy_manifest.docker_credentials_secret else None
     )
 
-    print_manifest_inventory(f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red")
+    print_manifest_inventory(
+        f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red"
+    )
     if not dryrun:
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
@@ -371,7 +375,9 @@ def deploy_deployment(
                 )
             )
     if unchanged_modules:
-        _print_modules(f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules)
+        _print_modules(
+            f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
+        )
     if not dryrun:
         _deploy_deployment_is_not_dry_run(
             deployment_manifest=deployment_manifest,

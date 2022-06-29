@@ -163,7 +163,7 @@ def _deploy_deployment_is_not_dry_run(
     if groups_to_deploy:
         deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
-            f"Resolved Deployment manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
+            f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}", deployment_manifest_wip, True
         )
         _logger.debug(f"DeploymentManifest for deploy after filter = {json.dumps(deployment_manifest_wip.dict())}")
         for _group in deployment_manifest_wip.groups:
@@ -201,7 +201,7 @@ def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deplo
         for _group in groups_to_deploy:
             for _module in _group.modules:
                 mods_would_deploy.append([deployment_name, _group.name, _module.name])
-    _print_modules("Modules that would be Deployed", mods_would_deploy)
+    _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
 
 
 def destroy_deployment(
@@ -235,13 +235,14 @@ def destroy_deployment(
     if not destroy_manifest.groups:
         print_bolded("Nothing to destroy", "white")
         return
-    print_manifest_inventory(f"Scheduled Destroy for {destroy_manifest.name}", destroy_manifest, False, "red")
+    print_manifest_inventory(f"Modules removed from manifest: {destroy_manifest.name}", destroy_manifest, False, "red")
 
     deployment_name = destroy_manifest.name
     docker_credentials_secret = (
         destroy_manifest.docker_credentials_secret if destroy_manifest.docker_credentials_secret else None
     )
 
+    print_manifest_inventory(f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red")
     if not dryrun:
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
@@ -313,7 +314,7 @@ def deploy_deployment(
     )
     _logger.debug(f"Setting up deployment for {deployment_name}")
     print_manifest_inventory(
-        f"Modules Requested for Deployment: {deployment_manifest_wip.name}", deployment_manifest_wip, True
+        f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
     commands.deploy_managed_policy_stack(deployment_name=deployment_name, deployment_manifest=deployment_manifest_wip)
 
@@ -370,7 +371,7 @@ def deploy_deployment(
                 )
             )
     if unchanged_modules:
-        _print_modules("Modules Unchanged, Ignored", unchanged_modules)
+        _print_modules(f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules)
     if not dryrun:
         _deploy_deployment_is_not_dry_run(
             deployment_manifest=deployment_manifest,
@@ -382,6 +383,8 @@ def deploy_deployment(
         )
     else:
         _deploy_deployment_is_dry_run(groups_to_deploy=groups_to_deploy, deployment_name=deployment_name)
+
+    print_bolded(f"To see all deployed modules, run seedfarmer list modules -d {deployment_name}")
 
     if show_manifest:
         print_manifest_json(deployment_manifest)

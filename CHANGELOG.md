@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 - change - enforce runtime versions of CodeSeeder
 - lock versions in requirements-dev.in
+- updating CLI output to discern changes to manifest, intended deployment
 
 ### Fixes
 

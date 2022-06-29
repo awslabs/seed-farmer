@@ -15,6 +15,8 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+import yaml
+
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
 
@@ -247,3 +249,10 @@ def _populate_modules_to_remove(
             mod_manifest["deploy_spec"] = mi.get_deployspec(dep_name, group, destroy_module, deployment_params_cache)
             destroy_module_list.append(ModuleManifest(**mod_manifest))
     return destroy_module_list
+
+
+def update_deployspec(deployment: str, group: str, module: str, module_path: str) -> None:
+    d_path = mi._get_deployspec_path(module_path=module_path)
+    with open(d_path) as deploymentspec:
+        new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
+    mi.write_deployspec(deployment, group, module, new_spec.dict())

@@ -5,24 +5,25 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 
 
-## Unreleased
+
+
+
 ---
+## Unreleased
 
 ### New
+ - feature - added CLI ability to list deployspec of deployed module
+ - feature - added CLI ability to store new deployspec of deployed module
 
 ### Changes
+- change - enforce runtime versions of CodeSeeder
+- lock versions in requirements-dev.in
 
 ### Fixes
 
-### Breaks
-
-
-## 0.2.0.dev0 -- Unreleased
-
-
-
-## 0.1.0 -- (2022-06-20)
 ---
+## v0.1.0  (2022-06-20)
+
 
 ### New
 * initial commit and release of public SeedFarmer

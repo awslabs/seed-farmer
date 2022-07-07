@@ -320,6 +320,7 @@ def deploy_deployment(
     print_manifest_inventory(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
+    commands.deploy_seedkit()
     commands.deploy_managed_policy_stack(deployment_name=deployment_name, deployment_manifest=deployment_manifest_wip)
 
     groups_to_deploy = []

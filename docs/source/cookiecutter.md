@@ -65,33 +65,52 @@ Please take a look at the [Cookiecuter Github](https://github.com/cookiecutter/c
 
 (cookiecutter_new_project)=
 ## How to Create a New Project
+Verify that you have `seedfarmer` installed from PyPi. 
 ```
-# seedfarmer init project --help
+pip list | grep seed-farmer
+```
+If not installed, please install:
+```
+pip install seed-farmer
+```
+On your local compute resource, pick a directory and add a file named `seedfarmer.yaml` that has the name of your new project.  For example, a new project named `mynewproject` can be seeded via the following:
+```bash
+echo project: mynewproject > seedfarmer.yaml
+```
+
+
+Now you are ready to create the new project.  
+
+```bash
+seedfarmer init project --help
 Usage: seedfarmer init project [OPTIONS]
 
-  Initialize a project
+  Initialize a project. Make sure seedfarmer.yaml is present in the same
+  location you execute this command!!
 
 Options:
-  -n, --project-name TEXT         The name of the project  [required]
-  -t, --template-url TEXT         The template URL. If not specified, the
-                                  default template repo is
-                                  `https://gitlab.aws.dev/wwcs-proserve-etip-
-                                  data-analytics/software-labs/seed-farmer`
-  --no-interactive-input / --interactive-input
-                                  Enable interactive prompt at command
-                                  execution. Default is False
-  --debug / --no-debug            Enable detail logging  [default: no-debug]
-  --help                          Show this message and exit.
+  -t, --template-url TEXT  The template URL. If not specified, the default
+                           template repo is `https://github.com/awslabs/seed-
+                           farmer`
+  --help                   Show this message and exit.
 ```
-This example will interactively create a new directory in your current working directory that contains some bare structure to support development with seedfarmer:
+This example will create a new directory in your current working directory that contains some bare structure to support development with seedfarmer:
+
+```bash
+seedfarmer init project
 ```
-seedfarmer init project -n my-app --interactive-input
+Your project is created and configured to use the `seedfarmer` CLI.
+
+If you want to use a different project template, you can override the default template url. For example:
 ```
+seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
+```
+NOTE: your project template for a new `seedfarmer` project  must contain at least the required project sturcture.
 
 
 (cookiecutter_new_module)=
 ## How to Create a New Module
- In the context of the your project and in conjunction with Cookiecutter and seedfarmer, the concept of a `project` is synonomous with `module`. Below are the module initialization commands.
+Within a `seedfarmer` project, you can create new modules. Below are the module initialization commands.
 ```
 # seedfarmer init module --help
 Usage: seedfarmer init module [OPTIONS]
@@ -99,29 +118,27 @@ Usage: seedfarmer init module [OPTIONS]
   Initialize a new module
 
 Options:
-  -g, --group-name TEXT           The group the module belongs to. The `group`
-                                  is created if it doesn't exist
-  -m, --module-name TEXT          The module name  [required]
-  -t, --template-url TEXT         The template URL. If not specified, the
-                                  default template repo is
-                                  `https://gitlab.aws.dev/wwcs-proserve-etip-
-                                  data-analytics/software-labs/seed-farmer`
-  --no-interactive-input / --interactive-input
-                                  Enable interactive prompt at command
-                                  execution. Default is False
-  --debug / --no-debug            Enable detail logging  [default: no-debug]
-  --help                          Show this message and exit.
+  -g, --group-name TEXT    The group the module belongs to. The `group` is
+                           created if it doesn't exist
+  -m, --module-name TEXT   The module name  [required]
+  -t, --template-url TEXT  The template URL. If not specified, the default
+                           template repo is `https://github.com/awslabs/seed-
+                           farmer`
+  --debug / --no-debug     Enable detail logging  [default: no-debug]
+  --help                   Show this message and exit.
 ```
 
-If we look at the root directory structure of this project, you will see a directory called `modules`; All modules created will appear there.
+If we look at the root directory structure of this project, you will see a directory called `modules`. All modules created will appear there.
 
-This is the command to create a module from the default project template linked above:
+This is the command to create a module named `my-module-name` from the default project template linked above:
 ```
-seedfarmer init module -m my-module-name
+seedfarmer init module --m my-module-name
 ```
 In the `modules/` directory, there will be a new folder called `my-module-name`. 
 
-Grouping of modules is also supported. You can have `group`, which is just a parent directory under `modules/` that can contain multiple modules. Here is an example that would create the directory structure `../modules/analytics/athena/`:
+Grouping of modules is also supported and stongly recommended. You can have `group`, which is just a parent directory under `modules/` that can contain multiple modules. 
+
+Here is an example that would create the directory structure `../modules/analytics/athena/`:
 
 ```
 seedfarmer init module -g analytics -m athena
@@ -133,18 +150,9 @@ Nested grouping is also supported. An example that would create the directory st
 seedfarmer init module -g "analytics/streaming" -m kinesis
 ```
 
-If you want to use a different project template, you can override the default template url. For example:
+If you want to use a different module template, you can override the default template url. For example:
 ```
 seedfarmer init module -m my-module-name -t https://github.com/briggySmalls/cookiecutter-pypackage
 ```
+NOTE: your project template for modules must contain at least the required files for a `seedfarmer` module.
 
-If you'd like to override the default values from the repository's `cookiecutter.json`, you can run in interactive mode. You will be propmpted to confirm the value of every key:
-```
-# seedfarmer init module -m my-module-name --interactive-input
-
-project_name [mew-project]:
-project_short_description [A short description of the module or project.]: A shorter description
-module_name [new-module]: my-module-name
-version [0.1.0]: 0.2.0
-...
-```

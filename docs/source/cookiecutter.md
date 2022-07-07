@@ -103,7 +103,7 @@ Your project is created and configured to use the `seedfarmer` CLI.
 
 If you want to use a different project template, you can override the default template url. For example:
 ```
-seedfarmer seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
+seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
 ```
 NOTE: your project template for a new `seedfarmer` project  must contain at least the required project sturcture.
 

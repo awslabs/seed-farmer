@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 
 ---
-## Unreleased
+## v0.1.1 (2022-07-07)
 
 ### New
  - feature - added CLI ability to list deployspec of deployed module

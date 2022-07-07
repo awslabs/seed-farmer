@@ -17,6 +17,18 @@ module code and the AWS Cloud via AWS CodeSeeder.
 
 .. image:: _static/SeedFarmer.png
    :alt: Seed-Farmer
+
+#.  Invoke **seedfarmer** CLI
+#.  **seedfarmer** reads/writes deployment metadata with AWS Systems Manager
+#.  **seedfarmer** invokes AWS IAM to create module-specific roles, attaching the proper least-privilege policies
+#.  **seedfarmer** leverages **AWS CodeSeeder** for remote deployment on AWS CodeBuild
+#.  **AWS CodeSeeder** prepares AWS CodeBuild 
+#.  AWS CodeBuild via **AWS CodeSeeder** inspects and fetches data from AWS SecretsManager (if necessary)
+#.  AWS CodeBuild via **AWS CodeSeeder** executes the custom **deployspec** for the module
+#.  AWS CodeBuild via **AWS CodeSeeder** updates AWS Systems Manager with completed module metadata
+#.  **seedfarmer** updates deployment metadata in AWS Systems Manager
+
+
 =======================================
 
 .. toctree::

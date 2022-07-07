@@ -18,7 +18,7 @@ import os
 import time
 from typing import List, Optional
 
-from aws_codeseeder import codeseeder, services
+from aws_codeseeder import codeseeder, commands, services
 from cfn_tools import load_yaml
 
 import seedfarmer.services._iam as iam
@@ -40,7 +40,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: DeploymentManifest) -> None:
     """
     deploy_managed_policy_stack
-        This function deployes the deployment-sepcific policy to allow CodeSeeder to deploy.
+        This function deployes the deployment-specific policy to allow CodeSeeder to deploy.
 
     Parameters
     ----------
@@ -50,20 +50,26 @@ def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: Deplo
         The DeploymentManifest object of the deploy
 
     """
-    project_managed_policy_template = (
-        deployment_manifest.project_policy if deployment_manifest.project_policy else PROJECT_POLICY_PATH
-    )
-    project_managed_policy_template = os.path.join(OPS_ROOT, project_managed_policy_template)
-    if not os.path.exists(project_managed_policy_template):
-        raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")
-    _logger.debug(f"Validated the existence of Project Managed Policy Template at:{project_managed_policy_template}")
+    # Determine if managed policy stack already deployed
+    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(stack_name=PROJECT_MANAGED_POLICY_CFN_NAME)
+    if not project_managed_policy_stack_exists:
+        project_managed_policy_template = (
+            deployment_manifest.project_policy if deployment_manifest.project_policy else PROJECT_POLICY_PATH
+        )
+        project_managed_policy_template = os.path.join(OPS_ROOT, project_managed_policy_template)
+        if not os.path.exists(project_managed_policy_template):
+            raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")
+        _logger.debug(
+            f"Validated the existence of Project Managed Policy Template at:{project_managed_policy_template}"
+        )
 
-    services.cfn.deploy_template(
-        stack_name=PROJECT_MANAGED_POLICY_CFN_NAME,
-        filename=project_managed_policy_template,
-        seedkit_tag=deployment_name,
-        parameters={"ProjectName": PROJECT.lower(), "DeploymentName": deployment_name},
-    )
+        _logger.info(f"Deploying {PROJECT_MANAGED_POLICY_CFN_NAME}")
+        services.cfn.deploy_template(
+            stack_name=PROJECT_MANAGED_POLICY_CFN_NAME,
+            filename=project_managed_policy_template,
+            seedkit_tag=deployment_name,
+            parameters={"ProjectName": PROJECT.lower(), "DeploymentName": deployment_name},
+        )
 
 
 def destroy_module_stack(
@@ -87,10 +93,11 @@ def destroy_module_stack(
     """
     module_stack_name, module_role_name = _get_module_stack_names(deployment_name, group_name, module_name)
     # Detach the Project Policy
-    seedkit_stack_name = services.cfn.get_stack_name(PROJECT.lower())
-    seedkit_stack_exists, stack_outputs = services.cfn.does_stack_exist(stack_name=seedkit_stack_name)
+    seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(seedkit_name=PROJECT)
+
     policies_arn = []
     if seedkit_stack_exists:
+        _logger.debug(f"Seedkit stack exists - {seedkit_stack_name}")
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
         policies_arn.append(seedkit_managed_policy_arn)
 
@@ -204,9 +211,9 @@ def deploy_module_stack(
 
     # Attaching managed IAM Policies
     _logger.debug("Extracting the Codeseeder Managed policy")
-    seedkit_stack_name = services.cfn.get_stack_name(PROJECT.lower())
-    seedkit_stack_exists, stack_outputs = services.cfn.does_stack_exist(stack_name=seedkit_stack_name)
+    seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(seedkit_name=PROJECT)
     if seedkit_stack_exists:
+        _logger.debug(f"Seedkit stack exists - {seedkit_stack_name}")
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
@@ -250,3 +257,13 @@ def deploy_module_stack(
             policy_body=policy_body,
             policy_name=docker_credentials_secret,
         )
+
+
+def deploy_seedkit() -> None:
+    """
+    deploy_seedkit
+        Accessor method to CodeSeeder to deploy the SeedKit if not deployed
+    """
+    stack_exists, _, _ = commands.seedkit_deployed(seedkit_name=PROJECT)
+    if not stack_exists:
+        commands.deploy_seedkit(seedkit_name=PROJECT)

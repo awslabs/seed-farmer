@@ -10,6 +10,16 @@ Seed-Farmer does not create its own deployments, rather it helps to deploy YOUR 
 
 ![Seed-Farmer](docs/source/_static/SeedFarmer.png)
 
+Steps:
+1. Invoke `seedfarmer` CLI
+2. `seedfarmer` reads/writes deployment metadata with AWS Systems Manager
+3. `seedfarmer` invokes AWS IAM to create module-specific roles, attaching the proper least-privilege policies
+4. `seedfarmer` leverages `AWS CodeSeeder` for remote deployment on AWS CodeBuild
+5. `AWS CodeSeeder` prepares AWS CodeBuild 
+6. AWS CodeBuild via `AWS CodeSeeder` inspects and fetches data from AWS SecretsManager (if necessary)
+7. AWS CodeBuild via `AWS CodeSeeder` executes the custom `deployspec` for the module
+8. AWS CodeBuild via `AWS CodeSeeder` updates AWS Systems Manager with completed module metadata
+9. `seedfarmer` updates deployment metadata in AWS Systems Manager
 
 ## Getting Started
 The Seed-Farmer library is available on PyPi.  Install the library in a python virtual environment.

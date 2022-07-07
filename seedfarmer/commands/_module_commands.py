@@ -22,8 +22,9 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import botocore.exceptions
 from aws_codeseeder import codeseeder
 
-from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT, generate_hash
+from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
+from seedfarmer.utils import generate_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

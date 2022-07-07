@@ -12,10 +12,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import hashlib
 import logging
 
 import humps
 import yaml
+
+from seedfarmer.services._service_utils import get_account_id, get_region
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -58,3 +61,12 @@ def upper_snake_case(value: str) -> str:
         return humps.depascalize(value).upper()  # type: ignore
     else:
         return value.replace("-", "_").upper()
+
+
+def generate_hash() -> str:
+    account = get_account_id()
+    region = get_region()
+    concatenated_string = f"{account}-{region}"
+    hash_value = (hashlib.sha1(concatenated_string.encode("UTF-8")).hexdigest())[:8]
+    _logger.debug(f"HASH generated is {hash_value}")
+    return hash_value

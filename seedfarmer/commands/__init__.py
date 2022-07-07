@@ -14,7 +14,12 @@
 
 from seedfarmer.commands._deployment_commands import apply, destroy
 from seedfarmer.commands._module_commands import deploy_module, destroy_module
-from seedfarmer.commands._stack_commands import deploy_managed_policy_stack, deploy_module_stack, destroy_module_stack
+from seedfarmer.commands._stack_commands import (
+    deploy_managed_policy_stack,
+    deploy_module_stack,
+    deploy_seedkit,
+    destroy_module_stack,
+)
 
 __all__ = [
     "apply",
@@ -24,4 +29,5 @@ __all__ = [
     "deploy_managed_policy_stack",
     "deploy_module_stack",
     "destroy_module_stack",
+    "deploy_seedkit",
 ]

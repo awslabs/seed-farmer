@@ -17,9 +17,10 @@ import os
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from seedfarmer import OPS_ROOT, PROJECT, generate_hash
+from seedfarmer import OPS_ROOT, PROJECT
 from seedfarmer.services import _secrets_manager as secrets
 from seedfarmer.services import _ssm as store
+from seedfarmer.utils import generate_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

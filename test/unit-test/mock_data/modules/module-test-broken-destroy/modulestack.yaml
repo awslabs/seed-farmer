@@ -22,5 +22,5 @@ Resources:
             Action: '*'
             Resource: '*'
         Version: 2012-10-17
-      PolicyName: "addl-modulespecific-policy"
+      PolicyName: "myapp-modulespecific-policy"
       Roles: [!Ref RoleName]

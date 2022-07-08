@@ -52,7 +52,7 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
     if os.path.exists(module_path):
         raise Exception(f"The module {module_name} already exists under {output_dir}.")
 
-    checkout_branch = "init-module" if template_url == "git@github.com:awslabs/seed-farmer.git" else None
+    checkout_branch = "init-module" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
 
     _logger.info(f"New module will be created in the following dir: {output_dir}")
     cookiecutter(
@@ -77,7 +77,7 @@ def create_project(template_url: Optional[str]) -> None:
         A URL, for example a Github repo, that is or contains templating for the initialization
     """
 
-    checkout_branch = "init-project" if template_url == "git@github.com:awslabs/seed-farmer.git" else None
+    checkout_branch = "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
     _logger.info(f"New project will be created in the following dir: {os.path.join(OPS_ROOT,PROJECT)}")
     cookiecutter(
         template=template_url,

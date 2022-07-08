@@ -467,7 +467,7 @@ def init() -> None:
 @click.option(
     "--template-url",
     "-t",
-    default="git@github.com:awslabs/seed-farmer.git",
+    default="https://github.com/awslabs/seed-farmer.git",
     help=(
         "The template URL. If not specified, the default template repo is " "`https://github.com/awslabs/seed-farmer`"
     ),
@@ -490,7 +490,7 @@ def init_project(template_url: str) -> None:
 @click.option(
     "--template-url",
     "-t",
-    default="git@github.com:awslabs/seed-farmer.git",
+    default="https://github.com/awslabs/seed-farmer.git",
     help=(
         "The template URL. If not specified, the default template repo is " "`https://github.com/awslabs/seed-farmer`"
     ),

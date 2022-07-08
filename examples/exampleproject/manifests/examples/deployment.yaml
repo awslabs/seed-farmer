@@ -1,0 +1,4 @@
+name: examples
+groups:
+  - name: optionals
+    path: manifests/examples/optional-modules.yaml

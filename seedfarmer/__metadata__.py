@@ -13,5 +13,5 @@
 #    limitations under the License.
 
 __title__: str = "seed-farmer"
-__description__: str = "The AWS Professional CLI tool SeedFarmer for GitOps support with AWS_CodeSeeder"
+__description__: str = "The AWS Professional Services CLI tool SeedFarmer for GitOps support with AWS_CodeSeeder"
 __license__: str = "Apache License 2.0"

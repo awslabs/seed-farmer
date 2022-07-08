@@ -2,11 +2,11 @@
 
 ## Description
 
-This module creates netowrking resources to support ADDL.  It is not required as 
+This module creates netowrking resources.  It is not required as 
 modules can leverage existing VPC networks.
 
 This module:
-- creates networking resources to support ADDL
+- creates networking resources
   - VPC and Subnets
   - VPC Endpoints
   - module-specific role with least privileges policy

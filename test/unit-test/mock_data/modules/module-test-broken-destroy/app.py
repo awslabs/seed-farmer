@@ -3,15 +3,15 @@ import os
 from aws_cdk import App, CfnOutput
 from stack import Cognito
 
-deployment_name = os.getenv("ADDL_DEPLOYMENT_NAME")
-module_name = os.getenv("ADDL_MODULE_NAME")
-domain_name_prefix = os.getenv("ADDL_PARAMETER_DOMAIN_NAME_PREFIX", "")
+deployment_name = os.getenv("MYAPP_DEPLOYMENT_NAME")
+module_name = os.getenv("MYAPP_MODULE_NAME")
+domain_name_prefix = os.getenv("MYAPP_PARAMETER_DOMAIN_NAME_PREFIX", "")
 
 app = App()
 
 stack = Cognito(
     scope=app,
-    id=f"addl-{deployment_name}-{module_name}",
+    id=f"myapp-{deployment_name}-{module_name}",
     domain_name_prefix=domain_name_prefix,
 )
 

@@ -27,6 +27,9 @@ with open(file=path, mode="r", encoding="utf-8") as f:
 with open("VERSION", "r") as version_file:
     version = version_file.read().strip()
 
+with open("README.md", "r") as file:
+    long_description = file.read()
+
 setup(
     name=about["__title__"],
     version=version,
@@ -35,6 +38,7 @@ setup(
     url="https://github.com/awslabs/seed-farmer",
     project_urls={"Org Site": "https://aws.amazon.com/professional-services/"},
     description=about["__description__"],
+    long_description=long_description,
     long_description_content_type="text/markdown",
     license=about["__license__"],
     packages=find_packages(include=["seed-farmer", "seedfarmer", "seedfarmer.*", "seed-farmer.*"]),

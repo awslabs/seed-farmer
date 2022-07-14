@@ -21,8 +21,10 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from aws_codeseeder import codeseeder
+from aws_codeseeder.error.CodeSeederError import CodeSeederRuntimeError
 
 from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
+from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
 from seedfarmer.utils import generate_hash
 
@@ -72,7 +74,7 @@ def deploy_module(
     module_bundle_md5: Optional[str] = None,
     docker_credentials_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
-) -> Tuple[str, Optional[Dict[str, str]]]:
+) -> ModuleDeploymentResponse:
     env_vars = _env_vars(
         deployment_name=deployment_name,
         group_name=group_name,
@@ -103,18 +105,40 @@ def deploy_module(
         raise ValueError("Missing `deploy` in module's deployspec.yaml")
 
     _phases = module_deploy_spec.deploy.phases
-    return _execute_module_commands(
-        deployment_name=deployment_name,
-        group_name=group_name,
-        module_manifest_name=module_manifest_name,
-        extra_dirs={"module": module_path},
-        extra_install_commands=["cd module/"] + _phases.install.commands,
-        extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
-        extra_build_commands=["cd module/"] + _phases.build.commands,
-        extra_post_build_commands=["cd module/"] + _phases.post_build.commands + md5_put + metadata_put,
-        extra_env_vars=env_vars,
-        codebuild_compute_type=module_deploy_spec.build_type,
-    )
+    try:
+        resp_dict_str, dict_metadata = _execute_module_commands(
+            deployment_name=deployment_name,
+            group_name=group_name,
+            module_manifest_name=module_manifest_name,
+            extra_dirs={"module": module_path},
+            extra_install_commands=["cd module/"] + _phases.install.commands,
+            extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
+            extra_build_commands=["cd module/"] + _phases.build.commands,
+            extra_post_build_commands=["cd module/"] + _phases.post_build.commands + md5_put + metadata_put,
+            extra_env_vars=env_vars,
+            codebuild_compute_type=module_deploy_spec.build_type,
+        )
+        _logger.debug(f"CodeSeeder Metadata response is {dict_metadata}")
+
+        resp = ModuleDeploymentResponse(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest_name,
+            status="SUCCESS",
+            codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
+            codeseeder_output=dict_metadata,
+        )
+    except CodeSeederRuntimeError as csre:
+        _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
+        l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
+        resp = ModuleDeploymentResponse(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest_name,
+            status="ERROR",
+            codeseeder_metadata=CodeSeederMetadata(**l_case_error),
+        )
+    return resp
 
 
 def destroy_module(
@@ -125,7 +149,7 @@ def destroy_module(
     module_manifest_name: str,
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
-) -> Tuple[str, Optional[Dict[str, str]]]:
+) -> ModuleDeploymentResponse:
     env_vars = _env_vars(
         deployment_name=deployment_name,
         group_name=group_name,
@@ -148,18 +172,38 @@ def destroy_module(
         )
 
     _phases = module_deploy_spec.destroy.phases
-    return _execute_module_commands(
-        deployment_name=deployment_name,
-        group_name=group_name,
-        module_manifest_name=module_manifest_name,
-        extra_dirs={"module": module_path},
-        extra_install_commands=["cd module/"] + _phases.install.commands,
-        extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
-        extra_build_commands=["cd module/"] + _phases.build.commands,
-        extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
-        extra_env_vars=env_vars,
-        codebuild_compute_type=module_deploy_spec.build_type,
-    )
+
+    try:
+        resp_dict_str, _ = _execute_module_commands(
+            deployment_name=deployment_name,
+            group_name=group_name,
+            module_manifest_name=module_manifest_name,
+            extra_dirs={"module": module_path},
+            extra_install_commands=["cd module/"] + _phases.install.commands,
+            extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
+            extra_build_commands=["cd module/"] + _phases.build.commands,
+            extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
+            extra_env_vars=env_vars,
+            codebuild_compute_type=module_deploy_spec.build_type,
+        )
+        resp = ModuleDeploymentResponse(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest_name,
+            status="SUCCESS",
+            codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
+        )
+    except CodeSeederRuntimeError as csre:
+        _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
+        l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
+        resp = ModuleDeploymentResponse(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest_name,
+            status="ERROR",
+            codeseeder_metadata=CodeSeederMetadata(**l_case_error),
+        )
+    return resp
 
 
 def _execute_module_commands(
@@ -200,8 +244,13 @@ def _execute_module_commands(
         extra_env_vars: Optional[Dict[str, Any]] = None,
         codebuild_compute_type: Optional[str] = None,
     ) -> str:
-        _logger.info("Deployment: %s", deployment_name)
-        return "Remote function execution complete"
+        deploy_info = {
+            "aws_region": os.environ.get("AWS_DEFAULT_REGION"),
+            "aws_account_id": os.environ.get("AWS_ACCOUNT_ID"),
+            "codebuild_build_id": os.environ.get("CODEBUILD_BUILD_ID"),
+            "codebuild_log_path": os.environ.get("CODEBUILD_LOG_PATH"),
+        }
+        return json.dumps(deploy_info)
 
     count = 0
     while True:

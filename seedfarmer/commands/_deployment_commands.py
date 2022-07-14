@@ -17,13 +17,14 @@ import hashlib
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import checksumdir
 import yaml
 
 import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import OPS_ROOT, commands
+from seedfarmer.commands._parameter_commands import load_parameter_values
 from seedfarmer.mgmt.module_info import (
     _get_deployspec_path,
     _get_modulestack_path,
@@ -34,51 +35,17 @@ from seedfarmer.mgmt.module_info import (
     remove_group_info,
     write_deployment_manifest,
 )
-from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModuleParameter, ModulesManifest
-from seedfarmer.output_utils import _print_modules, print_bolded, print_manifest_inventory, print_manifest_json
+from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
+from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.output_utils import (
+    _print_modules,
+    print_bolded,
+    print_errored_modules,
+    print_manifest_inventory,
+    print_manifest_json,
+)
 
 _logger: logging.Logger = logging.getLogger(__name__)
-
-
-def _load_parameter_values(deployment_name: str, parameters: List[ModuleParameter]) -> List[ModuleParameter]:
-    parameter_values = []
-    parameter_values_cache = {}
-    for parameter in parameters:
-        _logger.debug("parameter: %s", parameter.dict())
-        if parameter.value:
-            _logger.debug("static parameter value: %s", parameter.value)
-            parameter_values.append(parameter)
-        # Load parameter from Module Metadata
-        elif parameter.value_from and parameter.value_from.module_metadata:
-            group = parameter.value_from.module_metadata.group
-            name = parameter.value_from.module_metadata.name
-            _logger.debug("Loading metadata for dependency group, module: %s, %s" % (group, name))
-
-            # Ensure we only retrieve the SSM Parameter value once per module
-            if (deployment_name, group, name) not in parameter_values_cache:
-                parameter_values_cache[(deployment_name, group, name)] = get_module_metadata(
-                    deployment_name,
-                    group,
-                    name,
-                )
-            parameter_value = parameter_values_cache[(deployment_name, group, name)]
-            _logger.debug("loaded parameter value: %s", parameter_value)
-
-            parameter_value = (
-                parameter_value.get(parameter.value_from.module_metadata.key, None)
-                if parameter_value is not None and parameter.value_from.module_metadata.key is not None
-                else parameter_value
-            )
-            _logger.debug("parsed parameter value: %s", parameter_value)
-
-            if parameter_value is not None:
-                parameter_values.append(
-                    ModuleParameter(
-                        name=parameter.name,
-                        value=parameter_value,
-                    )
-                )
-    return parameter_values
 
 
 def _execute_deploy(
@@ -87,9 +54,8 @@ def _execute_deploy(
     m: ModuleManifest,
     d_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
-) -> Tuple[str, Optional[Dict[str, str]]]:
-    # Resolve parameters with valueFroms to values
-    parameters = _load_parameter_values(deployment_name=d_name, parameters=m.parameters)
+) -> ModuleDeploymentResponse:
+    parameters = load_parameter_values(deployment_name=d_name, parameters=m.parameters)
 
     # Deploys the IAM role per module
     commands.deploy_module_stack(
@@ -127,7 +93,7 @@ def _execute_destroy(
     g_name: str,
     m: ModuleManifest,
     d_secret: Optional[str] = None,
-) -> Optional[Tuple[str, Optional[Dict[str, str]]]]:
+) -> Optional[ModuleDeploymentResponse]:
     if m.deploy_spec is None:
         raise ValueError(f"Invalid value for ModuleManifest.deploy_spec in group {g_name} and module : {m.name}")
 
@@ -137,7 +103,7 @@ def _execute_destroy(
         module_path=m.path,
         module_deploy_spec=m.deploy_spec,
         module_manifest_name=m.name,
-        parameters=_load_parameter_values(deployment_name=d_name, parameters=m.parameters),
+        parameters=load_parameter_values(deployment_name=d_name, parameters=m.parameters),
         module_metadata=None,
     )
     commands.destroy_module_stack(
@@ -173,7 +139,7 @@ def _deploy_deployment_is_not_dry_run(
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
 
-                    def _exec_deploy(args: Dict[str, Any]) -> Optional[Tuple[str, Optional[Dict[str, str]]]]:
+                    def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
                         return _execute_deploy(
                             args["d_name"], args["g"], args["m"], args["d_secret"], args["permission_boundary_arn"]
                         )
@@ -189,7 +155,14 @@ def _deploy_deployment_is_not_dry_run(
                         for _module in _group.modules
                         if _module and _module.deploy_spec
                     ]
-                    _ = list(workers.map(_exec_deploy, params))
+                    deploy_response = list(workers.map(_exec_deploy, params))
+                    _logger.debug(deploy_response)
+                    for dep_resp_object in deploy_response:
+                        if dep_resp_object.status in ["ERROR", "error", "Error"]:
+                            _logger.error("At least one module failed to deploy...exiting deployment")
+                            print_errored_modules("These modules had errors deploying", deploy_response)  # type: ignore
+                            exit(0)
+
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
         _logger.info(f"All modules in {deployment_manifest_wip.name} up to date")
@@ -253,7 +226,7 @@ def destroy_deployment(
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
 
-                    def _exec_destroy(args: Dict[str, Any]) -> Optional[Tuple[str, Optional[Dict[str, str]]]]:
+                    def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
                         return _execute_destroy(
                             args["d"],
                             args["g"],
@@ -271,7 +244,13 @@ def destroy_deployment(
                         for _module in _group.modules
                         if _module and _module.deploy_spec
                     ]
-                    _ = list(workers.map(_exec_destroy, params))
+                    destroy_response = list(workers.map(_exec_destroy, params))
+                    _logger.debug(destroy_response)
+                    for dep_resp_object in destroy_response:
+                        if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
+                            _logger.error("At least one module failed to destroy...exiting deployment")
+                            print_errored_modules("The following modules had errors destroying ", destroy_response)
+                            exit(0)
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:

@@ -54,6 +54,7 @@ setup(
         "checksumdir~=1.2.0",
         "rich~=12.4.0",
         "requests==2.28.1",
+        "pyshorteners==1.0.1",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

@@ -13,7 +13,6 @@
 #    limitations under the License.
 
 import logging
-import os
 from typing import Any, List, cast
 
 import aws_cdk.aws_ec2 as ec2

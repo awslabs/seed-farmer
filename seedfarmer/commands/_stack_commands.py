@@ -229,8 +229,9 @@ def deploy_module_stack(
         raise ValueError("Project Managed Stack is missing the export `ProjectPolicyARN`")
 
     policies = [seedkit_managed_policy_arn, project_managed_policy_arn]
-    iam.attach_policy_to_role(module_role_name, policies)
-    time.sleep(3)  # if first deployment, these roles take time to propogate
+    policies_attached = iam.attach_policy_to_role(module_role_name, policies)
+    if policies == policies_attached:
+        time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
 
     # Attaching Docker Credentials Secret Optionally
     policy_body = json.dumps(

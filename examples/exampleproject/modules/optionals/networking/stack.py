@@ -23,20 +23,23 @@ from constructs import Construct, IConstruct
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
+
 class NetworkingStack(Stack):  # type: ignore
-    def __init__(self, 
-                scope: Construct, 
-                id: str, 
-                project_name: str,
-                deployment_name:  str,
-                module_name: str,
-                internet_accessible: bool,
-                **kwargs: Any) -> None:
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        project_name: str,
+        deployment_name: str,
+        module_name: str,
+        internet_accessible: bool,
+        **kwargs: Any,
+    ) -> None:
 
         super().__init__(scope, id, **kwargs)
         dep_mod = f"{project_name}-{deployment_name}-{module_name}"
         dep_mod = dep_mod[:27]
-        
+
         Tags.of(scope=cast(IConstruct, self)).add(key="Deployment", value=f"{dep_mod}")
         self.vpc: ec2.Vpc = self._create_vpc(internet_accessible=internet_accessible)
 

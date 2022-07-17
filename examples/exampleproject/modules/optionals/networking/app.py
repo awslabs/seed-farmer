@@ -2,13 +2,14 @@ import os
 
 import aws_cdk
 from aws_cdk import App, CfnOutput
-
 from stack import NetworkingStack
 
 project_name = os.getenv("AWS_CODESEEDER_NAME")
 
-def _proj(name:str)-> str:
+
+def _proj(name: str) -> str:
     return f"{project_name.upper()}_{name}"
+
 
 def _param(name: str) -> str:
     return f"{project_name.upper()}_PARAMETER_{name}"

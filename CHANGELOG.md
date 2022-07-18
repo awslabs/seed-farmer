@@ -7,9 +7,36 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 
 
+## Unreleased
+
+### New
+- support logging output and url gereration from codebuild output / codeseeder
+- added use of CodeSeederRuntimeError
+- added ModuleDeploymentResponse object 
+- added export of moduledata (metadata) in UNIX format from CLI (--export-local-env)
+
+### Changes
+- moved Parameter support to its own script
+
+### Fixes
+- eventual consistency of IAM policy to module-spcific role (issue 43)
+
 
 ---
-## Unreleased
+
+## v0.1.2 (2022-07-12)
+
+### New
+- added example modules for buckets and networking
+
+### Changes
+
+### Fixes
+- use HTTPS instead off SSH for git cloning 
+
+
+---
+## v0.1.1 (2022-07-07)
 
 ### New
  - feature - added CLI ability to list deployspec of deployed module

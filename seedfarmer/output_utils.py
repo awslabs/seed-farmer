@@ -14,9 +14,11 @@
 
 from typing import Any, Dict, List, Optional
 
+import pyshorteners
 from rich.console import Console
 from rich.table import Table
 
+from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
 from seedfarmer.models.manifests import DeploymentManifest
 
 console = Console(record=True)
@@ -55,7 +57,7 @@ def print_manifest_inventory(
     description : str
         Give the table a title
     dep : DeploymentManifest
-        A poluated Deplopyment Manifest object
+        A populated Deplopyment Manifest object
     show_path : bool, optional
        Show the relative path of the module code, by default False
     color : str, optional
@@ -129,3 +131,41 @@ def print_bolded(message: str, color: str = "yellow") -> None:
        The color you want the message printed in.... default is "yellow"
     """ """"""
     console.print(f"[bold {color}]{message}")
+
+
+def print_errored_modules(
+    description: str, modules_data: List[Optional[ModuleDeploymentResponse]], color: str = "red"
+) -> None:
+    """
+    Print the modules that have errored on deployment of a group
+
+    Parameters
+    ----------
+    description : str
+        The custom text to head the output table
+    modules_data : List[Optional[ModuleDeploymentResponse]]
+        The object containing the metadata related to the failure
+    color : str, optional
+        The color of the text to head the description of the table, by default "red"
+    """
+
+    table = Table(title=f"[bold {color}]{description}", title_justify="left")
+
+    table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Group", justify="left", style="magenta")
+    table.add_column("Module", justify="left", style="green")
+    table.add_column("CodeBuild Id", justify="left", style="white")
+    table.add_column("CodeBuild URL", justify="left", style="white")
+    for r_obj in modules_data:
+        if r_obj and r_obj.status in ["ERROR", "error", "Error"]:
+            if r_obj.codeseeder_metadata:
+                url = r_obj.codeseeder_metadata.build_url
+                shortened_url = pyshorteners.Shortener().tinyurl.short(url) if url not in ["NA", "N/A"] else url
+                table.add_row(
+                    r_obj.deployment if r_obj and r_obj.deployment else None,
+                    r_obj.group if r_obj and r_obj.group else None,
+                    r_obj.module if r_obj and r_obj.module else None,
+                    r_obj.codeseeder_metadata.codebuild_build_id,
+                    shortened_url,
+                )
+    console.print(table)

@@ -1,0 +1,28 @@
+deploy:
+  phases:
+    install:
+      commands:
+      # Install whatever additional build libraries 
+      - npm install -g aws-cdk@2.20.0
+      - pip install -r requirements.txt
+    build:
+      commands:
+      # execute the CDK
+      - cdk deploy --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
+      # derive the metadata environment parameter name that seedfarmer is looking for from the CODESEEDER project name
+      - export P_METADATA=$(echo $AWS_CODESEEDER_NAME | tr '[:lower:]' '[:upper:]')_MODULE_METADATA
+      # assign that paramter name the output from CDK by calling a custom python script
+      - export ${P_METADATA}=$(python export_metadata.py)
+destroy:
+  phases:
+    install:
+      commands:
+      # Install whatever additional build libraries 
+      - npm install -g aws-cdk@2.20.0
+      - pip install -r requirements.txt
+    build:
+      commands:
+      # execute the CDK
+      - cdk destroy --force --app "python app.py"
+
+

@@ -64,9 +64,59 @@ def upper_snake_case(value: str) -> str:
 
 
 def generate_hash() -> str:
+    """
+    Generate a hexdigest hash of the project and the deployment - for use generating unique names
+
+    Returns
+    -------
+    str
+        The resulting hash as a string
+    """
     account = get_account_id()
     region = get_region()
     concatenated_string = f"{account}-{region}"
     hash_value = (hashlib.sha1(concatenated_string.encode("UTF-8")).hexdigest())[:8]
-    _logger.debug(f"HASH generated is {hash_value}")
+    _logger.debug("HASH generated is %s", hash_value)
     return hash_value
+
+
+def generate_codebuild_url(account_id: str, region: str, codebuild_id: str) -> str:
+    """
+    Generate a standard URL for codebuild build information
+
+    Parameters
+    ----------
+    account_id : str
+        The AWS account id where CodeBuild ran
+    region : str
+        The AWS region where CodeBuild ran
+    codebuild_id : str
+        The CodeBuild Build ID
+
+    Returns
+    -------
+    str
+        The standard URL with protocol and query parameters
+        ex: https://us-east-1.console.aws.amazon.com/codesuite/codebuild/123456789012/projects/
+            codebuild-id/build/codebuild-id:3413241234/?region-us-east-1
+    """
+    try:
+        b_id_enc = codebuild_id.replace(":", "%3A")
+        cb_p = codebuild_id.split(":")[0]
+        return "".join(
+            (
+                "https://",
+                f"{region}",
+                ".console.aws.amazon.com/codesuite/codebuild/",
+                f"{account_id}",
+                "/projects/",
+                f"{cb_p}",
+                "/build/",
+                f"{b_id_enc}",
+                "/?region=",
+                f"{region}",
+            )
+        )
+    except Exception as e:
+        _logger.error(f"Error...{account_id} - {region} - {codebuild_id} - {e} ")
+        return "N/A"

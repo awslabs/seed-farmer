@@ -37,9 +37,11 @@ def load_parameter_values(deployment_name: str, parameters: List[ModuleParameter
     parameter_values = []
     parameter_values_cache: Dict[Tuple[str, str, str], Any] = {}
     for parameter in parameters:
-        _logger.debug("parameter: %s", parameter.dict())
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("parameter: %s", parameter.dict())
         if parameter.value:
-            _logger.debug("static parameter value: %s", parameter.value)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("static parameter value: %s", parameter.value)
             parameter_values.append(parameter)
         # Load parameter from Module Metadata
         elif parameter.value_from and parameter.value_from.module_metadata:
@@ -66,18 +68,21 @@ def _module_metatdata(
     if parameter.value_from and parameter.value_from.module_metadata:
         group = parameter.value_from.module_metadata.group
         module_name = parameter.value_from.module_metadata.name
-        _logger.debug("Loading metadata for dependency group, module: %s, %s" % (group, module_name))
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Loading metadata for dependency group, module: %s, %s" % (group, module_name))
 
         # Ensure we only retrieve the SSM Parameter value once per module
         parameter_value = _get_param_value_cache(deployment_name, group, module_name, parameter_values_cache)
-        _logger.debug("loaded parameter value: %s", parameter_value)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("loaded parameter value: %s", parameter_value)
 
         parameter_value = (
             parameter_value.get(parameter.value_from.module_metadata.key, None)
             if parameter_value is not None and parameter.value_from.module_metadata.key is not None
             else parameter_value
         )
-        _logger.debug("parsed parameter value: %s", parameter_value)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("parsed parameter value: %s", parameter_value)
 
         if parameter_value is not None:
             return ModuleParameter(

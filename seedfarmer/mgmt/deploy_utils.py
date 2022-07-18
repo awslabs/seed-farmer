@@ -212,7 +212,8 @@ def _populate_groups_to_remove(
     set_requested_groups = set([g.name for g in apply_groups])
     set_deployed_groups = set(mi.get_all_groups(dep_name))
     destroy_groups = list(sorted(set_deployed_groups - set_requested_groups))
-    _logger.debug(f"Groups already deployed that will be DESTROYED : {destroy_groups}")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Groups already deployed that will be DESTROYED : %s", destroy_groups)
     destroy_group_list = []
     for destroy_group in destroy_groups:
         group_manifests = mi.get_group_manifest(dep_name, destroy_group, deployment_params_cache)
@@ -241,7 +242,9 @@ def _populate_modules_to_remove(
     set_requests_modules = set([m.name for m in apply_modules])
     set_deployed_modules = set(mi.get_deployed_modules(dep_name, group, deployment_params_cache))
     destroy_modules = list(sorted(set_deployed_modules - set_requests_modules))
-    _logger.debug(f"Modules of Group {group} already deployed that will be DESTROYED: {destroy_modules}  ")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Modules of Group %s already deployed that will be DESTROYED: %s", group, destroy_modules)
+
     destroy_module_list = []
     for destroy_module in destroy_modules:
         mod_manifest = mi.get_module_manifest(dep_name, group, destroy_module, deployment_params_cache)

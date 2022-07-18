@@ -118,7 +118,8 @@ def deploy_module(
             extra_env_vars=env_vars,
             codebuild_compute_type=module_deploy_spec.build_type,
         )
-        _logger.debug(f"CodeSeeder Metadata response is {dict_metadata}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,

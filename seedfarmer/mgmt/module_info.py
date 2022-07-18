@@ -498,7 +498,8 @@ def write_deployment_manifest(deployment: str, data: Dict[str, Any]) -> None:
     data : Dict[str, Any]
         A dict of the deployment manifest
     """
-    _logger.debug(f"Writing to {_deployment_manifest_key(deployment)} value {data}")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Writing to %s values %s", _deployment_manifest_key(deployment), data)
     store.put_parameter(name=_deployment_manifest_key(deployment), obj=data)
 
 
@@ -515,7 +516,9 @@ def write_deployed_deployment_manifest(deployment: str, data: Dict[str, Any]) ->
         A dict of the deployment manifest
     """
     key = _deployed_deployment_manifest_key(deployment)
-    _logger.debug(f"Writing to {key} value {data}")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Writing to %s value %s", key, data)
+
     store.put_parameter(name=key, obj=data)
 
 
@@ -667,7 +670,8 @@ def _get_module_stack_names(deployment_name: str, group_name: str, module_name: 
 def _get_modulestack_path(module_path: str) -> Any:
     p = os.path.join(OPS_ROOT, module_path, "modulestack.yaml")
     if not os.path.exists(p):
-        _logger.debug("No modulestack.yaml found")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("No modulestack.yaml found")
         return None
     return p
 

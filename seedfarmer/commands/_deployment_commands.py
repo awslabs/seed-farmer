@@ -133,7 +133,10 @@ def _deploy_deployment_is_not_dry_run(
             deployment_manifest_wip,
             True,
         )
-        _logger.debug(f"DeploymentManifest for deploy after filter = {json.dumps(deployment_manifest_wip.dict())}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "DeploymentManifest for deploy after filter =  %s", json.dumps(deployment_manifest_wip.dict())
+            )
         for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
@@ -165,7 +168,7 @@ def _deploy_deployment_is_not_dry_run(
 
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
-        _logger.info(f"All modules in {deployment_manifest_wip.name} up to date")
+        _logger.info(" All modules in %s up to date", deployment_manifest_wip.name)
     # Write the deployment manifest once completed to preserve group order
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
@@ -295,7 +298,9 @@ def deploy_deployment(
     permission_boundary_arn = (
         deployment_manifest_wip.permission_boundary_arn if deployment_manifest_wip.permission_boundary_arn else None
     )
-    _logger.debug(f"Setting up deployment for {deployment_name}")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Setting up deployment for %s", deployment_name)
+
     print_manifest_inventory(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
@@ -310,10 +315,10 @@ def deploy_deployment(
         group_name = group.name
         du.write_group_manifest(deployment_name=deployment_name, group_manifest=working_group)
         modules_to_deploy = []
-        _logger.info(f"Verifying all modules in {group.name} for deploy")
+        _logger.info(" Verifying all modules in %s for deploy ", group.name)
         for module in group.modules:
-            _logger.debug(f"Working on -- {module}")
-
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Working on --  %s", module)
             if not module.path:
                 raise Exception("Unable to parse module manifest, `path` not specified")
 
@@ -416,10 +421,12 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
 
     for module_group in deployment_manifest.groups if deployment_manifest.groups else []:
         if module_group.path and module_group.modules:
-            _logger.debug("module_group: %s", module_group)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("module_group: %s", module_group)
             raise Exception("Only one of the `path` or `modules` attributes can be defined on a Group")
         if not module_group.path and not module_group.modules:
-            _logger.debug("module_group: %s", module_group)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("module_group: %s", module_group)
             raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
         if module_group.path:
             with open(os.path.join(OPS_ROOT, module_group.path)) as manifest_file:
@@ -458,7 +465,8 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
         By default False
 
     """
-    _logger.debug(f"Preparing to destroy {deployment_name}")
+    if _logger.isEnabledFor(logging.DEBUG):
+        _logger.debug("Preparing to destroy %s", deployment_name)
     deployment_params_cache = du.generate_deployment_cache(deployment_name=deployment_name)
     destroy_manifest = du.generate_deployed_manifest(
         deployment_name=deployment_name, deployment_params_cache=deployment_params_cache, skip_deploy_spec=False
@@ -466,4 +474,4 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
     if destroy_manifest:
         destroy_deployment(destroy_manifest, remove_deploy_manifest=True, dryrun=dryrun, show_manifest=show_manifest)
     else:
-        _logger.info(f"Deployment {deployment_name} was not found, ignoring...")
+        _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

@@ -27,6 +27,9 @@ with open(file=path, mode="r", encoding="utf-8") as f:
 with open("VERSION", "r") as version_file:
     version = version_file.read().strip()
 
+with open("README.md", "r") as file:
+    long_description = file.read()
+
 setup(
     name=about["__title__"],
     version=version,
@@ -35,13 +38,14 @@ setup(
     url="https://github.com/awslabs/seed-farmer",
     project_urls={"Org Site": "https://aws.amazon.com/professional-services/"},
     description=about["__description__"],
+    long_description=long_description,
     long_description_content_type="text/markdown",
     license=about["__license__"],
     packages=find_packages(include=["seed-farmer", "seedfarmer", "seedfarmer.*", "seed-farmer.*"]),
     keywords=["aws", "cdk"],
     python_requires=">=3.7",
     install_requires=[
-        "aws-codeseeder~=0.3.2",
+        "aws-codeseeder~=0.3.3",
         "cookiecutter~=2.1.0",
         "pyhumps~=3.5.0",
         "pydantic~=1.9.0",
@@ -50,6 +54,7 @@ setup(
         "checksumdir~=1.2.0",
         "rich~=12.4.0",
         "requests==2.28.1",
+        "pyshorteners==1.0.1",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

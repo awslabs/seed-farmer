@@ -13,18 +13,16 @@
 import os
 import sys
 
-os.environ['USE_CODESEEDER']='False'
+os.environ["USE_CODESEEDER"] = "False"
 sys.path.insert(0, os.path.abspath("../../seedfarmer"))
 
 import seedfarmer
 
-
-
 # -- Project information -----------------------------------------------------
 
-project = 'Seed-Farmer'
-copyright = '2022, AWS Professional Seervices'
-author = 'AWS Professional Seervices'
+project = "Seed-Farmer"
+copyright = "2022, AWS Professional Seervices"
+author = "AWS Professional Seervices"
 
 # The full version, including alpha/beta/rc tags
 release = seedfarmer.__version__
@@ -38,7 +36,7 @@ version = seedfarmer.__version__
 extensions = ["sphinx.ext.autosectionlabel", "sphinx.ext.napoleon", "myst_parser", "autoapi.extension"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # AutoAPI configuration
 autoapi_type = "python"
@@ -50,7 +48,7 @@ autoapi_member_order = "groupwise"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','conf','app']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "conf", "app"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -63,4 +61,4 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]

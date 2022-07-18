@@ -21,8 +21,7 @@ from _test_helper_functions import _test_command
 
 import seedfarmer.commands._stack_commands as _sc
 import seedfarmer.mgmt.module_init as minit
-from seedfarmer.__init__ import PROJECT
-from seedfarmer.__main__ import apply, destroy, init
+from seedfarmer.__main__ import PROJECT, apply, destroy, init
 from seedfarmer.__main__ import list as _list
 from seedfarmer.__main__ import remove, store
 
@@ -37,60 +36,58 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @pytest.mark.init
-def test_init_help():
-    _test_command(
-        sub_command=init,
-        options=["--help"],
-        exit_code=0,
-        expected_output="Initialize a new module in the proper structure",
-    )
-
-
-@pytest.mark.init
-def test_init_create_module(tmp_path):
-    minit.MOD_ROOT = tmp_path
+def test_init_create_module():
     module_name = "test-module"
-    expected_module_path = os.path.join(tmp_path, module_name)
+    expected_module_path = os.path.join(minit.OPS_ROOT, "modules")
 
     # Creates a new module
-    _test_command(sub_command=init, options=["-m", module_name], exit_code=0, return_result=False)
+    _test_command(sub_command=init, options=["module", "-m", module_name], exit_code=0, return_result=False)
 
     # Creates a module that already exist
-    result = _test_command(sub_command=init, options=["-m", module_name], exit_code=1, return_result=True)
-    assert result.exception.args[0] == f"The module {module_name} already exists under {tmp_path}."
+    result = _test_command(sub_command=init, options=["module", "-m", module_name], exit_code=1, return_result=True)
+    print(result.exception.args[0])
+    assert result.exception.args[0] == f"The module {module_name} already exists under {expected_module_path}."
 
     # Checks if file exists from the project template
-    assert os.path.exists(os.path.join(expected_module_path, "deployspec.yaml"))
+    assert os.path.exists(os.path.join(expected_module_path, module_name, "deployspec.yaml"))
 
 
 @pytest.mark.init
-def test_init_create_group_module(tmp_path):
-    minit.MOD_ROOT = tmp_path
+def test_init_create_group_module():
     module_name = "test-module"
     group_name = "group"
-    expected_module_path = os.path.join(tmp_path, group_name, module_name)
+    expected_module_path = os.path.join(minit.OPS_ROOT, "modules", group_name, module_name)
 
     # Creates a group and a module within the group
-    _test_command(sub_command=init, options=["-g", group_name, "-m", module_name], exit_code=0)
+    _test_command(sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=0)
     assert os.path.exists(expected_module_path)
 
     # Creates a group and a module that already exists within the group
     result = _test_command(
-        sub_command=init, options=["-g", group_name, "-m", module_name], exit_code=1, return_result=True
+        sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=1, return_result=True
     )
-    assert result.exception.args[0] == f"The module {module_name} already exists under {tmp_path}/{group_name}."
+    assert (
+        result.exception.args[0]
+        == f"The module {module_name} already exists under {minit.OPS_ROOT}/modules/{group_name}."
+    )
 
     # Checks if a file from the project template was created within the new module
     assert os.path.exists(os.path.join(expected_module_path, "deployspec.yaml"))
 
 
-# @pytest.mark.init
-# def test_init_create_custom_template(tmp_path):
-#     pass
+@pytest.mark.init
+def test_init_create_project(tmp_path):
+    expected_project_path = os.path.join(minit.OPS_ROOT, PROJECT)
 
-# @pytest.mark.init
-# def test_init_custom_template(tmp_path):
-#     pass
+    # Creates a new project
+    _test_command(sub_command=init, options=["project"], exit_code=0, return_result=False)
+
+    # Creates a project that already exist
+    result = _test_command(sub_command=init, options=["project"], exit_code=1, return_result=True)
+    assert result.exception.args[0] == f'Error: "{os.path.join(minit.OPS_ROOT, PROJECT)}" directory already exists'
+
+    # Checks if file exists from the project template
+    assert os.path.exists(os.path.join(expected_project_path, "seedfarmer.yaml"))
 
 
 # -------------------------------------------
@@ -104,7 +101,7 @@ def test_apply_help():
         sub_command=apply,
         options=["--help"],
         exit_code=0,
-        expected_output=f"Apply a deployment spec relative path for {PROJECT.upper()}",
+        expected_output=f"Apply a deployment manifest relative path for {PROJECT.upper()}",
     )
 
 

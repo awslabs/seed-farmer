@@ -13,14 +13,3 @@ Parameters:
     Description: The name of the IAM Role
 
 Resources:
-  Policy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action: '*'
-            Resource: '*'
-        Version: 2012-10-17
-      PolicyName: "myapp-modulespecific-policy"
-      Roles: [!Ref RoleName]

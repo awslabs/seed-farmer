@@ -14,6 +14,7 @@
 
 import logging
 from typing import Any, cast
+import hashlib
 
 import aws_cdk
 import aws_cdk.aws_iam as aws_iam
@@ -47,10 +48,13 @@ class BucketsStack(Stack):  # type: ignore
         super().__init__(scope, id, **kwargs)
         Tags.of(scope=cast(IConstruct, self)).add(key="Deployment", value=f"{project_name}-{deployment_name}")
 
+        artifact_bucket_name =f"{project_name}-{deployment_name}-artifacts-bucket-{hash}"
+        unique_ab=(hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[:(60-len(artifact_bucket_name))]
+        
         artifacts_bucket = aws_s3.Bucket(
             self,
             id="artifacts-bucket",
-            bucket_name=f"{project_name}-{deployment_name}-artifacts-bucket-{hash}",
+            bucket_name=f"{artifact_bucket_name}-{unique_ab}",
             removal_policy=aws_cdk.RemovalPolicy.RETAIN
             if buckets_retention.upper() == "RETAIN"
             else aws_cdk.RemovalPolicy.DESTROY,
@@ -63,10 +67,13 @@ class BucketsStack(Stack):  # type: ignore
             enforce_ssl=True,
         )
 
+        log_bucket_name =f"{project_name}-{deployment_name}-logs-bucket-{hash}"
+        unique_log=(hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[:(60-len(log_bucket_name))]        
+
         logs_bucket = aws_s3.Bucket(
             self,
             id="logs-bucket",
-            bucket_name=f"{project_name}-{deployment_name}-logs-bucket-{hash}",
+            bucket_name=f"{log_bucket_name}-{unique_log}",
             removal_policy=aws_cdk.RemovalPolicy.RETAIN
             if buckets_retention.upper() == "RETAIN"
             else aws_cdk.RemovalPolicy.DESTROY,

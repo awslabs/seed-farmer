@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
 
+
+
+
+## Unreleased
+
+### New
+- support logging output and url gereration from codebuild output / codeseeder
+- added use of CodeSeederRuntimeError
+- added ModuleDeploymentResponse object 
+- added export of moduledata (metadata) in UNIX format from CLI (--export-local-env)
+
+### Changes
+- moved Parameter support to its own script
+
+### Fixes
+- eventual consistency of IAM policy to module-spcific role (issue 43)
+
+
+---
+
 ## v0.1.2 (2022-07-12)
 
 ### New

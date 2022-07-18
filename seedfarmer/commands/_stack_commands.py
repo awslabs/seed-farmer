@@ -62,8 +62,7 @@ def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: Deplo
         _logger.debug(
             f"Validated the existence of Project Managed Policy Template at:{project_managed_policy_template}"
         )
-
-        _logger.info(f"Deploying {PROJECT_MANAGED_POLICY_CFN_NAME}")
+        _logger.info("Deploying %s", PROJECT_MANAGED_POLICY_CFN_NAME)
         services.cfn.deploy_template(
             stack_name=PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,
@@ -97,7 +96,7 @@ def destroy_module_stack(
 
     policies_arn = []
     if seedkit_stack_exists:
-        _logger.debug(f"Seedkit stack exists - {seedkit_stack_name}")
+        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
         policies_arn.append(seedkit_managed_policy_arn)
 
@@ -112,7 +111,7 @@ def destroy_module_stack(
     _logger.debug(
         f"seedkit_managed_policy {seedkit_managed_policy_arn}  project_managed_policy {project_managed_policy_arn}"
     )
-    _logger.debug(f"module_role_name {module_role_name}")
+    _logger.debug("module_role_name %s", module_role_name)
 
     for policy_arn in policies_arn:
         iam.detach_policy_from_role(role_name=module_role_name, policy_arn=policy_arn)
@@ -197,7 +196,6 @@ def deploy_module_stack(
                     stack_parameters[k] = ",".join(value)
                 else:
                     json.dumps(value)
-
         _logger.debug("stack_parameters: %s", stack_parameters)
 
         # Create/Update Module IAM Policy
@@ -213,7 +211,7 @@ def deploy_module_stack(
     _logger.debug("Extracting the Codeseeder Managed policy")
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(seedkit_name=PROJECT)
     if seedkit_stack_exists:
-        _logger.debug(f"Seedkit stack exists - {seedkit_stack_name}")
+        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
@@ -221,7 +219,7 @@ def deploy_module_stack(
         stack_name=PROJECT_MANAGED_POLICY_CFN_NAME
     )
 
-    _logger.debug(f"project_managed_policy_output is : {stack_outputs}")
+    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
     if project_managed_policy_stack_exists:
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
 
@@ -231,7 +229,7 @@ def deploy_module_stack(
     policies = [seedkit_managed_policy_arn, project_managed_policy_arn]
     policies_attached = iam.attach_policy_to_role(module_role_name, policies)
     if policies.sort() == policies_attached.sort():
-        _logger.info("Delaying module '%s' deployment to allow IAM Roles and Policies to take effect", module_name)
+        _logger.info("Delaying module %s deployment to allow IAM Roles and Policies to take effect", group_module_name)
         time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
 
     # Attaching Docker Credentials Secret Optionally

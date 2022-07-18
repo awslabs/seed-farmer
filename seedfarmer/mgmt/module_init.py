@@ -46,7 +46,7 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
         output_dir = os.path.join(module_root, group_name)
 
         if not os.path.exists(output_dir):
-            _logger.info(f"Creating group dir: {output_dir}")
+            _logger.info("Creating group dir: %s", output_dir)
             os.makedirs(output_dir)
 
     if os.path.exists(module_path):
@@ -54,7 +54,7 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
 
     checkout_branch = "init-module" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
 
-    _logger.info(f"New module will be created in the following dir: {output_dir}")
+    _logger.info("New module will be created in the following dir: %s", output_dir)
     cookiecutter(
         template=template_url,
         checkout=checkout_branch,
@@ -78,7 +78,7 @@ def create_project(template_url: Optional[str]) -> None:
     """
 
     checkout_branch = "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
-    _logger.info(f"New project will be created in the following dir: {os.path.join(OPS_ROOT,PROJECT)}")
+    _logger.info(" New project will be created in the following dir: %s", os.path.join(OPS_ROOT, PROJECT))
     cookiecutter(
         template=template_url,
         checkout=checkout_branch,

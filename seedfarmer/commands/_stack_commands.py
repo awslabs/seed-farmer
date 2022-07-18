@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from asyncio.log import logger
 import json
 import logging
 import os
@@ -230,7 +231,8 @@ def deploy_module_stack(
 
     policies = [seedkit_managed_policy_arn, project_managed_policy_arn]
     policies_attached = iam.attach_policy_to_role(module_role_name, policies)
-    if policies == policies_attached:
+    if policies.sort() == policies_attached.sort():
+        logger.info("Delaying module '%s' deployment to allow IAM Roles and Policies to take effect", module_name)
         time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
 
     # Attaching Docker Credentials Secret Optionally

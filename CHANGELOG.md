@@ -19,6 +19,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - moved Parameter support to its own script
 
 ### Fixes
+- eventual consistency of IAM policy to module-spcific role (issue 43)
 
 
 ---

@@ -298,8 +298,7 @@ def deploy_deployment(
     permission_boundary_arn = (
         deployment_manifest_wip.permission_boundary_arn if deployment_manifest_wip.permission_boundary_arn else None
     )
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Setting up deployment for %s", deployment_name)
+    _logger.debug("Setting up deployment for %s", deployment_name)
 
     print_manifest_inventory(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
@@ -317,8 +316,7 @@ def deploy_deployment(
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         for module in group.modules:
-            if _logger.isEnabledFor(logging.DEBUG):
-                _logger.debug("Working on --  %s", module)
+            _logger.debug("Working on --  %s", module)
             if not module.path:
                 raise Exception("Unable to parse module manifest, `path` not specified")
 
@@ -421,12 +419,10 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
 
     for module_group in deployment_manifest.groups if deployment_manifest.groups else []:
         if module_group.path and module_group.modules:
-            if _logger.isEnabledFor(logging.DEBUG):
-                _logger.debug("module_group: %s", module_group)
+            _logger.debug("module_group: %s", module_group)
             raise Exception("Only one of the `path` or `modules` attributes can be defined on a Group")
         if not module_group.path and not module_group.modules:
-            if _logger.isEnabledFor(logging.DEBUG):
-                _logger.debug("module_group: %s", module_group)
+            _logger.debug("module_group: %s", module_group)
             raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
         if module_group.path:
             with open(os.path.join(OPS_ROOT, module_group.path)) as manifest_file:
@@ -465,8 +461,7 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
         By default False
 
     """
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Preparing to destroy %s", deployment_name)
+    _logger.debug("Preparing to destroy %s", deployment_name)
     deployment_params_cache = du.generate_deployment_cache(deployment_name=deployment_name)
     destroy_manifest = du.generate_deployed_manifest(
         deployment_name=deployment_name, deployment_params_cache=deployment_params_cache, skip_deploy_spec=False

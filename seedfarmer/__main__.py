@@ -203,8 +203,7 @@ def store_module_metadata(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Writing metadata for module %s in deployment %s", module, deployment)
+    _logger.debug("Writing metadata for module %s in deployment %s", module, deployment)
     d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
     if d:
         mi.write_metadata(deployment=deployment, group=group, module=module, data=d)
@@ -256,8 +255,7 @@ def store_module_md5(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Writing md5 of  %s for module %s in deployment %s", type, module, deployment)
+    _logger.debug("Writing md5 of  %s for module %s in deployment %s", type, module, deployment)
     d = sys.stdin.readline().strip()
     if d:
         if type.casefold() == "bundle":
@@ -311,8 +309,7 @@ def list_deployspec(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("We are getting deployspec for  %s in %s of deployment %s", module, group, deployment)
+    _logger.debug("We are getting deployspec for  %s in %s of deployment %s", module, group, deployment)
 
     val = mi.get_deployspec(deployment=deployment, group=group, module=module)
     print_json(val)
@@ -361,9 +358,7 @@ def list_module_metadata(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("We are getting module data for  %s in %s of %s", module, group, deployment)
-
+    _logger.debug("We are getting module data for  %s in %s of %s", module, group, deployment)
     metadata_json = mi.get_module_metadata(deployment, group, module)
     if not export_local_env:
         sys.stdout.write(json.dumps(metadata_json))
@@ -395,8 +390,7 @@ def list_modules(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("We are getting modules for %s", deployment)
+    _logger.debug("We are getting modules for %s", deployment)
 
     cache = du.generate_deployment_cache(deployment_name=deployment)
     dep_manifest = du.generate_deployed_manifest(
@@ -418,8 +412,7 @@ def list_deployments(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("We are getting all deployments")
+    _logger.debug("We are getting all deployments")
     deps = mi.get_all_deployments()
     print_deployment_inventory(description="Deployment Names", dep=deps)
 
@@ -466,8 +459,7 @@ def remove_module_data(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug(" We are removing module data for %s of group %s in %s", module, group, deployment)
+    _logger.debug(" We are removing module data for %s of group %s in %s", module, group, deployment)
 
     mi.remove_module_info(deployment, group, module)
 
@@ -520,8 +512,7 @@ def init_project(template_url: str) -> None:
 def init_module(group_name: str, module_name: str, template_url: str, debug: bool) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Initializing module %s", module_name)
+    _logger.debug("Initializing module %s", module_name)
 
     minit.create_module_dir(
         group_name=group_name,

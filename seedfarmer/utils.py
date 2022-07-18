@@ -76,8 +76,7 @@ def generate_hash() -> str:
     region = get_region()
     concatenated_string = f"{account}-{region}"
     hash_value = (hashlib.sha1(concatenated_string.encode("UTF-8")).hexdigest())[:8]
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("HASH generated is %s", hash_value)
+    _logger.debug("HASH generated is %s", hash_value)
     return hash_value
 
 

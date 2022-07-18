@@ -96,8 +96,7 @@ def destroy_module_stack(
 
     policies_arn = []
     if seedkit_stack_exists:
-        if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
+        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
         policies_arn.append(seedkit_managed_policy_arn)
 
@@ -112,8 +111,7 @@ def destroy_module_stack(
     _logger.debug(
         f"seedkit_managed_policy {seedkit_managed_policy_arn}  project_managed_policy {project_managed_policy_arn}"
     )
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("module_role_name %s", module_role_name)
+    _logger.debug("module_role_name %s", module_role_name)
 
     for policy_arn in policies_arn:
         iam.detach_policy_from_role(role_name=module_role_name, policy_arn=policy_arn)
@@ -198,8 +196,7 @@ def deploy_module_stack(
                     stack_parameters[k] = ",".join(value)
                 else:
                     json.dumps(value)
-        if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("stack_parameters: %s", stack_parameters)
+        _logger.debug("stack_parameters: %s", stack_parameters)
 
         # Create/Update Module IAM Policy
         _logger.info("Deploying Module Stack for %s", group_module_name)
@@ -211,12 +208,10 @@ def deploy_module_stack(
         )
 
     # Attaching managed IAM Policies
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("Extracting the Codeseeder Managed policy")
+    _logger.debug("Extracting the Codeseeder Managed policy")
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(seedkit_name=PROJECT)
     if seedkit_stack_exists:
-        if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
+        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
@@ -224,8 +219,7 @@ def deploy_module_stack(
         stack_name=PROJECT_MANAGED_POLICY_CFN_NAME
     )
 
-    if _logger.isEnabledFor(logging.DEBUG):
-        _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
     if project_managed_policy_stack_exists:
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
 

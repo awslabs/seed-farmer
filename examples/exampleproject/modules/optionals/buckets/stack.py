@@ -29,15 +29,16 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 class BucketsStack(Stack):  # type: ignore
     def __init__(
-        self, scope: Construct, 
+        self,
+        scope: Construct,
         id: str,
         project_name: str,
-        deployment_name: str, 
-        module_name: str, 
+        deployment_name: str,
+        module_name: str,
         hash: str,
         buckets_encryption_type: str,
-        buckets_retention: str, 
-        **kwargs: Any
+        buckets_retention: str,
+        **kwargs: Any,
     ) -> None:
 
         # CDK Env Vars

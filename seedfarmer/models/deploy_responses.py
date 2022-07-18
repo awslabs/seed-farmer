@@ -12,12 +12,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import PrivateAttr
 
 from seedfarmer.models._base import CamelModel
 from seedfarmer.utils import generate_codebuild_url
+
+
+class StatusType(Enum):
+    SUCCESS = "SUCCESS"
+    ERROR = "ERROR"
 
 
 class CodeSeederMetadata(CamelModel):
@@ -43,9 +49,18 @@ class CodeSeederMetadata(CamelModel):
 
 
 class ModuleDeploymentResponse(CamelModel):
+
     deployment: str
     group: Optional[str]
     module: str
     status: str
     codeseeder_metadata: Optional[CodeSeederMetadata]
     codeseeder_output: Optional[Dict[Any, Any]]
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        if data.get("status"):
+            status_in = str(data["status"]).upper()
+            self.status = status_in if status_in in StatusType.__members__.keys() else StatusType.SUCCESS.value
+        else:
+            self.build_type = StatusType.SUCCESS.value

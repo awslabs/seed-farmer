@@ -24,7 +24,7 @@ from aws_codeseeder import codeseeder
 from aws_codeseeder.error.CodeSeederError import CodeSeederRuntimeError
 
 from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
-from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
+from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
 from seedfarmer.utils import generate_hash
 
@@ -125,7 +125,7 @@ def deploy_module(
             deployment=deployment_name,
             group=group_name,
             module=module_manifest_name,
-            status="SUCCESS",
+            status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
             codeseeder_output=dict_metadata,
         )
@@ -136,7 +136,7 @@ def deploy_module(
             deployment=deployment_name,
             group=group_name,
             module=module_manifest_name,
-            status="ERROR",
+            status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
         )
     return resp
@@ -191,7 +191,7 @@ def destroy_module(
             deployment=deployment_name,
             group=group_name,
             module=module_manifest_name,
-            status="SUCCESS",
+            status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
         )
     except CodeSeederRuntimeError as csre:
@@ -201,7 +201,7 @@ def destroy_module(
             deployment=deployment_name,
             group=group_name,
             module=module_manifest_name,
-            status="ERROR",
+            status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
         )
     return resp

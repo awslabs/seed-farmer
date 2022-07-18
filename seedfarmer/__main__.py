@@ -339,6 +339,12 @@ def list_deployspec(
     required=True,
 )
 @click.option(
+    "--export-local-env/--no-export-local-env",
+    default=False,
+    help="Print the moduledata as env parameters for local development support INSTEAD of json (default is FALSE)",
+    show_default=True,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -348,14 +354,21 @@ def list_module_metadata(
     deployment: str,
     group: str,
     module: str,
+    export_local_env: str,
     debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug(f"We are getting module data for {module} in {group} of {deployment}")
-
-    val = json.dumps(mi.get_module_metadata(deployment, group, module))
-    sys.stdout.write(val)
+    metadata_json = mi.get_module_metadata(deployment, group, module)
+    if not export_local_env:
+        sys.stdout.write(json.dumps(metadata_json))
+    else:
+        envs = commands.generate_export_env_params(metadata_json)
+        if envs:
+            for exp in envs:
+                sys.stdout.write(exp)
+                sys.stdout.write("\n")
 
 
 @list.command(name="modules", help="List the modules in a group")

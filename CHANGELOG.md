@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - support logging output and url gereration from codebuild output / codeseeder
 - added use of CodeSeederRuntimeError
 - added ModuleDeploymentResponse object 
+- added export of moduledata (metadata) in UNIX format from CLI (--export-local-env)
 
 ### Changes
 - moved Parameter support to its own script

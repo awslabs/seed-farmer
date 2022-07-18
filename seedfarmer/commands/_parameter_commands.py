@@ -16,10 +16,21 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
+from seedfarmer import PROJECT
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import ModuleParameter
+from seedfarmer.utils import upper_snake_case
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+def generate_export_env_params(metadata: Optional[Dict[str, Any]]) -> Optional[List[str]]:
+    envs: List[str] = [
+        f"export {PROJECT.upper()}_PARAMETER_{upper_snake_case(k)}={metadata[k]}"
+        for k in metadata.keys()  # type: ignore
+        if metadata is not None and metadata.keys() is not None
+    ]
+    return envs
 
 
 def load_parameter_values(deployment_name: str, parameters: List[ModuleParameter]) -> List[ModuleParameter]:

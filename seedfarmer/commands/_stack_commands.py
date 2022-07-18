@@ -12,11 +12,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from asyncio.log import logger
 import json
 import logging
 import os
 import time
+from asyncio.log import logger
 from typing import List, Optional
 
 from aws_codeseeder import codeseeder, commands, services

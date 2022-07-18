@@ -16,7 +16,6 @@ import json
 import logging
 import os
 import time
-from asyncio.log import logger
 from typing import List, Optional
 
 from aws_codeseeder import codeseeder, commands, services

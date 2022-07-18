@@ -48,23 +48,24 @@ def create_check_iam_role(trust_policy: Dict[str, Any], role_name: str, permissi
         iam_client.create_role(**args)
 
 
-def attach_policy_to_role(role_name: str, policies: List[str]) -> None:
+def attach_policy_to_role(role_name: str, policies: List[str]) -> List[str]:
     iam_client = boto3_client("iam")
     try:
         response = iam_client.list_attached_role_policies(RoleName=role_name)
         attached_policies = [i["PolicyArn"] for i in response["AttachedPolicies"] if response["AttachedPolicies"]]
         _logger.debug(f"List of Attached Policie(s) are: {attached_policies}")
+        to_be_attached = list(set(policies) - set(attached_policies))
+        # if attached_polices is empty, to_bo_attached == policies
+
         if attached_policies:
-            to_be_attached = list(set(policies) - set(attached_policies))
             _logger.debug(f"To be attached policie(s) are: {to_be_attached}")
-            for policy in to_be_attached:
-                iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
-                _logger.debug(f"Attached the policy: {policy}")
         else:
-            _logger.debug(f"First time deployment, attaching the policies: {policies}")
-            for policy in policies:
-                iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
-                _logger.debug(f"Attached the policy: {policy}")
+            _logger.debug(f"First time deployment, attaching all policies: {to_be_attached}")
+
+        for policy in to_be_attached:
+            iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
+            _logger.debug(f"Attached the policy: {policy}")
+        return to_be_attached
     except Exception as e:
         raise e
 

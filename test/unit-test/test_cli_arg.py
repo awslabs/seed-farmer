@@ -21,7 +21,9 @@ from _test_helper_functions import _test_command
 
 import seedfarmer.commands._stack_commands as _sc
 import seedfarmer.mgmt.module_init as minit
-from seedfarmer.__main__ import apply, destroy, init, remove, store, list as _list, PROJECT
+from seedfarmer.__main__ import PROJECT, apply, destroy, init
+from seedfarmer.__main__ import list as _list
+from seedfarmer.__main__ import remove, store
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #
 _sc.OPS_ROOT = os.path.join(_sc.OPS_ROOT, "test/unit-test/mock_data")
@@ -64,7 +66,10 @@ def test_init_create_group_module():
     result = _test_command(
         sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=1, return_result=True
     )
-    assert result.exception.args[0] == f"The module {module_name} already exists under {minit.OPS_ROOT}/modules/{group_name}."
+    assert (
+        result.exception.args[0]
+        == f"The module {module_name} already exists under {minit.OPS_ROOT}/modules/{group_name}."
+    )
 
     # Checks if a file from the project template was created within the new module
     assert os.path.exists(os.path.join(expected_module_path, "deployspec.yaml"))
@@ -83,6 +88,7 @@ def test_init_create_project(tmp_path):
 
     # Checks if file exists from the project template
     assert os.path.exists(os.path.join(expected_project_path, "seedfarmer.yaml"))
+
 
 # -------------------------------------------
 # -----  Test the sub-command `apply`   -----

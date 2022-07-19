@@ -22,7 +22,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def get_role(role_name: str) -> Optional[Dict[str, Any]]:
-    _logger.debug(f"Getting Role: {role_name}")
+    _logger.debug("Getting Role: %s", role_name)
 
     iam_client = boto3_client("iam")
     try:
@@ -32,7 +32,7 @@ def get_role(role_name: str) -> Optional[Dict[str, Any]]:
 
 
 def create_check_iam_role(trust_policy: Dict[str, Any], role_name: str, permission_boundary_arn: Optional[str]) -> None:
-    _logger.debug(f"Creating IAM Role with name: {role_name}")
+    _logger.debug("Creating IAM Role with name: %s ", role_name)
     iam_client = boto3_client("iam")
     try:
         iam_client.get_role(RoleName=role_name)
@@ -48,45 +48,46 @@ def create_check_iam_role(trust_policy: Dict[str, Any], role_name: str, permissi
         iam_client.create_role(**args)
 
 
-def attach_policy_to_role(role_name: str, policies: List[str]) -> None:
+def attach_policy_to_role(role_name: str, policies: List[str]) -> List[str]:
     iam_client = boto3_client("iam")
     try:
         response = iam_client.list_attached_role_policies(RoleName=role_name)
         attached_policies = [i["PolicyArn"] for i in response["AttachedPolicies"] if response["AttachedPolicies"]]
-        _logger.debug(f"List of Attached Policie(s) are: {attached_policies}")
+        _logger.debug("List of Attached Policie(s) are: %s ", attached_policies)
+        to_be_attached = list(set(policies) - set(attached_policies))
+        # if attached_polices is empty, to_bo_attached == policies
+
         if attached_policies:
-            to_be_attached = list(set(policies) - set(attached_policies))
-            _logger.debug(f"To be attached policie(s) are: {to_be_attached}")
-            for policy in to_be_attached:
-                iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
-                _logger.debug(f"Attached the policy: {policy}")
+            _logger.debug("To be attached policie(s) are %s ", to_be_attached)
         else:
-            _logger.debug(f"First time deployment, attaching the policies: {policies}")
-            for policy in policies:
-                iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
-                _logger.debug(f"Attached the policy: {policy}")
+            _logger.debug("First time deployment, attaching all policies: %s ", to_be_attached)
+
+        for policy in to_be_attached:
+            iam_client.attach_role_policy(RoleName=role_name, PolicyArn=policy)
+            _logger.debug("Attached the policy: %s ", policy)
+        return to_be_attached
     except Exception as e:
         raise e
 
 
 def attach_inline_policy(role_name: str, policy_body: str, policy_name: str) -> None:
     iam_client = boto3_client("iam")
-    _logger.debug(f"Attaching the Inline policy {policy_name} to the IAM Role: {role_name}")
+    _logger.debug("Attaching the Inline policy %s to the IAM Role: %s", policy_name, role_name)
     try:
         iam_client.put_role_policy(RoleName=role_name, PolicyName=policy_name, PolicyDocument=policy_body)
     except Exception as e:
-        _logger.debug(f"Failed to attach the Inline policy {policy_name} to the IAM Role: {role_name}")
+        _logger.debug("ailed to attach the Inline policy %s to the IAM Role: %s", policy_name, role_name)
         raise e
 
 
 def detach_policy_from_role(role_name: str, policy_arn: str) -> None:
-    _logger.debug(f"Detatching policy: {policy_arn} from the IAM Role: {role_name}")
+    _logger.debug("Detatching policy: %s  from the IAM Role: %s ", policy_arn, role_name)
     iam_client = boto3_client("iam")
     try:
         iam_client.detach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
     except Exception as e:
-        _logger.info(f"Could not delete policy : {policy_arn}")
-        _logger.info(f"Caught exception: {e}")
+        _logger.info("Could not delete policy %s", policy_arn)
+        _logger.info("Caught exception: %s ", e)
 
 
 def delete_role(role_name: str) -> None:
@@ -94,8 +95,8 @@ def delete_role(role_name: str) -> None:
     try:
         iam_client.delete_role(RoleName=role_name)
     except iam_client.exceptions.NoSuchEntityException as e:
-        _logger.info(f"Could not delete role : {role_name}")
-        _logger.info(f"Caught exception: {e}")
+        _logger.info("Could not delete role %s", role_name)
+        _logger.info("Caught exception: %s ", e)
 
 
 def detach_inline_policy_from_role(role_name: str, policy_name: str) -> None:

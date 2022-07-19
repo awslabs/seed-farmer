@@ -63,7 +63,7 @@ def apply(spec: str, debug: bool, dry_run: bool, show_manifest: bool) -> None:
     f"Deploy a(n) {PROJECT.upper()} environemnt based on a deployspec file (yaml)." ""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.info(f"Apply request with manifest {spec} ")
+    _logger.info("Apply request with manifest %s", spec)
     if dry_run:
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
 
@@ -103,7 +103,7 @@ def destroy(
     f"Destroy an {PROJECT.upper} deployment ."
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.info(f"Destroy for {deployment} ")
+    _logger.info("Destroy for %s", deployment)
     if dry_run:
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
     commands.destroy(deployment_name=deployment, dryrun=dry_run, show_manifest=show_manifest)
@@ -203,8 +203,7 @@ def store_module_metadata(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-
-    _logger.debug(f"Writing metadata for module {module} in deployment {deployment}")
+    _logger.debug("Writing metadata for module %s in deployment %s", module, deployment)
     d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
     if d:
         mi.write_metadata(deployment=deployment, group=group, module=module, data=d)
@@ -256,7 +255,7 @@ def store_module_md5(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"Writing md5 of {type} for module {module} in deployment {deployment}")
+    _logger.debug("Writing md5 of  %s for module %s in deployment %s", type, module, deployment)
     d = sys.stdin.readline().strip()
     if d:
         if type.casefold() == "bundle":
@@ -310,7 +309,7 @@ def list_deployspec(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"We are getting deployspec for {module} in {group} of {deployment}")
+    _logger.debug("We are getting deployspec for  %s in %s of deployment %s", module, group, deployment)
 
     val = mi.get_deployspec(deployment=deployment, group=group, module=module)
     print_json(val)
@@ -339,6 +338,12 @@ def list_deployspec(
     required=True,
 )
 @click.option(
+    "--export-local-env/--no-export-local-env",
+    default=False,
+    help="Print the moduledata as env parameters for local development support INSTEAD of json (default is FALSE)",
+    show_default=True,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -348,14 +353,21 @@ def list_module_metadata(
     deployment: str,
     group: str,
     module: str,
+    export_local_env: str,
     debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"We are getting module data for {module} in {group} of {deployment}")
-
-    val = json.dumps(mi.get_module_metadata(deployment, group, module))
-    sys.stdout.write(val)
+    _logger.debug("We are getting module data for  %s in %s of %s", module, group, deployment)
+    metadata_json = mi.get_module_metadata(deployment, group, module)
+    if not export_local_env:
+        sys.stdout.write(json.dumps(metadata_json))
+    else:
+        envs = commands.generate_export_env_params(metadata_json)
+        if envs:
+            for exp in envs:
+                sys.stdout.write(exp)
+                sys.stdout.write("\n")
 
 
 @list.command(name="modules", help="List the modules in a group")
@@ -378,7 +390,7 @@ def list_modules(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"We are getting modules for  {deployment}")
+    _logger.debug("We are getting modules for %s", deployment)
 
     cache = du.generate_deployment_cache(deployment_name=deployment)
     dep_manifest = du.generate_deployed_manifest(
@@ -447,7 +459,7 @@ def remove_module_data(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"We are removing module data for {module} of group {group} in {deployment}")
+    _logger.debug(" We are removing module data for %s of group %s in %s", module, group, deployment)
 
     mi.remove_module_info(deployment, group, module)
 
@@ -500,7 +512,8 @@ def init_project(template_url: str) -> None:
 def init_module(group_name: str, module_name: str, template_url: str, debug: bool) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug(f"Initializing module {module_name}")
+    _logger.debug("Initializing module %s", module_name)
+
     minit.create_module_dir(
         group_name=group_name,
         module_name=module_name,

@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ## Unreleased
 
+### New
+
+### Changes
+
+### Fixes
+- allow CLI to return when exporting moduledata that is None
+- remove table and short url for errored codebuild urls
+
 ## v0.1.3 (2022-07-19)
 
 ### New

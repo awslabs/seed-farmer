@@ -141,7 +141,7 @@ def print_errored_modules(
     Parameters
     ----------
     description : str
-        The custom text 
+        The custom text
     modules_data : List[Optional[ModuleDeploymentResponse]]
         The object containing the metadata related to the failure
     color : str, optional

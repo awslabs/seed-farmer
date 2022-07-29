@@ -54,4 +54,17 @@ def get_region() -> str:
 
 
 def get_account_id() -> str:
-    return str(boto3_client(service_name="sts").get_caller_identity().get("Account"))
+    try:
+        return str(boto3_client(service_name="sts").get_caller_identity().get("Account"))
+    except botocore.exceptions.NoCredentialsError as e:
+        _logger.error(f"ERROR: {e}")
+        from seedfarmer.output_utils import print_bolded
+
+        print_bolded("Please make sure you have valid AWS Credentials", color="red")
+        exit(1)
+    except botocore.exceptions.ClientError as e:
+        _logger.error(f"ERROR: {e}")
+        from seedfarmer.output_utils import print_bolded
+
+        print_bolded("Please make sure you have a valid AWS Session", color="red")
+        exit(1)

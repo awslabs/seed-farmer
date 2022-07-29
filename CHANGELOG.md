@@ -10,10 +10,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
-
+- updated user-friendly messages for invalid credentials / sessions
+- 
 ### Fixes
 - allow CLI to return when exporting moduledata that is None
 - remove table and short url for errored codebuild urls
+- removed architecture diagram from Git README - it is in `readthedocs`
 
 ## v0.1.3 (2022-07-19)
 
@@ -25,6 +27,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - moved Parameter support to its own script
+- removed arch diagram from README on git repo (the image does not translate on pypi).  It is in the readthedocs site
 
 ### Fixes
 - eventual consistency of IAM policy to module-spcific role (issue 43)

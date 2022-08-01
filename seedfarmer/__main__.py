@@ -368,6 +368,10 @@ def list_module_metadata(
             for exp in envs:
                 sys.stdout.write(exp)
                 sys.stdout.write("\n")
+        else:
+            print(f"No module data found for {deployment}-{group}-{module}")
+            print_bolded("To see all deployments, run seedfarmer list deployments")
+            print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
 
 
 @list.command(name="modules", help="List the modules in a group")

@@ -20,6 +20,7 @@ import sys
 import click
 import yaml
 
+import seedfarmer
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 import seedfarmer.mgmt.module_init as minit
@@ -33,6 +34,11 @@ _logger: logging.Logger = logging.getLogger(__name__)
 def cli() -> None:
     f"{DESCRIPTION}"
     pass
+
+
+@click.command(help="Get the version of seedfarmer")
+def version():
+    print(f"seedfarmer {seedfarmer.__version__}")
 
 
 @click.command(help=f"Apply a deployment manifest relative path for {PROJECT.upper()}")
@@ -368,6 +374,10 @@ def list_module_metadata(
             for exp in envs:
                 sys.stdout.write(exp)
                 sys.stdout.write("\n")
+        else:
+            print(f"No module data found for {deployment}-{group}-{module}")
+            print_bolded("To see all deployments, run seedfarmer list deployments")
+            print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
 
 
 @list.command(name="modules", help="List the modules in a group")
@@ -528,5 +538,6 @@ def main() -> int:
     cli.add_command(remove)
     cli.add_command(list)
     cli.add_command(init)
+    cli.add_command(version)
     cli()
     return 0

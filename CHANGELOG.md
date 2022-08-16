@@ -11,7 +11,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - updated user-friendly messages for invalid credentials / sessions
-- 
+- added version support for CLI `seedfarmer version`
+- updated dependency aws_codeseeder==0.4.0
+- corrected import of CodeSeederRuntimeError
 ### Fixes
 - allow CLI to return when exporting moduledata that is None
 - remove table and short url for errored codebuild urls

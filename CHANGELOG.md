@@ -10,6 +10,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+### Fixes
+
+## v0.1.4 (2022-08-16)
+### New
+
+### Changes
 - updated user-friendly messages for invalid credentials / sessions
 - added version support for CLI `seedfarmer version`
 - updated dependency aws_codeseeder==0.4.0

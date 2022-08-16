@@ -20,6 +20,7 @@ import sys
 import click
 import yaml
 
+import seedfarmer
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 import seedfarmer.mgmt.module_init as minit
@@ -33,6 +34,11 @@ _logger: logging.Logger = logging.getLogger(__name__)
 def cli() -> None:
     f"{DESCRIPTION}"
     pass
+
+
+@click.command(help="Get the version of seedfarmer")
+def version():
+    print(f"seedfarmer {seedfarmer.__version__}")
 
 
 @click.command(help=f"Apply a deployment manifest relative path for {PROJECT.upper()}")
@@ -532,5 +538,6 @@ def main() -> int:
     cli.add_command(remove)
     cli.add_command(list)
     cli.add_command(init)
+    cli.add_command(version)
     cli()
     return 0

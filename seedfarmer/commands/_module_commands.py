@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from aws_codeseeder import codeseeder
-from aws_codeseeder.error.CodeSeederError import CodeSeederRuntimeError
+from aws_codeseeder.errors import CodeSeederRuntimeError
 
 from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType

@@ -45,7 +45,7 @@ setup(
     keywords=["aws", "cdk"],
     python_requires=">=3.7",
     install_requires=[
-        "aws-codeseeder~=0.3.3",
+        "aws-codeseeder~=0.4.0",
         "cookiecutter~=2.1.0",
         "pyhumps~=3.5.0",
         "pydantic~=1.9.0",

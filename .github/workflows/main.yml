@@ -39,3 +39,5 @@ jobs:
         run: black --check .
       - name: Isort Check
         run: isort --check .
+      - name: PyTest
+        run: pytest test/unit-test/test_modules.py -v --cov=seedfarmer

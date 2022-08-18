@@ -131,7 +131,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         profile_name: Optional[str],
     ) -> Tuple[Session, Dict[Any, Any]]:
 
-        _logger.info("Getting toolchain role")
+        _logger.debug("Getting toolchain role")
         user_session = boto3.Session(region_name=region_name, profile_name=profile_name if profile_name else None)
         user_client = user_session.client("sts", use_ssl=True, config=self._get_botocore_config())
         toolchain_account_id = user_client.get_caller_identity().get("Account")
@@ -151,16 +151,16 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         return toolchain_session, toolchain_role
 
     def _setup_reaper(self) -> None:
-        _logger.info("Starting Session Reaper")
+        _logger.debug("Starting Session Reaper")
         t = Thread(target=self._reap_sessions, args=(self.reaperInterval,), daemon=True, name="SessionReaper")
         t.start()
         self.reaper = t
 
     def _reap_sessions(self, interval: int) -> None:
-        _logger.info("Reaper Is Set")
+        _logger.debug("Reaper Is Set")
         while True:
             sleep(interval)
-            _logger.info(f"Reaping Sessions - sleeping for {interval} seconds")
+            _logger.debug(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}
 
     def _get_botocore_config(self) -> botocore.config.Config:

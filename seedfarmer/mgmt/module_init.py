@@ -14,7 +14,7 @@
 
 import logging
 import os
-from typing import Optional, cast
+from typing import Optional
 
 from cookiecutter.main import cookiecutter
 
@@ -39,7 +39,7 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
     """
     module_root = os.path.join(OPS_ROOT, "modules")
     module_path = os.path.join(module_root, module_name)
-    output_dir = cast(str, module_root)
+    output_dir = module_root
 
     if group_name:
         module_path = os.path.join(module_root, group_name, module_name)

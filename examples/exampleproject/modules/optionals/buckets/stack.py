@@ -12,9 +12,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import hashlib
 import logging
 from typing import Any, cast
-import hashlib
 
 import aws_cdk
 import aws_cdk.aws_iam as aws_iam
@@ -48,9 +48,9 @@ class BucketsStack(Stack):  # type: ignore
         super().__init__(scope, id, **kwargs)
         Tags.of(scope=cast(IConstruct, self)).add(key="Deployment", value=f"{project_name}-{deployment_name}")
 
-        artifact_bucket_name =f"{project_name}-{deployment_name}-artifacts-bucket-{hash}"
-        unique_ab=(hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[:(60-len(artifact_bucket_name))]
-        
+        artifact_bucket_name = f"{project_name}-{deployment_name}-artifacts-bucket-{hash}"
+        unique_ab = (hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[: (60 - len(artifact_bucket_name))]
+
         artifacts_bucket = aws_s3.Bucket(
             self,
             id="artifacts-bucket",
@@ -67,8 +67,8 @@ class BucketsStack(Stack):  # type: ignore
             enforce_ssl=True,
         )
 
-        log_bucket_name =f"{project_name}-{deployment_name}-logs-bucket-{hash}"
-        unique_log=(hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[:(60-len(log_bucket_name))]        
+        log_bucket_name = f"{project_name}-{deployment_name}-logs-bucket-{hash}"
+        unique_log = (hashlib.sha1(module_name.encode("UTF-8")).hexdigest())[: (60 - len(log_bucket_name))]
 
         logs_bucket = aws_s3.Bucket(
             self,

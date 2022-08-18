@@ -25,7 +25,7 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 import seedfarmer.mgmt.module_init as minit
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, enable_debug, utils
-from seedfarmer.config import PROJECT, DESCRIPTION
+from seedfarmer.config import DESCRIPTION, PROJECT
 from seedfarmer.output_utils import print_bolded, print_deployment_inventory, print_json, print_manifest_inventory
 
 _logger: logging.Logger = logging.getLogger(__name__)

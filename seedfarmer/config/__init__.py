@@ -16,11 +16,9 @@
 import logging
 import os
 import pathlib
-
 from typing import Any, Dict
 
 import yaml
-
 from aws_codeseeder import LOGGER, codeseeder
 from aws_codeseeder.codeseeder import CodeSeederConfig
 
@@ -33,6 +31,7 @@ OPS_ROOT = os.getcwd()
 PROJECT = ""
 DESCRIPTION = ""
 
+
 def _load_config_data() -> None:
     count = 0
     global CONFIG_FILE
@@ -43,7 +42,9 @@ def _load_config_data() -> None:
     while not os.path.exists(os.path.join(OPS_ROOT, CONFIG_FILE)):
         if count >= 4:
             _logger.error("The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun.")
-            raise FileNotFoundError("The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun.")
+            raise FileNotFoundError(
+                "The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun."
+            )
         else:
             OPS_ROOT = pathlib.Path(OPS_ROOT).parent  # type: ignore
             count += 1
@@ -53,7 +54,9 @@ def _load_config_data() -> None:
         PROJECT = config_data["project"]
         DESCRIPTION = config_data["description"] if "description" in config_data else "NEW PROJECT"
 
+
 _load_config_data()
+
 
 @codeseeder.configure(PROJECT.lower(), deploy_if_not_exists=True)
 def configure(configuration: CodeSeederConfig) -> None:

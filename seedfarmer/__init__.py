@@ -14,13 +14,8 @@
 
 
 import logging
-import os
-import pathlib
 
 import pkg_resources
-import yaml
-from aws_codeseeder import LOGGER, codeseeder
-from aws_codeseeder.codeseeder import CodeSeederConfig
 
 from seedfarmer.__metadata__ import __description__, __license__, __title__
 

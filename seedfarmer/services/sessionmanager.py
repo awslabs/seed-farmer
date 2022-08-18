@@ -35,7 +35,7 @@ class SingletonMeta(type):
 
 class ISessionManager:
     @abstractmethod
-    def configure(self, project_name: str, **kwargs) -> Any:
+    def configure(self, project_name: str, **kwargs: Optional[Any]) -> Any:
         ...
 
     @abstractmethod
@@ -68,7 +68,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     reaper: Thread = None  # type: ignore
     reaperInterval: int = 3000  # every 50 minutes
 
-    def configure(self, project_name: str, **kwargs) -> ISessionManager:
+    def configure(self, project_name: str, **kwargs: Optional[Any]) -> ISessionManager:
         self.config["project_name"] = project_name
         self.config = {**self.config, **kwargs}
         return self
@@ -150,13 +150,13 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
 
         return toolchain_session, toolchain_role
 
-    def _setup_reaper(self):
+    def _setup_reaper(self) -> None:
         _logger.info("Starting Session Reaper")
         t = Thread(target=self._reap_sessions, args=(self.reaperInterval,), daemon=True, name="SessionReaper")
         t.start()
         self.reaper = t
 
-    def _reap_sessions(self, interval) -> None:
+    def _reap_sessions(self, interval: int) -> None:
         _logger.info("Reaper Is Set")
         while True:
             sleep(interval)
@@ -171,10 +171,10 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             # user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
         )
 
-    def _fetch_session_obj(self):
+    def _fetch_session_obj(self) -> Dict[Any, Any]:
         return self.sessions
 
-    def _fetch_toolchain_session(self):
+    def _fetch_toolchain_session(self) -> Session:
         if self.TOOLCHAIN_KEY not in self.sessions.keys():
             _logger.error("The toolchain session is not establshed....go create one")
         else:

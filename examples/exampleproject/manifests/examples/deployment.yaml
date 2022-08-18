@@ -9,7 +9,7 @@ targetAccountMappings:
     default: true
     parametersGlobal:
       permissionBoundaryArn: "arn:aws:iam::000000000000:policy/policy-name"
-      dockerCredentialsSecret: aws-addf-docker-credentials
+      dockerCredentialsSecret: some-secret
     regionMappings:
       - region: us-west-2
         default: true

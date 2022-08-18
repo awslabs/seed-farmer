@@ -15,9 +15,9 @@
 import json
 import logging
 import os
-import yaml
 
 import pytest
+import yaml
 
 from seedfarmer.models.manifests import DeploymentManifest
 
@@ -26,16 +26,14 @@ from seedfarmer.models.manifests import DeploymentManifest
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
+
 def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "models"
-    )
-    config.addinivalue_line(
-        "markers", "models_deployment_manifest"
-    )
+    config.addinivalue_line("markers", "models")
+    config.addinivalue_line("markers", "models_deployment_manifest")
 
 
-deployment_yaml = yaml.safe_load('''
+deployment_yaml = yaml.safe_load(
+    """
 name: test
 toolchainRegion: us-west-2
 groups:
@@ -53,7 +51,9 @@ targetAccountMappings:
         default: true
         parametersRegional:
           someKey: someValue
-''')
+"""
+)
+
 
 @pytest.mark.models
 @pytest.mark.models_deployment_manifest
@@ -69,13 +69,16 @@ def test_get_parameter_with_defaults():
 
     assert manifest.get_parameter_value("someKey", account_alias="primary", region="us-west-2") == "someValue"
     assert manifest.get_parameter_value("someKey", account_id="000000000000", region="us-west-2") == "someValue"
-    assert manifest.get_parameter_value("dockerCredentialsSecret", account_alias="primary", region="us-west-2") == "secret"
+    assert (
+        manifest.get_parameter_value("dockerCredentialsSecret", account_alias="primary", region="us-west-2") == "secret"
+    )
     assert manifest.get_parameter_value("dockerCredentialsSecret") == "secret"
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
     with pytest.raises(ValueError) as e:
-        manifest.get_parameter_value("someKey", account_alias="primary", account_id="000000000000", region="us-west-2") == "someValue"
-
+        manifest.get_parameter_value(
+            "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
+        ) == "someValue"
 
 
 @pytest.mark.models
@@ -86,13 +89,15 @@ def test_get_parameter_without_defaults():
     manifest.target_account_mappings[0].default = False
     manifest.target_account_mappings[0].region_mappings[0].default = False
 
-
     assert manifest.get_parameter_value("someKey", account_alias="primary", region="us-west-2") == "someValue"
     assert manifest.get_parameter_value("someKey", account_id="000000000000", region="us-west-2") == "someValue"
-    assert manifest.get_parameter_value("dockerCredentialsSecret", account_alias="primary", region="us-west-2") == "secret"
+    assert (
+        manifest.get_parameter_value("dockerCredentialsSecret", account_alias="primary", region="us-west-2") == "secret"
+    )
     assert manifest.get_parameter_value("dockerCredentialsSecret") is None
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
     with pytest.raises(ValueError) as e:
-        manifest.get_parameter_value("someKey", account_alias="primary", account_id="000000000000", region="us-west-2") == "someValue"
-
+        manifest.get_parameter_value(
+            "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
+        ) == "someValue"

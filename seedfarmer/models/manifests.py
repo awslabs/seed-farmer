@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import PrivateAttr
 
@@ -33,7 +33,7 @@ class BuildPhase(CamelModel):
     BuildPhase
     This is a list of strings that are passed to CodeSeeder to be executed
     in their respective phases as commands
-    """ """"""
+    """
 
     commands: List[str] = []
 
@@ -43,7 +43,7 @@ class BuildPhases(CamelModel):
     BuildPhases
     This object has the individual commands for each of the define build phases:
     install, pre_build,  build, post_build
-    """ """"""
+    """
 
     install: BuildPhase = BuildPhase()
     pre_build: BuildPhase = BuildPhase()
@@ -56,7 +56,7 @@ class ExecutionType(CamelModel):
     ExecutionType
     This an object that contains the Build Phases object for the destroy or deploy
     object of the DeploySpec
-    """ """"""
+    """
 
     phases: BuildPhases = BuildPhases()
 
@@ -67,7 +67,7 @@ class DeploySpec(CamelModel):
     This represents the commands passed to CodeSeeder that will be executed
     on behalf of the module to be built.
     The deploy and the destroy objects each have an ExecutionType object.
-    """ """"""
+    """
 
     deploy: Optional[ExecutionType] = None
     destroy: Optional[ExecutionType] = None
@@ -114,7 +114,7 @@ class ModuleManifest(CamelModel):
     This is a module in a group of the deployment and consists of a name,
     the path of the module manifest, any ModuleParameters for deployment, and
     the DeploySpec.
-    """ """"""
+    """
 
     name: str
     path: str
@@ -128,12 +128,36 @@ class ModulesManifest(CamelModel):
     ModulesManifest
     This is a group in the deployment and defines the name of the group,
     the path of the group definiton, and the modules that comprise the group
-    """ """"""
+    """
 
     name: str
     path: Optional[str] = None
     modules: List[ModuleManifest] = []
     concurrency: Optional[int] = None
+
+
+class RegionMapping(CamelModel):
+    """
+    RegionMapping
+    This class provides metadata about the regions where Modules are deployed
+    """
+
+    region: str
+    default: bool = False
+    parameters_regional: Dict[str, str] = {}
+
+
+class TargetAccountMapping(CamelModel):
+    """
+    TargetAccountMapping
+    This class provides metadata about the accounts where Modules are deployed
+    """
+
+    alias: str
+    account_id: str
+    default: bool = False
+    parameters_global: Dict[str, str] = {}
+    region_mappings: List[RegionMapping] = []
 
 
 class DeploymentManifest(CamelModel):
@@ -142,11 +166,43 @@ class DeploymentManifest(CamelModel):
     This represents the top layer of the Deployment definiton.
     It includes things like the name of the deployment, the groups in the deployment
     and a policy that is applied to all build roles.
-    """ """"""
+    """
 
     name: str
+    toolchainRegion: str
     groups: List[ModulesManifest] = []
-    project_policy: Optional[str]
     description: Optional[str]
-    docker_credentials_secret: Optional[str]
-    permission_boundary_arn: Optional[str]
+    target_account_mappings: List[TargetAccountMapping] = []
+
+    def get_parameter_value(
+        self,
+        parameter: str,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        default: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the parameter is in parameters_regional return it
+                for region_mapping in target_account.region_mappings:
+                    if (
+                        region == region_mapping.region or (use_default_region and region_mapping.default)
+                    ) and parameter in region_mapping.parameters_regional:
+                        return region_mapping.parameters_regional[parameter]
+
+                # If no region_mapping found for the region or no value for the parameter found in parameters_regional
+                # return the value for parameter from parameters_global, default None
+                return target_account.parameters_global.get(parameter, default)
+        else:
+            return default

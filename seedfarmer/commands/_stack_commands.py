@@ -40,7 +40,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: DeploymentManifest) -> None:
     """
     deploy_managed_policy_stack
-        This function deployes the deployment-specific policy to allow CodeSeeder to deploy.
+        This function deploys the deployment-specific policy to allow CodeSeeder to deploy.
 
     Parameters
     ----------
@@ -53,9 +53,7 @@ def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: Deplo
     # Determine if managed policy stack already deployed
     project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(stack_name=PROJECT_MANAGED_POLICY_CFN_NAME)
     if not project_managed_policy_stack_exists:
-        project_managed_policy_template = (
-            deployment_manifest.project_policy if deployment_manifest.project_policy else PROJECT_POLICY_PATH
-        )
+        project_managed_policy_template = deployment_manifest.get_parameter_value("projectPolicy", PROJECT_POLICY_PATH)
         project_managed_policy_template = os.path.join(OPS_ROOT, project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
             raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")

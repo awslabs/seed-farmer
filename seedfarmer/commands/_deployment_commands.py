@@ -216,9 +216,8 @@ def destroy_deployment(
     print_manifest_inventory(f"Modules removed from manifest: {destroy_manifest.name}", destroy_manifest, False, "red")
 
     deployment_name = destroy_manifest.name
-    docker_credentials_secret = (
-        destroy_manifest.docker_credentials_secret if destroy_manifest.docker_credentials_secret else None
-    )
+    docker_credentials_secret = destroy_manifest.get_parameter_value("dockerCredentialsSecret")
+    _logger.debug("dockerCredentialsSecret: %s", docker_credentials_secret)
 
     print_manifest_inventory(
         f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red"
@@ -292,12 +291,8 @@ def deploy_deployment(
     """
     deployment_manifest_wip = deployment_manifest.copy()
     deployment_name = deployment_manifest_wip.name
-    docker_credentials_secret = (
-        deployment_manifest_wip.docker_credentials_secret if deployment_manifest_wip.docker_credentials_secret else None
-    )
-    permission_boundary_arn = (
-        deployment_manifest_wip.permission_boundary_arn if deployment_manifest_wip.permission_boundary_arn else None
-    )
+    docker_credentials_secret = deployment_manifest.get_parameter_value("dockerCredentialsSecret", default=None)
+    permission_boundary_arn = deployment_manifest.get_parameter_value("permissionBoundaryArn", default=None)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
     print_manifest_inventory(

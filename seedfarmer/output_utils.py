@@ -35,7 +35,7 @@ def print_deployment_inventory(description: str, dep: List[str], color: str = "y
         A list of strings of the deployment names
     color : str, optional
         The color of the Title , by default "yellow"
-    """ """"""
+    """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
     table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
@@ -61,7 +61,7 @@ def print_manifest_inventory(
        Show the relative path of the module code, by default False
     color : str, optional
        The color of the Title, by default "yellow"
-    """ """"""
+    """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
     table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
@@ -102,7 +102,7 @@ def print_manifest_json(dep: DeploymentManifest) -> None:
     ----------
     dep : DeploymentManifest
         The DeploymentManifest to be printed as json
-    """ """"""
+    """
     console.print(dep.dict(), overflow="ignore", crop=False)
 
 
@@ -114,7 +114,7 @@ def print_json(payload: Optional[Dict]) -> None:
     ----------
     dep : DeploymentManifest
         The DeploymentManifest to be printed as json
-    """ """"""
+    """
     console.print(payload, overflow="ignore", crop=False)
 
 
@@ -128,7 +128,7 @@ def print_bolded(message: str, color: str = "yellow") -> None:
         The String
     color : str, optional
        The color you want the message printed in.... default is "yellow"
-    """ """"""
+    """
     console.print(f"[bold {color}]{message}")
 
 

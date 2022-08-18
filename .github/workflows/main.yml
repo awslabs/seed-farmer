@@ -40,4 +40,4 @@ jobs:
       - name: Isort Check
         run: isort --check .
       - name: PyTest
-        run: pytest test/unit-test/test_modules.py -v --cov=seedfarmer
+        run: pytest ../test/unit-test/test_modules.py -v --cov=seedfarmer

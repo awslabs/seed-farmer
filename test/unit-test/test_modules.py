@@ -12,9 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import json
 import logging
-import os
 
 import pytest
 import yaml
@@ -75,7 +73,7 @@ def test_get_parameter_with_defaults():
     assert manifest.get_parameter_value("dockerCredentialsSecret") == "secret"
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         manifest.get_parameter_value(
             "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
         ) == "someValue"
@@ -97,7 +95,7 @@ def test_get_parameter_without_defaults():
     assert manifest.get_parameter_value("dockerCredentialsSecret") is None
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError):
         manifest.get_parameter_value(
             "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
         ) == "someValue"

@@ -37,7 +37,7 @@ def cli() -> None:
 
 
 @click.command(help="Get the version of seedfarmer")
-def version():
+def version() -> None:
     print(f"seedfarmer {seedfarmer.__version__}")
 
 

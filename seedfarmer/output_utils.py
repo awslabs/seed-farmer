@@ -106,7 +106,7 @@ def print_manifest_json(dep: DeploymentManifest) -> None:
     console.print(dep.dict(), overflow="ignore", crop=False)
 
 
-def print_json(payload: Optional[Dict]) -> None:
+def print_json(payload: Optional[Dict[str, Any]]) -> None:
     """
     Pretty-print to console a json representation of the DeploymentManifest
 

@@ -14,7 +14,7 @@
 
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from seedfarmer import PROJECT
 from seedfarmer.mgmt.module_info import get_module_metadata
@@ -56,7 +56,7 @@ def _get_param_value_cache(
             g_name,
             m_name,
         )
-    return parameter_values_cache[(d_name, g_name, m_name)]
+    return cast(Dict[Any, Any], parameter_values_cache[(d_name, g_name, m_name)])
 
 
 def _module_metatdata(

@@ -33,7 +33,7 @@ class CfnSafeYamlLoader(yaml.SafeLoader):
     Parameters
     ----------
     yaml : _type_
-    """ """"""
+    """
 
     yaml_implicit_resolvers = {
         k: [r for r in v if r[0] != "tag:yaml.org,2002:timestamp"]
@@ -54,7 +54,7 @@ def upper_snake_case(value: str) -> str:
     -------
     str
         the string standardized
-    """ """"""
+    """
     if humps.is_camelcase(value):  # type: ignore
         return humps.decamelize(value).upper()  # type: ignore
     elif humps.is_pascalcase(value):  # type: ignore

@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- update DeploymentManifest to support targetAccountMappings and regionMappings
+- move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
 ### Fixes
 
 ## v0.1.4 (2022-08-16)

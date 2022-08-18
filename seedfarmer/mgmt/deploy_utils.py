@@ -191,7 +191,7 @@ def filter_deploy_destroy(
     -------
     DeploymentManifest
         A populated DeploymentManifest object with the modules needed to be destroyed
-    """ """"""
+    """
     dep_name = apply_manifest.name
 
     destroy_manifest = apply_manifest.copy()

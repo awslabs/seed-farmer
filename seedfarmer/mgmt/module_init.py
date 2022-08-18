@@ -18,7 +18,7 @@ from typing import Optional
 
 from cookiecutter.main import cookiecutter
 
-from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
+from seedfarmer.config import CONFIG_FILE, OPS_ROOT, PROJECT
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

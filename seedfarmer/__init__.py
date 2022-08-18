@@ -14,13 +14,8 @@
 
 
 import logging
-import os
-import pathlib
 
 import pkg_resources
-import yaml
-from aws_codeseeder import LOGGER, codeseeder
-from aws_codeseeder.codeseeder import CodeSeederConfig
 
 from seedfarmer.__metadata__ import __description__, __license__, __title__
 
@@ -51,37 +46,3 @@ def enable_info(format: str) -> None:
 
 
 enable_info(INFO_LOGGING_FORMAT)
-
-# Locate the config for seedfarmer
-CONFIG_FILE = "seedfarmer.yaml"
-OPS_ROOT = os.getcwd()
-count = 0
-while not os.path.exists(os.path.join(OPS_ROOT, CONFIG_FILE)):
-    if count >= 4:
-        _logger.error("The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun.")
-        exit(0)
-    else:
-        OPS_ROOT = pathlib.Path(OPS_ROOT).parent  # type: ignore
-        count += 1
-
-with open(os.path.join(OPS_ROOT, CONFIG_FILE), "r") as file:
-    config_data = yaml.safe_load(file)
-
-PROJECT = config_data["project"]
-DESCRIPTION = config_data["description"] if "description" in config_data else "NEW PROJECT"
-
-
-@codeseeder.configure(PROJECT.lower(), deploy_if_not_exists=True)
-def configure(configuration: CodeSeederConfig) -> None:
-    LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {OPS_ROOT}")
-    configuration.timeout = 120
-    configuration.codebuild_image = "public.ecr.aws/v3o4w1g6/aws-codeseeder/code-build-base:2.2.0"
-    configuration.pre_build_commands = [
-        (
-            "nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock"
-            " --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &"
-        ),
-        'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
-    ]
-    configuration.python_modules = [f"seed-farmer=={__version__}"]
-    configuration.runtime_versions = {"nodejs": "14", "python": "3.9"}

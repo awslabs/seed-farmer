@@ -23,8 +23,9 @@ import checksumdir
 import yaml
 
 import seedfarmer.mgmt.deploy_utils as du
-from seedfarmer import OPS_ROOT, commands
+from seedfarmer import commands
 from seedfarmer.commands._parameter_commands import load_parameter_values
+from seedfarmer.config import OPS_ROOT
 from seedfarmer.mgmt.module_info import (
     _get_deployspec_path,
     _get_modulestack_path,

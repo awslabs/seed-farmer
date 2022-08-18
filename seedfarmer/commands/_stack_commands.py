@@ -22,7 +22,7 @@ from aws_codeseeder import codeseeder, commands, services
 from cfn_tools import load_yaml
 
 import seedfarmer.services._iam as iam
-from seedfarmer import OPS_ROOT, PROJECT
+from seedfarmer.config import OPS_ROOT, PROJECT
 from seedfarmer.mgmt.module_info import _get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services._service_utils import get_account_id, get_region

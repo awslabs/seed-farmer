@@ -16,7 +16,7 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from seedfarmer import PROJECT
+from seedfarmer.config import PROJECT
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import ModuleParameter
 from seedfarmer.utils import upper_snake_case

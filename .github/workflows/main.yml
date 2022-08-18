@@ -31,6 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ../requirements.txt
           pip install -r ../requirements-dev.txt
+          pip install -e ../
       - name: Mypy Check
         run: mypy --ignore-missing-imports .
       - name: Flake8 Check

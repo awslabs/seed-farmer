@@ -23,7 +23,7 @@ import botocore.exceptions
 from aws_codeseeder import codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
 
-from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
+from seedfarmer.config import CONFIG_FILE, OPS_ROOT, PROJECT
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
 from seedfarmer.utils import generate_hash

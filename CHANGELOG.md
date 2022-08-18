@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - update DeploymentManifest to support targetAccountMappings and regionMappings
 - move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
 ### Fixes
+- fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
 
 ## v0.1.4 (2022-08-16)
 ### New

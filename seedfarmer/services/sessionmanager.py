@@ -42,6 +42,14 @@ class ISessionManager:
     def create(self, region_name: Optional[str] = None, profile: Optional[str] = None) -> Any:
         ...
 
+    @abstractmethod
+    def get_toolchain_session(self) -> Session:
+        ...
+
+    @abstractmethod
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        ...
+
 
 class SessionManager(ISessionManager, metaclass=SingletonMeta):
     # Example Calling:

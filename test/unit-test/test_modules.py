@@ -19,6 +19,7 @@ import os
 import pytest
 import yaml
 
+import seedfarmer
 from seedfarmer.models.manifests import DeploymentManifest
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #

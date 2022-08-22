@@ -12,17 +12,19 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 - update DeploymentManifest to support targetAccountMappings and regionMappings
 - move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
+- refactor cli commands/groups to reduce line count in `__main__.py`
+
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
 
 ## v0.1.4 (2022-08-16)
-### New
 
 ### Changes
 - updated user-friendly messages for invalid credentials / sessions
 - added version support for CLI `seedfarmer version`
 - updated dependency aws_codeseeder==0.4.0
 - corrected import of CodeSeederRuntimeError
+
 ### Fixes
 - allow CLI to return when exporting moduledata that is None
 - remove table and short url for errored codebuild urls

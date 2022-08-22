@@ -31,17 +31,13 @@ def init() -> None:
 
 @init.command(
     name="project",
-    help=(
-        "Initialize a project. " "Make sure seedfarmer.yaml is present in the same location you execute this command!!"
-    ),
+    help="Initialize a project. Make sure seedfarmer.yaml is present in the same location you execute this command!!",
 )
 @click.option(
     "--template-url",
     "-t",
     default="https://github.com/awslabs/seed-farmer.git",
-    help=(
-        "The template URL. If not specified, the default template repo is " "`https://github.com/awslabs/seed-farmer`"
-    ),
+    help="The template URL. If not specified, the default template repo is `https://github.com/awslabs/seed-farmer`",
     required=False,
 )
 def init_project(template_url: str) -> None:

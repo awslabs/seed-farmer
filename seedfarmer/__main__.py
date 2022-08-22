@@ -19,7 +19,7 @@ import click
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, enable_debug
-from seedfarmer.cli_groups import init, list, remove, store
+from seedfarmer.cli_groups import bootstrap, init, list, remove, store
 from seedfarmer.config import DESCRIPTION, PROJECT
 from seedfarmer.output_utils import print_bolded
 
@@ -119,5 +119,6 @@ def main() -> int:
     cli.add_command(list)
     cli.add_command(init)
     cli.add_command(version)
+    cli.add_command(bootstrap)
     cli()
     return 0

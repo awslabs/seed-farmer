@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import PrivateAttr
 
@@ -263,21 +263,20 @@ class DeploymentManifest(CamelModel):
                     else module.target_account
                 )
 
-                if self.get_target_account_mapping(account_alias=module.target_account) is None:
+                target_account = self.get_target_account_mapping(account_alias=module.target_account)
+                if target_account is None:
                     raise ValueError(
-                        f"Invalid target_account ({module.target_account}) for Module {module.name} in Group {group.name}"
+                        f"Invalid target_account ({module.target_account}) for "
+                        f"Module {module.name} in Group {group.name}"
                     )
 
-                target_account = self.get_target_account_mapping(account_alias=module.target_account)
                 module.target_region = (
                     target_account.default_region_mapping.region
-                    if target_account is not None
-                    and target_account.default_region_mapping is not None
-                    and module.target_region is None
+                    if target_account.default_region_mapping is not None and module.target_region is None
                     else module.target_region
                 )
 
-                if target_account.get_region_mapping(region=module.target_region) is None:
+                if target_account.get_region_mapping(region=cast(str, module.target_region)) is None:
                     raise ValueError(
                         f"Invalid target_region ({module.target_region}) in target_account ({target_account.alias}) "
                         f"for Module {module.name} in Group {group.name}"

@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import PrivateAttr
 
@@ -121,6 +121,8 @@ class ModuleManifest(CamelModel):
     bundle_md5: Optional[str]
     parameters: List[ModuleParameter] = []
     deploy_spec: Optional[DeploySpec]
+    target_account: Optional[str] = None
+    target_region: Optional[str] = None
 
 
 class ModulesManifest(CamelModel):
@@ -158,6 +160,22 @@ class TargetAccountMapping(CamelModel):
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
+    _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
+    _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        for r in self.region_mappings:
+            if r.default:
+                self._default_region = r
+            self._region_index[r.region] = r
+
+    def get_region_mapping(self, region: str) -> Optional[RegionMapping]:
+        return self._region_index.get(region, None)
+
+    @property
+    def default_region_mapping(self) -> Optional[RegionMapping]:
+        return self._default_region
 
 
 class DeploymentManifest(CamelModel):
@@ -173,6 +191,35 @@ class DeploymentManifest(CamelModel):
     groups: List[ModulesManifest] = []
     description: Optional[str]
     target_account_mappings: List[TargetAccountMapping] = []
+    _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)
+    _account_alias_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
+    _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        for ta in self.target_account_mappings:
+            if ta.default:
+                self._default_account = ta
+            self._account_alias_index[ta.alias] = ta
+            self._account_id_index[ta.account_id] = ta
+
+    def get_target_account_mapping(
+        self, account_alias: Optional[str] = None, account_id: Optional[str] = None
+    ) -> Optional[TargetAccountMapping]:
+        if account_alias is None and account_id is None:
+            raise ValueError("One of 'account_alias' or 'account_id' is required")
+        elif account_alias is not None and account_id is not None:
+            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+        elif account_alias:
+            return self._account_alias_index.get(account_alias, None)
+        elif account_id:
+            return self._account_id_index.get(account_id, None)
+        else:
+            return None
+
+    @property
+    def default_target_account_mapping(self) -> Optional[TargetAccountMapping]:
+        return self._default_account
 
     def get_parameter_value(
         self,
@@ -206,3 +253,31 @@ class DeploymentManifest(CamelModel):
                 return target_account.parameters_global.get(parameter, default)
         else:
             return default
+
+    def set_module_defaults(self) -> None:
+        for group in self.groups:
+            for module in group.modules:
+                module.target_account = (
+                    self.default_target_account_mapping.alias
+                    if self.default_target_account_mapping is not None and module.target_account is None
+                    else module.target_account
+                )
+
+                target_account = self.get_target_account_mapping(account_alias=module.target_account)
+                if target_account is None:
+                    raise ValueError(
+                        f"Invalid target_account ({module.target_account}) for "
+                        f"Module {module.name} in Group {group.name}"
+                    )
+
+                module.target_region = (
+                    target_account.default_region_mapping.region
+                    if target_account.default_region_mapping is not None and module.target_region is None
+                    else module.target_region
+                )
+
+                if target_account.get_region_mapping(region=cast(str, module.target_region)) is None:
+                    raise ValueError(
+                        f"Invalid target_region ({module.target_region}) in target_account ({target_account.alias}) "
+                        f"for Module {module.name} in Group {group.name}"
+                    )

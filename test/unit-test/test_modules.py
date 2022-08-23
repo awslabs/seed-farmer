@@ -13,11 +13,12 @@
 #    limitations under the License.
 
 import logging
+from copy import deepcopy
 
 import pytest
 import yaml
 
-from seedfarmer.models.manifests import DeploymentManifest
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #
 # _sc.OPS_ROOT = os.path.join(_sc.OPS_ROOT, "test/unit-test/mock_data")
@@ -62,7 +63,7 @@ def test_deserialize_deployment_manifest():
 
 @pytest.mark.models
 @pytest.mark.models_deployment_manifest
-def test_get_parameter_with_defaults():
+def test_deployment_manifest_get_parameter_with_defaults():
     manifest = DeploymentManifest(**deployment_yaml)
 
     assert manifest.get_parameter_value("someKey", account_alias="primary", region="us-west-2") == "someValue"
@@ -74,28 +75,151 @@ def test_get_parameter_with_defaults():
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
     with pytest.raises(ValueError):
-        manifest.get_parameter_value(
-            "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
-        ) == "someValue"
+        manifest.get_parameter_value("someKey", account_alias="primary", account_id="000000000000", region="us-west-2")
+
+    assert manifest.get_target_account_mapping(account_alias="primary").alias == "primary"
+    assert manifest.get_target_account_mapping(account_id="000000000000").alias == "primary"
+    assert manifest.get_target_account_mapping(account_alias="other") is None
+    assert manifest.get_target_account_mapping(account_id="other") is None
+    assert manifest.default_target_account_mapping.alias == "primary"
+
+    assert manifest.target_account_mappings[0].get_region_mapping(region="us-west-2").region == "us-west-2"
+    assert manifest.target_account_mappings[0].get_region_mapping(region="other") is None
+    assert manifest.target_account_mappings[0].default_region_mapping.region == "us-west-2"
+
+    with pytest.raises(ValueError):
+        manifest.get_target_account_mapping(account_alias="primary", account_id="000000000000")
+    with pytest.raises(ValueError):
+        manifest.get_target_account_mapping()
 
 
 @pytest.mark.models
 @pytest.mark.models_deployment_manifest
-def test_get_parameter_without_defaults():
-    manifest = DeploymentManifest(**deployment_yaml)
+def test_deployment_manifest_get_parameter_without_defaults():
     # Clear targetAccountMapping and regionMapping defaults
-    manifest.target_account_mappings[0].default = False
-    manifest.target_account_mappings[0].region_mappings[0].default = False
+    updated_deployment_yaml = deepcopy(deployment_yaml)
+    updated_deployment_yaml["targetAccountMappings"][0]["default"] = False
+    updated_deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["default"] = False
+    manifest = DeploymentManifest(**updated_deployment_yaml)
 
-    assert manifest.get_parameter_value("someKey", account_alias="primary", region="us-west-2") == "someValue"
-    assert manifest.get_parameter_value("someKey", account_id="000000000000", region="us-west-2") == "someValue"
-    assert (
-        manifest.get_parameter_value("dockerCredentialsSecret", account_alias="primary", region="us-west-2") == "secret"
-    )
     assert manifest.get_parameter_value("dockerCredentialsSecret") is None
-    assert manifest.get_parameter_value("noKey") is None
-    assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
+    assert manifest.default_target_account_mapping is None
+    assert manifest.target_account_mappings[0].default_region_mapping is None
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_defaults():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    manifest.set_module_defaults()
+
+    assert module.target_account == "primary"
+    assert module.target_region == "us-west-2"
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    manifest.set_module_defaults()
+
+    assert module.target_account == "primary"
+    assert module.target_region == "us-west-2"
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: other
+targetRegion: us-west-2
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
     with pytest.raises(ValueError):
-        manifest.get_parameter_value(
-            "someKey", account_alias="primary", account_id="000000000000", region="us-west-2"
-        ) == "someValue"
+        manifest.set_module_defaults()
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: other
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    with pytest.raises(ValueError):
+        manifest.set_module_defaults()
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_without_defaults():
+    # Clear targetAccountMapping and regionMapping defaults
+    updated_deployment_yaml = deepcopy(deployment_yaml)
+    updated_deployment_yaml["targetAccountMappings"][0]["default"] = False
+    updated_deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["default"] = False
+    manifest = DeploymentManifest(**updated_deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    manifest.set_module_defaults()
+
+    assert module.target_account == "primary"
+    assert module.target_region == "us-west-2"
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+
+    with pytest.raises(ValueError):
+        manifest.set_module_defaults()
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetRegion: us-west-2
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+
+    with pytest.raises(ValueError):
+        manifest.set_module_defaults()

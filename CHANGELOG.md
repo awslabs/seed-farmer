@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - update DeploymentManifest to support targetAccountMappings and regionMappings
+- update ModuleManifest to support targetAccount and targetRegion with defaults
 - move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
 - refactor cli commands/groups to reduce line count in `__main__.py`
 

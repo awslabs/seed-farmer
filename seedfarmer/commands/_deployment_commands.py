@@ -423,6 +423,7 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
         if module_group.path:
             with open(os.path.join(OPS_ROOT, module_group.path)) as manifest_file:
                 module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+    deployment_manifest.set_module_defaults()
 
     deployment_params_cache = du.generate_deployment_cache(deployment_name=deployment_manifest.name)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, deployment_params_cache)

@@ -50,7 +50,7 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
     Parameters
     ----------
     deployment_manifest : DeploymentManifest
-       The deployment manifest ojject to store
+        The deployment manifest ojject to store
     """
     deployment_name = deployment_manifest.name
     for group in deployment_manifest.groups:

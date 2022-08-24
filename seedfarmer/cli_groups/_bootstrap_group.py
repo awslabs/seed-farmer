@@ -19,14 +19,14 @@ from typing import List, Optional
 import click
 
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
-from seedfarmer.config import PROJECT
+from seedfarmer.commands import bootstrap_target_account, bootstrap_toolchain_account
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group(name="bootstrap", help="Bootstrap (initialize) a Toolchain or Target account")
 def bootstrap() -> None:
-    f"""Bootstrap a Toolchain or Target account for project {PROJECT.upper()}"""
+    """Bootstrap a Toolchain or Target account for project"""
     pass
 
 
@@ -57,14 +57,40 @@ def bootstrap() -> None:
     help="Optionally also bootstrap the account as a Target account",
     required=False,
 )
+@click.option(
+    "--synth/--no-synth",
+    type=bool,
+    default=False,
+    help="Synthesize a CFN template only...do not deploy",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_toolchain(
-    project: str, trusted_principal: List[str], permission_boundary: Optional[str], as_target: bool, debug: bool
+    project: str,
+    trusted_principal: List[str],
+    permission_boundary: Optional[str],
+    as_target: bool,
+    synth: bool,
+    debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
-    pass
+    bootstrap_toolchain_account(
+        project_name="exampleproj",
+        principalARNs=trusted_principal,
+        permissionsBoundaryARN=permission_boundary,
+        synthesize=synth,
+    )
+    # if as_target:
+    #     #  Go get the account id and call the target command
+    #     toolchain_account = None
+    #     bootstrap_target_account(
+    #         toolchain_account_id=toolchain_account,
+    #         project_name="exampleproj",
+    #         permissionsBoundaryARN=permission_boundary,
+    #         synthesize=synth,
+    # )
 
 
 @bootstrap.command(
@@ -85,9 +111,27 @@ def bootstrap_toolchain(
     required=False,
     default=None,
 )
+@click.option(
+    "--synth/--no-synth",
+    type=bool,
+    default=False,
+    help="Synthesize a CFN template only...do not deploy",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
-def bootstrap_target(project: str, toolchain_account: str, permission_boundary: Optional[str], debug: bool) -> None:
+def bootstrap_target(
+    project: str,
+    toolchain_account: str,
+    permission_boundary: Optional[str],
+    synth: bool,
+    debug: bool = False,
+) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Bootstrapping a Target account for Project %s", project)
-    pass
+    bootstrap_target_account(
+        toolchain_account_id=toolchain_account,
+        project_name="exampleproj",
+        permissionsBoundaryARN=permission_boundary,
+        synthesize=synth,
+    )

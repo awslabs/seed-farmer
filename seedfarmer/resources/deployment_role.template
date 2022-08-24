@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation for the SeedFarmer Deployment Role
+Outputs:
+  DeploymentRoleName:
+    Value:
+      Ref: DeploymentRole
+Resources:
+  DeploymentRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        -   Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+                AWS: arn:aws:iam::{{ toolchain_account_id }}:role/seedfarmer-{{ project_name }}-toolchain-role
+      Path: /
+      Policies:
+        - PolicyName: InlineToolchain
+          PolicyDocument:
+            Statement:
+            - Action:
+              - kms:Enable*
+              - kms:Get*
+              - kms:Decrypt
+              - kms:Untag*
+              - kms:Put*
+              - kms:List*
+              - kms:Tag*
+              - kms:Encrypt
+              - kms:Describe*
+              - kms:Disable*
+              - kms:Retire*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Generate*
+              - kms:Delete*
+              - kms:Create*
+              Effect: Allow
+              Resource:
+                - Fn::Join: [
+                    "",[
+                    "arn:aws:kms:*:",
+                    "Ref": AWS::AccountId,
+                    ":key/*"]
+                  ]
+                - Fn::Join: [
+                    "",[
+                    "arn:aws:kms:*:",
+                    "Ref": AWS::AccountId,
+                    ":alias/*"]
+                  ]  
+              Sid: DeploymentKMS
+            - Action:
+              - iam:Delete*
+              - iam:Create*
+              - iam:Get*
+              - iam:Tag*
+              - iam:Untag*
+              - iam:Update*
+              - iam:AttachRolePolicy
+              - iam:PutRolePolicy
+              - iam:Pass*
+              - iam:DetachRolePolicy
+              Effect: Allow
+              Resource:
+                - Fn::Join: [
+                    "",[
+                    "arn:aws:iam::",
+                    "Ref": AWS::AccountId,
+                    ":role/*"]
+                  ]
+                - Fn::Join: [
+                    "",[
+                    "arn:aws:iam::",
+                    "Ref": AWS::AccountId,
+                    ":policy/*"]
+                  ]            
+              Sid: DeploymentIAM
+            - Action:
+              - codebuild:Update*
+              - codebuild:Batch*
+              - codebuild:Create*
+              - codebuild:Delete*
+              Effect: Allow
+              Resource:
+                Fn::Join: [
+                  "",[
+                  "arn:aws:codebuild:*:",
+                  "Ref": AWS::AccountId,
+                  ":project/*"]
+                ]
+              Sid: DeploymentCodeBuild
+            - Action:
+              - iam:ListPolicies
+              - kms:ListKeys
+              - ssm:DescribeParameters
+              - kms:UpdateCustomKeyStore
+              - kms:ListAliases
+              - codebuild:ListProjects
+              Effect: Allow
+              Resource: '*'
+              Sid: DeploymentListStuff
+            - Action:
+              - s3:Delete*
+              - s3:Put*
+              - s3:Get*
+              - s3:Restore*
+              - s3:Create*
+              - s3:List*
+              Effect: Allow
+              Resource:
+              - arn:aws:s3:::{{ project_name }}*/*
+              Sid: DeploymentS3
+            - Action:
+              - sts:AssumeRole
+              - sts:TagSession
+              - sts:GetSessionToken
+              Effect: Allow
+              Resource:
+              - arn:aws:iam::*:role/{{ project_name }}*
+              Sid: DeploymentSTS
+            - Action:
+              - ssm:Put*
+              - ssm:Delete*
+              - ssm:Remove*
+              - ssm:Add*
+              - ssm:Describe*
+              - ssm:Get*
+              Effect: Allow              
+              Resource: 
+                Fn::Join: [
+                  "",[
+                  "arn:aws:ssm:*:",
+                  "Ref": AWS::AccountId,
+                  ":parameter/{{ project_name }}/*"]
+                ]
+      RoleName: seedfarmer-{{ project_name }}-deployment-role
+    Type: AWS::IAM::Role

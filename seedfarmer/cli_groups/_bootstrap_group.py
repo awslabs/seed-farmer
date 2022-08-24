@@ -78,7 +78,7 @@ def bootstrap_toolchain(
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
     bootstrap_toolchain_account(
         project_name="exampleproj",
-        principalARN=trusted_principal,
+        principalARNs=trusted_principal,
         permissionsBoundaryARN=permission_boundary,
         synthesize=synth,
     )

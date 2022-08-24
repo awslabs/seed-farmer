@@ -67,11 +67,11 @@ def write_template(template: Dict[Any, Any], name: str) -> None:
 
 def bootstrap_toolchain_account(
     project_name: str,
-    principalARN: List[str],
+    principalARNs: List[str],
     permissionsBoundaryARN: Optional[str] = None,
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
-    template = get_toolchain_template(project_name, principalARN, permissionsBoundaryARN)
+    template = get_toolchain_template(project_name, principalARNs, permissionsBoundaryARN)
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
         # call the services to deploy

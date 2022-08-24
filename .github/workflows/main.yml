@@ -41,4 +41,4 @@ jobs:
       - name: Isort Check
         run: isort --check ./seedfarmer
       - name: PyTest
-        run: cp test/unit-test/mock_data/seedfarmer.yaml . && pytest test/unit-test/test_modules.py -v --cov=seedfarmer
+        run: cp test/unit-test/mock_data/seedfarmer.yaml . && pytest test/unit-test/test_models.py -v --cov=seedfarmer

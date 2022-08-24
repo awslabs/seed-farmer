@@ -67,4 +67,5 @@ def get_account_id() -> str:
         from seedfarmer.output_utils import print_bolded
 
         print_bolded("Please make sure you have a valid AWS Session", color="red")
+        raise e
         exit(1)

@@ -18,14 +18,13 @@ import click
 
 import seedfarmer.mgmt.module_init as minit
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
-from seedfarmer.config import PROJECT
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group(name="init", help="Initiaize a project or module")
 def init() -> None:
-    f"""Initialize a project or module for {PROJECT.upper()}"""
+    """Initialize a project or module"""
     pass
 
 

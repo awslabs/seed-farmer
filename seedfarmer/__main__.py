@@ -20,7 +20,6 @@ import click
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, enable_debug
 from seedfarmer.cli_groups import bootstrap, init, list, remove, store
-from seedfarmer.config import DESCRIPTION, PROJECT
 from seedfarmer.output_utils import print_bolded
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -28,16 +27,16 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 @click.group()
 def cli() -> None:
-    f"{DESCRIPTION}"
+    """SeedFarmer CLI interface"""
     pass
 
 
-@click.command(help="Get the version of seedfarmer")
+@click.command(help="Get the version SeedFarmer")
 def version() -> None:
-    print(f"seedfarmer {seedfarmer.__version__}")
+    print(f"seed-farmer-{seedfarmer.__version__}")
 
 
-@click.command(help=f"Apply a deployment manifest relative path for {PROJECT.upper()}")
+@click.command(help="Apply manifests to a SeedFarmer managed deployment")
 @click.argument(
     "spec",
     type=str,
@@ -62,7 +61,7 @@ def version() -> None:
     show_default=True,
 )
 def apply(spec: str, debug: bool, dry_run: bool, show_manifest: bool) -> None:
-    f"Deploy a(n) {PROJECT.upper()} environemnt based on a deployspec file (yaml)." ""
+    """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.info("Apply request with manifest %s", spec)
@@ -72,7 +71,7 @@ def apply(spec: str, debug: bool, dry_run: bool, show_manifest: bool) -> None:
     commands.apply(spec, dry_run, show_manifest)
 
 
-@click.command(help=f"Destroy {PROJECT.upper()} Deployment")
+@click.command(help="Destroy a SeedFarmer managed deployment")
 @click.argument(
     "deployment",
     type=str,
@@ -102,7 +101,7 @@ def destroy(
     show_manifest: bool,
     debug: bool,
 ) -> None:
-    f"Destroy an {PROJECT.upper()} deployment ."
+    """Destroy a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.info("Destroy for %s", deployment)

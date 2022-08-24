@@ -17,7 +17,7 @@ import os
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from seedfarmer.config import OPS_ROOT, PROJECT
+from seedfarmer import config
 from seedfarmer.services import _secrets_manager as secrets
 from seedfarmer.services import _ssm as store
 from seedfarmer.utils import generate_hash
@@ -62,7 +62,7 @@ def get_all_deployments() -> List[str]:
     List[str]
         A list of the deployments in the account
     """
-    prefix = f"/{PROJECT}"
+    prefix = f"/{config.PROJECT}"
     _filter = f"{ModuleConst.MANIFEST.value}"
     ret = set()
     params = store.list_parameters_with_filter(prefix, _filter)
@@ -121,7 +121,7 @@ def get_deployed_modules(deployment: str, group: str, params_cache: Optional[Dic
     List[str]
         A list of the names of the modules in the group
     """
-    prefix = f"/{PROJECT}/{deployment}/{group}"
+    prefix = f"/{config.PROJECT}/{deployment}/{group}"
     _filter = f"{ModuleConst.MD5.value}/{ModuleConst.BUNDLE.value}"
     params = params_cache.keys() if params_cache else store.list_parameters_with_filter(prefix, _filter)
     ret: List[str] = []
@@ -603,35 +603,35 @@ def remove_deployed_deployment_manifest(deployment: str) -> None:
 
 
 def _metadata_key(deployment: str, group: str, module: str) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
 
 
 def _md5_module_key(deployment: str, group: str, module: str, type: ModuleConst) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MD5.value}/{type.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MD5.value}/{type.value}"
 
 
 def _md5_group_key(deployment: str, group: str, type: ModuleConst) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{ModuleConst.MD5.value}/{type.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{ModuleConst.MD5.value}/{type.value}"
 
 
 def _deployspec_key(deployment: str, group: str, module: str) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{module}/{ModuleConst.DEPLOYSPEC.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.DEPLOYSPEC.value}"
 
 
 def _manifest_key(deployment: str, group: str, module: str) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MANIFEST.value}"
 
 
 def _group_key(deployment: str, group: str) -> str:
-    return f"/{PROJECT}/{deployment}/{group}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.PROJECT}/{deployment}/{group}/{ModuleConst.MANIFEST.value}"
 
 
 def _deployment_manifest_key(deployment: str) -> str:
-    return f"/{PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}"
 
 
 def _deployed_deployment_manifest_key(deployment: str) -> str:
-    return f"/{PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}/{ModuleConst.DEPLOYED.value}"
+    return f"/{config.PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}/{ModuleConst.DEPLOYED.value}"
 
 
 def _all_module_keys(deployment: str, group: str, module: str) -> List[str]:
@@ -650,7 +650,7 @@ def _all_group_keys(deployment: str, group: str) -> List[str]:
 
 
 def _deployment_key(deployment: str) -> str:
-    return f"/{PROJECT}/{deployment}/"
+    return f"/{config.PROJECT}/{deployment}/"
 
 
 def _fetch_helper(name: str, params_cache: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
@@ -661,13 +661,13 @@ def _fetch_helper(name: str, params_cache: Optional[Dict[str, Any]] = None) -> O
 
 
 def _get_module_stack_names(deployment_name: str, group_name: str, module_name: str) -> Tuple[str, str]:
-    module_stack_name = f"{PROJECT}-{deployment_name}-{group_name}-{module_name}-iam-policy"
-    module_role_name = f"{PROJECT}-{deployment_name}-{group_name}-{module_name}-{generate_hash()}"
+    module_stack_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-iam-policy"
+    module_role_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-{generate_hash()}"
     return module_stack_name, module_role_name
 
 
 def _get_modulestack_path(module_path: str) -> Any:
-    p = os.path.join(OPS_ROOT, module_path, "modulestack.yaml")
+    p = os.path.join(config.OPS_ROOT, module_path, "modulestack.yaml")
     if not os.path.exists(p):
         _logger.debug("No modulestack.yaml found")
         return None
@@ -675,7 +675,7 @@ def _get_modulestack_path(module_path: str) -> Any:
 
 
 def _get_deployspec_path(module_path: str) -> str:
-    p = os.path.join(OPS_ROOT, module_path, "deployspec.yaml")
+    p = os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")
     if not os.path.exists(p):
         raise Exception("No deployspec.yaml file found in module directory: %s", p)
-    return os.path.join(OPS_ROOT, module_path, "deployspec.yaml")
+    return os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")

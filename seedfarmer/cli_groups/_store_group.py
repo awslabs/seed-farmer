@@ -21,14 +21,13 @@ import yaml
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug, utils
-from seedfarmer.config import PROJECT
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group(name="store", help="Top Level command to support storing module metadata")
 def store() -> None:
-    f"Store module data for {PROJECT.upper()}"
+    "Store module data"
     pass
 
 

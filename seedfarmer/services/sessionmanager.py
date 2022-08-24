@@ -168,7 +168,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             retries={"max_attempts": 5},
             connect_timeout=10,
             max_pool_connections=10,
-            # user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
+            user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
         )
 
     def _fetch_session_obj(self) -> Dict[Any, Any]:

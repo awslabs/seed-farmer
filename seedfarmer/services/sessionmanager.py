@@ -9,6 +9,8 @@ import boto3
 import botocore
 from boto3 import Session
 
+import seedfarmer
+
 _logger: logging.Logger = logging.getLogger(__name__)
 
 

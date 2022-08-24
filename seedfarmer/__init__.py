@@ -16,7 +16,7 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import pkg_resources
 import yaml
@@ -81,7 +81,7 @@ class Config(object):
             self._PROJECT = config_data["project"]
             self._DESCRIPTION = config_data["description"] if "description" in config_data else "NEW PROJECT"
 
-        @codeseeder.configure(self._PROJECT.lower(), deploy_if_not_exists=True)
+        @codeseeder.configure(cast(str, self._PROJECT).lower(), deploy_if_not_exists=True)
         def configure(configuration: CodeSeederConfig) -> None:
             LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {self.OPS_ROOT}")
             configuration.timeout = 120

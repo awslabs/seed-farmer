@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, cast
+from typing import List, Optional, cast
 
 from aws_codeseeder import codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -55,7 +55,9 @@ class StackInfo(object):
             self._PROJECT_MANAGED_POLICY_CFN_NAME = f"{config.PROJECT.lower()}-managed-policy"
         return self._PROJECT_MANAGED_POLICY_CFN_NAME
 
+
 info = StackInfo()
+
 
 def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: DeploymentManifest) -> None:
     """
@@ -71,7 +73,9 @@ def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: Deplo
 
     """
     # Determine if managed policy stack already deployed
-    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME)
+    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
+        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME
+    )
     if not project_managed_policy_stack_exists:
         project_managed_policy_template = cast(
             str, deployment_manifest.get_parameter_value("projectPolicy", info.PROJECT_POLICY_PATH)
@@ -264,7 +268,9 @@ def deploy_module_stack(
                         "secretsmanager:DescribeSecret",
                         "secretsmanager:ListSecretVersionIds",
                     ],
-                    "Resource": f"arn:aws:secretsmanager:{info.REGION}:{info.ACCOUNT_ID}:secret:{docker_credentials_secret}*",
+                    "Resource": (
+                        f"arn:aws:secretsmanager:{info.REGION}:{info.ACCOUNT_ID}:secret:{docker_credentials_secret}*"
+                    ),
                 },
                 {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},
             ],

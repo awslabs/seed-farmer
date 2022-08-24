@@ -227,7 +227,9 @@ def _execute_module_commands(
         extra_post_build_commands=extra_post_build_commands,
         extra_env_vars=extra_env_vars,
         extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
-        codebuild_role=f"{config.PROJECT.lower()}-{deployment_name}-{group_name}-{module_manifest_name}-{generate_hash()}",
+        codebuild_role=(
+            f"{config.PROJECT.lower()}-{deployment_name}-{group_name}" f"-{module_manifest_name}-{generate_hash()}"
+        ),
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,
         extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},

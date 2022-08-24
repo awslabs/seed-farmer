@@ -19,7 +19,6 @@ import os
 import pytest
 from _test_helper_functions import _test_command
 
-import seedfarmer.mgmt.module_init as minit
 from seedfarmer import config
 from seedfarmer.__main__ import apply, destroy, init
 from seedfarmer.__main__ import list as _list
@@ -103,7 +102,7 @@ def test_apply_help():
         sub_command=apply,
         options=["--help"],
         exit_code=0,
-        expected_output=f"Apply manifests to a SeedFarmer managed deployment",
+        expected_output="Apply manifests to a SeedFarmer managed deployment",
     )
 
 
@@ -589,7 +588,7 @@ def test_store_moduledata_missing_module_arg():
 @pytest.mark.destroy
 def test_destroy():
     _test_command(
-        sub_command=destroy, options=["--help"], exit_code=0, expected_output=f"Destroy a SeedFarmer managed deployment"
+        sub_command=destroy, options=["--help"], exit_code=0, expected_output="Destroy a SeedFarmer managed deployment"
     )
 
 

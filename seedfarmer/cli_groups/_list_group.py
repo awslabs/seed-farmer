@@ -21,7 +21,6 @@ import click
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, enable_debug
-from seedfarmer.config import PROJECT
 from seedfarmer.output_utils import print_bolded, print_deployment_inventory, print_json, print_manifest_inventory
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 @click.group(name="list", help="List the relative data (module or deployment)")
 def list() -> None:
-    f"""List module data for {PROJECT.upper()}"""
+    """List module data"""
     pass
 
 
@@ -177,5 +176,6 @@ def list_deployments(
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("We are getting all deployments")
+
     deps = mi.get_all_deployments()
     print_deployment_inventory(description="Deployment Names", dep=deps)

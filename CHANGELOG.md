@@ -22,6 +22,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
+- enable basic CLI functions by lazy loading seedfarmer.yaml and boto3.Session
 
 ## v0.1.4 (2022-08-16)
 

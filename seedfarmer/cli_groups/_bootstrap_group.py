@@ -20,13 +20,25 @@ import click
 
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
 from seedfarmer.commands import bootstrap_target_account, bootstrap_toolchain_account
+from seedfarmer.output_utils import print_bolded
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
+def _load_project() -> str:
+    print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
+    try:
+        from seedfarmer import config
+
+        return config.PROJECT
+    except FileNotFoundError:
+        print_bolded("Unable to determine project to bootstrap, one of --project or a seedfarmer.yaml is required")
+        raise click.ClickException("Failed to determine project identifier")
+
+
 @click.group(name="bootstrap", help="Bootstrap (initialize) a Toolchain or Target account")
 def bootstrap() -> None:
-    """Bootstrap a Toolchain or Target account for project"""
+    """Bootstrap a Toolchain or Target account"""
     pass
 
 
@@ -34,7 +46,13 @@ def bootstrap() -> None:
     name="toolchain",
     help="Bootstrap a Toolchain account.",
 )
-@click.argument("project", type=str, required=True)
+@click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
 @click.option(
     "--trusted-principal",
     "-t",
@@ -45,7 +63,7 @@ def bootstrap() -> None:
 )
 @click.option(
     "--permission-boundary",
-    "-p",
+    "-b",
     help="ARN of a Managed Policy to set as the Permission Boundary on the Toolchain Role",
     required=False,
     default=None,
@@ -66,7 +84,7 @@ def bootstrap() -> None:
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_toolchain(
-    project: str,
+    project: Optional[str],
     trusted_principal: List[str],
     permission_boundary: Optional[str],
     as_target: bool,
@@ -75,6 +93,8 @@ def bootstrap_toolchain(
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
+    if project is None:
+        project = _load_project()
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
     bootstrap_toolchain_account(
         project_name="exampleproj",
@@ -97,7 +117,13 @@ def bootstrap_toolchain(
     name="target",
     help="Bootstrap a Target account.",
 )
-@click.argument("project", type=str, required=True)
+@click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
 @click.option(
     "--toolchain-account",
     "-t",
@@ -106,7 +132,7 @@ def bootstrap_toolchain(
 )
 @click.option(
     "--permission-boundary",
-    "-p",
+    "-b",
     help="ARN of a Managed Policy to set as the Permission Boundary on the Toolchain Role",
     required=False,
     default=None,
@@ -120,14 +146,16 @@ def bootstrap_toolchain(
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_target(
-    project: str,
+    project: Optional[str],
     toolchain_account: str,
     permission_boundary: Optional[str],
     synth: bool,
-    debug: bool = False,
+    debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
+    if project is None:
+        project = _load_project()
     _logger.debug("Bootstrapping a Target account for Project %s", project)
     bootstrap_target_account(
         toolchain_account_id=toolchain_account,

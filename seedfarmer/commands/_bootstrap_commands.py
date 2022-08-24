@@ -15,6 +15,7 @@
 import json
 import logging
 import os
+import sys
 from typing import Any, Dict, List, Optional
 
 import yaml
@@ -56,13 +57,8 @@ def get_deployment_template(
     return dict(json.loads(t))
 
 
-def write_template(template: Dict[Any, Any], name: str) -> None:
-    loc = os.path.join(os.getcwd(), "templates")
-    output = os.path.join(loc, name)
-    _logger.info(f"Writing template to {output}")
-    os.makedirs(loc, exist_ok=True)
-    with open(output, "w") as outfile:
-        yaml.dump(template, outfile)
+def write_template(template: Dict[Any, Any]) -> None:
+    yaml.dump(template, sys.stdout)
 
 
 def bootstrap_toolchain_account(
@@ -77,7 +73,7 @@ def bootstrap_toolchain_account(
         # call the services to deploy
         pass
     else:
-        write_template(template=template, name="toolchain_bootstrap.yaml")
+        write_template(template=template)
     return template
 
 
@@ -93,5 +89,5 @@ def bootstrap_target_account(
         # call the services to deploy
         pass
     else:
-        write_template(template=template, name="target_bootstrap.yaml")
+        write_template(template=template)
     return template

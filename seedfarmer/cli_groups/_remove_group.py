@@ -18,14 +18,13 @@ import click
 
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
-from seedfarmer.config import PROJECT
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group(name="remove", help="Top Level command to support removing module metadata")
 def remove() -> None:
-    f"""Remove module data for {PROJECT.upper()}"""
+    """Remove module data"""
     pass
 
 

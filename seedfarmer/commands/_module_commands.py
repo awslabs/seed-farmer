@@ -23,7 +23,7 @@ import botocore.exceptions
 from aws_codeseeder import codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
 
-from seedfarmer.config import CONFIG_FILE, OPS_ROOT, PROJECT
+from seedfarmer import config
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
 from seedfarmer.utils import generate_hash
@@ -32,7 +32,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _param(key: str) -> str:
-    return f"{PROJECT.upper()}_{key}"
+    return f"{config.PROJECT.upper()}_{key}"
 
 
 def _env_vars(
@@ -219,7 +219,7 @@ def _execute_module_commands(
     codebuild_compute_type: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     @codeseeder.remote_function(
-        PROJECT.lower(),
+        config.PROJECT.lower(),
         extra_dirs=extra_dirs,
         extra_install_commands=extra_install_commands,
         extra_pre_build_commands=extra_pre_build_commands,
@@ -227,10 +227,12 @@ def _execute_module_commands(
         extra_post_build_commands=extra_post_build_commands,
         extra_env_vars=extra_env_vars,
         extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
-        codebuild_role=f"{PROJECT.lower()}-{deployment_name}-{group_name}-{module_manifest_name}-{generate_hash()}",
+        codebuild_role=(
+            f"{config.PROJECT.lower()}-{deployment_name}-{group_name}" f"-{module_manifest_name}-{generate_hash()}"
+        ),
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,
-        extra_files={CONFIG_FILE: os.path.join(OPS_ROOT, CONFIG_FILE)},
+        extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},
     )
     def _execute_module_commands(
         deployment_name: str,

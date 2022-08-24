@@ -23,9 +23,8 @@ import checksumdir
 import yaml
 
 import seedfarmer.mgmt.deploy_utils as du
-from seedfarmer import commands
+from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values
-from seedfarmer.config import OPS_ROOT
 from seedfarmer.mgmt.module_info import (
     _get_deployspec_path,
     _get_modulestack_path,
@@ -78,7 +77,7 @@ def _execute_deploy(
     return commands.deploy_module(
         deployment_name=d_name,
         group_name=g_name,
-        module_path=os.path.join(OPS_ROOT, m.path),
+        module_path=os.path.join(config.OPS_ROOT, m.path),
         module_deploy_spec=m.deploy_spec,
         module_manifest_name=m.name,
         parameters=parameters,
@@ -327,7 +326,7 @@ def deploy_deployment(
             # of `bundle_md5` and `deploy_spec` below
             module_manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
 
-            module.bundle_md5 = checksumdir.dirhash(os.path.join(OPS_ROOT, module.path))
+            module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module.path))
             module_deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(
@@ -406,7 +405,7 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
         If the relative `path' value is a list
     """
 
-    spec_path = os.path.join(OPS_ROOT, deployment_spec)
+    spec_path = os.path.join(config.OPS_ROOT, deployment_spec)
     with open(spec_path) as manifest_file:
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
     _logger.debug(deployment_manifest.dict())
@@ -421,7 +420,7 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
             _logger.debug("module_group: %s", module_group)
             raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
         if module_group.path:
-            with open(os.path.join(OPS_ROOT, module_group.path)) as manifest_file:
+            with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
                 module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
     deployment_manifest.set_module_defaults()
 

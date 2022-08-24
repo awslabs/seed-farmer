@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from seedfarmer.commands._bootstrap_commands import bootstrap_target_account, bootstrap_toolchain_account
 from seedfarmer.commands._deployment_commands import apply, destroy
 from seedfarmer.commands._module_commands import deploy_module, destroy_module
 from seedfarmer.commands._parameter_commands import generate_export_env_params
@@ -32,4 +33,6 @@ __all__ = [
     "destroy_module_stack",
     "deploy_seedkit",
     "generate_export_env_params",
+    "bootstrap_toolchain_account",
+    "bootstrap_target_account",
 ]

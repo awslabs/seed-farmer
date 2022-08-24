@@ -20,6 +20,7 @@ import click
 
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.commands import bootstrap_target_account, bootstrap_toolchain_account
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -68,16 +69,17 @@ def bootstrap() -> None:
     default=None,
 )
 @click.option(
-    "--output",
-    help="Output a CloudFormation template to be manually deployed",
-    required=False,
-    default=None,
-)
-@click.option(
     "--as-target/--not-as-target",
     type=bool,
     default=False,
     help="Optionally also bootstrap the account as a Target account",
+    required=False,
+)
+@click.option(
+    "--synth/--no-synth",
+    type=bool,
+    default=False,
+    help="Synthesize a CFN template only...do not deploy",
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
@@ -85,8 +87,8 @@ def bootstrap_toolchain(
     project: Optional[str],
     trusted_principal: List[str],
     permission_boundary: Optional[str],
-    output: Optional[str],
     as_target: bool,
+    synth: bool,
     debug: bool,
 ) -> None:
     if debug:
@@ -94,7 +96,21 @@ def bootstrap_toolchain(
     if project is None:
         project = _load_project()
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
-    pass
+    bootstrap_toolchain_account(
+        project_name="exampleproj",
+        principalARNs=trusted_principal,
+        permissionsBoundaryARN=permission_boundary,
+        synthesize=synth,
+    )
+    # if as_target:
+    #     #  Go get the account id and call the target command
+    #     toolchain_account = None
+    #     bootstrap_target_account(
+    #         toolchain_account_id=toolchain_account,
+    #         project_name="exampleproj",
+    #         permissionsBoundaryARN=permission_boundary,
+    #         synthesize=synth,
+    # )
 
 
 @bootstrap.command(
@@ -122,17 +138,18 @@ def bootstrap_toolchain(
     default=None,
 )
 @click.option(
-    "--output",
-    help="Output a CloudFormation template to be manually deployed",
+    "--synth/--no-synth",
+    type=bool,
+    default=False,
+    help="Synthesize a CFN template only...do not deploy",
     required=False,
-    default=None,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_target(
     project: Optional[str],
     toolchain_account: str,
     permission_boundary: Optional[str],
-    output: Optional[str],
+    synth: bool,
     debug: bool,
 ) -> None:
     if debug:
@@ -140,4 +157,9 @@ def bootstrap_target(
     if project is None:
         project = _load_project()
     _logger.debug("Bootstrapping a Target account for Project %s", project)
-    pass
+    bootstrap_target_account(
+        toolchain_account_id=toolchain_account,
+        project_name="exampleproj",
+        permissionsBoundaryARN=permission_boundary,
+        synthesize=synth,
+    )

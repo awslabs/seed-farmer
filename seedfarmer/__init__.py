@@ -32,6 +32,8 @@ __version__: str = pkg_resources.get_distribution(__title__).version
 DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
 INFO_LOGGING_FORMAT = "[%(filename)-13s:%(lineno)3d] %(message)s"
 
+CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 
 def enable_debug(format: str) -> None:
     logging.basicConfig(level=logging.DEBUG, format=format)

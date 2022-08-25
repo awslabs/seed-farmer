@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - new CLI bootstrap commands for Toolchain and Target accounts
 - create SessionManager class for supporting multi-account, multi-region
 - bootstrap command support to generate CFN templates for Toolchain and Target accounts
+- added deployment for toolchain and target accounts via CFN
 
 
 ### Changes
@@ -18,7 +19,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - update ModuleManifest to support targetAccount and targetRegion with defaults
 - move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
 - refactor cli commands/groups to reduce line count in `__main__.py`
-- poved projectpolicy.yaml into resources/.
+- moved projectpolicy.yaml into resources/.
+- added profile and region support for session in `_session_utils.py`
+- convertd `sessionmanager.py` to only use `_session_utils.py`
 
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist

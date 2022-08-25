@@ -82,11 +82,18 @@ def bootstrap() -> None:
     help="Synthesize a CFN template only...do not deploy",
     required=False,
 )
+@click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to initiate a session",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_toolchain(
     project: Optional[str],
     trusted_principal: List[str],
     permission_boundary: Optional[str],
+    profile: Optional[str],
     as_target: bool,
     synth: bool,
     debug: bool,
@@ -97,20 +104,13 @@ def bootstrap_toolchain(
         project = _load_project()
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
     bootstrap_toolchain_account(
-        project_name="exampleproj",
-        principalARNs=trusted_principal,
-        permissionsBoundaryARN=permission_boundary,
+        project_name=project,
+        principal_arns=trusted_principal,
+        permissions_boundary_arn=permission_boundary,
+        profile=profile,
         synthesize=synth,
+        as_target=as_target,
     )
-    # if as_target:
-    #     #  Go get the account id and call the target command
-    #     toolchain_account = None
-    #     bootstrap_target_account(
-    #         toolchain_account_id=toolchain_account,
-    #         project_name="exampleproj",
-    #         permissionsBoundaryARN=permission_boundary,
-    #         synthesize=synth,
-    # )
 
 
 @bootstrap.command(
@@ -144,11 +144,18 @@ def bootstrap_toolchain(
     help="Synthesize a CFN template only...do not deploy",
     required=False,
 )
+@click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to initiate a session",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_target(
     project: Optional[str],
     toolchain_account: str,
     permission_boundary: Optional[str],
+    profile: Optional[str],
     synth: bool,
     debug: bool,
 ) -> None:
@@ -159,7 +166,8 @@ def bootstrap_target(
     _logger.debug("Bootstrapping a Target account for Project %s", project)
     bootstrap_target_account(
         toolchain_account_id=toolchain_account,
-        project_name="exampleproj",
-        permissionsBoundaryARN=permission_boundary,
+        project_name=project,
+        profile=profile,
+        permissions_boundary_arn=permission_boundary,
         synthesize=synth,
     )

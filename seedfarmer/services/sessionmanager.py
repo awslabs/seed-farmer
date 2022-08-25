@@ -5,11 +5,9 @@ from threading import Thread
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple
 
-import boto3
-import botocore
 from boto3 import Session
 
-import seedfarmer
+from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_account_id
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -108,12 +106,12 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             _logger.info(f"Creating Session for {session_key}")
             toolchain_session = self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
             deployment_role_arn = f"arn:aws:iam::{account_id}:role/seedfarmer-{p_name}-deployment-role"
-            sts_toolchain_client = toolchain_session.client("sts")
+            sts_toolchain_client = boto3_client(service_name="sts", session=toolchain_session)
             deployment_role = sts_toolchain_client.assume_role(
                 RoleArn=deployment_role_arn,
                 RoleSessionName="deployment_role",
             )
-            deployment_session = boto3.Session(
+            deployment_session = create_new_session_with_creds(
                 aws_access_key_id=deployment_role["Credentials"]["AccessKeyId"],
                 aws_secret_access_key=deployment_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=deployment_role["Credentials"]["SessionToken"],
@@ -134,16 +132,16 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     ) -> Tuple[Session, Dict[Any, Any]]:
 
         _logger.debug("Getting toolchain role")
-        user_session = boto3.Session(region_name=region_name, profile_name=profile_name if profile_name else None)
-        user_client = user_session.client("sts", use_ssl=True, config=self._get_botocore_config())
-        toolchain_account_id = user_client.get_caller_identity().get("Account")
+        user_session = create_new_session(region_name=region_name, profile=profile_name)
+        user_client = boto3_client(service_name="sts", session=user_session)
+        toolchain_account_id = get_account_id(user_session)
 
         toolchain_role_arn = f"arn:aws:iam::{toolchain_account_id}:role/{self.toolchain_role_name}"
         toolchain_role = user_client.assume_role(
             RoleArn=toolchain_role_arn,
             RoleSessionName="toolchainrole",
         )
-        toolchain_session = boto3.Session(
+        toolchain_session = create_new_session_with_creds(
             aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
             aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
             aws_session_token=toolchain_role["Credentials"]["SessionToken"],
@@ -164,14 +162,6 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             sleep(interval)
             _logger.debug(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}
-
-    def _get_botocore_config(self) -> botocore.config.Config:
-        return botocore.config.Config(
-            retries={"max_attempts": 5},
-            connect_timeout=10,
-            max_pool_connections=10,
-            user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
-        )
 
     def _fetch_session_obj(self) -> Dict[Any, Any]:
         return self.sessions

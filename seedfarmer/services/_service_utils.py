@@ -34,7 +34,7 @@ def get_botocore_config() -> botocore.config.Config:
 
 
 def create_new_session(region_name: Optional[str] = None, profile: Optional[str] = None) -> Session:
-    return Session(region_name=region_name if region_name else None, profile_name=profile if profile else None)
+    return Session(region_name=region_name, profile_name=profile)
 
 
 def create_new_session_with_creds(
@@ -44,7 +44,7 @@ def create_new_session_with_creds(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
-        region_name=region_name if region_name else None,
+        region_name=region_name,
     )
 
 

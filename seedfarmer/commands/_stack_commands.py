@@ -78,7 +78,7 @@ def deploy_managed_policy_stack(deployment_name: str, deployment_manifest: Deplo
     )
     if not project_managed_policy_stack_exists:
         project_managed_policy_template = cast(
-            str, deployment_manifest.get_parameter_value("projectPolicy", info.PROJECT_POLICY_PATH)
+            str, deployment_manifest.get_parameter_value("projectPolicy", default=info.PROJECT_POLICY_PATH)
         )
         project_managed_policy_template = os.path.join(config.OPS_ROOT, project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):

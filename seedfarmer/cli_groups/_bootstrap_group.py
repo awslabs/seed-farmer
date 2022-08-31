@@ -18,7 +18,7 @@ from typing import List, Optional
 
 import click
 
-from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
+from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.commands import bootstrap_target_account, bootstrap_toolchain_account
 from seedfarmer.output_utils import print_bolded
 
@@ -26,10 +26,8 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _load_project() -> str:
-    print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
     try:
-        from seedfarmer import config
-
+        print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
         return config.PROJECT
     except FileNotFoundError:
         print_bolded("Unable to determine project to bootstrap, one of --project or a seedfarmer.yaml is required")

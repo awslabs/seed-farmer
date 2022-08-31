@@ -17,13 +17,15 @@ import logging
 import time
 from typing import Any, Dict, List, Optional, cast
 
+from boto3 import Session
+
 from seedfarmer.services._service_utils import boto3_client
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def put_parameter(name: str, obj: Dict[str, Any]) -> None:
-    client = boto3_client(service_name="ssm")
+def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = None) -> None:
+    client = boto3_client(service_name="ssm", session=session)
     retries = 3
     while retries > 0:
         try:
@@ -45,14 +47,14 @@ def put_parameter(name: str, obj: Dict[str, Any]) -> None:
                 raise Exception(err)
 
 
-def get_parameter(name: str) -> Dict[str, Any]:
-    client = boto3_client(service_name="ssm")
+def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
+    client = boto3_client(service_name="ssm", session=session)
     json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def get_parameter_if_exists(name: str) -> Optional[Dict[str, Any]]:
-    client = boto3_client(service_name="ssm")
+def get_parameter_if_exists(name: str, session: Optional[Session] = None) -> Optional[Dict[str, Any]]:
+    client = boto3_client(service_name="ssm", session=session)
     try:
         json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
     except client.exceptions.ParameterNotFound:
@@ -60,8 +62,8 @@ def get_parameter_if_exists(name: str) -> Optional[Dict[str, Any]]:
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def does_parameter_exist(name: str) -> bool:
-    client = boto3_client(service_name="ssm")
+def does_parameter_exist(name: str, session: Optional[Session] = None) -> bool:
+    client = boto3_client(service_name="ssm", session=session)
     try:
         client.get_parameter(Name=name)
         return True
@@ -69,8 +71,8 @@ def does_parameter_exist(name: str) -> bool:
         return False
 
 
-def list_parameters(prefix: str) -> List[str]:
-    client = boto3_client(service_name="ssm")
+def list_parameters(prefix: str, session: Optional[Session] = None) -> List[str]:
+    client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("describe_parameters")
     response_iterator = paginator.paginate(
         ParameterFilters=[
@@ -91,8 +93,8 @@ def list_parameters(prefix: str) -> List[str]:
     return ret
 
 
-def list_parameters_with_filter(prefix: str, contains_string: str) -> List[str]:
-    client = boto3_client(service_name="ssm")
+def list_parameters_with_filter(prefix: str, contains_string: str, session: Optional[Session] = None) -> List[str]:
+    client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("describe_parameters")
 
     response_iterator = paginator.paginate(
@@ -115,8 +117,8 @@ def list_parameters_with_filter(prefix: str, contains_string: str) -> List[str]:
     return ret
 
 
-def get_all_parameter_data_by_path(prefix: str) -> Dict[str, Any]:
-    client = boto3_client(service_name="ssm")
+def get_all_parameter_data_by_path(prefix: str, session: Optional[Session] = None) -> Dict[str, Any]:
+    client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("get_parameters_by_path")
     response_iterator = paginator.paginate(
         Path=prefix,
@@ -138,11 +140,11 @@ def get_all_parameter_data_by_path(prefix: str) -> Dict[str, Any]:
     return ret
 
 
-def delete_parameters(parameters: List[str]) -> None:
+def delete_parameters(parameters: List[str], session: Optional[Session] = None) -> None:
     if parameters:
         if len(parameters) < 10:
-            client = boto3_client(service_name="ssm")
+            client = boto3_client(service_name="ssm", session=session)
             client.delete_parameters(Names=parameters)
         else:
-            delete_parameters(parameters[0:9])
-            delete_parameters(parameters[9 : len(parameters)])
+            delete_parameters(parameters[0:9], session=session)
+            delete_parameters(parameters[9:], session=session)

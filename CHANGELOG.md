@@ -21,7 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - refactor cli commands/groups to reduce line count in `__main__.py`
 - moved projectpolicy.yaml into resources/.
 - added profile and region support for session in `_session_utils.py`
-- convertd `sessionmanager.py` to only use `_session_utils.py`
+- convertd `session_manager.py` to only use `_session_utils.py`
 
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
@@ -45,7 +45,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 - support logging output and url gereration from codebuild output / codeseeder
 - added use of CodeSeederRuntimeError
-- added ModuleDeploymentResponse object 
+- added ModuleDeploymentResponse object
 - added export of moduledata (metadata) in UNIX format from CLI (--export-local-env)
 
 ### Changes
@@ -66,7 +66,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-- use HTTPS instead off SSH for git cloning 
+- use HTTPS instead off SSH for git cloning
 
 
 ---
@@ -81,7 +81,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - lock versions in requirements-dev.in
 - updating CLI output to discern changes to manifest, intended deployment
 - lazy-load seedkit (version 0.3.2 of codeseeder)
-- improve logging messages from codeseeder 
+- improve logging messages from codeseeder
 - align message output / tables listing modules requested, modified, deleted for deployment
 
 ### Fixes

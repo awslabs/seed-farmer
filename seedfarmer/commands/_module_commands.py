@@ -22,10 +22,12 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import botocore.exceptions
 from aws_codeseeder import codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
+from boto3 import Session
 
 from seedfarmer import config
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
+from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import generate_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -69,6 +71,8 @@ def deploy_module(
     module_path: str,
     module_deploy_spec: DeploySpec,
     module_manifest_name: str,
+    account_id: str,
+    region: str,
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
     module_bundle_md5: Optional[str] = None,
@@ -110,6 +114,8 @@ def deploy_module(
             deployment_name=deployment_name,
             group_name=group_name,
             module_manifest_name=module_manifest_name,
+            account_id=account_id,
+            region=region,
             extra_dirs={"module": module_path},
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
@@ -147,6 +153,8 @@ def destroy_module(
     module_path: str,
     module_deploy_spec: DeploySpec,
     module_manifest_name: str,
+    account_id: str,
+    region: str,
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
@@ -178,6 +186,8 @@ def destroy_module(
             deployment_name=deployment_name,
             group_name=group_name,
             module_manifest_name=module_manifest_name,
+            account_id=account_id,
+            region=region,
             extra_dirs={"module": module_path},
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
@@ -210,6 +220,8 @@ def _execute_module_commands(
     deployment_name: str,
     group_name: str,
     module_manifest_name: str,
+    account_id: str,
+    region: str,
     extra_dirs: Optional[Dict[str, Any]] = None,
     extra_install_commands: Optional[List[str]] = None,
     extra_pre_build_commands: Optional[List[str]] = None,
@@ -218,6 +230,11 @@ def _execute_module_commands(
     extra_env_vars: Optional[Dict[str, Any]] = None,
     codebuild_compute_type: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
+    session: Optional[Session] = None
+
+    if not codeseeder.EXECUTING_REMOTELY:
+        session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+
     @codeseeder.remote_function(
         config.PROJECT.lower(),
         extra_dirs=extra_dirs,
@@ -233,11 +250,14 @@ def _execute_module_commands(
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,
         extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},
+        boto3_session=session,
     )
     def _execute_module_commands(
         deployment_name: str,
         group_name: str,
         module_manifest_name: str,
+        account_id: str,
+        region: str,
         extra_dirs: Optional[Dict[str, Any]] = None,
         extra_install_commands: Optional[List[str]] = None,
         extra_pre_build_commands: Optional[List[str]] = None,
@@ -264,6 +284,8 @@ def _execute_module_commands(
                     deployment_name=deployment_name,
                     group_name=group_name,
                     module_manifest_name=module_manifest_name,
+                    account_id=account_id,
+                    region=region,
                     extra_dirs=extra_dirs,
                     extra_install_commands=extra_install_commands,
                     extra_pre_build_commands=extra_pre_build_commands,

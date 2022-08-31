@@ -14,15 +14,28 @@
 
 import logging
 import sys
+from typing import Optional
 
 import click
 import yaml
+from boto3 import Session
 
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
-from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug, utils
+from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug, utils
+from seedfarmer.output_utils import print_bolded
+from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _load_project() -> str:
+    try:
+        print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
+        return config.PROJECT
+    except FileNotFoundError:
+        print_bolded("Unable to determine project to bootstrap, one of --project or a seedfarmer.yaml is required")
+        raise click.ClickException("Failed to determine project identifier")
 
 
 @click.group(name="store", help="Top Level command to support storing module metadata")
@@ -61,6 +74,25 @@ def store() -> None:
     required=True,
 )
 @click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--target-account-id",
+    default=None,
+    help="Account Id to remove module data from, if specifed --target-region is required",
+    show_default=True,
+)
+@click.option(
+    "--target-region",
+    default=None,
+    help="Region to remove module data from, if specifed --target-account-id is required",
+    show_default=True,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -71,6 +103,9 @@ def store_deployspec(
     group: str,
     module: str,
     path: str,
+    project: Optional[str],
+    target_account_id: Optional[str],
+    target_region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -80,7 +115,21 @@ def store_deployspec(
         f"""Storing deployspec for module {module} of group {group}
         in deployment {deployment} located at {path}/deployspec.yaml"""
     )
-    du.update_deployspec(deployment, group, module, path)
+
+    if project is None:
+        project = _load_project()
+
+    session: Optional[Session] = None
+    if (target_account_id is not None) != (target_region is not None):
+        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
+    elif target_account_id is not None and target_region is not None:
+        session = (
+            SessionManager()
+            .get_or_create(project_name=project)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
+        )
+
+    du.update_deployspec(deployment, group, module, path, session=session)
 
 
 @store.command(name="moduledata", help="CAT or pipe in a json or yaml object")
@@ -106,6 +155,25 @@ def store_deployspec(
     required=True,
 )
 @click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--target-account-id",
+    default=None,
+    help="Account Id to remove module data from, if specifed --target-region is required",
+    show_default=True,
+)
+@click.option(
+    "--target-region",
+    default=None,
+    help="Region to remove module data from, if specifed --target-account-id is required",
+    show_default=True,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -115,14 +183,31 @@ def store_module_metadata(
     deployment: str,
     group: str,
     module: str,
+    project: Optional[str],
+    target_account_id: Optional[str],
+    target_region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Writing metadata for module %s in deployment %s", module, deployment)
+
+    if project is None:
+        project = _load_project()
+
+    session: Optional[Session] = None
+    if (target_account_id is not None) != (target_region is not None):
+        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
+    elif target_account_id is not None and target_region is not None:
+        session = (
+            SessionManager()
+            .get_or_create(project_name=project)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
+        )
+
     d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
     if d:
-        mi.write_metadata(deployment=deployment, group=group, module=module, data=d)
+        mi.write_metadata(deployment=deployment, group=group, module=module, data=d, session=session)
     else:
         _logger.info("No Data avaiable...skipping")
 
@@ -157,6 +242,25 @@ def store_module_metadata(
     required=True,
 )
 @click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--target-account-id",
+    default=None,
+    help="Account Id to remove module data from, if specifed --target-region is required",
+    show_default=True,
+)
+@click.option(
+    "--target-region",
+    default=None,
+    help="Region to remove module data from, if specifed --target-account-id is required",
+    show_default=True,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -167,17 +271,34 @@ def store_module_md5(
     group: str,
     module: str,
     type: str,
+    project: Optional[str],
+    target_account_id: Optional[str],
+    target_region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Writing md5 of  %s for module %s in deployment %s", type, module, deployment)
+
+    if project is None:
+        project = _load_project()
+
+    session: Optional[Session] = None
+    if (target_account_id is not None) != (target_region is not None):
+        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
+    elif target_account_id is not None and target_region is not None:
+        session = (
+            SessionManager()
+            .get_or_create(project_name=project)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
+        )
+
     d = sys.stdin.readline().strip()
     if d:
         if type.casefold() == "bundle":
             _type = mi.ModuleConst.BUNDLE
         elif type.casefold() == "spec":
             _type = mi.ModuleConst.DEPLOYSPEC
-        mi.write_module_md5(deployment=deployment, group=group, module=module, hash=d, type=_type)
+        mi.write_module_md5(deployment=deployment, group=group, module=module, hash=d, type=_type, session=session)
     else:
         _logger.info("No Data avaiable...skipping")

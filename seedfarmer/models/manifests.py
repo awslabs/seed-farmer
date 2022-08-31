@@ -120,9 +120,16 @@ class ModuleManifest(CamelModel):
     path: str
     bundle_md5: Optional[str]
     parameters: List[ModuleParameter] = []
-    deploy_spec: Optional[DeploySpec]
+    deploy_spec: Optional[DeploySpec] = None
     target_account: Optional[str] = None
     target_region: Optional[str] = None
+    _target_account_id: Optional[str] = PrivateAttr(default=None)
+
+    def set_target_account_id(self, account_id: str) -> None:
+        self._target_account_id = account_id
+
+    def get_target_account_id(self) -> Optional[str]:
+        return self._target_account_id
 
 
 class ModulesManifest(CamelModel):
@@ -194,6 +201,7 @@ class DeploymentManifest(CamelModel):
     _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)
     _account_alias_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
+    _accounts_regions: Optional[List[Dict[str, str]]] = PrivateAttr(default=None)
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -220,6 +228,21 @@ class DeploymentManifest(CamelModel):
     @property
     def default_target_account_mapping(self) -> Optional[TargetAccountMapping]:
         return self._default_account
+
+    @property
+    def target_accounts_regions(self) -> List[Dict[str, str]]:
+        if self._accounts_regions is None:
+            self._accounts_regions = []
+            for target_account in self.target_account_mappings:
+                for region in target_account.region_mappings:
+                    self._accounts_regions.append(
+                        {
+                            "alias": target_account.alias,
+                            "account_id": target_account.account_id,
+                            "region": region.region,
+                        }
+                    )
+        return self._accounts_regions
 
     def get_parameter_value(
         self,
@@ -254,7 +277,7 @@ class DeploymentManifest(CamelModel):
         else:
             return default
 
-    def set_module_defaults(self) -> None:
+    def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:
             for module in group.modules:
                 module.target_account = (
@@ -269,6 +292,7 @@ class DeploymentManifest(CamelModel):
                         f"Invalid target_account ({module.target_account}) for "
                         f"Module {module.name} in Group {group.name}"
                     )
+                module.set_target_account_id(target_account.account_id)
 
                 module.target_region = (
                     target_account.default_region_mapping.region

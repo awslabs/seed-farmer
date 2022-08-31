@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from pydantic import PrivateAttr
 
@@ -202,6 +202,7 @@ class DeploymentManifest(CamelModel):
     _account_alias_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _accounts_regions: Optional[List[Dict[str, str]]] = PrivateAttr(default=None)
+    _module_index: Dict[Tuple[str, str], ModuleManifest] = PrivateAttr(default_factory=dict)
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -281,6 +282,7 @@ class DeploymentManifest(CamelModel):
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:
             for module in group.modules:
+                self._module_index[(group.name, module.name)] = module
                 module.target_account = (
                     self.default_target_account_mapping.alias
                     if self.default_target_account_mapping is not None and module.target_account is None
@@ -306,3 +308,6 @@ class DeploymentManifest(CamelModel):
                         f"Invalid target_region ({module.target_region}) in target_account ({target_account.alias}) "
                         f"for Module {module.name} in Group {group.name}"
                     )
+
+    def get_module(self, group: str, module: str) -> Optional[ModuleManifest]:
+        return self._module_index.get((group, module), None)

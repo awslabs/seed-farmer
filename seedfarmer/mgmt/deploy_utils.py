@@ -14,7 +14,7 @@
 
 import logging
 from threading import Lock
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import yaml
 from boto3 import Session
@@ -212,22 +212,42 @@ def need_to_build(
     g = group_name
     m = module_manifest.name if module_manifest.name else ""
     module_bundle_md5 = module_manifest.bundle_md5 if module_manifest.bundle_md5 else ""
-
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=cast(str, module_manifest.get_target_account_id()),
+            region_name=cast(str, module_manifest.target_region),
+        )
+    )
     if (
-        mi.does_md5_match(d, g, m, str(module_bundle_md5), mi.ModuleConst.BUNDLE, deployment_params_cache)
-        and mi.does_md5_match(d, g, m, module_deployspec_md5, mi.ModuleConst.DEPLOYSPEC, deployment_params_cache)
-        and mi.does_md5_match(d, g, m, module_manifest_md5, mi.ModuleConst.MANIFEST, deployment_params_cache)
+        mi.does_md5_match(
+            d, g, m, str(module_bundle_md5), mi.ModuleConst.BUNDLE, deployment_params_cache, session=session
+        )
+        and mi.does_md5_match(
+            d, g, m, module_deployspec_md5, mi.ModuleConst.DEPLOYSPEC, deployment_params_cache, session=session
+        )
+        and mi.does_md5_match(
+            d, g, m, module_manifest_md5, mi.ModuleConst.MANIFEST, deployment_params_cache, session=session
+        )
     ):
         return False
     else:
         if not dryrun:
-            mi.write_deployspec(deployment=d, group=g, module=m, data=module_deployspec.dict())
-            mi.write_module_manifest(deployment=d, group=g, module=m, data=module_manifest.dict())
+            mi.write_deployspec(deployment=d, group=g, module=m, data=module_deployspec.dict(), session=session)
+            mi.write_module_manifest(deployment=d, group=g, module=m, data=module_manifest.dict(), session=session)
             mi.write_module_md5(
-                deployment=d, group=g, module=m, hash=module_deployspec_md5, type=mi.ModuleConst.DEPLOYSPEC
+                deployment=d,
+                group=g,
+                module=m,
+                hash=module_deployspec_md5,
+                type=mi.ModuleConst.DEPLOYSPEC,
+                session=session,
             )
-            mi.write_module_md5(deployment=d, group=g, module=m, hash=module_manifest_md5, type=mi.ModuleConst.MANIFEST)
-            mi.remove_module_md5(deployment=d, group=g, module=m, type=mi.ModuleConst.BUNDLE)
+            mi.write_module_md5(
+                deployment=d, group=g, module=m, hash=module_manifest_md5, type=mi.ModuleConst.MANIFEST, session=session
+            )
+            mi.remove_module_md5(deployment=d, group=g, module=m, type=mi.ModuleConst.BUNDLE, session=session)
         return True
 
 

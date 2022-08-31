@@ -51,12 +51,12 @@ def _execute_deploy(
     d_name: str,
     g_name: str,
     m: ModuleManifest,
-    module_info_index: du.ModuleInfoIndex,
+    deployment_manifest: DeploymentManifest,
     d_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     parameters = load_parameter_values(
-        deployment_name=d_name, parameters=m.parameters, module_info_index=module_info_index
+        deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
     )
 
     target_account_id = cast(str, m.get_target_account_id())
@@ -103,7 +103,7 @@ def _execute_destroy(
     d_name: str,
     g_name: str,
     m: ModuleManifest,
-    module_info_index: du.ModuleInfoIndex,
+    deployment_manifest: DeploymentManifest,
     d_secret: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
     if m.deploy_spec is None:
@@ -118,7 +118,7 @@ def _execute_destroy(
         account_id=cast(str, m.get_target_account_id()),
         region=cast(str, m.target_region),
         parameters=load_parameter_values(
-            deployment_name=d_name, parameters=m.parameters, module_info_index=module_info_index
+            deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
         ),
         module_metadata=None,
     )
@@ -144,7 +144,6 @@ def _deploy_deployment_is_not_dry_run(
     deployment_manifest_wip: DeploymentManifest,
     deployment_name: str,
     groups_to_deploy: List[ModulesManifest],
-    module_info_index: du.ModuleInfoIndex,
 ) -> None:
     if groups_to_deploy:
         deployment_manifest_wip.groups = groups_to_deploy
@@ -167,7 +166,7 @@ def _deploy_deployment_is_not_dry_run(
                             args["d_name"],
                             args["g"],
                             args["m"],
-                            module_info_index,
+                            deployment_manifest,
                             args["d_secret"],
                             args["permission_boundary_arn"],
                         )
@@ -232,7 +231,6 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
 
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
-    module_info_index: du.ModuleInfoIndex,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
@@ -280,7 +278,7 @@ def destroy_deployment(
                             args["d"],
                             args["g"],
                             args["m"],
-                            module_info_index,
+                            destroy_manifest,
                             args["d_secret"],
                         )
 
@@ -415,7 +413,6 @@ def deploy_deployment(
             deployment_manifest_wip=deployment_manifest_wip,
             deployment_name=deployment_name,
             groups_to_deploy=groups_to_deploy,
-            module_info_index=module_info_index,
         )
     else:
         _deploy_deployment_is_dry_run(groups_to_deploy=groups_to_deploy, deployment_name=deployment_name)
@@ -488,7 +485,6 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,
-        module_info_index=module_info_index,
         remove_deploy_manifest=False,
         dryrun=dryrun,
         show_manifest=show_manifest,
@@ -523,12 +519,10 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
     """
     _logger.debug("Preparing to destroy %s", deployment_name)
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
-    destroy_manifest.validate_and_set_module_defaults()
     if destroy_manifest:
-        module_info_index = du.populate_module_info_index(deployment_manifest=destroy_manifest)
+        destroy_manifest.validate_and_set_module_defaults()
         destroy_deployment(
             destroy_manifest,
-            module_info_index=module_info_index,
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,

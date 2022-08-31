@@ -224,6 +224,7 @@ class DeploymentManifest(CamelModel):
     def get_parameter_value(
         self,
         parameter: str,
+        *,
         account_alias: Optional[str] = None,
         account_id: Optional[str] = None,
         region: Optional[str] = None,

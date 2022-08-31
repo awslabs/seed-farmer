@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - create SessionManager class for supporting multi-account, multi-region
 - bootstrap command support to generate CFN templates for Toolchain and Target accounts
 - added deployment for toolchain and target accounts via CFN
+- support for cross-account and cross-region deployments
 
 
 ### Changes

@@ -68,6 +68,7 @@ class ModuleInfoIndex(object):
         if m is not None:
             return {"group": m[0], "account_id": m[1], "region": m[2], "module_name": m[3]}
         else:
+            _logger.debug("module_names_idx: %s", self._module_names_idx)
             return {"group": "", "account_id": "", "region": "", "module_name": ""}
 
 
@@ -95,6 +96,9 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
         module_info = mi.get_parameter_data_cache(deployment=deployment_manifest.name, session=session)
         for key, value in module_info.items():
             key_parts = key.split("/")[1:]
+            _logger.debug("key: %s key_parts: %s", key, key_parts)
+            if len(key_parts) < 4:
+                continue
             group = key_parts[2]
             module_name = key_parts[3]
             module_info_index.index_module_info(

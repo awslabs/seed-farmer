@@ -14,15 +14,26 @@
 
 
 import logging
+from typing import Optional
 
 import click
 
 import seedfarmer
-from seedfarmer import DEBUG_LOGGING_FORMAT, commands, enable_debug
+from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, init, list, remove, store
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _load_project() -> str:
+    try:
+        print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
+        return config.PROJECT
+    except FileNotFoundError:
+        print_bolded("Unable to determine project to bootstrap, one of --project or a seedfarmer.yaml is required")
+        raise click.ClickException("Failed to determine project identifier")
 
 
 @click.group()
@@ -90,6 +101,25 @@ def apply(spec: str, debug: bool, dry_run: bool, show_manifest: bool) -> None:
     show_default=True,
 )
 @click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -99,14 +129,23 @@ def destroy(
     deployment: str,
     dry_run: bool,
     show_manifest: bool,
+    project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
     debug: bool,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.info("Destroy for %s", deployment)
+    if project is None:
+        project = _load_project()
+    _logger.debug("Listing all deployments for Project %s", project)
+
+    _logger.info("Destroy for Project %s, Deployment %s", project, deployment)
     if dry_run:
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
+
+    (SessionManager().get_or_create(project_name=project, profile=profile, region_name=region).toolchain_session)
     commands.destroy(deployment_name=deployment, dryrun=dry_run, show_manifest=show_manifest)
 
 

@@ -33,7 +33,7 @@ from seedfarmer.mgmt.module_info import (
     remove_deployment_manifest,
     write_deployment_manifest,
 )
-from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
+from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import (
     _print_modules,
@@ -122,14 +122,16 @@ def _execute_destroy(
         ),
         module_metadata=None,
     )
-    commands.destroy_module_stack(
-        d_name,
-        g_name,
-        m.name,
-        account_id=cast(str, m.get_target_account_id()),
-        region=cast(str, m.target_region),
-        docker_credentials_secret=d_secret,
-    )
+
+    if resp.status == StatusType.SUCCESS.value:
+        commands.destroy_module_stack(
+            d_name,
+            g_name,
+            m.name,
+            account_id=cast(str, m.get_target_account_id()),
+            region=cast(str, m.target_region),
+            docker_credentials_secret=d_secret,
+        )
 
     # TODO: Confirm whether this is needed, commenting for now
     # if not get_deployed_modules(deployment=d_name, group=g_name):
@@ -211,6 +213,21 @@ def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deplo
             for _module in _group.modules:
                 mods_would_deploy.append([deployment_name, _group.name, _module.name])
     _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
+
+
+def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
+    # TODO: Include output on Target accounts and regions to be primed
+    # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
+    # TODO: multi-thread this for reach Target account/region for better performance
+
+    for target_account_region in deployment_manifest.target_accounts_regions:
+        commands.deploy_seedkit(account_id=target_account_region["account_id"], region=target_account_region["region"])
+        commands.deploy_managed_policy_stack(
+            deployment_name=deployment_manifest.name,
+            deployment_manifest=deployment_manifest,
+            account_id=target_account_region["account_id"],
+            region=target_account_region["region"],
+        )
 
 
 def destroy_deployment(
@@ -327,17 +344,11 @@ def deploy_deployment(
     """
     deployment_manifest_wip = deployment_manifest.copy()
     deployment_name = deployment_manifest_wip.name
-    # docker_credentials_secret = deployment_manifest.get_parameter_value("dockerCredentialsSecret", default=None)
-    # permission_boundary_arn = deployment_manifest.get_parameter_value("permissionBoundaryArn", default=None)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
     print_manifest_inventory(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
-
-    # TODO: These need to move to a primer phase and be executed for each Target account/region
-    # commands.deploy_seedkit()
-    # commands.deploy_managed_policy_stack(deployment_name=deployment_name, deployment_manifest=deployment_manifest_wip)
 
     groups_to_deploy = []
     unchanged_modules = []
@@ -470,6 +481,8 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
                 module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
     deployment_manifest.validate_and_set_module_defaults()
 
+    prime_target_accounts(deployment_manifest=deployment_manifest)
+
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)
 
@@ -510,6 +523,7 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
     """
     _logger.debug("Preparing to destroy %s", deployment_name)
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
+    destroy_manifest.validate_and_set_module_defaults()
     if destroy_manifest:
         module_info_index = du.populate_module_info_index(deployment_manifest=destroy_manifest)
         destroy_deployment(

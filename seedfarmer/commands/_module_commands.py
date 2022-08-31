@@ -166,7 +166,9 @@ def destroy_module(
         module_metadata=module_metadata,
     )
 
-    remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest_name}"]
+    remove_ssm = [
+        f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest_name}"
+    ]
 
     export_info = [
         f"export DEPLOYEMNT={deployment_name}",

@@ -143,6 +143,7 @@ def get_all_parameter_data_by_path(prefix: str, session: Optional[Session] = Non
 def delete_parameters(parameters: List[str], session: Optional[Session] = None) -> None:
     if parameters:
         if len(parameters) < 10:
+            _logger.debug("deleting parameters: %s", parameters)
             client = boto3_client(service_name="ssm", session=session)
             client.delete_parameters(Names=parameters)
         else:

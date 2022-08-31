@@ -38,18 +38,8 @@ Resources:
               - kms:Create*
               Effect: Allow
               Resource:
-                - Fn::Join: [
-                    "",[
-                    "arn:aws:kms:*:",
-                    "Ref": AWS::AccountId,
-                    ":key/*"]
-                  ]
-                - Fn::Join: [
-                    "",[
-                    "arn:aws:kms:*:",
-                    "Ref": AWS::AccountId,
-                    ":alias/*"]
-                  ]  
+                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:key/*"
+                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/*"
               Sid: DeploymentKMS
             - Action:
               - iam:Delete*
@@ -62,34 +52,21 @@ Resources:
               - iam:PutRolePolicy
               - iam:Pass*
               - iam:DetachRolePolicy
+              - iam:List*
               Effect: Allow
               Resource:
-                - Fn::Join: [
-                    "",[
-                    "arn:aws:iam::",
-                    "Ref": AWS::AccountId,
-                    ":role/*"]
-                  ]
-                - Fn::Join: [
-                    "",[
-                    "arn:aws:iam::",
-                    "Ref": AWS::AccountId,
-                    ":policy/*"]
-                  ]            
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
               - codebuild:Batch*
               - codebuild:Create*
               - codebuild:Delete*
+              - codebuild:StartBuild
               Effect: Allow
               Resource:
-                Fn::Join: [
-                  "",[
-                  "arn:aws:codebuild:*:",
-                  "Ref": AWS::AccountId,
-                  ":project/*"]
-                ]
+                Fn::Sub: "arn:aws:codebuild:*:${AWS::AccountId}:project/codeseeder-{{ project_name }}*"
               Sid: DeploymentCodeBuild
             - Action:
               - iam:ListPolicies
@@ -98,9 +75,16 @@ Resources:
               - kms:UpdateCustomKeyStore
               - kms:ListAliases
               - codebuild:ListProjects
+              - cloudformation:Describe*
+              - cloudformation:GetTemplate
               Effect: Allow
               Resource: '*'
               Sid: DeploymentListStuff
+            - Action:
+              - cloudformation:*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/exampleproj*"
             - Action:
               - s3:Delete*
               - s3:Put*
@@ -110,7 +94,7 @@ Resources:
               - s3:List*
               Effect: Allow
               Resource:
-              - arn:aws:s3:::{{ project_name }}*/*
+              - arn:aws:s3:::codeseeder-{{ project_name }}*/*
               Sid: DeploymentS3
             - Action:
               - sts:AssumeRole
@@ -127,13 +111,19 @@ Resources:
               - ssm:Add*
               - ssm:Describe*
               - ssm:Get*
-              Effect: Allow              
-              Resource: 
-                Fn::Join: [
-                  "",[
-                  "arn:aws:ssm:*:",
-                  "Ref": AWS::AccountId,
-                  ":parameter/{{ project_name }}/*"]
-                ]
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+            - Effect: Allow
+              Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:GetLogEvents
+              - logs:GetLogRecord
+              - logs:GetLogGroupFields
+              - logs:GetQueryResults
+              - logs:DescribeLogStreams
+              Resource:
+                Fn::Sub: "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-{{ project_name }}*"
       RoleName: seedfarmer-{{ project_name }}-deployment-role
     Type: AWS::IAM::Role

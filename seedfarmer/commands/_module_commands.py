@@ -248,7 +248,8 @@ def _execute_module_commands(
         extra_env_vars=extra_env_vars,
         extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
         codebuild_role=(
-            f"{config.PROJECT.lower()}-{deployment_name}-{group_name}" f"-{module_manifest_name}-{generate_hash()}"
+            f"{config.PROJECT.lower()}-{deployment_name}-{group_name}"
+            f"-{module_manifest_name}-{generate_hash(session=session)}"
         ),
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,

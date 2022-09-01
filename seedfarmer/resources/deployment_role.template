@@ -71,9 +71,10 @@ Resources:
             - Action:
               - iam:ListPolicies
               - kms:ListKeys
-              - ssm:DescribeParameters
               - kms:UpdateCustomKeyStore
               - kms:ListAliases
+              - kms:CreateKey
+              - ssm:DescribeParameters
               - codebuild:ListProjects
               - cloudformation:Describe*
               - cloudformation:GetTemplate
@@ -84,7 +85,8 @@ Resources:
               - cloudformation:*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/exampleproj*"
+                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}*"
+                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*"
             - Action:
               - s3:Delete*
               - s3:Put*
@@ -94,6 +96,7 @@ Resources:
               - s3:List*
               Effect: Allow
               Resource:
+              - arn:aws:s3:::codeseeder-{{ project_name }}*
               - arn:aws:s3:::codeseeder-{{ project_name }}*/*
               Sid: DeploymentS3
             - Action:

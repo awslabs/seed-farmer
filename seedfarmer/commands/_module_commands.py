@@ -45,6 +45,7 @@ def _env_vars(
     module_metadata: Optional[str] = None,
     docker_credentials_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
+    session: Optional[Session] = None,
 ) -> Dict[str, str]:
     env_vars = (
         {
@@ -57,7 +58,7 @@ def _env_vars(
     env_vars[_param("DEPLOYMENT_NAME")] = deployment_name
     env_vars[_param("MODULE_METADATA")] = module_metadata if module_metadata is not None else ""
     env_vars[_param("MODULE_NAME")] = f"{group_name}-{module_manifest_name}"
-    env_vars[_param("HASH")] = generate_hash()
+    env_vars[_param("HASH")] = generate_hash(session=session)
     if docker_credentials_secret:
         env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
     if permission_boundary_arn:
@@ -87,6 +88,7 @@ def deploy_module(
         module_metadata=module_metadata,
         docker_credentials_secret=docker_credentials_secret,
         permission_boundary_arn=permission_boundary_arn,
+        session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
     )
     env_vars[_param("MODULE_MD5")] = module_bundle_md5 if module_bundle_md5 is not None else ""
 
@@ -164,6 +166,7 @@ def destroy_module(
         module_manifest_name=module_manifest_name,
         parameters=parameters,
         module_metadata=module_metadata,
+        session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
     )
 
     remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest_name}"]

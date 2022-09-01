@@ -35,13 +35,8 @@ Resources:
               - ssm:Describe*
               - ssm:Get*
               Effect: Allow
-              Resource: 
-                Fn::Join: [
-                  "",[
-                  "arn:aws:ssm:*:",
-                  "Ref": AWS::AccountId,
-                  ":parameter/{{ project_name }}/*"]
-                ]
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
               Sid: ToolChainSSM
       RoleName: seedfarmer-{{ project_name }}-toolchain-role
     Type: AWS::IAM::Role

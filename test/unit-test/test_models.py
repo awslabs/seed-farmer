@@ -123,7 +123,7 @@ targetRegion: us-west-2
 
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
-    manifest.set_module_defaults()
+    manifest.validate_and_set_module_defaults()
 
     assert module.target_account == "primary"
     assert module.target_region == "us-west-2"
@@ -137,7 +137,7 @@ path: modules/test-module
 
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
-    manifest.set_module_defaults()
+    manifest.validate_and_set_module_defaults()
 
     assert module.target_account == "primary"
     assert module.target_region == "us-west-2"
@@ -154,7 +154,7 @@ targetRegion: us-west-2
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
     with pytest.raises(ValueError):
-        manifest.set_module_defaults()
+        manifest.validate_and_set_module_defaults()
 
     module_yaml = yaml.safe_load(
         """
@@ -168,7 +168,7 @@ targetRegion: other
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
     with pytest.raises(ValueError):
-        manifest.set_module_defaults()
+        manifest.validate_and_set_module_defaults()
 
 
 @pytest.mark.models
@@ -191,7 +191,7 @@ targetRegion: us-west-2
 
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
-    manifest.set_module_defaults()
+    manifest.validate_and_set_module_defaults()
 
     assert module.target_account == "primary"
     assert module.target_region == "us-west-2"
@@ -208,7 +208,7 @@ targetAccount: primary
     manifest.groups[0].modules = [module]
 
     with pytest.raises(ValueError):
-        manifest.set_module_defaults()
+        manifest.validate_and_set_module_defaults()
 
     module_yaml = yaml.safe_load(
         """
@@ -222,4 +222,4 @@ targetRegion: us-west-2
     manifest.groups[0].modules = [module]
 
     with pytest.raises(ValueError):
-        manifest.set_module_defaults()
+        manifest.validate_and_set_module_defaults()

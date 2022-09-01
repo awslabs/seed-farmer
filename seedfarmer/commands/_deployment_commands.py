@@ -17,7 +17,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import checksumdir
 import yaml
@@ -28,14 +28,12 @@ from seedfarmer.commands._parameter_commands import load_parameter_values
 from seedfarmer.mgmt.module_info import (
     _get_deployspec_path,
     _get_modulestack_path,
-    get_deployed_modules,
     get_module_metadata,
     remove_deployed_deployment_manifest,
     remove_deployment_manifest,
-    remove_group_info,
     write_deployment_manifest,
 )
-from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
+from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import (
     _print_modules,
@@ -44,6 +42,7 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
     print_manifest_json,
 )
+from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -52,24 +51,34 @@ def _execute_deploy(
     d_name: str,
     g_name: str,
     m: ModuleManifest,
+    deployment_manifest: DeploymentManifest,
     d_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
-    parameters = load_parameter_values(deployment_name=d_name, parameters=m.parameters)
+    parameters = load_parameter_values(
+        deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
+    )
 
+    target_account_id = cast(str, m.get_target_account_id())
+    target_region = cast(str, m.target_region)
     # Deploys the IAM role per module
     commands.deploy_module_stack(
         _get_modulestack_path(m.path),
         d_name,
         g_name,
         m.name,
+        target_account_id,
+        target_region,
         parameters,
         docker_credentials_secret=d_secret,
         permission_boundary_arn=permission_boundary_arn,
     )
 
     #   Get the current module's SSM if it was alreadly loaded...
-    module_metadata = json.dumps(get_module_metadata(d_name, g_name, m.name))
+    session = (
+        SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
+    )
+    module_metadata = json.dumps(get_module_metadata(d_name, g_name, m.name, session=session))
 
     if m.deploy_spec is None:
         raise ValueError(f"Invalid value for ModuleManifest.deploy_spec in group {g_name} and module : {m.name}")
@@ -80,6 +89,8 @@ def _execute_deploy(
         module_path=os.path.join(config.OPS_ROOT, m.path),
         module_deploy_spec=m.deploy_spec,
         module_manifest_name=m.name,
+        account_id=target_account_id,
+        region=target_region,
         parameters=parameters,
         module_metadata=module_metadata,
         module_bundle_md5=m.bundle_md5,
@@ -92,6 +103,7 @@ def _execute_destroy(
     d_name: str,
     g_name: str,
     m: ModuleManifest,
+    deployment_manifest: DeploymentManifest,
     d_secret: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
     if m.deploy_spec is None:
@@ -103,18 +115,27 @@ def _execute_destroy(
         module_path=m.path,
         module_deploy_spec=m.deploy_spec,
         module_manifest_name=m.name,
-        parameters=load_parameter_values(deployment_name=d_name, parameters=m.parameters),
+        account_id=cast(str, m.get_target_account_id()),
+        region=cast(str, m.target_region),
+        parameters=load_parameter_values(
+            deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
+        ),
         module_metadata=None,
     )
-    commands.destroy_module_stack(
-        d_name,
-        g_name,
-        m.name,
-        docker_credentials_secret=d_secret,
-    )
 
-    if not get_deployed_modules(deployment=d_name, group=g_name):
-        remove_group_info(d_name, g_name)
+    if resp.status == StatusType.SUCCESS.value:
+        commands.destroy_module_stack(
+            d_name,
+            g_name,
+            m.name,
+            account_id=cast(str, m.get_target_account_id()),
+            region=cast(str, m.target_region),
+            docker_credentials_secret=d_secret,
+        )
+
+    # TODO: Confirm whether this is needed, commenting for now
+    # if not get_deployed_modules(deployment=d_name, group=g_name):
+    #     remove_group_info(d_name, g_name)
     return resp
 
 
@@ -123,8 +144,6 @@ def _deploy_deployment_is_not_dry_run(
     deployment_manifest_wip: DeploymentManifest,
     deployment_name: str,
     groups_to_deploy: List[ModulesManifest],
-    permission_boundary_arn: Optional[str],
-    docker_credentials_secret: Optional[str],
 ) -> None:
     if groups_to_deploy:
         deployment_manifest_wip.groups = groups_to_deploy
@@ -144,7 +163,12 @@ def _deploy_deployment_is_not_dry_run(
 
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
                         return _execute_deploy(
-                            args["d_name"], args["g"], args["m"], args["d_secret"], args["permission_boundary_arn"]
+                            args["d_name"],
+                            args["g"],
+                            args["m"],
+                            deployment_manifest,
+                            args["d_secret"],
+                            args["permission_boundary_arn"],
                         )
 
                     params = [
@@ -152,8 +176,16 @@ def _deploy_deployment_is_not_dry_run(
                             "d_name": deployment_name,
                             "g": _group.name,
                             "m": _module,
-                            "d_secret": docker_credentials_secret,
-                            "permission_boundary_arn": permission_boundary_arn,
+                            "d_secret": deployment_manifest_wip.get_parameter_value(
+                                "dockerCredentialsSecret",
+                                account_alias=_module.target_account,
+                                region=_module.target_region,
+                            ),
+                            "permission_boundary_arn": deployment_manifest_wip.get_parameter_value(
+                                "permissionBoundaryArn",
+                                account_alias=_module.target_account,
+                                region=_module.target_region,
+                            ),
                         }
                         for _module in _group.modules
                         if _module and _module.deploy_spec
@@ -182,6 +214,21 @@ def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deplo
     _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
 
 
+def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
+    # TODO: Include output on Target accounts and regions to be primed
+    # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
+    # TODO: multi-thread this for reach Target account/region for better performance
+
+    for target_account_region in deployment_manifest.target_accounts_regions:
+        commands.deploy_seedkit(account_id=target_account_region["account_id"], region=target_account_region["region"])
+        commands.deploy_managed_policy_stack(
+            deployment_name=deployment_manifest.name,
+            deployment_manifest=deployment_manifest,
+            account_id=target_account_region["account_id"],
+            region=target_account_region["region"],
+        )
+
+
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
     remove_deploy_manifest: bool = False,
@@ -197,7 +244,7 @@ def destroy_deployment(
     deployment_manifest : DeploymentManifest
         The DeploymentManifest objec of all modules to destroy
     remove_deploy_manifest : bool, optional
-        This flag indicates whether the project resouurce policy should be deleted.
+        This flag indicates whether the project resource policy should be deleted.
         If there are ANY modules deployed, this should not be set to True.  This is only
         used when the entire deployment is destroyed
     dryrun : bool, optional
@@ -216,8 +263,6 @@ def destroy_deployment(
     print_manifest_inventory(f"Modules removed from manifest: {destroy_manifest.name}", destroy_manifest, False, "red")
 
     deployment_name = destroy_manifest.name
-    docker_credentials_secret = destroy_manifest.get_parameter_value("dockerCredentialsSecret")
-    _logger.debug("dockerCredentialsSecret: %s", docker_credentials_secret)
 
     print_manifest_inventory(
         f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red"
@@ -233,6 +278,7 @@ def destroy_deployment(
                             args["d"],
                             args["g"],
                             args["m"],
+                            destroy_manifest,
                             args["d_secret"],
                         )
 
@@ -241,7 +287,11 @@ def destroy_deployment(
                             "d": deployment_name,
                             "g": _group.name,
                             "m": _module,
-                            "d_secret": docker_credentials_secret,
+                            "d_secret": destroy_manifest.get_parameter_value(
+                                "dockerCredentialsSecret",
+                                account_alias=_module.target_account,
+                                region=_module.target_region,
+                            ),
                         }
                         for _module in _group.modules
                         if _module and _module.deploy_spec
@@ -256,15 +306,16 @@ def destroy_deployment(
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:
-            remove_deployment_manifest(deployment_name)
-            remove_deployed_deployment_manifest(deployment_name)
+            session = SessionManager().get_or_create().toolchain_session
+            remove_deployment_manifest(deployment_name, session=session)
+            remove_deployed_deployment_manifest(deployment_name, session=session)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
 
 def deploy_deployment(
     deployment_manifest: DeploymentManifest,
-    deployment_params_cache: Optional[Dict[str, Any]] = None,
+    module_info_index: du.ModuleInfoIndex,
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
@@ -278,8 +329,8 @@ def deploy_deployment(
     ----------
     deployment_manifest : DeploymentManifest
         The DeploymentManifest objec of all modules to deploy
-    deployment_params_cache: Dict[str,Any]
-        A dictionary representation of what is in the store (SSM for DDB) of the modules deployed
+    module_info_index:ModuleInfoIndex
+        An index of all Module Info stored in SSM across all target accounts and regions
     dryrun : bool, optional
         This flag indicates that the DeploymentManifest object should be consumed but DOES NOT
         enact any deployment changes.
@@ -291,36 +342,33 @@ def deploy_deployment(
     """
     deployment_manifest_wip = deployment_manifest.copy()
     deployment_name = deployment_manifest_wip.name
-    docker_credentials_secret = deployment_manifest.get_parameter_value("dockerCredentialsSecret", default=None)
-    permission_boundary_arn = deployment_manifest.get_parameter_value("permissionBoundaryArn", default=None)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
     print_manifest_inventory(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
-    commands.deploy_seedkit()
-    commands.deploy_managed_policy_stack(deployment_name=deployment_name, deployment_manifest=deployment_manifest_wip)
 
     groups_to_deploy = []
     unchanged_modules = []
     for group in deployment_manifest_wip.groups:
-        working_group = group.copy()
-        # TODO - Write the group manifest here...without the module deployspec
+        # working_group = group.copy()
         group_name = group.name
-        du.write_group_manifest(deployment_name=deployment_name, group_manifest=working_group)
+        # TODO: Investigate whether we need the group manifest, for now commenting
+        # du.write_group_manifest(deployment_name=deployment_name, group_manifest=working_group)
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         for module in group.modules:
-            _logger.debug("Working on --  %s", module)
+            _logger.debug("Working on -- %s", module)
             if not module.path:
-                raise Exception("Unable to parse module manifest, `path` not specified")
+                raise ValueError("Unable to parse module manifest, `path` not specified")
 
             # This checks if the modulestack file exists, else fail fast
-            _ = _get_modulestack_path(module.path)
+            # TODO: Uncomment this if it's needed, but this isn't actually doing anything
+            # _ = _get_modulestack_path(module.path)
 
             deployspec_path = _get_deployspec_path(module.path)
             with open(deployspec_path) as module_spec_file:
-                module_deploy_spec = DeploySpec(**yaml.load(module_spec_file, Loader=yaml.SafeLoader))
+                module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
             # This MD5 is generated from the module manifest content before setting the generated values
             # of `bundle_md5` and `deploy_spec` below
@@ -333,17 +381,20 @@ def deploy_deployment(
                 deployment_name=deployment_name,
                 group_name=group_name,
                 module_manifest=module,
-                module_deployspec=module_deploy_spec,
+                module_deployspec=module.deploy_spec,
                 module_deployspec_md5=module_deployspec_md5,
                 module_manifest_md5=module_manifest_md5,
                 dryrun=dryrun,
-                deployment_params_cache=deployment_params_cache,
+                deployment_params_cache=module_info_index.get_module_info(
+                    group=group_name,
+                    account_id=cast(str, module.get_target_account_id()),
+                    region=cast(str, module.target_region),
+                    module_name=module.name,
+                ),
             )
             if not _build_module:
-                module.deploy_spec = module_deploy_spec
                 unchanged_modules.append([deployment_name, group_name, module.name])
             else:
-                module.deploy_spec = module_deploy_spec
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:
@@ -362,8 +413,6 @@ def deploy_deployment(
             deployment_manifest_wip=deployment_manifest_wip,
             deployment_name=deployment_name,
             groups_to_deploy=groups_to_deploy,
-            permission_boundary_arn=permission_boundary_arn,
-            docker_credentials_secret=docker_credentials_secret,
         )
     else:
         _deploy_deployment_is_dry_run(groups_to_deploy=groups_to_deploy, deployment_name=deployment_name)
@@ -374,7 +423,7 @@ def deploy_deployment(
         print_manifest_json(deployment_manifest)
 
 
-def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = False) -> None:
+def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bool = False) -> None:
     """
     apply
         This function takes the relative path of a deployment manifest and
@@ -384,7 +433,7 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
 
     Parameters
     ----------
-    deployment_spec : str
+    deployment_manifest_path : str
         Relative path to the deployment manifest
     dryrun : bool, optional
         This flag indicates that the deployment manifest should be consumed and a
@@ -405,14 +454,19 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
         If the relative `path' value is a list
     """
 
-    spec_path = os.path.join(config.OPS_ROOT, deployment_spec)
-    with open(spec_path) as manifest_file:
+    manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
+    with open(manifest_path) as manifest_file:
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
     _logger.debug(deployment_manifest.dict())
-    if not dryrun:
-        write_deployment_manifest(deployment_manifest.name, deployment_manifest.dict())
 
-    for module_group in deployment_manifest.groups if deployment_manifest.groups else []:
+    # Initialize the SessionManager for the entire project
+    session_manager = SessionManager().get_or_create(project_name=config.PROJECT)
+    if not dryrun:
+        write_deployment_manifest(
+            deployment_manifest.name, deployment_manifest.dict(), session=session_manager.toolchain_session
+        )
+
+    for module_group in deployment_manifest.groups:
         if module_group.path and module_group.modules:
             _logger.debug("module_group: %s", module_group)
             raise Exception("Only one of the `path` or `modules` attributes can be defined on a Group")
@@ -422,16 +476,22 @@ def apply(deployment_spec: str, dryrun: bool = False, show_manifest: bool = Fals
         if module_group.path:
             with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
                 module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
-    deployment_manifest.set_module_defaults()
+    deployment_manifest.validate_and_set_module_defaults()
 
-    deployment_params_cache = du.generate_deployment_cache(deployment_name=deployment_manifest.name)
-    destroy_manifest = du.filter_deploy_destroy(deployment_manifest, deployment_params_cache)
+    prime_target_accounts(deployment_manifest=deployment_manifest)
+
+    module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
+    destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)
+
     destroy_deployment(
-        destroy_manifest=destroy_manifest, remove_deploy_manifest=False, dryrun=dryrun, show_manifest=show_manifest
+        destroy_manifest=destroy_manifest,
+        remove_deploy_manifest=False,
+        dryrun=dryrun,
+        show_manifest=show_manifest,
     )
     deploy_deployment(
         deployment_manifest=deployment_manifest,
-        deployment_params_cache=deployment_params_cache,
+        module_info_index=module_info_index,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )
@@ -445,7 +505,7 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
     Parameters
     ----------
     deployment_name : str
-       The name of the deployment to destroy
+        The name of the deployment to destroy
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
@@ -458,11 +518,14 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
 
     """
     _logger.debug("Preparing to destroy %s", deployment_name)
-    deployment_params_cache = du.generate_deployment_cache(deployment_name=deployment_name)
-    destroy_manifest = du.generate_deployed_manifest(
-        deployment_name=deployment_name, deployment_params_cache=deployment_params_cache, skip_deploy_spec=False
-    )
+    destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
     if destroy_manifest:
-        destroy_deployment(destroy_manifest, remove_deploy_manifest=True, dryrun=dryrun, show_manifest=show_manifest)
+        destroy_manifest.validate_and_set_module_defaults()
+        destroy_deployment(
+            destroy_manifest,
+            remove_deploy_manifest=True,
+            dryrun=dryrun,
+            show_manifest=show_manifest,
+        )
     else:
         _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

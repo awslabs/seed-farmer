@@ -1,6 +1,6 @@
 import logging
 import threading
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 from threading import Thread
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple
@@ -33,17 +33,21 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-class ISessionManager:
+class ISessionManager(object):
     @abstractmethod
-    def configure(self, project_name: str, **kwargs: Optional[Any]) -> Any:
+    def get_or_create(
+        self,
+        *,
+        project_name: Optional[str] = None,
+        region_name: Optional[str] = None,
+        profile: Optional[str] = None,
+        enable_reaper: bool = False,
+        **kwargs: Optional[Any],
+    ) -> Any:
         ...
 
-    @abstractmethod
-    def create(self, region_name: Optional[str] = None, profile: Optional[str] = None) -> Any:
-        ...
-
-    @abstractmethod
-    def get_toolchain_session(self) -> Session:
+    @abstractproperty
+    def toolchain_session(self) -> Session:
         ...
 
     @abstractmethod
@@ -63,49 +67,57 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     sessions: Dict[Any, Any] = {}
 
     config: Dict[Any, Any] = {}
-    toolchain_create_params: Dict[Any, Any] = {}
     created: bool = False
     reaper: Thread = None  # type: ignore
     reaperInterval: int = 3000  # every 50 minutes
 
-    def configure(self, project_name: str, **kwargs: Optional[Any]) -> ISessionManager:
-        self.config["project_name"] = project_name
-        self.config = {**self.config, **kwargs}
-        return self
+    def __init__(self) -> None:
+        super().__init__()
 
-    def create(self, region_name: Optional[str] = None, profile: Optional[str] = None) -> ISessionManager:
-        p_name = self.config["project_name"] if self.config.get("project_name") else "sf"
-        self.toolchain_create_params = {"region_name": region_name, "profile": profile}
-        self.toolchain_role_name = f"seedfarmer-{p_name}-toolchain-role"
-        if not self.reaper or not self.reaper.is_alive():
-            self._setup_reaper()
-        if self.TOOLCHAIN_KEY not in self.sessions.keys():
-            session, role = self._get_toolchain(region_name, profile)
-            self.sessions = {self.TOOLCHAIN_KEY: {self.SESSION: session, self.ROLE: role}}
+    def get_or_create(
+        self,
+        *,
+        project_name: Optional[str] = None,
+        region_name: Optional[str] = None,
+        profile: Optional[str] = None,
+        enable_reaper: bool = False,
+        **kwargs: Optional[Any],
+    ) -> ISessionManager:
+        if not self.created:
+            if project_name is None:
+                raise ValueError("A 'project_name' is required for first time initialization of the SessionManager")
+            self.config["project_name"] = project_name
+            self.config["region_name"] = region_name
+            self.config["profile"] = profile
+            self.config = {**self.config, **kwargs}
+            self.toolchain_role_name = f"seedfarmer-{project_name}-toolchain-role"
+
+            if enable_reaper and (not self.reaper or not self.reaper.is_alive()):
+                self._setup_reaper()
+
+            if self.TOOLCHAIN_KEY not in self.sessions.keys():
+                session, role = self._get_toolchain()
+                self.sessions = {self.TOOLCHAIN_KEY: {self.SESSION: session, self.ROLE: role}}
             self.created = True
         else:
             _logger.info("Toolchain Already Created")
         return self
 
-    def get_toolchain_session(self) -> Session:
-        if not self.sessions or not self.sessions[self.TOOLCHAIN_KEY][self.SESSION]:
-            self.create(
-                region_name=self.toolchain_create_params["region_name"]
-                if self.toolchain_create_params["region_name"]
-                else None,
-                profile=self.toolchain_create_params["profile"] if self.toolchain_create_params["profile"] else None,
-            )
+    @property
+    def toolchain_session(self) -> Session:
+        if not self.created:
+            raise RuntimeError("The SessionManager object was never properly created...call .create()")
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
 
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
         session_key = f"{account_id}-{region_name}"
-        p_name = self.config["project_name"] if self.config.get("project_name") else "NA"
+        project_name = self.config["project_name"]
         if not self.created:
             raise RuntimeError("The SessionManager object was never properly created...call .create()")
         if session_key not in self.sessions.keys():
             _logger.info(f"Creating Session for {session_key}")
             toolchain_session = self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
-            deployment_role_arn = f"arn:aws:iam::{account_id}:role/seedfarmer-{p_name}-deployment-role"
+            deployment_role_arn = f"arn:aws:iam::{account_id}:role/seedfarmer-{project_name}-deployment-role"
             sts_toolchain_client = boto3_client(service_name="sts", session=toolchain_session)
             deployment_role = sts_toolchain_client.assume_role(
                 RoleArn=deployment_role_arn,
@@ -125,12 +137,9 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
 
     # These methods below should not be called outside of this class
 
-    def _get_toolchain(
-        self,
-        region_name: Optional[str],
-        profile_name: Optional[str],
-    ) -> Tuple[Session, Dict[Any, Any]]:
-
+    def _get_toolchain(self) -> Tuple[Session, Dict[Any, Any]]:
+        region_name = self.config.get("region_name")
+        profile_name = self.config.get("profile")
         _logger.debug("Getting toolchain role")
         user_session = create_new_session(region_name=region_name, profile=profile_name)
         user_client = boto3_client(service_name="sts", session=user_session)
@@ -145,7 +154,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
             aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
             aws_session_token=toolchain_role["Credentials"]["SessionToken"],
-            region_name=region_name if region_name else None,
+            region_name=region_name,
         )
 
         return toolchain_session, toolchain_role
@@ -162,12 +171,3 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             sleep(interval)
             _logger.debug(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}
-
-    def _fetch_session_obj(self) -> Dict[Any, Any]:
-        return self.sessions
-
-    def _fetch_toolchain_session(self) -> Session:
-        if self.TOOLCHAIN_KEY not in self.sessions.keys():
-            _logger.error("The toolchain session is not establshed....go create one")
-        else:
-            return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]

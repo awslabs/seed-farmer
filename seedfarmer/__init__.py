@@ -66,11 +66,9 @@ class Config(object):
         count = 0
         while not os.path.exists(os.path.join(self.OPS_ROOT, self.CONFIG_FILE)):
             if count >= 4:
-                _logger.error(
-                    "The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun."
-                )
+                _logger.error("The seedfarmer.yaml was not found at the root of your project. Please set it and rerun.")
                 raise FileNotFoundError(
-                    "The seedfarmer.yaml was not found at the root of your project.  Please set it and rerun."
+                    "The seedfarmer.yaml was not found at the root of your project. Please set it and rerun."
                 )
             else:
                 self.OPS_ROOT = pathlib.Path(self.OPS_ROOT).parent  # type: ignore

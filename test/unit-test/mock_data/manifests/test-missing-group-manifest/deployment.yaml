@@ -1,4 +1,18 @@
 name: test-missing-group-manifest
+toolchainRegion: us-west-2
 groups:
   - name: test
     path: test/unit-test/mock_data/manifests/test-missing-group-manifest/test-module.yaml
+targetAccountMappings:
+  - alias: primary
+    accountId: "000000000000"
+    default: true
+    parametersGlobal:
+      projectPolicy: examples/exampleproject/resources/projectpolicy.yaml
+    #   permissionBoundaryArn: "arn:aws:iam::000000000000:policy/policy-name"
+    #   dockerCredentialsSecret: some-secret
+    regionMappings:
+      - region: us-west-2
+        default: true
+        parametersRegional:
+          someKey: someValue

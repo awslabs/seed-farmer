@@ -33,22 +33,8 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 class StackInfo(object):
-    _ACCOUNT_ID: Optional[str] = None
-    _REGION: Optional[str] = None
     _PROJECT_MANAGED_POLICY_CFN_NAME: Optional[str] = None
     PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
-
-    @property
-    def ACCOUNT_ID(self) -> str:
-        if self._ACCOUNT_ID is None:
-            self._ACCOUNT_ID = get_account_id()
-        return str(self._ACCOUNT_ID)
-
-    @property
-    def REGION(self) -> str:
-        if self._REGION is None:
-            self._REGION = get_region()
-        return str(self._REGION)
 
     @property
     def PROJECT_MANAGED_POLICY_CFN_NAME(self) -> str:
@@ -132,7 +118,9 @@ def destroy_module_stack(
         The region where the module is deployed
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    module_stack_name, module_role_name = _get_module_stack_names(deployment_name, group_name, module_name)
+    module_stack_name, module_role_name = _get_module_stack_names(
+        deployment_name, group_name, module_name, session=session
+    )
     # Detach the Project Policy
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(
         seedkit_name=config.PROJECT, session=session
@@ -211,7 +199,10 @@ def deploy_module_stack(
     if module_stack_path:
         _logger.debug(module_stack_path)
 
-    module_stack_name, module_role_name = _get_module_stack_names(deployment_name, group_name, module_name)
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    module_stack_name, module_role_name = _get_module_stack_names(
+        deployment_name, group_name, module_name, session=session
+    )
 
     # Create IAM Role
     trust_policy = {
@@ -221,7 +212,6 @@ def deploy_module_stack(
         ],
     }
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     iam.create_check_iam_role(trust_policy, module_role_name, permission_boundary_arn, session=session)
 
     group_module_name = f"{group_name}-{module_name}"
@@ -301,7 +291,8 @@ def deploy_module_stack(
                         "secretsmanager:ListSecretVersionIds",
                     ],
                     "Resource": (
-                        f"arn:aws:secretsmanager:{info.REGION}:{info.ACCOUNT_ID}:secret:{docker_credentials_secret}*"
+                        f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}"
+                        f":secret:{docker_credentials_secret}*"
                     ),
                 },
                 {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},

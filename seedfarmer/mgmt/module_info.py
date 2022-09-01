@@ -760,9 +760,11 @@ def _fetch_helper(
         return store.get_parameter_if_exists(name=name, session=session)
 
 
-def _get_module_stack_names(deployment_name: str, group_name: str, module_name: str) -> Tuple[str, str]:
+def _get_module_stack_names(
+    deployment_name: str, group_name: str, module_name: str, session: Optional[Session] = None
+) -> Tuple[str, str]:
     module_stack_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-iam-policy"
-    module_role_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-{generate_hash()}"
+    module_role_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-{generate_hash(session=session)}"
     return module_stack_name, module_role_name
 
 

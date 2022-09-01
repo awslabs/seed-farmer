@@ -229,6 +229,22 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
         )
 
 
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
+    # TODO: Include output on Target accounts and regions to be primed
+    # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
+    # TODO: multi-thread this for reach Target account/region for better performance
+
+    for target_account_region in deployment_manifest.target_accounts_regions:
+        commands.destroy_managed_policy_stack(
+            account_id=target_account_region["account_id"],
+            region=target_account_region["region"],
+        )
+        if not retain_seedkit:
+            commands.destroy_seedkit(
+                account_id=target_account_region["account_id"], region=target_account_region["region"]
+            )
+
+
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
     remove_deploy_manifest: bool = False,
@@ -497,7 +513,9 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
     )
 
 
-def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = False) -> None:
+def destroy(
+    deployment_name: str, dryrun: bool = False, show_manifest: bool = False, retain_seedkit: bool = False
+) -> None:
     """
     destroy
         This function takes the name of a deployment and destroy all artifacts related.
@@ -527,5 +545,6 @@ def destroy(deployment_name: str, dryrun: bool = False, show_manifest: bool = Fa
             dryrun=dryrun,
             show_manifest=show_manifest,
         )
+
     else:
         _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

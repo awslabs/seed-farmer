@@ -92,6 +92,33 @@ def deploy_managed_policy_stack(
         )
 
 
+def destroy_managed_policy_stack(account_id: str, region: str) -> None:
+    """
+    destroy_managed_policy_stack
+        This function destroys the deployment-specific policy.
+
+    Parameters
+    ----------
+    account_id: str
+        The Account Id where the module is deployed
+    region: str
+        The region wher
+    """
+    # Determine if managed policy stack already deployed
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
+        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
+    )
+    if project_managed_policy_stack_exists:
+        _logger.info(
+            "Destroying Stack %s in Account/Region: %s/%s", info.PROJECT_MANAGED_POLICY_CFN_NAME, account_id, region
+        )
+        services.cfn.destroy_stack(
+            stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
+            session=session,
+        )
+
+
 def destroy_module_stack(
     deployment_name: str,
     group_name: str,
@@ -318,6 +345,26 @@ def deploy_seedkit(account_id: str, region: str) -> None:
     region: str
         The region wher"""
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    stack_exists, _, _ = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
-    if not stack_exists:
-        commands.deploy_seedkit(seedkit_name=config.PROJECT, session=session)
+    stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+    deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
+    if stack_exists:
+        _logger.debug("Updating SeedKit for Account/Region: %s/%s", account_id, region)
+    else:
+        _logger.debug("Initializing SeedKit for Account/Region: %s/%s", account_id, region)
+    commands.deploy_seedkit(seedkit_name=config.PROJECT, deploy_codeartifact=deploy_codeartifact, session=session)
+
+
+def destroy_seedkit(account_id: str, region: str) -> None:
+    """
+    destroy_seedkit
+        Accessor method to CodeSeeder to destroy the SeedKit if deployed
+
+    Parameters
+    ----------
+    account_id: str
+        The Account Id where the module is deployed
+    region: str
+        The region wher"""
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
+    commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)

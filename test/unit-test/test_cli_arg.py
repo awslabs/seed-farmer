@@ -159,7 +159,7 @@ def test_apply_missing_deployment_name():
 def test_apply_broken_deploy_phase():
     deployment_manifest = "manifests/test-broken-deployspec-deploy/deployment.yaml"
 
-    result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
+    _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     # assert result.exception.args[0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
 
 

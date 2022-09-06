@@ -12,8 +12,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import os
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from pydantic import PrivateAttr
 
@@ -90,14 +91,18 @@ class ModuleRef(CamelModel):
 
 class ValueRef(CamelModel):
     module_metadata: Optional[ModuleRef] = None
+    env_variable: Optional[str] = None
 
 
-class ModuleParameter(CamelModel):
+class ValueFromRef(CamelModel):
+    value_from: Optional[ValueRef] = None
+
+
+class ModuleParameter(ValueFromRef):
     _upper_snake_case: str = PrivateAttr()
 
     name: str
     value: Optional[Any] = None
-    value_from: Optional[ValueRef] = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
@@ -163,7 +168,7 @@ class TargetAccountMapping(CamelModel):
     """
 
     alias: str
-    account_id: str
+    account_id: Union[str, ValueFromRef]
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
@@ -179,6 +184,20 @@ class TargetAccountMapping(CamelModel):
 
     def get_region_mapping(self, region: str) -> Optional[RegionMapping]:
         return self._region_index.get(region, None)
+
+    @property
+    def actual_account_id(self) -> str:
+        if isinstance(self.account_id, str):
+            return self.account_id
+        elif isinstance(self.account_id, ValueFromRef):
+            if self.account_id.value_from and self.account_id.value_from.module_metadata is not None:
+                raise ValueError("Loading value from Module Metadata is not supported in the Deployment Manifest")
+            elif self.account_id.value_from and self.account_id.value_from.env_variable:
+                return os.getenv(self.account_id.value_from.env_variable, "")
+            else:
+                raise ValueError("Unsupported valueFrom type")
+        else:
+            raise ValueError("Unsupported accountId type")
 
     @property
     def default_region_mapping(self) -> Optional[RegionMapping]:
@@ -210,7 +229,7 @@ class DeploymentManifest(CamelModel):
             if ta.default:
                 self._default_account = ta
             self._account_alias_index[ta.alias] = ta
-            self._account_id_index[ta.account_id] = ta
+            self._account_id_index[ta.actual_account_id] = ta
 
     def get_target_account_mapping(
         self, account_alias: Optional[str] = None, account_id: Optional[str] = None
@@ -239,7 +258,7 @@ class DeploymentManifest(CamelModel):
                     self._accounts_regions.append(
                         {
                             "alias": target_account.alias,
-                            "account_id": target_account.account_id,
+                            "account_id": target_account.actual_account_id,
                             "region": region.region,
                         }
                     )
@@ -263,7 +282,7 @@ class DeploymentManifest(CamelModel):
         for target_account in self.target_account_mappings:
             if (
                 account_alias == target_account.alias
-                or account_id == target_account.account_id
+                or account_id == target_account.actual_account_id
                 or (use_default_account and target_account.default)
             ):
                 # Search the region_mappings for the region, if the parameter is in parameters_regional return it
@@ -295,7 +314,7 @@ class DeploymentManifest(CamelModel):
                         f"Invalid target_account ({module.target_account}) for "
                         f"Module {module.name} in Group {group.name}"
                     )
-                module.set_target_account_id(target_account.account_id)
+                module.set_target_account_id(target_account.actual_account_id)
 
                 module.target_region = (
                     target_account.default_region_mapping.region

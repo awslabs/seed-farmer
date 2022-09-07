@@ -56,11 +56,6 @@ class ISessionManager(object):
 
 
 class SessionManager(ISessionManager, metaclass=SingletonMeta):
-    # Example Calling:
-    # sm = SessionManager()\
-    # .configure(project_name=PROJECT)\
-    # .create(profile='myprorilename')
-
     TOOLCHAIN_KEY: str = "toolchain"
     SESSION: str = "session"
     ROLE: str = "role"
@@ -106,14 +101,14 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     @property
     def toolchain_session(self) -> Session:
         if not self.created:
-            raise RuntimeError("The SessionManager object was never properly created...call .create()")
+            raise RuntimeError("The SessionManager object was never properly created...)")
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
 
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
         if not self.created:
-            raise RuntimeError("The SessionManager object was never properly created...call .create()")
+            raise RuntimeError("The SessionManager object was never properly created...")
         if session_key not in self.sessions.keys():
             _logger.info(f"Creating Session for {session_key}")
             toolchain_session = self.sessions[self.TOOLCHAIN_KEY][self.SESSION]

@@ -12,8 +12,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
 import logging
+import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 from seedfarmer import config
@@ -51,6 +51,10 @@ def load_parameter_values(
                 deployment_name, parameter, parameter_values_cache, deployment_manifest
             )
             parameter_values.append(module_metatdata) if module_metatdata else None
+        elif parameter.value_from and parameter.value_from.env_variable:
+            parameter_values.append(
+                ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
+            )
     return parameter_values
 
 

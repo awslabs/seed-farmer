@@ -14,9 +14,11 @@
 
 
 import logging
+import os
 from typing import Optional
 
 import click
+from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
@@ -25,6 +27,9 @@ from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file if it exists
+load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, ".env"), verbose=True, override=True)
 
 
 def _load_project() -> str:

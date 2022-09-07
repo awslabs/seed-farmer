@@ -38,8 +38,7 @@ Resources:
               - kms:Create*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:key/*"
-                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/*"
+                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/{{ project_name }}-*"
               Sid: DeploymentKMS
             - Action:
               - iam:Delete*
@@ -55,8 +54,8 @@ Resources:
               - iam:List*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/*"
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*

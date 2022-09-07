@@ -72,6 +72,7 @@ def bootstrap() -> None:
     default=False,
     help="Optionally also bootstrap the account as a Target account",
     required=False,
+    show_default=True,
 )
 @click.option(
     "--synth/--no-synth",
@@ -79,11 +80,18 @@ def bootstrap() -> None:
     default=False,
     help="Synthesize a CFN template only...do not deploy",
     required=False,
+    show_default=True,
 )
 @click.option(
     "--profile",
     default=None,
     help="The AWS profile to initiate a session",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="AWS region to use",
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
@@ -92,6 +100,7 @@ def bootstrap_toolchain(
     trusted_principal: List[str],
     permission_boundary: Optional[str],
     profile: Optional[str],
+    region: Optional[str],
     as_target: bool,
     synth: bool,
     debug: bool,
@@ -106,6 +115,7 @@ def bootstrap_toolchain(
         principal_arns=trusted_principal,
         permissions_boundary_arn=permission_boundary,
         profile=profile,
+        region_name=region,
         synthesize=synth,
         as_target=as_target,
     )
@@ -141,11 +151,18 @@ def bootstrap_toolchain(
     default=False,
     help="Synthesize a CFN template only...do not deploy",
     required=False,
+    show_default=True,
 )
 @click.option(
     "--profile",
     default=None,
     help="The AWS profile to initiate a session",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="AWS region to use",
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
@@ -154,6 +171,7 @@ def bootstrap_target(
     toolchain_account: str,
     permission_boundary: Optional[str],
     profile: Optional[str],
+    region: Optional[str],
     synth: bool,
     debug: bool,
 ) -> None:
@@ -166,6 +184,7 @@ def bootstrap_target(
         toolchain_account_id=toolchain_account,
         project_name=project,
         profile=profile,
+        region_name=region,
         permissions_boundary_arn=permission_boundary,
         synthesize=synth,
     )

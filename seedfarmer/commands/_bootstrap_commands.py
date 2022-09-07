@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 from aws_codeseeder import services as cs_services
@@ -25,7 +25,8 @@ from botocore.exceptions import WaiterError
 from jinja2 import Template
 
 from seedfarmer import CLI_ROOT
-from seedfarmer.services import create_new_session, get_account_id
+from seedfarmer.services import create_new_session, get_account_id, get_region
+from seedfarmer.services._iam import get_role
 from seedfarmer.utils import CfnSafeYamlLoader
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -70,20 +71,23 @@ def bootstrap_toolchain_account(
     principal_arns: List[str],
     permissions_boundary_arn: Optional[str] = None,
     profile: Optional[str] = None,
+    region_name: Optional[str] = None,
     synthesize: bool = False,
     as_target: bool = False,
 ) -> Optional[Dict[Any, Any]]:
     template = get_toolchain_template(project_name, principal_arns, permissions_boundary_arn)
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
-        session = create_new_session(profile=profile)
-        deploy_template(template=template, stack_name=f"seedfarmer-{project_name}-toolchain-role", session=session)
+        session = create_new_session(profile=profile, region_name=region_name)
+        role_name, stack_name = f"seedfarmer-{project_name}-toolchain-role", f"seedfarmer-{project_name}-toolchain-role"
+        apply_deploy_logic(template=template, role_name=role_name, stack_name=stack_name, session=session)
         if as_target:
             bootstrap_target_account(
                 toolchain_account_id=get_account_id(session),
                 project_name=project_name,
                 permissions_boundary_arn=permissions_boundary_arn,
                 profile=profile,
+                region_name=region_name,
                 session=session,
             )
     else:
@@ -96,17 +100,45 @@ def bootstrap_target_account(
     project_name: str,
     permissions_boundary_arn: Optional[str] = None,
     profile: Optional[str] = None,
+    region_name: Optional[str] = None,
     session: Optional[Session] = None,
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
     template = get_deployment_template(toolchain_account_id, project_name, permissions_boundary_arn)
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
-        sess = session if session else create_new_session(profile=profile)
-        deploy_template(template=template, stack_name=f"seedfarmer-{project_name}-deployment-role", session=sess)
+        if not session:
+            session = create_new_session(profile=profile, region_name=region_name)
+        role_name, stack_name = (
+            f"seedfarmer-{project_name}-deployment-role",
+            f"seedfarmer-{project_name}-deployment-role",
+        )
+        apply_deploy_logic(template=template, role_name=role_name, stack_name=stack_name, session=session)
     else:
         write_template(template=template)
     return template
+
+
+def apply_deploy_logic(template: Dict[Any, Any], role_name: str, stack_name: str, session: Session) -> None:
+    role_exists, stack_exists = role_deploy_status(role_name=role_name, stack_name=stack_name, session=session)
+    if not role_exists:
+        _logger.info(
+            "Deploying role in account %s, region %s", get_account_id(session=session), get_region(session=session)
+        )
+        deploy_template(template=template, stack_name=stack_name, session=session)
+    else:
+        if stack_exists[0]:
+            _logger.info(
+                "Updating role in account %s, region %s", get_account_id(session=session), get_region(session=session)
+            )
+            deploy_template(template=template, stack_name=stack_name, session=session)
+        else:
+            _logger.info(
+                "The role %s exists in account %s as was not deployed in region %s, it will NOT be updated",
+                role_name,
+                get_account_id(session=session),
+                get_region(session=session),
+            )
 
 
 def deploy_template(template: Dict[Any, Any], stack_name: str, session: Optional[Session]) -> None:
@@ -127,3 +159,9 @@ def deploy_template(template: Dict[Any, Any], stack_name: str, session: Optional
         raise we
     finally:
         os.remove(output)
+
+
+def role_deploy_status(role_name: str, stack_name: str, session: Session) -> Tuple[Optional[Dict[str, Any]], Any]:
+    return get_role(role_name=role_name, session=session), cs_services.cfn.does_stack_exist(
+        stack_name=stack_name, session=session
+    )

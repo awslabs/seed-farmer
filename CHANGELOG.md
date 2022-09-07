@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - bootstrap command support to generate CFN templates for Toolchain and Target accounts
 - added deployment for toolchain and target accounts via CFN
 - support for cross-account and cross-region deployments
+- support for envVariable as valueFrom via .env and python-detenv
+
 
 
 ### Changes
@@ -28,6 +30,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
 - enable basic CLI functions by lazy loading seedfarmer.yaml and boto3.Session
 - ensure get_account_id() and get_regin() always use correct boto3.Session
+- ensure bootstrap functions look for roles and cfn templates when updating/deploying roles
+- honed back deployment role permissions
 
 ## v0.1.4 (2022-08-16)
 

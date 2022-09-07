@@ -34,7 +34,22 @@ Resources:
               Effect: Allow
               Resource:
                 - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/codeseeder-{{ project_name }}-*"
-              Sid: DeploymentKMS
+              Sid: DeploymentKMSAlias
+            - Action:
+              - kms:ListKeys
+              - kms:UpdateCustomKeyStore
+              - kms:ListAliases
+              - kms:CreateKey
+              - kms:PutKeyPolicy
+              - kms:Tag*
+              - kms:Untag*
+              - kms:ScheduleKey*
+              - kms:DescribeKey
+              - kms:CreateAlias
+              - kms:DeleteAlias
+              Effect: Allow
+              Resource: '*'
+              Sid: DeploymentKMSKey
             - Action:
               - iam:Delete*
               - iam:Create*
@@ -50,7 +65,9 @@ Resources:
               Effect: Allow
               Resource:
                 - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"                
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
@@ -64,10 +81,6 @@ Resources:
               Sid: DeploymentCodeBuild
             - Action:
               - iam:ListPolicies
-              - kms:ListKeys
-              - kms:UpdateCustomKeyStore
-              - kms:ListAliases
-              - kms:CreateKey
               - ssm:DescribeParameters
               - codebuild:ListProjects
               - cloudformation:Describe*
@@ -80,7 +93,7 @@ Resources:
               Effect: Allow
               Resource:
                 - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}"
+                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}/*"
             - Action:
               - s3:Delete*
               - s3:Put*

@@ -46,17 +46,13 @@ class StackInfo(object):
 info = StackInfo()
 
 
-def deploy_managed_policy_stack(
-    deployment_name: str, deployment_manifest: DeploymentManifest, account_id: str, region: str
-) -> None:
+def deploy_managed_policy_stack(deployment_manifest: DeploymentManifest, account_id: str, region: str) -> None:
     """
     deploy_managed_policy_stack
         This function deploys the deployment-specific policy to allow CodeSeeder to deploy.
 
     Parameters
     ----------
-    deployment_name : str
-        The name of the deployment
     deployment_manifest : DeploymentManifest
         The DeploymentManifest object of the deploy
     account_id: str
@@ -86,8 +82,8 @@ def deploy_managed_policy_stack(
         services.cfn.deploy_template(
             stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,
-            seedkit_tag=deployment_name,
-            parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": deployment_name},
+            seedkit_tag=deployment_manifest.name,
+            parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": deployment_manifest.name},
             session=session,
         )
 

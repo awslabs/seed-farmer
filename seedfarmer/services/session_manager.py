@@ -90,18 +90,15 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             if enable_reaper and (not self.reaper or not self.reaper.is_alive()):
                 self._setup_reaper()
 
-            if self.TOOLCHAIN_KEY not in self.sessions.keys():
-                session, role = self._get_toolchain()
-                self.sessions = {self.TOOLCHAIN_KEY: {self.SESSION: session, self.ROLE: role}}
+            self._check_for_toolchain()
             self.created = True
-        else:
-            _logger.info("Toolchain Already Created")
         return self
 
     @property
     def toolchain_session(self) -> Session:
         if not self.created:
             raise RuntimeError("The SessionManager object was never properly created...)")
+        self._check_for_toolchain()
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
 
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
@@ -111,9 +108,16 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             raise RuntimeError("The SessionManager object was never properly created...")
         if session_key not in self.sessions.keys():
             _logger.info(f"Creating Session for {session_key}")
-            toolchain_session = self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
+            self._check_for_toolchain()
+            toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
             deployment_role_arn = f"arn:aws:iam::{account_id}:role/seedfarmer-{project_name}-deployment-role"
-            sts_toolchain_client = boto3_client(service_name="sts", session=toolchain_session)
+            # the boto sessions are not thread safe, so create a new one for the toolchain role every time to be sure
+            sts_toolchain_client = boto3_client(
+                service_name="sts",
+                aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
+                aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
+                aws_session_token=toolchain_role["Credentials"]["SessionToken"],
+            )
             deployment_role = sts_toolchain_client.assume_role(
                 RoleArn=deployment_role_arn,
                 RoleSessionName="deployment_role",
@@ -131,6 +135,12 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             return self.sessions[session_key][self.SESSION]
 
     # These methods below should not be called outside of this class
+
+    def _check_for_toolchain(self) -> None:
+        if self.TOOLCHAIN_KEY not in self.sessions.keys():
+            _logger.info("Creating toolchain session")
+            session, role = self._get_toolchain()
+            self.sessions = {self.TOOLCHAIN_KEY: {self.SESSION: session, self.ROLE: role}}
 
     def _get_toolchain(self) -> Tuple[Session, Dict[Any, Any]]:
         region_name = self.config.get("region_name")
@@ -155,7 +165,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         return toolchain_session, toolchain_role
 
     def _setup_reaper(self) -> None:
-        _logger.debug("Starting Session Reaper")
+        _logger.info("Starting Session Reaper")
         t = Thread(target=self._reap_sessions, args=(self.reaperInterval,), daemon=True, name="SessionReaper")
         t.start()
         self.reaper = t
@@ -164,5 +174,5 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         _logger.debug("Reaper Is Set")
         while True:
             sleep(interval)
-            _logger.debug(f"Reaping Sessions - sleeping for {interval} seconds")
+            _logger.info(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}

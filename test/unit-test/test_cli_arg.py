@@ -308,7 +308,7 @@ def test_list_moduledata():
         exit_code=0,
         return_result=True,
     )
-    assert json.loads(result.output).get("CognitoDomainName") == "testdomaindomaintest"
+    assert json.loads(result.output).get("CognitoDomainName") == "testdomaindomaintester"
 
 
 # Test `list modules` #

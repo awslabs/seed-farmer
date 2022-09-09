@@ -13,7 +13,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - bootstrap command support to generate CFN templates for Toolchain and Target accounts
 - added deployment for toolchain and target accounts via CFN
 - support for cross-account and cross-region deployments
-- support for envVariable as valueFrom via .env and python-detenv
+- support for envVariable as valueFrom via .env and python-dotenv
+- threadded the priming of accounts on create and destroy
+- added ddestroy of managed polices when destroying deployments
 
 
 
@@ -25,6 +27,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - moved projectpolicy.yaml into resources/.
 - added profile and region support for session in `_session_utils.py`
 - convertd `session_manager.py` to only use `_session_utils.py`
+- refactored deployment_command objects and signatures for threadding 
 
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
@@ -32,6 +35,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - ensure get_account_id() and get_regin() always use correct boto3.Session
 - ensure bootstrap functions look for roles and cfn templates when updating/deploying roles
 - honed back deployment role permissions
+- modified session manager to support threadding with the toolchain session
 
 ## v0.1.4 (2022-08-16)
 

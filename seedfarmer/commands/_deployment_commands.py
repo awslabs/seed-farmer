@@ -48,29 +48,30 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _execute_deploy(
-    d_name: str,
-    g_name: str,
-    m: ModuleManifest,
+    group_name: str,
+    module_manifest: ModuleManifest,
     deployment_manifest: DeploymentManifest,
-    d_secret: Optional[str] = None,
+    docker_credentials_secret: Optional[str] = None,
     permission_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     parameters = load_parameter_values(
-        deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
+        deployment_name=deployment_manifest.name,
+        parameters=module_manifest.parameters,
+        deployment_manifest=deployment_manifest,
     )
 
-    target_account_id = cast(str, m.get_target_account_id())
-    target_region = cast(str, m.target_region)
+    target_account_id = cast(str, module_manifest.get_target_account_id())
+    target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
     commands.deploy_module_stack(
-        _get_modulestack_path(m.path),
-        d_name,
-        g_name,
-        m.name,
+        _get_modulestack_path(module_manifest.path),
+        deployment_manifest.name,
+        group_name,
+        module_manifest.name,
         target_account_id,
         target_region,
         parameters,
-        docker_credentials_secret=d_secret,
+        docker_credentials_secret=docker_credentials_secret,
         permission_boundary_arn=permission_boundary_arn,
     )
 
@@ -78,59 +79,66 @@ def _execute_deploy(
     session = (
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
-    module_metadata = json.dumps(get_module_metadata(d_name, g_name, m.name, session=session))
+    module_metadata = json.dumps(
+        get_module_metadata(deployment_manifest.name, group_name, module_manifest.name, session=session)
+    )
 
-    if m.deploy_spec is None:
-        raise ValueError(f"Invalid value for ModuleManifest.deploy_spec in group {g_name} and module : {m.name}")
+    if module_manifest.deploy_spec is None:
+        raise ValueError(
+            f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
+        )
 
     return commands.deploy_module(
-        deployment_name=d_name,
-        group_name=g_name,
-        module_path=os.path.join(config.OPS_ROOT, m.path),
-        module_deploy_spec=m.deploy_spec,
-        module_manifest_name=m.name,
+        deployment_name=deployment_manifest.name,
+        group_name=group_name,
+        module_path=os.path.join(config.OPS_ROOT, module_manifest.path),
+        module_deploy_spec=module_manifest.deploy_spec,
+        module_manifest_name=module_manifest.name,
         account_id=target_account_id,
         region=target_region,
         parameters=parameters,
         module_metadata=module_metadata,
-        module_bundle_md5=m.bundle_md5,
-        docker_credentials_secret=d_secret,
+        module_bundle_md5=module_manifest.bundle_md5,
+        docker_credentials_secret=docker_credentials_secret,
         permission_boundary_arn=permission_boundary_arn,
     )
 
 
 def _execute_destroy(
-    d_name: str,
-    g_name: str,
-    m: ModuleManifest,
+    group_name: str,
+    module_manifest: ModuleManifest,
     deployment_manifest: DeploymentManifest,
-    d_secret: Optional[str] = None,
+    docker_credentials_secret: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
-    if m.deploy_spec is None:
-        raise ValueError(f"Invalid value for ModuleManifest.deploy_spec in group {g_name} and module : {m.name}")
+    if module_manifest.deploy_spec is None:
+        raise ValueError(
+            f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
+        )
 
     resp = commands.destroy_module(
-        deployment_name=d_name,
-        group_name=g_name,
-        module_path=m.path,
-        module_deploy_spec=m.deploy_spec,
-        module_manifest_name=m.name,
-        account_id=cast(str, m.get_target_account_id()),
-        region=cast(str, m.target_region),
+        deployment_name=deployment_manifest.name,
+        group_name=group_name,
+        module_path=module_manifest.path,
+        module_deploy_spec=module_manifest.deploy_spec,
+        module_manifest_name=module_manifest.name,
+        account_id=cast(str, module_manifest.get_target_account_id()),
+        region=cast(str, module_manifest.target_region),
         parameters=load_parameter_values(
-            deployment_name=d_name, parameters=m.parameters, deployment_manifest=deployment_manifest
+            deployment_name=deployment_manifest.name,
+            parameters=module_manifest.parameters,
+            deployment_manifest=deployment_manifest,
         ),
         module_metadata=None,
     )
 
     if resp.status == StatusType.SUCCESS.value:
         commands.destroy_module_stack(
-            d_name,
-            g_name,
-            m.name,
-            account_id=cast(str, m.get_target_account_id()),
-            region=cast(str, m.target_region),
-            docker_credentials_secret=d_secret,
+            deployment_manifest.name,
+            group_name,
+            module_manifest.name,
+            account_id=cast(str, module_manifest.get_target_account_id()),
+            region=cast(str, module_manifest.target_region),
+            docker_credentials_secret=docker_credentials_secret,
         )
 
     # TODO: Confirm whether this is needed, commenting for now
@@ -142,7 +150,6 @@ def _execute_destroy(
 def _deploy_deployment_is_not_dry_run(
     deployment_manifest: DeploymentManifest,
     deployment_manifest_wip: DeploymentManifest,
-    deployment_name: str,
     groups_to_deploy: List[ModulesManifest],
 ) -> None:
     if groups_to_deploy:
@@ -162,21 +169,14 @@ def _deploy_deployment_is_not_dry_run(
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
 
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
-                        return _execute_deploy(
-                            args["d_name"],
-                            args["g"],
-                            args["m"],
-                            deployment_manifest,
-                            args["d_secret"],
-                            args["permission_boundary_arn"],
-                        )
+                        return _execute_deploy(**args)
 
                     params = [
                         {
-                            "d_name": deployment_name,
-                            "g": _group.name,
-                            "m": _module,
-                            "d_secret": deployment_manifest_wip.get_parameter_value(
+                            "group_name": _group.name,
+                            "module_manifest": _module,
+                            "deployment_manifest": deployment_manifest,
+                            "docker_credentials_secret": deployment_manifest_wip.get_parameter_value(
                                 "dockerCredentialsSecret",
                                 account_alias=_module.target_account,
                                 region=_module.target_region,
@@ -215,34 +215,39 @@ def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deplo
 
 
 def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
-    # TODO: Include output on Target accounts and regions to be primed
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
-    # TODO: multi-thread this for reach Target account/region for better performance
 
-    for target_account_region in deployment_manifest.target_accounts_regions:
-        commands.deploy_seedkit(account_id=target_account_region["account_id"], region=target_account_region["region"])
-        commands.deploy_managed_policy_stack(
-            deployment_name=deployment_manifest.name,
-            deployment_manifest=deployment_manifest,
-            account_id=target_account_region["account_id"],
-            region=target_account_region["region"],
-        )
+    _logger.info("Priming Accounts")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+        def _prime_accounts(args: Dict[str, Any]) -> None:
+            _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
+            commands.deploy_seedkit(**args)
+            commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
+
+        params = [
+            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            for target_account_region in deployment_manifest.target_accounts_regions
+        ]
+        _ = list(workers.map(_prime_accounts, params))
 
 
 def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
-    # TODO: Include output on Target accounts and regions to be primed
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
-    # TODO: multi-thread this for reach Target account/region for better performance
+    _logger.info("Tearing Down Accounts")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
-    for target_account_region in deployment_manifest.target_accounts_regions:
-        commands.destroy_managed_policy_stack(
-            account_id=target_account_region["account_id"],
-            region=target_account_region["region"],
-        )
-        if not retain_seedkit:
-            commands.destroy_seedkit(
-                account_id=target_account_region["account_id"], region=target_account_region["region"]
-            )
+        def _teardown_accounts(args: Dict[str, Any]) -> None:
+            _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
+            commands.destroy_managed_policy_stack(**args)
+            if not retain_seedkit:
+                commands.destroy_seedkit(**args)
+
+        params = [
+            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            for target_account_region in deployment_manifest.target_accounts_regions
+        ]
+        _ = list(workers.map(_teardown_accounts, params))
 
 
 def destroy_deployment(
@@ -290,20 +295,14 @@ def destroy_deployment(
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
 
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
-                        return _execute_destroy(
-                            args["d"],
-                            args["g"],
-                            args["m"],
-                            destroy_manifest,
-                            args["d_secret"],
-                        )
+                        return _execute_destroy(**args)
 
                     params = [
                         {
-                            "d": deployment_name,
-                            "g": _group.name,
-                            "m": _module,
-                            "d_secret": destroy_manifest.get_parameter_value(
+                            "group_name": _group.name,
+                            "module_manifest": _module,
+                            "deployment_manifest": destroy_manifest,
+                            "docker_credentials_secret": destroy_manifest.get_parameter_value(
                                 "dockerCredentialsSecret",
                                 account_alias=_module.target_account,
                                 region=_module.target_region,
@@ -325,6 +324,7 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
+            tear_down_target_accounts(deployment_manifest=destroy_manifest, retain_seedkit=True)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -427,7 +427,6 @@ def deploy_deployment(
         _deploy_deployment_is_not_dry_run(
             deployment_manifest=deployment_manifest,
             deployment_manifest_wip=deployment_manifest_wip,
-            deployment_name=deployment_name,
             groups_to_deploy=groups_to_deploy,
         )
     else:

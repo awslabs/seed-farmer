@@ -53,8 +53,15 @@ def boto3_client(
     session: Optional[Session] = None,
     region_name: Optional[str] = None,
     profile: Optional[str] = None,
+    aws_access_key_id: Optional[str] = None,
+    aws_secret_access_key: Optional[str] = None,
+    aws_session_token: Optional[str] = None,
 ) -> boto3.client:
-    if not session:
+    if aws_access_key_id and aws_secret_access_key and aws_session_token:
+        return create_new_session_with_creds(
+            aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
+        ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+    elif not session:
         return create_new_session(region_name, profile).client(
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )

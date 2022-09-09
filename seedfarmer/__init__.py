@@ -30,7 +30,7 @@ __all__ = ["__description__", "__license__", "__title__"]
 __version__: str = pkg_resources.get_distribution(__title__).version
 
 DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
-INFO_LOGGING_FORMAT = "[%(filename)-13s:%(lineno)3d] %(message)s"
+INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 

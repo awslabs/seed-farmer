@@ -38,5 +38,10 @@ Resources:
               Resource:
                 Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
               Sid: ToolChainSSM
+            - Action:
+              - ssm:Describe*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:*"
       RoleName: seedfarmer-{{ project_name }}-toolchain-role
     Type: AWS::IAM::Role

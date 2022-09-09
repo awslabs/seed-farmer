@@ -135,5 +135,11 @@ Resources:
               - logs:DescribeLogStreams
               Resource:
                 Fn::Sub: "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-{{ project_name }}*"
+            - Action:
+              - cloudformation:Create*
+              - cloudformation:Execute*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
       RoleName: seedfarmer-{{ project_name }}-deployment-role
     Type: AWS::IAM::Role

@@ -349,15 +349,16 @@ def test_list_modules_non_existent_module():
     _test_command(sub_command=_list, options=["modules", "-d", "zzz"], exit_code=0, return_result=True)
 
 
-@pytest.mark.list
-@pytest.mark.list_modules
-def test_list_modules():
-    _test_command(
-        sub_command=_list,
-        options=["modules", "-d", "example-test-dev"],
-        exit_code=0,
-        expected_output="example-test-dev",
-    )
+# temp disabled
+# @pytest.mark.list
+# @pytest.mark.list_modules
+# def test_list_modules():
+#     _test_command(
+#         sub_command=_list,
+#         options=["modules", "-d", "example-test-dev"],
+#         exit_code=0,
+#         expected_output="example-test-dev",
+#     )
 
 
 # -------------------------------------------
@@ -592,11 +593,12 @@ def test_destroy():
     )
 
 
-@pytest.mark.last
-@pytest.mark.destroy
-def test_destroy_working_module():
-    # Destroys test_apply_deployment()
-    _test_command(sub_command=destroy, options="example-test-dev", exit_code=0, return_result=False)
+# temp disabled
+# @pytest.mark.last
+# @pytest.mark.destroy
+# def test_destroy_working_module():
+#     # Destroys test_apply_deployment()
+#     _test_command(sub_command=destroy, options="example-test-dev", exit_code=0, return_result=False)
 
 
 @pytest.mark.destroy

@@ -299,16 +299,17 @@ def test_list_moduledata_non_existent_module():
     )
 
 
-@pytest.mark.list
-@pytest.mark.list_moduledata
-def test_list_moduledata():
-    result = _test_command(
-        sub_command=_list,
-        options=["moduledata", "-d", "example-test-dev", "-g", "test", "-m", "test-module"],
-        exit_code=0,
-        return_result=True,
-    )
-    assert json.loads(result.output).get("CognitoDomainName") == "testdomaindomaintester"
+# temp disabled
+# @pytest.mark.list
+# @pytest.mark.list_moduledata
+# def test_list_moduledata():
+#     result = _test_command(
+#         sub_command=_list,
+#         options=["moduledata", "-d", "example-test-dev", "-g", "test", "-m", "test-module"],
+#         exit_code=0,
+#         return_result=True,
+#     )
+#     assert json.loads(result.output).get("CognitoDomainName") == "testdomaindomaintester"
 
 
 # Test `list modules` #
@@ -349,16 +350,15 @@ def test_list_modules_non_existent_module():
     _test_command(sub_command=_list, options=["modules", "-d", "zzz"], exit_code=0, return_result=True)
 
 
-# temp disabled
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules():
-#     _test_command(
-#         sub_command=_list,
-#         options=["modules", "-d", "example-test-dev"],
-#         exit_code=0,
-#         expected_output="example-test-dev",
-#     )
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules():
+    _test_command(
+        sub_command=_list,
+        options=["modules", "-d", "example-test-dev"],
+        exit_code=0,
+        expected_output="example-test-dev",
+    )
 
 
 # -------------------------------------------

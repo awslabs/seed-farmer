@@ -8,7 +8,7 @@ targetAccountMappings:
     accountId: "000000000000"
     default: true
     parametersGlobal:
-      projectPolicy: examples/exampleproject/resources/projectpolicy.yaml
+      projectPolicy: resources/projectpolicy.yaml
     #   permissionBoundaryArn: "arn:aws:iam::000000000000:policy/policy-name"
     #   dockerCredentialsSecret: some-secret
     regionMappings:

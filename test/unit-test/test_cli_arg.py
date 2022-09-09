@@ -321,7 +321,7 @@ def test_list_modules_help():
         sub_command=_list,
         options=["modules", "--help"],
         exit_code=0,
-        expected_output="List the modules in a group",
+        expected_output="List the modules in a deployment",
     )
 
 

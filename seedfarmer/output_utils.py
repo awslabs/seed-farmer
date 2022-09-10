@@ -64,6 +64,8 @@ def print_manifest_inventory(
     """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
+    table.add_column("Account", justify="left", style="yellow", no_wrap=True)
+    table.add_column("Region", justify="left", style="white", no_wrap=True)
     table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
     table.add_column("Group", justify="left", style="magenta")
     table.add_column("Module", justify="left", style="green")
@@ -74,10 +76,12 @@ def print_manifest_inventory(
         for module in group.modules:
             m_name = module.name
             m_path = module.path
+            region = module.target_region
+            account = module.target_account
             if show_path:
-                table.add_row(d_name, g_name, m_name, m_path)
+                table.add_row(account, region, d_name, g_name, m_name, m_path)
             else:
-                table.add_row(d_name, g_name, m_name)
+                table.add_row(account, region, d_name, g_name, m_name)
 
     console.print(table)
 
@@ -85,11 +89,13 @@ def print_manifest_inventory(
 def _print_modules(description: str, modules_list: List[Any]) -> None:
     table = Table(title=f"[bold yellow]{description}", title_justify="left")
 
+    table.add_column("Account", justify="left", style="yellow", no_wrap=True)
+    table.add_column("Region", justify="left", style="white", no_wrap=True)
     table.add_column("Deployemnt", style="cyan", no_wrap=True)
     table.add_column("Group", justify="left", style="magenta")
     table.add_column("Module", justify="left", style="green")
     for lst in modules_list:
-        table.add_row(lst[0], lst[1], lst[2])
+        table.add_row(lst[0], lst[1], lst[2], lst[3], lst[4])
 
     console.print(table)
 

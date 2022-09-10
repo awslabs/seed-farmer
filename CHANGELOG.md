@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - support for envVariable as valueFrom via .env and python-dotenv
 - threadded the priming of accounts on create and destroy
 - added ddestroy of managed polices when destroying deployments
+- added account and region to module list output
 
 
 

@@ -17,7 +17,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - threaded the priming of accounts on create and destroy
 - added destroy of managed polices when destroying deployments
 - threaded module info fetching
-
+- added account and region to module list output
 
 
 ### Changes

@@ -210,7 +210,9 @@ def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deplo
     if groups_to_deploy:
         for _group in groups_to_deploy:
             for _module in _group.modules:
-                mods_would_deploy.append([deployment_name, _group.name, _module.name])
+                mods_would_deploy.append(
+                    [_module.target_account, _module.target_region, deployment_name, _group.name, _module.name]
+                )
     _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
 
 
@@ -409,7 +411,9 @@ def deploy_deployment(
                 ),
             )
             if not _build_module:
-                unchanged_modules.append([deployment_name, group_name, module.name])
+                unchanged_modules.append(
+                    [module.target_account, module.target_region, deployment_name, group_name, module.name]
+                )
             else:
                 modules_to_deploy.append(module)
 

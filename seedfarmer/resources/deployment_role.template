@@ -141,6 +141,6 @@ Resources:
               Effect: Allow
               Resource:
                 Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
-                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-managed-policy/*"
+                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}*policy/*"
       RoleName: seedfarmer-{{ project_name }}-deployment-role
     Type: AWS::IAM::Role

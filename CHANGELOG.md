@@ -14,8 +14,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added deployment for toolchain and target accounts via CFN
 - support for cross-account and cross-region deployments
 - support for envVariable as valueFrom via .env and python-dotenv
-- threadded the priming of accounts on create and destroy
-- added ddestroy of managed polices when destroying deployments
+- threaded the priming of accounts on create and destroy
+- added destroy of managed polices when destroying deployments
+- threaded module info fetching
 
 
 

@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import concurrent.futures
 import logging
 from threading import Lock
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
@@ -87,25 +88,33 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
         An index of Module info for all Target accounts and regions
     """
     module_info_index = ModuleInfoIndex()
-    # TODO: Enable multi-threaded query of account/region pairs
-    for account_region in deployment_manifest.target_accounts_regions:
-        account_id = account_region["account_id"]
-        region = account_region["region"]
-        session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-        module_info = mi.get_parameter_data_cache(deployment=deployment_manifest.name, session=session)
-        for key, value in module_info.items():
-            key_parts = key.split("/")[1:]
-            if len(key_parts) < 4:
-                continue
-            group = key_parts[2]
-            module_name = key_parts[3]
-            module_info_index.index_module_info(
-                group=group,
-                account_id=account_id,
-                region=region,
-                module_name=module_name,
-                module_info={key: value},
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+        def _get_module_info(args: Dict[str, Any]) -> None:
+            session = (
+                SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=args["account_id"], region_name=args["region"])
             )
+            module_info = mi.get_parameter_data_cache(deployment=deployment_manifest.name, session=session)
+            for key, value in module_info.items():
+                key_parts = key.split("/")[1:]
+                if len(key_parts) < 4:
+                    continue
+                group = key_parts[2]
+                module_name = key_parts[3]
+                module_info_index.index_module_info(
+                    group=group, module_name=module_name, module_info={key: value}, **args
+                )
+
+        params = [
+            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            for target_account_region in deployment_manifest.target_accounts_regions
+        ]
+        _ = list(workers.map(_get_module_info, params))
+
+    _logger.debug(module_info_index.__dict__)
     return module_info_index
 
 

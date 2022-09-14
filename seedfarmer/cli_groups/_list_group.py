@@ -86,6 +86,18 @@ def list() -> None:
     show_default=True,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -96,6 +108,8 @@ def list_deployspec(
     group: str,
     module: str,
     project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
     debug: bool,
@@ -113,7 +127,7 @@ def list_deployspec(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project)
+            .get_or_create(project_name=project, profile=profile, region_name=region)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
@@ -151,6 +165,18 @@ def list_deployspec(
     default=None,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -179,6 +205,8 @@ def list_module_metadata(
     group: str,
     module: str,
     project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
     export_local_env: str,
@@ -197,7 +225,7 @@ def list_module_metadata(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project)
+            .get_or_create(project_name=project, profile=profile, region_name=region)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
@@ -225,6 +253,18 @@ def list_module_metadata(
     required=True,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -232,6 +272,8 @@ def list_module_metadata(
 )
 def list_modules(
     deployment: str,
+    profile: Optional[str],
+    region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -239,7 +281,7 @@ def list_modules(
     _logger.debug("We are getting modules for %s", deployment)
 
     project = _load_project()
-    SessionManager().get_or_create(project_name=project)
+    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
     if dep_manifest:
@@ -263,7 +305,7 @@ def list_modules(
 @click.option(
     "--region",
     default=None,
-    help="The AWS region to use for boto3.Sessions",
+    help="The AWS region of the toolchain",
     required=False,
 )
 @click.option(

@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added destroy of managed polices when destroying deployments
 - threaded module info fetching
 - added account and region to module list output
+- added region and profile support for CLI commands
 
 
 ### Changes

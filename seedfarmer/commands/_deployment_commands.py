@@ -442,7 +442,13 @@ def deploy_deployment(
         print_manifest_json(deployment_manifest)
 
 
-def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bool = False) -> None:
+def apply(
+    deployment_manifest_path: str,
+    profile: Optional[str] = None,
+    region_name: Optional[str] = None,
+    dryrun: bool = False,
+    show_manifest: bool = False,
+) -> None:
     """
     apply
         This function takes the relative path of a deployment manifest and
@@ -454,6 +460,10 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
     ----------
     deployment_manifest_path : str
         Relative path to the deployment manifest
+    profile : str
+        If using an AWS Profile for deployment use it here
+    region_name : str
+        The name of the AWS region the deployment is based in for the toolchain
     dryrun : bool, optional
         This flag indicates that the deployment manifest should be consumed and a
         DeploymentManifest object be created (for both apply and destroy) but DOES NOT
@@ -479,7 +489,9 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
     _logger.debug(deployment_manifest.dict())
 
     # Initialize the SessionManager for the entire project
-    session_manager = SessionManager().get_or_create(project_name=config.PROJECT)
+    session_manager = SessionManager().get_or_create(
+        project_name=config.PROJECT, profile=profile, region_name=region_name
+    )
     if not dryrun:
         write_deployment_manifest(
             deployment_manifest.name, deployment_manifest.dict(), session=session_manager.toolchain_session
@@ -517,7 +529,12 @@ def apply(deployment_manifest_path: str, dryrun: bool = False, show_manifest: bo
 
 
 def destroy(
-    deployment_name: str, dryrun: bool = False, show_manifest: bool = False, retain_seedkit: bool = False
+    deployment_name: str,
+    profile: Optional[str] = None,
+    region_name: Optional[str] = None,
+    dryrun: bool = False,
+    show_manifest: bool = False,
+    retain_seedkit: bool = False,
 ) -> None:
     """
     destroy
@@ -527,6 +544,10 @@ def destroy(
     ----------
     deployment_name : str
         The name of the deployment to destroy
+    profile : str
+        If using an AWS Profile for deployment use it here
+    region_name : str
+        The name of the AWS region the deployment is based in for the toolchain
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
@@ -538,7 +559,9 @@ def destroy(
         By default False
 
     """
+    project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
+    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region_name)
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
     if destroy_manifest:
         destroy_manifest.validate_and_set_module_defaults()

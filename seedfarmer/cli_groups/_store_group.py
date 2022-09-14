@@ -81,6 +81,18 @@ def store() -> None:
     default=None,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -103,6 +115,8 @@ def store_deployspec(
     group: str,
     module: str,
     path: str,
+    profile: Optional[str],
+    region: Optional[str],
     project: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
@@ -125,7 +139,7 @@ def store_deployspec(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project)
+            .get_or_create(project_name=project, profile=profile, region_name=region)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 

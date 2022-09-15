@@ -177,18 +177,6 @@ def list_deployspec(
     required=False,
 )
 @click.option(
-    "--target-account-id",
-    default=None,
-    help="Account Id to remove module data from, if specifed --target-region is required",
-    show_default=True,
-)
-@click.option(
-    "--target-region",
-    default=None,
-    help="Region to remove module data from, if specifed --target-account-id is required",
-    show_default=True,
-)
-@click.option(
     "--export-local-env/--no-export-local-env",
     default=False,
     help="Print the moduledata as env parameters for local development support INSTEAD of json (default is FALSE)",
@@ -207,8 +195,6 @@ def list_module_metadata(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
-    target_account_id: Optional[str],
-    target_region: Optional[str],
     export_local_env: str,
     debug: bool,
 ) -> None:
@@ -219,15 +205,13 @@ def list_module_metadata(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
-    if (target_account_id is not None) != (target_region is not None):
-        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
-    elif target_account_id is not None and target_region is not None:
-        session = (
-            SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
-            .get_deployment_session(account_id=target_account_id, region_name=target_region)
-        )
+    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+    dep_manifest.validate_and_set_module_defaults() if dep_manifest else None
+    session = session.get_deployment_session(
+        account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
+        region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
+    )
 
     metadata_json = mi.get_module_metadata(deployment, group, module, session=session)
     if not export_local_env:

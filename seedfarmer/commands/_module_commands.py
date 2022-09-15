@@ -20,7 +20,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
-from aws_codeseeder import codeseeder
+from aws_codeseeder import EnvVar, codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
 from boto3 import Session
 
@@ -49,12 +49,15 @@ def _env_vars(
 ) -> Dict[str, str]:
     env_vars = (
         {
-            f"{_param('PARAMETER')}_{p.upper_snake_case}": p.value if isinstance(p.value, str) else json.dumps(p.value)
+            f"{_param('PARAMETER')}_{p.upper_snake_case}": p.value
+            if isinstance(p.value, str) or isinstance(p.value, EnvVar)
+            else json.dumps(p.value)
             for p in parameters
         }
         if parameters
         else {}
     )
+    _logger.debug(f"env_vars: {env_vars}")
     env_vars[_param("DEPLOYMENT_NAME")] = deployment_name
     env_vars[_param("MODULE_METADATA")] = module_metadata if module_metadata is not None else ""
     env_vars[_param("MODULE_NAME")] = f"{group_name}-{module_manifest_name}"
@@ -290,13 +293,6 @@ def _execute_module_commands(
                     module_manifest_name=module_manifest_name,
                     account_id=account_id,
                     region=region,
-                    extra_dirs=extra_dirs,
-                    extra_install_commands=extra_install_commands,
-                    extra_pre_build_commands=extra_pre_build_commands,
-                    extra_build_commands=extra_build_commands,
-                    extra_post_build_commands=extra_post_build_commands,
-                    extra_env_vars=extra_env_vars,
-                    codebuild_compute_type=codebuild_compute_type,
                 ),
             )
         except botocore.exceptions.ClientError as ex:

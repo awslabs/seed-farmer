@@ -114,7 +114,6 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
         ]
         _ = list(workers.map(_get_module_info, params))
 
-    _logger.debug(module_info_index.__dict__)
     return module_info_index
 
 

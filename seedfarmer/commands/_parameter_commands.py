@@ -16,6 +16,8 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+from aws_codeseeder import EnvVar, EnvVarType
+
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
@@ -42,19 +44,34 @@ def load_parameter_values(
     for parameter in parameters:
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug("parameter: %s", parameter.dict())
+
         if parameter.value:
             _logger.debug("static parameter value: %s", parameter.value)
             parameter_values.append(parameter)
-        # Load parameter from Module Metadata
-        elif parameter.value_from and parameter.value_from.module_metadata:
-            module_metatdata = _module_metatdata(
-                deployment_name, parameter, parameter_values_cache, deployment_manifest
-            )
-            parameter_values.append(module_metatdata) if module_metatdata else None
-        elif parameter.value_from and parameter.value_from.env_variable:
-            parameter_values.append(
-                ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
-            )
+        elif parameter.value_from:
+            if parameter.value_from.module_metadata:
+                module_metatdata = _module_metatdata(
+                    deployment_name, parameter, parameter_values_cache, deployment_manifest
+                )
+                parameter_values.append(module_metatdata) if module_metatdata else None
+            elif parameter.value_from.env_variable:
+                parameter_values.append(
+                    ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
+                )
+            elif parameter.value_from.parameter_store:
+                parameter_values.append(
+                    ModuleParameter(
+                        name=parameter.name,
+                        value=EnvVar(value=parameter.value_from.parameter_store, type=EnvVarType.PARAMETER_STORE),
+                    ),
+                )
+            elif parameter.value_from.secrets_manager:
+                parameter_values.append(
+                    ModuleParameter(
+                        name=parameter.name,
+                        value=EnvVar(value=parameter.value_from.secrets_manager, type=EnvVarType.SECRETS_MANAGER),
+                    ),
+                )
     return parameter_values
 
 

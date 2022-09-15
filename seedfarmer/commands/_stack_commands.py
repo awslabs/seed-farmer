@@ -18,7 +18,7 @@ import os
 import time
 from typing import List, Optional, cast
 
-from aws_codeseeder import codeseeder, commands, services
+from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
 
 import seedfarmer.services._iam as iam
@@ -260,6 +260,8 @@ def deploy_module_stack(
                     stack_parameters[k] = value
                 elif isinstance(value, list):
                     stack_parameters[k] = ",".join(value)
+                elif isinstance(value, EnvVar):
+                    stack_parameters[k] = value.value
                 else:
                     json.dumps(value)
         _logger.debug("stack_parameters: %s", stack_parameters)

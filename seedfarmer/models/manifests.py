@@ -92,6 +92,8 @@ class ModuleRef(CamelModel):
 class ValueRef(CamelModel):
     module_metadata: Optional[ModuleRef] = None
     env_variable: Optional[str] = None
+    parameter_store: Optional[str] = None
+    secrets_manager: Optional[str] = None
 
 
 class ValueFromRef(CamelModel):

@@ -18,7 +18,6 @@ import sys
 from typing import Optional
 
 import click
-from boto3 import Session
 
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
@@ -74,18 +73,6 @@ def list() -> None:
     default=None,
 )
 @click.option(
-    "--target-account-id",
-    default=None,
-    help="Account Id to remove module data from, if specifed --target-region is required",
-    show_default=True,
-)
-@click.option(
-    "--target-region",
-    default=None,
-    help="Region to remove module data from, if specifed --target-account-id is required",
-    show_default=True,
-)
-@click.option(
     "--profile",
     default=None,
     help="The AWS profile to use for boto3.Sessions",
@@ -110,8 +97,6 @@ def list_deployspec(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
-    target_account_id: Optional[str],
-    target_region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -121,15 +106,13 @@ def list_deployspec(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
-    if (target_account_id is not None) != (target_region is not None):
-        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
-    elif target_account_id is not None and target_region is not None:
-        session = (
-            SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
-            .get_deployment_session(account_id=target_account_id, region_name=target_region)
-        )
+    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+    dep_manifest.validate_and_set_module_defaults() if dep_manifest else None
+    session = session.get_deployment_session(
+        account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
+        region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
+    )
 
     val = mi.get_deployspec(deployment=deployment, group=group, module=module, session=session)
     print_json(val)
@@ -237,6 +220,13 @@ def list_module_metadata(
     required=True,
 )
 @click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
     "--profile",
     default=None,
     help="The AWS profile to use for boto3.Sessions",
@@ -256,6 +246,7 @@ def list_module_metadata(
 )
 def list_modules(
     deployment: str,
+    project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
     debug: bool,
@@ -264,7 +255,8 @@ def list_modules(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("We are getting modules for %s", deployment)
 
-    project = _load_project()
+    if project is None:
+        project = _load_project()
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)

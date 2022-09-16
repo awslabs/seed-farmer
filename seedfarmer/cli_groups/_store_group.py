@@ -133,7 +133,7 @@ def store_deployspec(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
+    session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):
         raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
     elif target_account_id is not None and target_region is not None:
@@ -223,7 +223,7 @@ def store_module_metadata(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
+    session: Session = Session(profile_name=profile, region_name=region)
 
     if (target_account_id is not None) != (target_region is not None):
         raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
@@ -326,7 +326,7 @@ def store_module_md5(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
+    session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):
         raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
     elif target_account_id is not None and target_region is not None:

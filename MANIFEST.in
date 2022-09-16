@@ -1,2 +1,1 @@
-
-recursive-include seedfarmer/resources
+recursive-include seedfarmer/resources *

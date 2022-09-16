@@ -83,7 +83,7 @@ def store() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile to use for assuming toolchain role",
     required=False,
 )
 @click.option(
@@ -176,6 +176,18 @@ def store_deployspec(
     default=None,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for asssuming toolchain role",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -198,6 +210,8 @@ def store_module_metadata(
     group: str,
     module: str,
     project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
     debug: bool,
@@ -210,12 +224,13 @@ def store_module_metadata(
         project = _load_project()
 
     session: Optional[Session] = None
+
     if (target_account_id is not None) != (target_region is not None):
         raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project)
+            .get_or_create(project_name=project, profile=profile, region_name=region)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
@@ -263,6 +278,18 @@ def store_module_metadata(
     default=None,
 )
 @click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for asssuming toolchain role",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -288,6 +315,8 @@ def store_module_md5(
     project: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -303,7 +332,7 @@ def store_module_md5(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project)
+            .get_or_create(project_name=project, profile=profile, region_name=region)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 

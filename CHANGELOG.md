@@ -21,6 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added region and profile support for CLI commands
 - added multi-region support for list moduledata
 - support ParameterStore and SecretsManager as sources for module parameters (new valueFrom types)
+- added region adn profile support for all cli commands where needed
 
 
 ### Changes

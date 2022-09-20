@@ -1,0 +1,86 @@
+# Project Development
+
+Once SeedFarmer is installed and bootstrapped, it is important to initialize a project structure properly.  The project encapsulates everything SeedFarmer needs to deploy and manage your project as a deployment.
+
+The project for a Seed-Farmer compliant deployment is as follows:
+
+```
+<project-name>
+- manifests (dir)
+    -- <group>
+- modules (dir)
+    -- <group> (dir)
+        -- <module>(dir)
+        -- <module>(dir)
+        -- <module>(dir)
+    -- <group> (dir)
+        -- <module>(dir)
+        -- <module>(dir)
+        -- <module>(dir)
+- resources (dir)
+    -- projectpolicy.yaml
+- seedfarmer.yaml
+```
+The `modules`, `manifests`, and `resources` directories are at the same level. 
+
+The `resources` directory and explanation can be viewed in the [resouces documentation](resources).
+
+It is important to have the ```seedfarmer.yaml``` at the root of your project.  This allows the `SeedFarmer CLI` to be executed anywhere within the project subdirectories.  Its content defines the name of the project that is used for deployment and provides a base of reference for all modules:
+```yaml
+project: <your project name>
+description: <your project description>
+```
+
+(project_initalization)=
+## Initialization
+On your local compute resource, pick a directory and add a file named `seedfarmer.yaml` that has the name of your new project.  For example, a new project named `mynewproject` can be seeded via the following:
+```bash
+echo project: mynewproject > seedfarmer.yaml
+```
+
+
+Now you are ready to create the new project.  
+
+```bash
+seedfarmer init project --help
+Usage: seedfarmer init project [OPTIONS]
+
+  Initialize a project. Make sure seedfarmer.yaml is present in the same
+  location you execute this command!!
+
+Options:
+  -t, --template-url TEXT  The template URL. If not specified, the default
+                           template repo is `https://github.com/awslabs/seed-
+                           farmer`
+  --help                   Show this message and exit.
+```
+This example will create a new directory in your current working directory that contains some bare structure to support development with seedfarmer:
+
+```bash
+seedfarmer init project
+```
+Your project is created and configured to use the `seedfarmer` CLI.
+
+`seedfarmer` uses [CookieCutter](cookiecutter.md)for templating.
+If you want to use a different project template, you can override the default template url. For example:
+```
+seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
+```
+NOTE: your project template for a new `seedfarmer` project must contain at least the required project sturcture.
+
+
+(resources)=
+## Resources
+
+The resources section/directory of the [project stucture](project_structure.md) contains resources (policies) that can be applied to all the roles created for [AWS CodeSeeder](https://aws-codeseeder.readthedocs.io/en/latest/) to use.
+
+(project_policy)=
+### Project Policy
+`SeedFarmer` expects a policy located at `resources/projectpolicy.yaml`.  This provided by default when using the [project initialization](cookiecutter_new_project).  This can be used as-is, modified, or you can provide your own - but this policy contains the MINIMUM permissions `SeedFarmer` needs to operate.
+
+(permission_boundary)=
+### Permission Boundary Support
+`SeedFarmer` supports the concept of a [permission boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html).  This should already be deployed in your AWS account prior to use.
+
+
+Please see the [deployment manifest](deployment_manifest) definition for details of configuring `SeedFarmer` to use your customized resources.

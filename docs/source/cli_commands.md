@@ -1,4 +1,4 @@
-## SeedFarmer CLI (Command Line Interface)
+# CLI (Command Line Interface)
 
 The SeedFarmer CLI provides the primary way to interface with the orchestration framework that manages a deploymement with AWS CodeSeeder.  It is used by CICD pipelines and individual users to:
  - deploy code (modules) via a deployment and manifest
@@ -6,12 +6,12 @@ The SeedFarmer CLI provides the primary way to interface with the orchestration 
  - destroy deployments
  - apply changes to deployments (via a GitOps model)
 
-### Summary Commands
+## Summary Commands
 These commands are  structured in the format of:
 ```
 seedfarmer <verb> <object> -<parameters>
 ```
-#### Top Level Commands:
+### Top Level Commands:
 ```
 > seedfarmer
 Usage: seedfarmer [OPTIONS] COMMAND [ARGS]...
@@ -35,7 +35,7 @@ Each sub-command has help information related to how to use them.  Users typical
 
 
 
-#### Example Walkthru - Deploy and Apply changes
+### Example Walkthru - Deploy and Apply changes
 The first time deploying, a deployment manifest must be created [see here](manifests.md).  The deployment manifests should be in the ```manifests``` directory.  All paths are relative to the project level (at all times).  For this example, we have a deployment manifest  located at ```manifests/walkthru/deployment.yaml``` and and modules manifests located at ```manifests/walkthru/<whatevername>```.  To check our deployment without apply any changes, our command would look like this:
 ```
 seedfarmer apply manifests/walkthru/deployment.yaml --dry-run
@@ -61,7 +61,7 @@ seedfarmer destroy local
 
 
 
-#### Example Walkthru - Fetch Module Metadata
+### Example Walkthru - Fetch Module Metadata
 
 This is an example of how to get the metadata of a module without knowing what is currently deployed.
 

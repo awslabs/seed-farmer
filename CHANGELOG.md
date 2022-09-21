@@ -42,6 +42,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - honed back deployment role permissions
 - modified session manager to support threadding with the toolchain session
 - rename manifest parameter permissionBoundaryArn -> permissionsBoundaryName to align on AWS naming and hide account ids in ARNs
+- ensure we find a deploymed manifest when listing/printing module metadata
 
 ## v0.1.4 (2022-08-16)
 

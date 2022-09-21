@@ -52,7 +52,7 @@ def _execute_deploy(
     module_manifest: ModuleManifest,
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
-    permission_boundary_arn: Optional[str] = None,
+    permissions_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     parameters = load_parameter_values(
         deployment_name=deployment_manifest.name,
@@ -72,7 +72,7 @@ def _execute_deploy(
         target_region,
         parameters,
         docker_credentials_secret=docker_credentials_secret,
-        permission_boundary_arn=permission_boundary_arn,
+        permissions_boundary_arn=permissions_boundary_arn,
     )
 
     #   Get the current module's SSM if it was alreadly loaded...
@@ -100,7 +100,7 @@ def _execute_deploy(
         module_metadata=module_metadata,
         module_bundle_md5=module_manifest.bundle_md5,
         docker_credentials_secret=docker_credentials_secret,
-        permission_boundary_arn=permission_boundary_arn,
+        permissions_boundary_arn=permissions_boundary_arn,
     )
 
 
@@ -171,6 +171,15 @@ def _deploy_deployment_is_not_dry_run(
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
                         return _execute_deploy(**args)
 
+                    def _render_permissions_boundary_arn(
+                        account_id: Optional[str], permissions_boundary_name: Optional[str]
+                    ) -> Optional[str]:
+                        return (
+                            f"arn:aws:iam::{account_id}:policy/{permissions_boundary_name}"
+                            if permissions_boundary_name is not None
+                            else None
+                        )
+
                     params = [
                         {
                             "group_name": _group.name,
@@ -181,10 +190,13 @@ def _deploy_deployment_is_not_dry_run(
                                 account_alias=_module.target_account,
                                 region=_module.target_region,
                             ),
-                            "permission_boundary_arn": deployment_manifest_wip.get_parameter_value(
-                                "permissionBoundaryArn",
-                                account_alias=_module.target_account,
-                                region=_module.target_region,
+                            "permissions_boundary_arn": _render_permissions_boundary_arn(
+                                account_id=_module.get_target_account_id(),
+                                permissions_boundary_name=deployment_manifest_wip.get_parameter_value(
+                                    "permissionsBoundaryName",
+                                    account_alias=_module.target_account,
+                                    region=_module.target_region,
+                                ),
                             ),
                         }
                         for _module in _group.modules

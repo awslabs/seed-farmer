@@ -190,7 +190,7 @@ def deploy_module_stack(
     region: str,
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
-    permission_boundary_arn: Optional[str] = None,
+    permissions_boundary_arn: Optional[str] = None,
 ) -> None:
     """
     deploy_module_stack
@@ -215,8 +215,8 @@ def deploy_module_stack(
         The region where the module is deployed
     docker_credentials_secret: str
         OPTIONAL parameter with name of SecrestManager of docker credentials
-    permission_boundary_arn: str
-        OPTIONAL parameter with ARN of PermissionBoundary ManagedPolicy
+    permissions_boundary_arn: str
+        OPTIONAL parameter with Name of PermissionBoundary ManagedPolicy
     """
 
     if module_stack_path:
@@ -235,7 +235,7 @@ def deploy_module_stack(
         ],
     }
 
-    iam.create_check_iam_role(trust_policy, module_role_name, permission_boundary_arn, session=session)
+    iam.create_check_iam_role(trust_policy, module_role_name, permissions_boundary_arn, session=session)
 
     group_module_name = f"{group_name}-{module_name}"
 

@@ -32,14 +32,14 @@ Its elements are:
     }
   }
   ```
-- *permissionBoundaryArn*
+- *permissionsBoundaryName*
   - _OPTIONAL_
   - The value should be the Name of the Permission Boundary Managed Policy
-  - Below is the command to deploy a sample [Permission Boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) Managed Policy stack located in the project, however we expect the consumer of the framework to create a permission boundary as per their security requirements/guidelines and provide the ARN to the key `permissionBoundaryArn`:
+  - Below is the command to deploy a sample [Permission Boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) Managed Policy stack located in the project, however we expect the consumer of the framework to create a permission boundary as per their security requirements/guidelines and provide the ARN to the key `permissionsBoundaryName`:
   ```sh
   aws cloudformation deploy \
     --template-file ./resources/sample-permissionboundary.yaml \
-    --stack-name permission-boundary-stack \
+    --stack-name permissions-boundary-stack \
     --parameter-overrides ManagedPolicyName=MyAppPermissionBoundary \
     --capabilities CAPABILITY_NAMED_IAM
   ```
@@ -55,7 +55,7 @@ groups:
     path: manifests/example-dev/core-modules.yaml
 projectPolicy: resources/mycustomiampolicy.yaml
 dockerCredentialsSecret: aws-myapp-docker-credentials
-permissionBoundaryArn: arn:aws:iam::XXXXXXXXXXXX:policy/MyAppPermissionBoundary
+permissionsBoundaryName: MyAppPermissionBoundary
 ```
 (module_manifest)=
 ### Module Manifest

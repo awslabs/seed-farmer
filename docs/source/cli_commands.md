@@ -1,6 +1,6 @@
 # CLI (Command Line Interface)
 
-The SeedFarmer CLI provides the primary way to interface with the orchestration framework that manages a deploymement with AWS CodeSeeder.  It is used by CICD pipelines and individual users to:
+The `seedfarmer` CLI provides the primary way to interface with the orchestration framework that manages a deploymement with AWS CodeSeeder.  It is used by CICD pipelines and individual users to:
  - deploy code (modules) via a deployment and manifest
  - fetch metadata related to currently deployed modules
  - destroy deployments
@@ -59,58 +59,3 @@ Once we are finished with the deployment (ex. the ```local``` deployment), we ca
 seedfarmer destroy local
 ```
 
-
-
-### Example Walkthru - Fetch Module Metadata
-
-This is an example of how to get the metadata of a module without knowing what is currently deployed.
-
-First, get the list of all deployments in this region:
-```
-> seedfarmer list deployments
-Deployment    
-Names         
-┏━━━━━━━━━━━━┓
-┃ Deployemnt ┃
-┡━━━━━━━━━━━━┩
-│ local      │
-└────────────┘
-```
-Here, there is one deployment: _local_ <br>
-Now, get all the modules deployed in _local_ with their corresponding group:
-
-
-```
-> seedfarmer list modules -d local
-Deployed Modules                                     
-┏━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Deployemnt ┃ Group       ┃ Module                 ┃
-┡━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ local      │ optionals   │ networking             │
-│ local      │ optionals   │ datalake-buckets       │
-│ local      │ core        │ metadata-storage       │
-│ local      │ core        │ opensearch             │
-│ local      │ core        │ eks                    │
-│ local      │ blogs       │ rosbag-scene-detection │
-│ local      │ blogs       │ rosbag-webviz          │
-│ local      │ integration │ opensearch-proxy       │
-│ local      │ integration │ rosbag-ddb-to-os       │
-└────────────┴─────────────┴────────────────────────┘
-```
-
-With the above table, we can fetch all the metadata associated with a module deployment.  The output is in JSON:
-
-```
-> seedfarmer list moduledata -d local -g core -m metadata-storage
-{
-  "GlueDBName": "project-local-core-metadata-storage-vsidata",
-  "RosbagBagFilePartitionKey": "bag_file_prefix",
-  "RosbagBagFileTable": "project-local-core-metadata-storage-Rosbag-BagFile-Metadata",
-  "RosbagSceneMetadataPartitionKey": "bag_file",
-  "RosbagSceneMetadataSortKey": "scene_id",
-  "RosbagSceneMetadataStreamArn": "arn:aws:dynamodb:us-east-1:123456789012:table/project-local-core-metadata-storage-Rosbag-Scene-Metadata/stream/2022-03-23T17:25:25.958",
-  "RosbagSceneMetadataTable": "project-local-core-metadata-storage-Rosbag-Scene-Metadata"
-}
-
-```
-This metadata is the same metadata that modules reference (as needed).

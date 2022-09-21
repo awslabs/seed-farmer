@@ -5,12 +5,13 @@ module code and the AWS Cloud via AWS CodeSeeder.
 
 
 ## Multi-Account Architecture
-<TODO: PUT MULTI-ACCOUNT DIAGRAM HERE!!>
-<TODO: Explain the multi-account stuff with toolchain roles and target/deployment roles>
+![MultiAccount seedfarmer](_static/multi-account.png)
 
-## Method of processing
-Below is a flow of `seed-farmer` deployment of a single module in a single account/region.  Once `seed-farmer` resolves the proer target/deployment role, the following depicts the steps taken to deploy a module.
-![Seed-Farmer Invocation](_static/SeedFarmer.png)
+Please see these [account definitons](multiaccount_support) for details.
+
+## Method of Processing
+Below is a flow of `seedfarmer` deployment of a single module in a single account/region.  Once `seedfarmer` resolves the proer target/deployment role, the following depicts the steps taken to deploy a module.
+![seedfarmer Invocation](_static/SeedFarmer.png)
 
 1. Invoke **seedfarmer** CLI
 2. **seedfarmer** reads/writes deployment metadata with AWS Systems Manager

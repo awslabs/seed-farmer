@@ -22,6 +22,7 @@ It has a CommandLine Interface (CLI) based in Python.
    manifests
    cli_commands
    module_development
+   deployment_guide
    module_best_practices
    cookiecutter
    faq

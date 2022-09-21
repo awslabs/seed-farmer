@@ -2,9 +2,9 @@
 
 
 ## Ordering of Module Deployment
-The `SeedFarmer CLI` uses the [deployment manifest](manifests.md) group ordering to sequentially deploy groups (modules in a group are deployed in parallel), and this ordering is preserved.  On the destroy of the deployment, the reverse ordering of the groups is followed (still, each module in the group is destroy in parallel).  It is important to identify your module inter-dependancies and allocate them to the proper group in the proer order.  For example, if a compute resource (ex. an ec2 instance) needs to be deployed in a VPC, then the module that creates the VPC should be in a group that is deployed BEFORE the group that contains the EC2 module.  
+The `seedfarmer` CLI uses the [deployment manifest](manifests.md) group ordering to sequentially deploy groups (modules in a group are deployed in parallel), and this ordering is preserved.  On the destroy of the deployment, the reverse ordering of the groups is followed (still, each module in the group is destroy in parallel).  It is important to identify your module inter-dependancies and allocate them to the proper group in the proer order.  For example, if a compute resource (ex. an ec2 instance) needs to be deployed in a VPC, then the module that creates the VPC should be in a group that is deployed BEFORE the group that contains the EC2 module.  
 
-The `SeedFarmer CLI` does not currently support inter-module dependency management, so the best-pracice guideline is to group modules that are independent of one-another and order the groups based on module-dependancy.
+The `seedfarmer` CLI does not currently support inter-module dependency management, so the best-pracice guideline is to group modules that are independent of one-another and order the groups based on module-dependancy.
 
 
 ***
@@ -20,6 +20,8 @@ Whenever the [deployspec](deployspec.md) is executing commands directly (ex. `aw
 We have available two (2) scripts that can format and check your moduel code:
 * `scripts/fix.sh` - this will correct the format of your code or tell you what the issues are
 * `scripts/validate.sh` - this will perform checks of your code for consistency
+
+These are found in the [Seed-Farmer Git Repo](https://github.com/awslabs/seed-farmer)
 
 You should run these against your module codebase prior to making code repository commits.
 Feel free to copy these scripts into your own project for application to your modules

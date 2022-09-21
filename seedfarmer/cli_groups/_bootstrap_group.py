@@ -60,7 +60,7 @@ def bootstrap() -> None:
     default=[],
 )
 @click.option(
-    "--permission-boundary",
+    "--permissions-boundary",
     "-b",
     help="ARN of a Managed Policy to set as the Permission Boundary on the Toolchain Role",
     required=False,
@@ -98,7 +98,7 @@ def bootstrap() -> None:
 def bootstrap_toolchain(
     project: Optional[str],
     trusted_principal: List[str],
-    permission_boundary: Optional[str],
+    permissions_boundary: Optional[str],
     profile: Optional[str],
     region: Optional[str],
     as_target: bool,
@@ -113,7 +113,7 @@ def bootstrap_toolchain(
     bootstrap_toolchain_account(
         project_name=project,
         principal_arns=trusted_principal,
-        permissions_boundary_arn=permission_boundary,
+        permissions_boundary_arn=permissions_boundary,
         profile=profile,
         region_name=region,
         synthesize=synth,
@@ -139,7 +139,7 @@ def bootstrap_toolchain(
     help="Account Id of the Toolchain account trusted to assume the Target account's Deployment Role",
 )
 @click.option(
-    "--permission-boundary",
+    "--permissions-boundary",
     "-b",
     help="ARN of a Managed Policy to set as the Permission Boundary on the Toolchain Role",
     required=False,
@@ -169,7 +169,7 @@ def bootstrap_toolchain(
 def bootstrap_target(
     project: Optional[str],
     toolchain_account: str,
-    permission_boundary: Optional[str],
+    permissions_boundary: Optional[str],
     profile: Optional[str],
     region: Optional[str],
     synth: bool,
@@ -185,6 +185,6 @@ def bootstrap_target(
         project_name=project,
         profile=profile,
         region_name=region,
-        permissions_boundary_arn=permission_boundary,
+        permissions_boundary_arn=permissions_boundary,
         synthesize=synth,
     )

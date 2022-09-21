@@ -1,14 +1,14 @@
 name: test-missing-deployment-group-name
 toolchainRegion: us-west-2
 groups:
-  - name: 
+  - name:
     path: manifests/test-missing-deployment-group-name/test-module.yaml
 targetAccountMappings:
   - alias: primary
     accountId: "000000000000"
     default: true
     # parametersGlobal:
-    #   permissionBoundaryArn: "arn:aws:iam::000000000000:policy/policy-name"
+    #   permissionsBoundaryName: policy-name
     #   dockerCredentialsSecret: some-secret
     regionMappings:
       - region: us-west-2

@@ -36,7 +36,7 @@ def get_role(role_name: str, session: Optional[Session] = None) -> Optional[Dict
 def create_check_iam_role(
     trust_policy: Dict[str, Any],
     role_name: str,
-    permission_boundary_arn: Optional[str],
+    permissions_boundary_arn: Optional[str],
     session: Optional[Session] = None,
 ) -> None:
     _logger.debug("Creating IAM Role with name: %s ", role_name)
@@ -50,8 +50,8 @@ def create_check_iam_role(
             "Description": f"deployment-role for {role_name}",
             "Tags": [{"Key": "Region", "Value": get_region(session=session)}],
         }
-        if permission_boundary_arn:
-            args["PermissionsBoundary"] = permission_boundary_arn
+        if permissions_boundary_arn:
+            args["PermissionsBoundary"] = permissions_boundary_arn
         iam_client.create_role(**args)
 
 

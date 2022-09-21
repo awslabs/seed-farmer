@@ -44,7 +44,7 @@ def _env_vars(
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
     docker_credentials_secret: Optional[str] = None,
-    permission_boundary_arn: Optional[str] = None,
+    permissions_boundary_arn: Optional[str] = None,
     session: Optional[Session] = None,
 ) -> Dict[str, str]:
     env_vars = (
@@ -64,8 +64,8 @@ def _env_vars(
     env_vars[_param("HASH")] = generate_hash(session=session)
     if docker_credentials_secret:
         env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
-    if permission_boundary_arn:
-        env_vars[_param("PERMISSION_BOUNDARY_ARN")] = permission_boundary_arn
+    if permissions_boundary_arn:
+        env_vars[_param("PERMISSIONS_BOUNDARY_ARN")] = permissions_boundary_arn
     return env_vars
 
 
@@ -81,7 +81,7 @@ def deploy_module(
     module_metadata: Optional[str] = None,
     module_bundle_md5: Optional[str] = None,
     docker_credentials_secret: Optional[str] = None,
-    permission_boundary_arn: Optional[str] = None,
+    permissions_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     env_vars = _env_vars(
         deployment_name=deployment_name,
@@ -90,7 +90,7 @@ def deploy_module(
         parameters=parameters,
         module_metadata=module_metadata,
         docker_credentials_secret=docker_credentials_secret,
-        permission_boundary_arn=permission_boundary_arn,
+        permissions_boundary_arn=permissions_boundary_arn,
         session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
     )
     env_vars[_param("MODULE_MD5")] = module_bundle_md5 if module_bundle_md5 is not None else ""

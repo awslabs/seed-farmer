@@ -14,7 +14,7 @@ Options:
   -p, --project TEXT              Project identifier
   -t, --trusted-principal TEXT    ARN of Principals trusted to assume the
                                   Toolchain Role
-  -b, --permission-boundary TEXT  ARN of a Managed Policy to set as the
+  -b, --permissions-boundary TEXT  ARN of a Managed Policy to set as the
                                   Permission Boundary on the Toolchain Role
   --as-target / --not-as-target   Optionally also bootstrap the account as a
                                   Target account  [default: not-as-target]
@@ -46,7 +46,7 @@ Options:
   -t, --toolchain-account TEXT    Account Id of the Toolchain account trusted
                                   to assume the Target account's Deployment
                                   Role  [required]
-  -b, --permission-boundary TEXT  ARN of a Managed Policy to set as the
+  -b, --permissions-boundary TEXT  ARN of a Managed Policy to set as the
                                   Permission Boundary on the Toolchain Role
   --synth / --no-synth            Synthesize a CFN template only...do not
                                   deploy  [default: no-synth]

@@ -2,7 +2,7 @@
 
 Once `seedfarmer` is installed and bootstrapped, it is important to initialize a project structure properly.  The project encapsulates everything `seedfarmer` needs to deploy and manage your project as a deployment.
 
-The project for a Seed-Farmer compliant deployment is as follows:
+The project for a `seedfarmer` compliant deployment is as follows:
 
 ```
 <project-name>
@@ -17,13 +17,10 @@ The project for a Seed-Farmer compliant deployment is as follows:
         -- <module>(dir)
         -- <module>(dir)
         -- <module>(dir)
-- resources (dir)
-    -- projectpolicy.yaml
 - seedfarmer.yaml
 ```
 The `modules`, `manifests`, and `resources` directories are at the same level. 
 
-The `resources` directory and explanation can be viewed in the [resouces documentation](resources).
 
 It is important to have the ```seedfarmer.yaml``` at the root of your project.  This allows the `seedfarmer` CLI to be executed anywhere within the project subdirectories.  Its content defines the name of the project that is used for deployment and provides a base of reference for all modules:
 ```yaml
@@ -69,17 +66,9 @@ seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackag
 NOTE: your project template for a new `seedfarmer` project must contain at least the required project sturcture.
 
 
-(resources)=
-## Resources
 
-The resources section/directory of the [project stucture](project_structure.md) contains resources (policies) that can be applied to all the roles created for [AWS CodeSeeder](https://aws-codeseeder.readthedocs.io/en/latest/) to use.
-
-(project_policy)=
-### Project Policy
-`seedfarmer` expects a policy located at `resources/projectpolicy.yaml`.  This provided by default when using the [project initialization](cookiecutter_new_project).  This can be used as-is, modified, or you can provide your own - but this policy contains the MINIMUM permissions `seedfarmer` needs to operate.
-
-(permission_boundary)=
-### Permission Boundary Support
+(permissions_boundary)=
+### Permissions Boundary Support
 `seedfarmer` supports the concept of a [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html).  This should already be deployed in your AWS account prior to use.
 
 

@@ -2,4 +2,4 @@ name: test-module
 path: modules/module-test/
 parameters:
   - name: domain_name_prefix
-    value: testdomaindomaintesterA
+    value: testdomaindomaintester-a

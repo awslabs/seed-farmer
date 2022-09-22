@@ -91,7 +91,7 @@ parameters:
 - **path** - the relative path to the module code in the project
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings 
-- **parameters** - the parameters section .... ser [Parameters](parameters)
+- **parameters** - the parameters section .... see [Parameters](parameters)
 
 (parameters)=
 ## Parameters
@@ -102,7 +102,7 @@ Modules should be parameterized to promote extensibility.  The CLI and [Module M
 - [User Defined](user_defined) - a simple key/value string
 - [Module Metadata](modulemetadata) from other deployed modules 
 - [Environment Variables](envVariable)
-- [AWS SSM parameters](ssm_parameter)
+- [AWS SSM Parameter](ssm_parameter)
 - [AWS Secrets Manager](secrets_manager)
 
 They are defined in the module manifest for each module.
@@ -121,25 +121,37 @@ parameters:
   - name: rosbag-scene-table-suffix
     value: Rosbag-Scene-Metadata
 ```
-In this example, the `glue-db-suffix` parameter will be exposed to the CodeBuild via AWS CodeSeeder as:
-```MYAPP_PARAMETER_GLUE_DB_SUFFIX=vsidata```.
+In this example, the `glue-db-suffix` parameter will be exposed to the CodeBuild via AWS CodeSeeder as an [environment parameter](params_in_codeseeder).
 
-See [Parameters in AWS CodeSeeder](params_in_codeseeder)
 
 
 (envVariable)=
 ### Environment Variables
 `seedfarmer` supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement.  Wen a file names `.env` is placed at the projecr root (where `seedfarmer.yaml` resides), any value in a manifest with a key of `envVariable` will be matched and replaced with the corresponding environment variable.
 
-For example, instead of hard-coding an `account id` in any manifest, that is commited to a repo, you can use `.env` and dynamically replace the value at runtime via the sample below:
+```yaml
+name: opensearch
+path: modules/core/opensearch/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      envVariable: ENV_VPC_ID
+```
+In this example, the `opensearch` module is referencing an environment parameter named `ENV_VPC_ID`. <br>
+
+The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the parameter.  It can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
+
+`Environment Variables` also support dynamically changing the `account_id` in manifests to avoid hard-coding an `account_id` in any manifest.
 ```yaml
 accountId:
   valueFrom:
     envVariable: PRIMARY_ACCOUNT
 ```
+<br>
+
 (modulemetadata)=
 ### Module Metadata
-Parameters can also leverage exported metadata from eisting modules.  You will need to know the group name, module name and the name of the paramter.  It leverages the `valueFrom` keyword (instead of `value') and has a nested definiton. Below is an example:
+Parameters can leverage exported metadata from existing modules.  You will need to know the group name, module name and the name of the parameter.  It leverages the `valueFrom` keyword and has a nested definiton. Below is an example:
 ```yaml
 name: opensearch
 path: modules/core/opensearch/
@@ -153,22 +165,45 @@ parameters:
 ```
 In this example, the `opensearch` module is referencing a module metadata parameter `VpcId` from the `networking` module in the `optionals` group. <br>
 
-The `opensearch` module deployment will then have an environment parameter set: `MYAPP_PARAMETER_VPC_ID` in the environment to the value of the vpc-id that is exported from the `networking` module.  They can then be referenced as an environment parameter in the deployment
+The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the vpc-id that is exported from the `networking` module.  They can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
 
 
 (ssm_parameter)=
 ### AWS SSM Parameter
-Add the stuff here...
+Parameters can leverage key/value pairs stored in [AWS SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html).  You will need to know the name of the parameter.  It leverages the `valueFrom` keyword and has a nested definiton. Below is an example:
+```yaml
+name: opensearch
+path: modules/core/opensearch/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      parameterStore: my-vpc-id
+```
+In this example, the `opensearch` module is referencing an SSM parameter named `my-vpc-id` from AWS SSM Parameter Store. <br>
+
+The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the parameter that is fetched.  It can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
 
 (secrets_manager)=
 ### AWS SecretsManager
-Add the stuff here
+Parameters can leverage secured secrets in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html).  You will need to know the name of the secret.  It leverages the `valueFrom` keyword and has a nested definiton. Below is an example:
+```yaml
+name: opensearch
+path: modules/core/opensearch/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      secretsManager: my-secret-vpc-id
+```
+In this example, the `opensearch` module is referencing a secret named `my-secret-vpc-id` from AWS Secrets Manager. <br>
+
+The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the secret that is fetched.  It can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.  NOTE: the value will be obfusticated in the AWS CodeBuild console in the Environments Section for security purposes.
 
 
 (dockerCredentialsSecret)=
 ### Docker Credentials Secret
-A named manifest key pointing to an AWS SecretsManager parameter that is use by AWS CodeSeeder when building images to prevent throttling from publically hosted image repositories such as DockerHub
-  - the data in the SecretsManager is a json element of the following format:
+A named manifest key pointing to an [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html) entry that is use by AWS CodeSeeder when building images to prevent throttling from publically hosted image repositories such as DockerHub. <br>
+<br>
+The data in the SecretsManager is a json element of the following format:
   ```json
   {
     "docker.io": {
@@ -179,11 +214,12 @@ A named manifest key pointing to an AWS SecretsManager parameter that is use by 
   ```
 
   (params_in_codeseeder)=
-###  Parameters in AWS CodeSeeder
+### Parameters in AWS CodeSeeder
 
-CodeBuild Environment Variables that are set via AWS CodeSeeder are made known to the module using a naming convention based off the Parameter’s key. Parameter keys are converted from “PascalCase”, “camelCase”, or “kebab-case” to all upper “SNAKE_CASE” and prefixed with “MYAPP_PARAMETER_”. Examples:
+CodeBuild Environment Variables that are set via AWS CodeSeeder are made known to the module using a naming convention based off the Parameter’s key. Parameter keys are converted from “PascalCase”, “camelCase”, or “kebab-case” to all upper “SNAKE_CASE” and prefixed with “<<project>>_PARAMETER_”.  If the name of our project is "MY_APP" the resulting environment parameters will be:
 
-``` * someKey will become environment variable MYAPP_PARAMETER_SOME_KEY
+``` 
+* someKey will become environment variable MYAPP_PARAMETER_SOME_KEY
 * SomeKey will become environment variable MYAPP_PARAMETER_SOME_KEY
 * some-key will become environment variable MYAPP_PARAMETER_SOME_KEY
 * some_key will become environment variable MYAPP_PARAMETER_SOME_KEY

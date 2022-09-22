@@ -1,10 +1,6 @@
-# Cookiecutter & Project Templating
+# Templating with Cookiecutter
 
 The `SeedFarmer CLI` used [CookieCutter](https://cookiecutter.readthedocs.io/en/stable/) to simplify the initialization of new project and modules in existing projects.  
-
-
-* [Create a New Project](cookiecutter_new_project)
-* [Create a New Module](cookiecutter_new_module)
 
 ## What is Cookiecutter
 Cookiecutter is a command-line utility that creates projects from project templates(known as cookiecutters). The project templates are housed in a git repository where the files, directories, and the content of both, can be templated. All templating is done with Jinja2. The repository contains a `cookiecutter.json` that containes keys:values that will be used by the templating engine when intialized. The initialization can be interactive if you want to override the `cookiecutter.json` values. In non-interactive mode, the values in cookiecutter.json are default.
@@ -63,53 +59,10 @@ Please take a look at the [Cookiecuter Github](https://github.com/cookiecutter/c
 ## SeedFarmer and Cookiecutter
 `seedfarmer` integrates the Cookiecutter library right out of the box to create projects and modules. The template repo structure differs for a project and module, and are housed in separate branches in this repo: `init-project` and `init-module`. Those branches are defaults for `seedfarmer init` when using our repo for templating. If you'd like to use another cookiecutter repo for initialization, you can override the template url. Keep in mind, if you do override the template url, make sure you follow the seedfarmer deployment guide; The default template creates some of the structure specific for seedfarmer that won't be in other custom templates.
 
-(cookiecutter_new_project)=
-## How to Create a New Project
-Verify that you have `seedfarmer` installed from PyPi. 
-```
-pip list | grep seed-farmer
-```
-If not installed, please install:
-```
-pip install seed-farmer
-```
-On your local compute resource, pick a directory and add a file named `seedfarmer.yaml` that has the name of your new project.  For example, a new project named `mynewproject` can be seeded via the following:
-```bash
-echo project: mynewproject > seedfarmer.yaml
-```
 
 
-Now you are ready to create the new project.  
-
-```bash
-seedfarmer init project --help
-Usage: seedfarmer init project [OPTIONS]
-
-  Initialize a project. Make sure seedfarmer.yaml is present in the same
-  location you execute this command!!
-
-Options:
-  -t, --template-url TEXT  The template URL. If not specified, the default
-                           template repo is `https://github.com/awslabs/seed-
-                           farmer`
-  --help                   Show this message and exit.
-```
-This example will create a new directory in your current working directory that contains some bare structure to support development with seedfarmer:
-
-```bash
-seedfarmer init project
-```
-Your project is created and configured to use the `seedfarmer` CLI.
-
-If you want to use a different project template, you can override the default template url. For example:
-```
-seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
-```
-NOTE: your project template for a new `seedfarmer` project  must contain at least the required project sturcture.
-
-
-(cookiecutter_new_module)=
-## How to Create a New Module
+(indepth_module_creation)=
+### Create the Module Skeleton
 Within a `seedfarmer` project, you can create new modules. Below are the module initialization commands.
 ```
 # seedfarmer init module --help
@@ -150,9 +103,11 @@ Nested grouping is also supported. An example that would create the directory st
 seedfarmer init module -g "analytics/streaming" -m kinesis
 ```
 
+`seedfarmer` uses [CookieCutter](cookiecutter.md)for templating.
 If you want to use a different module template, you can override the default template url. For example:
 ```
 seedfarmer init module -m my-module-name -t https://github.com/briggySmalls/cookiecutter-pypackage
 ```
-NOTE: your project template for modules must contain at least the required files for a `seedfarmer` module.
+
+
 

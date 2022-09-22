@@ -67,7 +67,7 @@ Resources:
                 - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/{{ project_name }}-*"
                 - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"                
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
@@ -141,5 +141,11 @@ Resources:
               Effect: Allow
               Resource:
                 Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
+            - Action:
+              - codeartifact:*
+              Effect: Allow
+              Resource:
+                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
+                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
       RoleName: seedfarmer-{{ project_name }}-deployment-role
     Type: AWS::IAM::Role

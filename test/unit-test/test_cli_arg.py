@@ -294,7 +294,7 @@ def test_list_moduledata_non_existent_module():
         sub_command=_list,
         options=["moduledata", "-d", "test-deployment", "-g", "group-name", "-m", "module-name"],
         exit_code=0,
-        expected_output="null",
+        expected_output="No module data found for test-deployment-group-name-module-name",
     )
 
 

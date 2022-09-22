@@ -3,6 +3,7 @@
 The CLI is a module-centric deployment manager that follows the GitOps paradigm of code deployment.  Several manifests are required for deployment as defined below.
 
 (deployment_manifest)=
+
 ## Deployment Manifest
 The deployment manifest is the top level manifest and resides in the `modules` directory.  Below is an example deployment manifest. 
 
@@ -39,6 +40,7 @@ targetAccountMappings:
           permissionsBoundaryName: policyname
       - region: us-east-2
         default: true
+
 ```
 
 - **name** : this is the name of your deployment.  There can be only one deployment with this name in a project.

@@ -108,7 +108,12 @@ def list_deployspec(
 
     session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
-    dep_manifest.validate_and_set_module_defaults() if dep_manifest else None
+
+    if dep_manifest is None:
+        print_json({})
+        return
+
+    dep_manifest.validate_and_set_module_defaults()
     session = session.get_deployment_session(
         account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
         region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
@@ -190,7 +195,14 @@ def list_module_metadata(
 
     session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
-    dep_manifest.validate_and_set_module_defaults() if dep_manifest else None
+
+    if dep_manifest is None:
+        print(f"No module data found for {deployment}-{group}-{module}")
+        print_bolded("To see all deployments, run seedfarmer list deployments")
+        print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+        return
+
+    dep_manifest.validate_and_set_module_defaults()
     session = session.get_deployment_session(
         account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
         region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore

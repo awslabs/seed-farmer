@@ -27,12 +27,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 - update DeploymentManifest to support targetAccountMappings and regionMappings
 - update ModuleManifest to support targetAccount and targetRegion with defaults
-- move deployment level Parameters (dockerCredentialsSecret, permissionBoundaryArn) to mappings
+- move deployment level Parameters (dockerCredentialsSecret, permissionsBoundaryName) to mappings
 - refactor cli commands/groups to reduce line count in `__main__.py`
 - moved projectpolicy.yaml into resources/.
 - added profile and region support for session in `_session_utils.py`
 - convertd `session_manager.py` to only use `_session_utils.py`
-- refactored deployment_command objects and signatures for threadding 
+- refactored deployment_command objects and signatures for threadding
 
 ### Fixes
 - fix import failure of seedfarmer top-level module if seedfarmer.yaml doesn't exist
@@ -41,6 +41,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - ensure bootstrap functions look for roles and cfn templates when updating/deploying roles
 - honed back deployment role permissions
 - modified session manager to support threadding with the toolchain session
+- rename manifest parameter permissionBoundaryArn -> permissionsBoundaryName to align on AWS naming and hide account ids in ARNs
+- ensure we find a deploymed manifest when listing/printing module metadata
 
 ## v0.1.4 (2022-08-16)
 

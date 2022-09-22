@@ -43,7 +43,7 @@ targetAccountMappings:
     accountId: "000000000000"
     default: true
     parametersGlobal:
-      permissionBoundaryArn: arn
+      permissionsBoundaryName: policyName
       dockerCredentialsSecret: secret
     regionMappings:
       - region: us-west-2

@@ -12,34 +12,109 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import concurrent.futures
 import logging
-from typing import Any, Dict, List, Optional
+from threading import Lock
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import yaml
+from boto3 import Session
 
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def generate_deployment_cache(deployment_name: str) -> Optional[Dict[str, Any]]:
+class ModuleInfoIndex(object):
+    def __init__(self) -> None:
+        super().__init__()
+        self._index: Dict[Tuple[str, str, str, str], Dict[str, Any]] = dict()
+        self._groups: Set[str] = set()
+        self._groups_idx: Dict[str, Set[Tuple[str, str, str, str]]] = dict()
+        self._module_names_idx: Dict[Tuple[str, str], Tuple[str, str, str, str]] = dict()
+        self._lock = Lock()
+
+    @property
+    def groups(self) -> Set[str]:
+        return self._groups
+
+    def get_module_info(
+        self, *, group: str, account_id: str, region: str, module_name: str
+    ) -> Optional[Dict[str, Any]]:
+        return self._index.get((group, account_id, region, module_name))
+
+    def index_module_info(
+        self, *, group: str, account_id: str, region: str, module_name: str, module_info: Dict[str, Any]
+    ) -> None:
+        with self._lock:
+            module_info_key = (group, account_id, region, module_name)
+            current_module_info = self._index.get(module_info_key, {})
+            self._index[module_info_key] = {**current_module_info, **module_info}
+            self._groups.add(group)
+            current_group_keys = self._groups_idx.get(group, set())
+            current_group_keys.add(module_info_key)
+            self._groups_idx[group] = current_group_keys
+            self._module_names_idx[(group, module_name)] = module_info_key
+
+    def get_keys_for_group(self, group: str) -> List[Dict[str, str]]:
+        return [
+            {"group": m[0], "account_id": m[1], "region": m[2], "module_name": m[3]}
+            for m in self._groups_idx.get(group, [])
+        ]
+
+    def get_key_for_module_name(self, group: str, module_name: str) -> Dict[str, str]:
+        m = self._module_names_idx.get((group, module_name), None)
+        if m is not None:
+            return {"group": m[0], "account_id": m[1], "region": m[2], "module_name": m[3]}
+        else:
+            return {"group": "", "account_id": "", "region": "", "module_name": ""}
+
+
+def populate_module_info_index(deployment_manifest: DeploymentManifest) -> ModuleInfoIndex:
     """
-    generate_deployment_cache
-        Fetch all parameters for the deployemnt currently stored
+    populate_module_info_index
+        Fetch all info for the deployemnt currently stored, across all Target accounts and regions
 
     Parameters
     ----------
-    deployment_name: str
-        The name of the deployment
+    deployment_manifest: DeploymentManifest
+        The DeploymentManifest, including TargetAccount and Region mappings
 
     Returns
     -------
-    Dict[str,Any]
-        A dictionary representation of what is in the store (SSM for DDB) of the modules deployed
+    ModuleInfoIndex
+        An index of Module info for all Target accounts and regions
     """
-    c = mi.get_parameter_data_cache(deployment=deployment_name)
-    return c if len(c) > 0 else None
+    module_info_index = ModuleInfoIndex()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+        def _get_module_info(args: Dict[str, Any]) -> None:
+            session = (
+                SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=args["account_id"], region_name=args["region"])
+            )
+            module_info = mi.get_parameter_data_cache(deployment=deployment_manifest.name, session=session)
+            for key, value in module_info.items():
+                key_parts = key.split("/")[1:]
+                if len(key_parts) < 4:
+                    continue
+                group = key_parts[2]
+                module_name = key_parts[3]
+                module_info_index.index_module_info(
+                    group=group, module_name=module_name, module_info={key: value}, **args
+                )
+
+        params = [
+            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            for target_account_region in deployment_manifest.target_accounts_regions
+        ]
+        _ = list(workers.map(_get_module_info, params))
+
+    return module_info_index
 
 
 def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) -> None:
@@ -50,17 +125,17 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
     Parameters
     ----------
     deployment_manifest : DeploymentManifest
-       The deployment manifest ojject to store
+        The deployment manifest ojject to store
     """
     deployment_name = deployment_manifest.name
     for group in deployment_manifest.groups:
         delattr(group, "modules")
-    mi.write_deployed_deployment_manifest(deployment=deployment_name, data=deployment_manifest.dict())
+    session = SessionManager().get_or_create().toolchain_session
+    mi.write_deployed_deployment_manifest(deployment=deployment_name, data=deployment_manifest.dict(), session=session)
 
 
 def generate_deployed_manifest(
     deployment_name: str,
-    deployment_params_cache: Optional[Dict[str, Any]] = None,
     skip_deploy_spec: bool = False,
 ) -> Optional[DeploymentManifest]:
     """
@@ -78,22 +153,27 @@ def generate_deployed_manifest(
     Optional[DeploymentManifest]
         The hydrated DeploymentManifest object of deployed modules
     """
-    dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, deployment_params_cache)
+    session_manager = SessionManager().get_or_create()
+    dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     if dep_manifest_dict is None:
         # No successful deployments, just use what was last requested
-        dep_manifest_dict = mi.get_deployment_manifest(deployment_name, deployment_params_cache)
-    destroy_manifest = None
+        dep_manifest_dict = mi.get_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
+    deployed_manifest = None
     if dep_manifest_dict:
+        deployed_manifest = DeploymentManifest(**dep_manifest_dict)
+        module_info_index = populate_module_info_index(deployment_manifest=deployed_manifest)
         for module_group in dep_manifest_dict["groups"] if dep_manifest_dict["groups"] else []:
+            # TODO: Investigate whether this group manifest in SSM is needed, for now load from index
+            # from_ssm = mi.get_group_manifest(deployment_name, group_name, module_info_index.get_keys_for_group())
             group_name = module_group["name"]
-            from_ssm = mi.get_group_manifest(deployment_name, group_name, deployment_params_cache)
-            if from_ssm:
-                module_group["modules"] = from_ssm["modules"]
-                if not skip_deploy_spec:
-                    for module in module_group["modules"] if module_group["modules"] else []:
-                        module["deploy_spec"] = mi.get_deployspec(deployment_name, group_name, module["name"])
-        destroy_manifest = DeploymentManifest(**dep_manifest_dict)
-    return destroy_manifest
+            module_group["modules"] = _populate_group_modules_from_index(
+                deployment_name=deployment_name,
+                group_name=group_name,
+                module_info_index=module_info_index,
+                skip_deploy_spec=skip_deploy_spec,
+            )
+        deployed_manifest.groups = [ModulesManifest(**group) for group in dep_manifest_dict["groups"]]
+    return deployed_manifest
 
 
 def need_to_build(
@@ -137,23 +217,43 @@ def need_to_build(
     d = deployment_name
     g = group_name
     m = module_manifest.name if module_manifest.name else ""
-    module_bundle_md5 = module_manifest.bundle_md5 if module_manifest.bundle_md5 else []
-
+    module_bundle_md5 = module_manifest.bundle_md5 if module_manifest.bundle_md5 else ""
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=cast(str, module_manifest.get_target_account_id()),
+            region_name=cast(str, module_manifest.target_region),
+        )
+    )
     if (
-        mi.does_md5_match(d, g, m, str(module_bundle_md5), mi.ModuleConst.BUNDLE, deployment_params_cache)
-        and mi.does_md5_match(d, g, m, module_deployspec_md5, mi.ModuleConst.DEPLOYSPEC, deployment_params_cache)
-        and mi.does_md5_match(d, g, m, module_manifest_md5, mi.ModuleConst.MANIFEST, deployment_params_cache)
+        mi.does_md5_match(
+            d, g, m, str(module_bundle_md5), mi.ModuleConst.BUNDLE, deployment_params_cache, session=session
+        )
+        and mi.does_md5_match(
+            d, g, m, module_deployspec_md5, mi.ModuleConst.DEPLOYSPEC, deployment_params_cache, session=session
+        )
+        and mi.does_md5_match(
+            d, g, m, module_manifest_md5, mi.ModuleConst.MANIFEST, deployment_params_cache, session=session
+        )
     ):
         return False
     else:
         if not dryrun:
-            mi.write_deployspec(deployment=d, group=g, module=m, data=module_deployspec.dict())
-            mi.write_module_manifest(deployment=d, group=g, module=m, data=module_manifest.dict())
+            mi.write_deployspec(deployment=d, group=g, module=m, data=module_deployspec.dict(), session=session)
+            mi.write_module_manifest(deployment=d, group=g, module=m, data=module_manifest.dict(), session=session)
             mi.write_module_md5(
-                deployment=d, group=g, module=m, hash=module_deployspec_md5, type=mi.ModuleConst.DEPLOYSPEC
+                deployment=d,
+                group=g,
+                module=m,
+                hash=module_deployspec_md5,
+                type=mi.ModuleConst.DEPLOYSPEC,
+                session=session,
             )
-            mi.write_module_md5(deployment=d, group=g, module=m, hash=module_manifest_md5, type=mi.ModuleConst.MANIFEST)
-            mi.remove_module_md5(deployment=d, group=g, module=m, type=mi.ModuleConst.BUNDLE)
+            mi.write_module_md5(
+                deployment=d, group=g, module=m, hash=module_manifest_md5, type=mi.ModuleConst.MANIFEST, session=session
+            )
+            mi.remove_module_md5(deployment=d, group=g, module=m, type=mi.ModuleConst.BUNDLE, session=session)
         return True
 
 
@@ -173,9 +273,7 @@ def write_group_manifest(deployment_name: str, group_manifest: ModulesManifest) 
     mi.write_group_manifest(deployment=deployment_name, group=g, data=group_manifest.dict())
 
 
-def filter_deploy_destroy(
-    apply_manifest: DeploymentManifest, deployment_params_cache: Optional[Dict[str, Any]] = None
-) -> DeploymentManifest:
+def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index: ModuleInfoIndex) -> DeploymentManifest:
     """
     This method takes a populated DeploymentManifest object based off the requested deployment.
     It compares this requested deployment with what is currently deployed.  If there are groups or
@@ -186,74 +284,97 @@ def filter_deploy_destroy(
     ----------
     apply_manifest : DeploymentManifest
         The DeploymentManifest object based off a deployment manifest of a requested deployment.
+    module_info_index: ModuleInfoIndex
+        The index of existing module info for all Target accounts and regions
 
     Returns
     -------
     DeploymentManifest
         A populated DeploymentManifest object with the modules needed to be destroyed
-    """ """"""
-    dep_name = apply_manifest.name
+    """
+    deployment_name = apply_manifest.name
 
     destroy_manifest = apply_manifest.copy()
     delattr(destroy_manifest, "groups")
-    destroy_group_list = _populate_groups_to_remove(dep_name, apply_manifest.groups)
+    destroy_group_list = _populate_groups_to_remove(deployment_name, apply_manifest.groups, module_info_index)
     destroy_manifest.groups = destroy_group_list
     for group in apply_manifest.groups:
-        destroy_module_list = _populate_modules_to_remove(dep_name, group.name, group.modules, deployment_params_cache)
+        destroy_module_list = _populate_modules_to_remove(deployment_name, group.name, group.modules, module_info_index)
         if destroy_module_list:
             to_destroy = ModulesManifest(name=group.name, path=group.path, modules=destroy_module_list)
             destroy_manifest.groups.append(to_destroy)
+    destroy_manifest.validate_and_set_module_defaults()
     return destroy_manifest
 
 
+def _populate_group_modules_from_index(
+    deployment_name: str, group_name: str, module_info_index: ModuleInfoIndex, skip_deploy_spec: bool
+) -> List[Dict[str, Any]]:
+    modules = []
+    for group_key in module_info_index.get_keys_for_group(group_name):
+        deployment_params_cache = module_info_index.get_module_info(**group_key)
+        module_manifest = mi.get_module_manifest(
+            deployment_name, group_name, group_key["module_name"], deployment_params_cache
+        )
+        if module_manifest is not None:
+            if not skip_deploy_spec:
+                module_manifest["deploy_spec"] = mi.get_deployspec(
+                    deployment_name, group_name, group_key["module_name"], deployment_params_cache
+                )
+            modules.append(module_manifest)
+    return modules
+
+
 def _populate_groups_to_remove(
-    dep_name: str, apply_groups: List[ModulesManifest], deployment_params_cache: Optional[Dict[str, Any]] = None
+    deployment_name: str, apply_groups: List[ModulesManifest], module_info_index: ModuleInfoIndex
 ) -> List[ModulesManifest]:
     set_requested_groups = set([g.name for g in apply_groups])
-    set_deployed_groups = set(mi.get_all_groups(dep_name))
+    set_deployed_groups = module_info_index.groups
     destroy_groups = list(sorted(set_deployed_groups - set_requested_groups))
     _logger.debug("Groups already deployed that will be DESTROYED : %s", destroy_groups)
     destroy_group_list = []
     for destroy_group in destroy_groups:
-        group_manifests = mi.get_group_manifest(dep_name, destroy_group, deployment_params_cache)
-        if group_manifests:
-            valid_modules = []
-            for module in group_manifests["modules"]:
-                mod_manifest = mi.get_module_manifest(dep_name, destroy_group, module["name"], deployment_params_cache)
-                if mod_manifest:
-                    module["deploy_spec"] = mi.get_deployspec(
-                        dep_name, destroy_group, module["name"], deployment_params_cache
-                    )
-                    module["parameters"] = mod_manifest["parameters"]
-                    valid_modules.append(module)
-            if valid_modules:
-                group_manifests["modules"] = valid_modules
-            destroy_group_list.append(ModulesManifest(**group_manifests))
+        # TODO: Investigate whether it's necessary to read the existing group manifest from SSM
+        # group_manifest = mi.get_group_manifest(deployment_name, destroy_group, deployment_params_cache)
+        group_manifest = {
+            "name": destroy_group,
+            "modules": _populate_group_modules_from_index(
+                deployment_name=deployment_name,
+                group_name=destroy_group,
+                module_info_index=module_info_index,
+                skip_deploy_spec=False,
+            ),
+        }
+        destroy_group_list.append(ModulesManifest(**group_manifest))
     return destroy_group_list
 
 
 def _populate_modules_to_remove(
-    dep_name: str,
-    group: str,
-    apply_modules: List[ModuleManifest],
-    deployment_params_cache: Optional[Dict[str, Any]] = None,
+    deployment_name: str, group: str, apply_modules: List[ModuleManifest], module_info_index: ModuleInfoIndex
 ) -> List[ModuleManifest]:
     set_requests_modules = set([m.name for m in apply_modules])
-    set_deployed_modules = set(mi.get_deployed_modules(dep_name, group, deployment_params_cache))
+    set_deployed_modules = set([m["module_name"] for m in module_info_index.get_keys_for_group(group)])
     destroy_modules = list(sorted(set_deployed_modules - set_requests_modules))
     _logger.debug("Modules of Group %s already deployed that will be DESTROYED: %s", group, destroy_modules)
 
     destroy_module_list = []
     for destroy_module in destroy_modules:
-        mod_manifest = mi.get_module_manifest(dep_name, group, destroy_module, deployment_params_cache)
-        if mod_manifest:
-            mod_manifest["deploy_spec"] = mi.get_deployspec(dep_name, group, destroy_module, deployment_params_cache)
-            destroy_module_list.append(ModuleManifest(**mod_manifest))
+        deployment_params_cache = module_info_index.get_module_info(
+            **module_info_index.get_key_for_module_name(group=group, module_name=destroy_module)
+        )
+        module_manifest = mi.get_module_manifest(deployment_name, group, destroy_module, deployment_params_cache)
+        if module_manifest is not None:
+            module_manifest["deploy_spec"] = mi.get_deployspec(
+                deployment_name, group, destroy_module, deployment_params_cache
+            )
+            destroy_module_list.append(ModuleManifest(**module_manifest))
     return destroy_module_list
 
 
-def update_deployspec(deployment: str, group: str, module: str, module_path: str) -> None:
+def update_deployspec(
+    deployment: str, group: str, module: str, module_path: str, session: Optional[Session] = None
+) -> None:
     d_path = mi._get_deployspec_path(module_path=module_path)
     with open(d_path) as deploymentspec:
         new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
-    mi.write_deployspec(deployment, group, module, new_spec.dict())
+    mi.write_deployspec(deployment, group, module, new_spec.dict(), session=session)

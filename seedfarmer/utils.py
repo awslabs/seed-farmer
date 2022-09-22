@@ -14,9 +14,11 @@
 
 import hashlib
 import logging
+from typing import Optional
 
 import humps
 import yaml
+from boto3 import Session
 
 from seedfarmer.services._service_utils import get_account_id, get_region
 
@@ -33,7 +35,7 @@ class CfnSafeYamlLoader(yaml.SafeLoader):
     Parameters
     ----------
     yaml : _type_
-    """ """"""
+    """
 
     yaml_implicit_resolvers = {
         k: [r for r in v if r[0] != "tag:yaml.org,2002:timestamp"]
@@ -54,7 +56,7 @@ def upper_snake_case(value: str) -> str:
     -------
     str
         the string standardized
-    """ """"""
+    """
     if humps.is_camelcase(value):  # type: ignore
         return humps.decamelize(value).upper()  # type: ignore
     elif humps.is_pascalcase(value):  # type: ignore
@@ -63,7 +65,7 @@ def upper_snake_case(value: str) -> str:
         return value.replace("-", "_").upper()
 
 
-def generate_hash() -> str:
+def generate_hash(session: Optional[Session] = None) -> str:
     """
     Generate a hexdigest hash of the project and the deployment - for use generating unique names
 
@@ -72,8 +74,8 @@ def generate_hash() -> str:
     str
         The resulting hash as a string
     """
-    account = get_account_id()
-    region = get_region()
+    account = get_account_id(session=session)
+    region = get_region(session=session)
     concatenated_string = f"{account}-{region}"
     hash_value = (hashlib.sha1(concatenated_string.encode("UTF-8")).hexdigest())[:8]
     _logger.debug("HASH generated is %s", hash_value)

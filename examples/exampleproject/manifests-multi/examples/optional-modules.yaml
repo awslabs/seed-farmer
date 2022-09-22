@@ -1,0 +1,16 @@
+name: networking
+path: modules/optionals/networking/
+targetAccount: secondary
+parameters:
+  - name: internet-accessible
+    value: true
+---
+name: buckets
+path: modules/optionals/buckets
+targetAccount: primary
+targetRegion: us-east-2
+parameters:
+  - name: encryption-type
+    value: SSE
+  - name: some-name
+    value: other

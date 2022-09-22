@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation for the SeedFarmer Deployment Role
+Outputs:
+  DeploymentRoleName:
+    Value:
+      Ref: DeploymentRole
+Resources:
+  DeploymentRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        -   Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+                AWS: arn:aws:iam::{{ toolchain_account_id }}:role/seedfarmer-{{ project_name }}-toolchain-role
+      Path: /
+      Policies:
+        - PolicyName: InlineToolchain
+          PolicyDocument:
+            Statement:
+            - Action:
+              - kms:Get*
+              - kms:Decrypt
+              - kms:Untag*
+              - kms:Put*
+              - kms:List*
+              - kms:Tag*
+              - kms:Encrypt
+              - kms:Describe*
+              - kms:Update*
+              - kms:Delete*
+              - kms:Create*
+              Effect: Allow
+              Resource:
+                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/codeseeder-{{ project_name }}-*"
+              Sid: DeploymentKMSAlias
+            - Action:
+              - kms:ListKeys
+              - kms:UpdateCustomKeyStore
+              - kms:ListAliases
+              - kms:CreateKey
+              - kms:PutKeyPolicy
+              - kms:Tag*
+              - kms:Untag*
+              - kms:ScheduleKey*
+              - kms:DescribeKey
+              - kms:CreateAlias
+              - kms:DeleteAlias
+              Effect: Allow
+              Resource: '*'
+              Sid: DeploymentKMSKey
+            - Action:
+              - iam:Delete*
+              - iam:Create*
+              - iam:Get*
+              - iam:Tag*
+              - iam:Untag*
+              - iam:Update*
+              - iam:AttachRolePolicy
+              - iam:PutRolePolicy
+              - iam:Pass*
+              - iam:DetachRolePolicy
+              - iam:List*
+              Effect: Allow
+              Resource:
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
+              Sid: DeploymentIAM
+            - Action:
+              - codebuild:Update*
+              - codebuild:Batch*
+              - codebuild:Create*
+              - codebuild:Delete*
+              - codebuild:StartBuild
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:codebuild:*:${AWS::AccountId}:project/codeseeder-{{ project_name }}*"
+              Sid: DeploymentCodeBuild
+            - Action:
+              - iam:ListPolicies
+              - ssm:DescribeParameters
+              - codebuild:ListProjects
+              - cloudformation:Describe*
+              - cloudformation:GetTemplate
+              Effect: Allow
+              Resource: '*'
+              Sid: DeploymentListStuff
+            - Action:
+              - cloudformation:*
+              Effect: Allow
+              Resource:
+                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-*"
+                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}/*"
+            - Action:
+              - s3:Delete*
+              - s3:Put*
+              - s3:Get*
+              - s3:Restore*
+              - s3:Create*
+              - s3:List*
+              Effect: Allow
+              Resource:
+              - arn:aws:s3:::codeseeder-{{ project_name }}*
+              - arn:aws:s3:::codeseeder-{{ project_name }}*/*
+              Sid: DeploymentS3
+            - Action:
+              - sts:AssumeRole
+              - sts:TagSession
+              - sts:GetSessionToken
+              Effect: Allow
+              Resource:
+              - arn:aws:iam::*:role/{{ project_name }}-*
+              Sid: DeploymentSTS
+            - Action:
+              - ssm:Put*
+              - ssm:Delete*
+              - ssm:Remove*
+              - ssm:Add*
+              - ssm:Describe*
+              - ssm:Get*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+            - Effect: Allow
+              Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:GetLogEvents
+              - logs:GetLogRecord
+              - logs:GetLogGroupFields
+              - logs:GetQueryResults
+              - logs:DescribeLogStreams
+              Resource:
+                Fn::Sub: "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-{{ project_name }}*"
+            - Action:
+              - cloudformation:Create*
+              - cloudformation:Execute*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
+            - Action:
+              - codeartifact:*
+              Effect: Allow
+              Resource:
+                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
+                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
+      RoleName: seedfarmer-{{ project_name }}-deployment-role
+    Type: AWS::IAM::Role

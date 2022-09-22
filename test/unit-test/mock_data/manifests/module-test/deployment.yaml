@@ -5,7 +5,9 @@ groups:
     path: manifests/module-test/test-modules.yaml
 targetAccountMappings:
   - alias: primary
-    accountId: "000000000000"
+    accountId:
+      valueFrom:
+        envVariable: PRIMARY_ACCOUNT
     default: true
     # parametersGlobal:
     #   permissionsBoundaryName: policy-name

@@ -5,7 +5,9 @@ groups:
     path: manifests/test-broken-deployspec-destroy/test-module.yaml
 targetAccountMappings:
   - alias: primary
-    accountId: "000000000000"
+    accountId:
+      valueFrom:
+        envVariable: PRIMARY_ACCOUNT
     default: true
     # parametersGlobal:
     #   permissionsBoundaryName: policy-name

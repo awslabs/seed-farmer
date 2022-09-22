@@ -13,20 +13,15 @@
 #    limitations under the License.
 
 import logging
-import math
-from typing import Any, List, Optional
+from typing import Optional
 
 import boto3
 import botocore.exceptions
+from boto3 import Session
 
 import seedfarmer
 
 _logger: logging.Logger = logging.getLogger(__name__)
-
-
-def chunkify(lst: List[Any], num_chunks: int = 1, max_length: Optional[int] = None) -> List[List[Any]]:
-    num: int = num_chunks if max_length is None else int(math.ceil((float(len(lst)) / float(max_length))))
-    return [lst[i : i + num] for i in range(0, len(lst), num)]  # noqa: E203
 
 
 def get_botocore_config() -> botocore.config.Config:
@@ -38,33 +33,79 @@ def get_botocore_config() -> botocore.config.Config:
     )
 
 
-def boto3_client(service_name: str) -> boto3.client:
-    return boto3.Session().client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+def create_new_session(region_name: Optional[str] = None, profile: Optional[str] = None) -> Session:
+    return Session(region_name=region_name, profile_name=profile)
 
 
-def boto3_resource(service_name: str) -> boto3.client:
-    return boto3.Session().resource(service_name=service_name, use_ssl=True, config=get_botocore_config())
+def create_new_session_with_creds(
+    aws_access_key_id: str, aws_secret_access_key: str, aws_session_token: str, region_name: Optional[str] = None
+) -> Session:
+    return boto3.Session(
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_session_token=aws_session_token,
+        region_name=region_name,
+    )
 
 
-def get_region() -> str:
-    session = boto3.Session()
-    if session.region_name is None:
+def boto3_client(
+    service_name: str,
+    session: Optional[Session] = None,
+    region_name: Optional[str] = None,
+    profile: Optional[str] = None,
+    aws_access_key_id: Optional[str] = None,
+    aws_secret_access_key: Optional[str] = None,
+    aws_session_token: Optional[str] = None,
+) -> boto3.client:
+    if aws_access_key_id and aws_secret_access_key and aws_session_token:
+        return create_new_session_with_creds(
+            aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
+        ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+    elif not session:
+        return create_new_session(region_name, profile).client(
+            service_name=service_name, use_ssl=True, config=get_botocore_config()
+        )
+    else:
+        return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+
+
+def boto3_resource(
+    service_name: str,
+    session: Optional[Session] = None,
+    region_name: Optional[str] = None,
+    profile: Optional[str] = None,
+) -> boto3.client:
+    if not session:
+        return create_new_session(region_name=region_name, profile=profile).resource(
+            service_name=service_name, use_ssl=True, config=get_botocore_config()
+        )
+    else:
+        return session.resource(service_name=service_name, use_ssl=True, config=get_botocore_config())
+
+
+def get_region(session: Optional[Session] = None, profile: Optional[str] = None) -> str:
+    sess = session if session else create_new_session(profile=profile)
+    if sess.region_name is None:
         raise ValueError("It is not possible to infer AWS REGION from your environment.")
-    return str(session.region_name)
+    return str(sess.region_name)
 
 
-def get_account_id() -> str:
+def get_account_id(session: Optional[Session] = None, profile: Optional[str] = None) -> str:
     try:
-        return str(boto3_client(service_name="sts").get_caller_identity().get("Account"))
+        if not session:
+            return str(boto3_client(service_name="sts", profile=profile).get_caller_identity().get("Account"))
+        else:
+            return str(boto3_client(service_name="sts", session=session).get_caller_identity().get("Account"))
     except botocore.exceptions.NoCredentialsError as e:
         _logger.error(f"ERROR: {e}")
         from seedfarmer.output_utils import print_bolded
 
         print_bolded("Please make sure you have valid AWS Credentials", color="red")
-        exit(1)
+        raise e
+
     except botocore.exceptions.ClientError as e:
         _logger.error(f"ERROR: {e}")
         from seedfarmer.output_utils import print_bolded
 
         print_bolded("Please make sure you have a valid AWS Session", color="red")
-        exit(1)
+        raise e

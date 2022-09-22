@@ -1,5 +1,5 @@
 name: test-module
-path: test/unit-test/mock_data/modules/module-test/
+path: modules/module-test/
 parameters:
   - name: domain_name_prefix
-    value: testdomaindomaintest
+    value: testdomaindomaintester

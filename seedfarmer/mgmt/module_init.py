@@ -14,11 +14,11 @@
 
 import logging
 import os
-from typing import Optional, cast
+from typing import Optional
 
 from cookiecutter.main import cookiecutter
 
-from seedfarmer import CONFIG_FILE, OPS_ROOT, PROJECT
+from seedfarmer import config
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,9 +37,9 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
     template_url : Optional[List[str]]
         A URL, for example a Github repo, that is or contains templating for the initialization
     """
-    module_root = os.path.join(OPS_ROOT, "modules")
+    module_root = os.path.join(config.OPS_ROOT, "modules")
     module_path = os.path.join(module_root, module_name)
-    output_dir = cast(str, module_root)
+    output_dir = module_root
 
     if group_name:
         module_path = os.path.join(module_root, group_name, module_name)
@@ -78,12 +78,15 @@ def create_project(template_url: Optional[str]) -> None:
     """
 
     checkout_branch = "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
-    _logger.info(" New project will be created in the following dir: %s", os.path.join(OPS_ROOT, PROJECT))
+    _logger.info(" New project will be created in the following dir: %s", os.path.join(config.OPS_ROOT, config.PROJECT))
     cookiecutter(
         template=template_url,
         checkout=checkout_branch,
         no_input=True,
-        extra_context={"project_name": PROJECT},
-        output_dir=OPS_ROOT,
+        extra_context={"project_name": config.PROJECT},
+        output_dir=config.OPS_ROOT,
     )
-    os.replace(os.path.join(OPS_ROOT, CONFIG_FILE), os.path.join(OPS_ROOT, PROJECT, CONFIG_FILE))
+    os.replace(
+        os.path.join(config.OPS_ROOT, config.CONFIG_FILE),
+        os.path.join(config.OPS_ROOT, config.PROJECT, config.CONFIG_FILE),
+    )

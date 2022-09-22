@@ -1,4 +1,17 @@
 name: test-broken-deployspec-destroy
+toolchainRegion: us-west-2
 groups:
   - name: test
-    path: test/unit-test/mock_data/manifests/test-broken-deployspec-destroy/test-module.yaml
+    path: manifests/test-broken-deployspec-destroy/test-module.yaml
+targetAccountMappings:
+  - alias: primary
+    accountId: "000000000000"
+    default: true
+    # parametersGlobal:
+    #   permissionsBoundaryName: policy-name
+    #   dockerCredentialsSecret: some-secret
+    regionMappings:
+      - region: us-west-2
+        default: true
+        parametersRegional:
+          someKey: someValue

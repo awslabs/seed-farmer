@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation for the SeedFarmer Toolchain Role
+Outputs:
+  ToolchainRoleName:
+    Value:
+      Ref: ToolchainRole
+Resources:
+  ToolchainRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        -   Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+                AWS: []
+      Path: /
+      Policies:
+        - PolicyName: InlineToolchain
+          PolicyDocument:
+            Statement:
+            - Action:
+              - sts:AssumeRole
+              - sts:TagSession
+              - sts:GetSessionToken
+              Effect: Allow
+              Resource:
+              - arn:aws:iam::*:role/seedfarmer-{{ project_name }}*
+              Sid: ToolChainSTS
+            - Action:
+              - ssm:Put*
+              - ssm:Delete*
+              - ssm:Remove*
+              - ssm:Add*
+              - ssm:Describe*
+              - ssm:Get*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+              Sid: ToolChainSSM
+            - Action:
+              - ssm:Describe*
+              Effect: Allow
+              Resource:
+                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:*"
+      RoleName: seedfarmer-{{ project_name }}-toolchain-role
+    Type: AWS::IAM::Role

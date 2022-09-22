@@ -5,7 +5,9 @@ groups:
     path: test/unit-test/mock_data/manifests/test-missing-deployment-name/test-module.yaml
 targetAccountMappings:
   - alias: primary
-    accountId: "000000000000"
+    accountId:
+      valueFrom:
+        envVariable: PRIMARY_ACCOUNT
     default: true
     # parametersGlobal:
     #   permissionsBoundaryName: policy-name

@@ -6,7 +6,7 @@ parameters:
     value: true
 ---
 name: buckets
-path: git::https://github.com/awslabs/seed-farmer.git//examples/exampleproject/modules/optionals/buckets/?ref=release/0.1.4&depth=1
+path: git::https://github.com/awslabs/seed-farmer.git//examples/exampleproject/modules/optionals/buckets/
 targetAccount: primary
 targetRegion: us-east-2
 parameters:

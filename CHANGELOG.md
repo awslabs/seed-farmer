@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 - added updated multi-account diagram source for docs
+- added support for git repositories as source for module code
 
 ### Changes
 - updated architecture diagram and verbiage in docs

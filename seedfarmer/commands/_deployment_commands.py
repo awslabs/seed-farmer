@@ -85,7 +85,7 @@ def _clone_module_repo(git_path: str) -> str:
     repo_directory = git_path.replace("https://", "").replace("git@", "").replace("/", "_").replace(":", "_")
 
     working_dir = os.path.join(
-        os.getcwd(), "seedfarmer.gitmodules", f"{repo_directory}_{ref.replace('/', '_')}" if ref else repo_directory
+        config.OPS_ROOT, "seedfarmer.gitmodules", f"{repo_directory}_{ref.replace('/', '_')}" if ref else repo_directory
     )
     os.makedirs(working_dir, exist_ok=True)
     if not os.listdir(working_dir):

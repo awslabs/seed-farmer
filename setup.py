@@ -55,6 +55,7 @@ setup(
         "rich~=12.4.0",
         "requests==2.28.1",
         "python-dotenv~=0.21.0",
+        "gitpython~=3.1.27",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

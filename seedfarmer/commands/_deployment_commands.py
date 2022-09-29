@@ -18,9 +18,11 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, cast
+from urllib.parse import parse_qs
 
 import checksumdir
 import yaml
+from git import Repo  # type: ignore
 
 import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import commands, config
@@ -45,6 +47,55 @@ from seedfarmer.output_utils import (
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _clone_module_repo(git_path: str) -> str:
+    """Clone a git repo and return directory it is cloned into
+
+    Rather than reinventing the wheel, we implement the Generic Git Repository functionality introduced by
+    Terraform. Full documentation on the Git URL definition can be found at:
+    https://www.terraform.io/language/modules/sources#generic-git-repository
+
+    Parameters
+    ----------
+    git_path : str
+        The Git URL specified in the Module Manifest. Full example:
+        https://example.com/network.git//modules/vpc?ref=v1.2.0&depth=1
+
+    Returns
+    -------
+    str
+        The local directory within the codeseeder.out/ where the repository was cloned
+    """
+    git_path = git_path.replace("git::", "")
+    ref: Optional[str] = None
+    depth: Optional[int] = None
+    module_directory = ""
+
+    if "?" in git_path:
+        git_path, query = git_path.split("?")
+        query_params = parse_qs(query)
+        ref = query_params.get("ref", [None])[0]  # type: ignore
+        if "depth" in query_params and query_params["depth"][0].isnumeric():
+            depth = int(query_params["depth"][0])
+
+    if ".git//" in git_path:
+        git_path, module_directory = git_path.split(".git//")
+
+    repo_directory = git_path.replace("https://", "").replace("git@", "").replace("/", "_").replace(":", "_")
+
+    working_dir = os.path.join(
+        config.OPS_ROOT, "seedfarmer.gitmodules", f"{repo_directory}_{ref.replace('/', '_')}" if ref else repo_directory
+    )
+    os.makedirs(working_dir, exist_ok=True)
+    if not os.listdir(working_dir):
+        _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
+        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth)
+    else:
+        _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
+        Repo(working_dir).remotes["origin"].pull()
+
+    return os.path.join(working_dir, module_directory)
 
 
 def _execute_deploy(
@@ -392,11 +443,9 @@ def deploy_deployment(
             if not module.path:
                 raise ValueError("Unable to parse module manifest, `path` not specified")
 
-            # This checks if the modulestack file exists, else fail fast
-            # TODO: Uncomment this if it's needed, but this isn't actually doing anything
-            # _ = _get_modulestack_path(module.path)
+            module_path = _clone_module_repo(module.path) if module.path.startswith("git::") else module.path
 
-            deployspec_path = _get_deployspec_path(module.path)
+            deployspec_path = _get_deployspec_path(module_path)
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
@@ -404,7 +453,7 @@ def deploy_deployment(
             # of `bundle_md5` and `deploy_spec` below
             module_manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
 
-            module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module.path))
+            module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module_path))
             module_deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(
@@ -427,6 +476,7 @@ def deploy_deployment(
                     [module.target_account, module.target_region, deployment_name, group_name, module.name]
                 )
             else:
+                module.path = module_path
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:

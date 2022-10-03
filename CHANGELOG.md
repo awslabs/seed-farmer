@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v2.1.0 (2022-10-03)
+
+### New
 - added updated multi-account diagram source for docs
 - added support for git repositories as source for module code
 

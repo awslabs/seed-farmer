@@ -58,9 +58,9 @@ def print_manifest_inventory(
     dep : DeploymentManifest
         A populated Deplopyment Manifest object
     show_path : bool, optional
-       Show the relative path of the module code, by default False
+        Show the relative path of the module code, by default False
     color : str, optional
-       The color of the Title, by default "yellow"
+        The color of the Title, by default "yellow"
     """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
@@ -133,7 +133,7 @@ def print_bolded(message: str, color: str = "yellow") -> None:
     message : str
         The String
     color : str, optional
-       The color you want the message printed in.... default is "yellow"
+        The color you want the message printed in.... default is "yellow"
     """
     console.print(f"[bold {color}]{message}")
 

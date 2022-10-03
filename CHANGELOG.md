@@ -3,7 +3,24 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
+## Unreleased
 
+### New
+
+### Changes
+
+### Fixes
+
+## v2.1.0 (2022-10-03)
+
+### New
+- added updated multi-account diagram source for docs
+- added support for git repositories as source for module code
+
+### Changes
+- updated architecture diagram and verbiage in docs
+
+### Fixes
 
 ## v2.0.0 (2022-09-22)
 

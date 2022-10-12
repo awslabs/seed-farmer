@@ -11,7 +11,11 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+- exit code on on failed modules changed from 0 1o 1
+
+
 ## v2.1.0 (2022-10-03)
+
 
 ### New
 - added updated multi-account diagram source for docs

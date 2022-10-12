@@ -259,7 +259,7 @@ def _deploy_deployment_is_not_dry_run(
                         if dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to deploy...exiting deployment")
                             print_errored_modules("These modules had errors deploying", deploy_response)  # type: ignore
-                            exit(0)
+                            exit(1)
 
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:

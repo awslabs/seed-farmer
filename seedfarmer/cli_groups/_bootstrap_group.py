@@ -27,7 +27,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 def _load_project() -> str:
     try:
-        print_bolded("No --project provided, attempting load from seedfarmer.yaml", "white")
+        _logger.info("No --project provided, attempting load from seedfarmer.yaml")
         return config.PROJECT
     except FileNotFoundError:
         print_bolded("Unable to determine project to bootstrap, one of --project or a seedfarmer.yaml is required")

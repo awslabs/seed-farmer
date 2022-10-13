@@ -8,9 +8,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- modified output messaging to use logger instead of bolded print when loading project configs
 
 ### Fixes
-
 - exit code on on failed modules changed from 0 1o 1
 
 

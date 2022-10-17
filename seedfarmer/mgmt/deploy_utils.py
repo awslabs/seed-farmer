@@ -75,7 +75,7 @@ class ModuleInfoIndex(object):
 def populate_module_info_index(deployment_manifest: DeploymentManifest) -> ModuleInfoIndex:
     """
     populate_module_info_index
-        Fetch all info for the deployemnt currently stored, across all Target accounts and regions
+        Fetch all info for the deployment currently stored, across all Target accounts and regions
 
     Parameters
     ----------

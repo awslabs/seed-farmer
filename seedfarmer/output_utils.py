@@ -38,7 +38,7 @@ def print_deployment_inventory(description: str, dep: List[str], color: str = "y
     """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
-    table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Deployment", justify="left", style="cyan", no_wrap=True)
     for deployment in dep:
         table.add_row(deployment)
 
@@ -66,7 +66,7 @@ def print_manifest_inventory(
 
     table.add_column("Account", justify="left", style="yellow", no_wrap=True)
     table.add_column("Region", justify="left", style="white", no_wrap=True)
-    table.add_column("Deployemnt", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Deployment", justify="left", style="cyan", no_wrap=True)
     table.add_column("Group", justify="left", style="magenta")
     table.add_column("Module", justify="left", style="green")
     table.add_column("Path", justify="left") if show_path else None
@@ -91,7 +91,7 @@ def _print_modules(description: str, modules_list: List[Any]) -> None:
 
     table.add_column("Account", justify="left", style="yellow", no_wrap=True)
     table.add_column("Region", justify="left", style="white", no_wrap=True)
-    table.add_column("Deployemnt", style="cyan", no_wrap=True)
+    table.add_column("Deployment", style="cyan", no_wrap=True)
     table.add_column("Group", justify="left", style="magenta")
     table.add_column("Module", justify="left", style="green")
     for lst in modules_list:

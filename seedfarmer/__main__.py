@@ -27,9 +27,6 @@ from seedfarmer.output_utils import print_bolded
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file if it exists
-load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, ".env"), verbose=True, override=True)
-
 
 @click.group()
 def cli() -> None:
@@ -61,6 +58,12 @@ def version() -> None:
     required=False,
 )
 @click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -79,11 +82,21 @@ def version() -> None:
     show_default=True,
 )
 def apply(
-    spec: str, profile: Optional[str], region: Optional[str], debug: bool, dry_run: bool, show_manifest: bool
+    spec: str,
+    profile: Optional[str],
+    region: Optional[str],
+    env_file: str,
+    debug: bool,
+    dry_run: bool,
+    show_manifest: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
+
+    # Load environment variables from .env file if it exists
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
     _logger.info("Apply request with manifest %s", spec)
     if dry_run:
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
@@ -124,6 +137,12 @@ def apply(
     required=False,
 )
 @click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -135,11 +154,16 @@ def destroy(
     show_manifest: bool,
     profile: Optional[str],
     region: Optional[str],
+    env_file: str,
     debug: bool,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
+
+    # Load environment variables from .env file if it exists
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
     # MUST use seedfarmer.yaml so we can initialize codeseeder configs
     project = config.PROJECT
     _logger.debug("Listing all deployments for Project %s", project)

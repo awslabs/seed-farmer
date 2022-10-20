@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- new --env-file CLI parameter on apply and destroy enabling specific declaration of the dotenv file to use
 
 ### Changes
 - modified output messaging to use logger instead of bolded print when loading project configs

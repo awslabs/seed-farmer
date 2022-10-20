@@ -195,7 +195,15 @@ class TargetAccountMapping(CamelModel):
             if self.account_id.value_from and self.account_id.value_from.module_metadata is not None:
                 raise ValueError("Loading value from Module Metadata is not supported in the Deployment Manifest")
             elif self.account_id.value_from and self.account_id.value_from.env_variable:
-                return os.getenv(self.account_id.value_from.env_variable, "")
+                account_id = os.getenv(self.account_id.value_from.env_variable, None)
+                if account_id is None:
+                    raise ValueError(
+                        (
+                            "Unable to resolve AccountId from Environment Variable:"
+                            f" {self.account_id.value_from.env_variable}"
+                        )
+                    )
+                return account_id
             else:
                 raise ValueError("Unsupported valueFrom type")
         else:

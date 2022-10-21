@@ -22,7 +22,7 @@ from boto3 import Session
 from seedfarmer import config
 from seedfarmer.services import _secrets_manager as secrets
 from seedfarmer.services import _ssm as store
-from seedfarmer.utils import generate_hash
+from seedfarmer.utils import generate_hash, generate_session_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -760,15 +760,32 @@ def _fetch_helper(
         return store.get_parameter_if_exists(name=name, session=session)
 
 
-def _get_module_stack_names(
+def get_module_stack_names(
     deployment_name: str, group_name: str, module_name: str, session: Optional[Session] = None
 ) -> Tuple[str, str]:
-    module_stack_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-iam-policy"
-    module_role_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}-{generate_hash(session=session)}"
+    resource_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}"
+    resource_hash = generate_hash(string=resource_name, length=4)
+    # Max length of a Stack Name is 128 chars, -iam-policy is 11 chars, resource_hash plus "-" is 5 chars
+    # If the resource_name and "-iam-policy" is too long, truncate and use a resource_hash for uniqueness
+    module_stack_name = (
+        f"{resource_name[:128 - 11 - 5]}-{resource_hash}-iam-policy"
+        if len(resource_name) > (128 - 11)
+        else f"{resource_name}-iam-policy"
+    )
+
+    # Max length of a a Role Name is 64 chars, session_hash plus "-" is 9 chars, resource_hash plus "-" is 5 chars
+    # If the resource_name and session_hash is too long, truncate and use a resource_hash for uniqueness
+    session_hash = generate_session_hash(session=session)
+    module_role_name = (
+        f"{resource_name[:64 - 9 - 5]}-{resource_hash}-{session_hash}"
+        if len(resource_name) > (64 - 9)
+        else f"{resource_name}-{session_hash}"
+    )
+
     return module_stack_name, module_role_name
 
 
-def _get_modulestack_path(module_path: str) -> Any:
+def get_modulestack_path(module_path: str) -> Any:
     p = os.path.join(config.OPS_ROOT, module_path, "modulestack.yaml")
     if not os.path.exists(p):
         _logger.debug("No modulestack.yaml found")
@@ -776,7 +793,7 @@ def _get_modulestack_path(module_path: str) -> Any:
     return p
 
 
-def _get_deployspec_path(module_path: str) -> str:
+def get_deployspec_path(module_path: str) -> str:
     p = os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")
     if not os.path.exists(p):
         raise Exception("No deployspec.yaml file found in module directory: %s", p)

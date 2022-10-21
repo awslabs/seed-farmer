@@ -65,7 +65,11 @@ def upper_snake_case(value: str) -> str:
         return value.replace("-", "_").upper()
 
 
-def generate_hash(session: Optional[Session] = None) -> str:
+def generate_hash(string: str, length: int = 8) -> str:
+    return (hashlib.sha1(string.encode("UTF-8")).hexdigest())[:length]
+
+
+def generate_session_hash(session: Optional[Session] = None) -> str:
     """
     Generate a hexdigest hash of the project and the deployment - for use generating unique names
 
@@ -77,7 +81,7 @@ def generate_hash(session: Optional[Session] = None) -> str:
     account = get_account_id(session=session)
     region = get_region(session=session)
     concatenated_string = f"{account}-{region}"
-    hash_value = (hashlib.sha1(concatenated_string.encode("UTF-8")).hexdigest())[:8]
+    hash_value = generate_hash(string=concatenated_string, length=8)
     _logger.debug("HASH generated is %s", hash_value)
     return hash_value
 

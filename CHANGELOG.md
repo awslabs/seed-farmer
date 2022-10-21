@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - exit code on on failed modules changed from 0 1o 1
 - changed typo `Deployemnt` to `Deployment` everywhere
 - improved validation and error handling when AccountId is not resolvable from EnvVariable
+- truncate and generate unique role and stack names when identifier is too long
 
 
 ## v2.1.0 (2022-10-03)

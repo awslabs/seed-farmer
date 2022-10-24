@@ -374,7 +374,7 @@ def _populate_modules_to_remove(
 def update_deployspec(
     deployment: str, group: str, module: str, module_path: str, session: Optional[Session] = None
 ) -> None:
-    d_path = mi._get_deployspec_path(module_path=module_path)
+    d_path = mi.get_deployspec_path(module_path=module_path)
     with open(d_path) as deploymentspec:
         new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
     mi.write_deployspec(deployment, group, module, new_spec.dict(), session=session)

@@ -3,7 +3,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
+
 ## Unreleased
+
+### New
+### Changes
+
+### Fixes
+
+## v2.2.0 (2022-10-24)
 
 ### New
 - new --env-file CLI parameter on apply and destroy enabling specific declaration of the dotenv file to use

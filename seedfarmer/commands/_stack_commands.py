@@ -23,7 +23,7 @@ from cfn_tools import load_yaml
 
 import seedfarmer.services._iam as iam
 from seedfarmer import config
-from seedfarmer.mgmt.module_info import _get_module_stack_names
+from seedfarmer.mgmt.module_info import get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services._service_utils import get_account_id, get_region
 from seedfarmer.services.session_manager import SessionManager
@@ -141,7 +141,7 @@ def destroy_module_stack(
         The region where the module is deployed
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    module_stack_name, module_role_name = _get_module_stack_names(
+    module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
     # Detach the Project Policy
@@ -223,7 +223,7 @@ def deploy_module_stack(
         _logger.debug(module_stack_path)
 
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    module_stack_name, module_role_name = _get_module_stack_names(
+    module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
 

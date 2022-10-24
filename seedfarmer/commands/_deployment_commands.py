@@ -28,9 +28,9 @@ import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values
 from seedfarmer.mgmt.module_info import (
-    _get_deployspec_path,
-    _get_modulestack_path,
+    get_deployspec_path,
     get_module_metadata,
+    get_modulestack_path,
     remove_deployed_deployment_manifest,
     remove_deployment_manifest,
     write_deployment_manifest,
@@ -115,7 +115,7 @@ def _execute_deploy(
     target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
     commands.deploy_module_stack(
-        _get_modulestack_path(module_manifest.path),
+        get_modulestack_path(module_manifest.path),
         deployment_manifest.name,
         group_name,
         module_manifest.name,
@@ -259,7 +259,7 @@ def _deploy_deployment_is_not_dry_run(
                         if dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to deploy...exiting deployment")
                             print_errored_modules("These modules had errors deploying", deploy_response)  # type: ignore
-                            exit(0)
+                            exit(1)
 
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
@@ -445,7 +445,7 @@ def deploy_deployment(
 
             module_path = _clone_module_repo(module.path) if module.path.startswith("git::") else module.path
 
-            deployspec_path = _get_deployspec_path(module_path)
+            deployspec_path = get_deployspec_path(module_path)
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 

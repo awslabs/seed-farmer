@@ -28,7 +28,7 @@ from seedfarmer import config
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DeploySpec, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
-from seedfarmer.utils import generate_hash
+from seedfarmer.utils import generate_session_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def _env_vars(
     env_vars[_param("DEPLOYMENT_NAME")] = deployment_name
     env_vars[_param("MODULE_METADATA")] = module_metadata if module_metadata is not None else ""
     env_vars[_param("MODULE_NAME")] = f"{group_name}-{module_manifest_name}"
-    env_vars[_param("HASH")] = generate_hash(session=session)
+    env_vars[_param("HASH")] = generate_session_hash(session=session)
     if docker_credentials_secret:
         env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
     if permissions_boundary_arn:
@@ -175,7 +175,7 @@ def destroy_module(
     remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest_name}"]
 
     export_info = [
-        f"export DEPLOYEMNT={deployment_name}",
+        f"export DEPLOYMENT={deployment_name}",
         f"export GROUP={group_name}",
         f"export MODULE={module_manifest_name}",
     ]
@@ -252,7 +252,7 @@ def _execute_module_commands(
         extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
         codebuild_role=(
             f"{config.PROJECT.lower()}-{deployment_name}-{group_name}"
-            f"-{module_manifest_name}-{generate_hash(session=session)}"
+            f"-{module_manifest_name}-{generate_session_hash(session=session)}"
         ),
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,

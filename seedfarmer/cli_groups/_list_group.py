@@ -14,10 +14,12 @@
 
 import json
 import logging
+import os
 import sys
 from typing import Optional
 
 import click
+from dotenv import load_dotenv
 
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
@@ -85,6 +87,12 @@ def list() -> None:
     required=False,
 )
 @click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -97,6 +105,7 @@ def list_deployspec(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    env_file: str,
     debug: bool,
 ) -> None:
     if debug:
@@ -105,6 +114,7 @@ def list_deployspec(
 
     if project is None:
         project = _load_project()
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
     session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -171,6 +181,12 @@ def list_deployspec(
     show_default=True,
 )
 @click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -183,6 +199,7 @@ def list_module_metadata(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    env_file: str,
     export_local_env: str,
     debug: bool,
 ) -> None:
@@ -192,6 +209,7 @@ def list_module_metadata(
 
     if project is None:
         project = _load_project()
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
     session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -251,6 +269,12 @@ def list_module_metadata(
     required=False,
 )
 @click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -261,6 +285,7 @@ def list_modules(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    env_file: str,
     debug: bool,
 ) -> None:
     if debug:
@@ -269,6 +294,7 @@ def list_modules(
 
     if project is None:
         project = _load_project()
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)

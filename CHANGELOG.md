@@ -10,6 +10,13 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+## v2.2.1 (2022-10-25)
+
+### New
+### Changes
+
+### Fixes
 - seedfarmer apply was not picking up .env at same level as `seedfarmer.yaml`
 - all `list` functions did not respect the .env path relative to `seedfarmer.yaml`
 

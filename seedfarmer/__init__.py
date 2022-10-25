@@ -58,20 +58,21 @@ enable_info(INFO_LOGGING_FORMAT)
 
 class Config(object):
     CONFIG_FILE = "seedfarmer.yaml"
-    OPS_ROOT = os.getcwd()
+    _OPS_ROOT: Optional[str] = None
     _PROJECT: Optional[str] = None
     _DESCRIPTION: Optional[str] = None
 
     def _load_config_data(self) -> None:
         count = 0
-        while not os.path.exists(os.path.join(self.OPS_ROOT, self.CONFIG_FILE)):
+        self._OPS_ROOT = os.getcwd()
+        while not os.path.exists(os.path.join(self._OPS_ROOT, self.CONFIG_FILE)):
             if count >= 4:
                 _logger.error("The seedfarmer.yaml was not found at the root of your project. Please set it and rerun.")
                 raise FileNotFoundError(
                     "The seedfarmer.yaml was not found at the root of your project. Please set it and rerun."
                 )
             else:
-                self.OPS_ROOT = pathlib.Path(self.OPS_ROOT).parent  # type: ignore
+                self._OPS_ROOT = pathlib.Path(self._OPS_ROOT).parent  # type: ignore
                 count += 1
 
         with open(os.path.join(self.OPS_ROOT, self.CONFIG_FILE), "r") as file:
@@ -105,6 +106,12 @@ class Config(object):
         if self._DESCRIPTION is None:
             self._load_config_data()
         return str(self._DESCRIPTION)
+
+    @property
+    def OPS_ROOT(self) -> str:
+        if self._OPS_ROOT is None:
+            self._load_config_data()
+        return str(self._OPS_ROOT)
 
 
 config = Config()

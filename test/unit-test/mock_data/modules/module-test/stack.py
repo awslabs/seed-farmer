@@ -16,8 +16,8 @@ import logging
 import os
 from typing import Any
 
-from aws_cdk import Duration, Stack
-from aws_cdk import aws_cognito as cognito
+from aws_cdk import Stack
+from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -25,53 +25,16 @@ _logger: logging.Logger = logging.getLogger(__name__)
 project_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class Cognito(Stack):
+class S3(Stack):
     def __init__(
         self,
         scope: Construct,
         id: str,
-        domain_name_prefix: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
-        self.cognito_user_pool = cognito.UserPool(
+        self.bucket = s3.Bucket(
             self,
-            id="CognitoUserPool",
-            account_recovery=cognito.AccountRecovery.EMAIL_ONLY,
-            auto_verify=cognito.AutoVerifiedAttrs(email=True, phone=False),
-            password_policy=cognito.PasswordPolicy(
-                min_length=8,
-                require_digits=True,
-                require_lowercase=True,
-                require_symbols=True,
-                require_uppercase=True,
-                temp_password_validity=Duration.days(5),
-            ),
-            self_sign_up_enabled=False,
-            user_invitation=cognito.UserInvitationConfig(
-                email_subject="Invite to join!",
-                email_body="Hello, you have been invited!<br/><br/>"
-                "Username: {username}<br/>"
-                "Temporary password: {####}<br/><br/>"
-                "Regards",
-            ),
-            user_verification=cognito.UserVerificationConfig(
-                email_subject="Verify your email",
-                email_body="Thanks for signing up! Your verification code is {####}",
-                email_style=cognito.VerificationEmailStyle.CODE,
-            ),
-        )
-
-        self.cognito_user_pool_client = cognito.UserPoolClient(
-            self,
-            id="UserPoolClient",
-            user_pool=self.cognito_user_pool,
-        )
-
-        self.cognito_domain = cognito.UserPoolDomain(
-            self,
-            "CognitoDomain",
-            user_pool=self.cognito_user_pool,
-            cognito_domain=cognito.CognitoDomainOptions(domain_prefix=domain_name_prefix),
+            id="BucketTesting",
         )

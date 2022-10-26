@@ -24,7 +24,9 @@ from seedfarmer.__main__ import list as _list
 from seedfarmer.__main__ import remove, store
 
 # Override OPS_ROOT to reflect path of resource policy needed for some testing #
-config.OPS_ROOT = os.path.join(config.OPS_ROOT, "test/unit-test/mock_data")
+_OPS_ROOT = config.OPS_ROOT
+_TEST_ROOT = os.path.join(config.OPS_ROOT, "test/unit-test/mock_data")
+_PROJECT = config.PROJECT
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 @pytest.mark.init
 def test_init_create_module():
     module_name = "test-module"
-    expected_module_path = os.path.join(config.OPS_ROOT, "modules")
+    expected_module_path = os.path.join(_OPS_ROOT, "modules")
 
     # Creates a new module
     _test_command(sub_command=init, options=["module", "-m", module_name], exit_code=0, return_result=False)
@@ -54,7 +56,7 @@ def test_init_create_module():
 def test_init_create_group_module():
     module_name = "test-module"
     group_name = "group"
-    expected_module_path = os.path.join(config.OPS_ROOT, "modules", group_name, module_name)
+    expected_module_path = os.path.join(_OPS_ROOT, "modules", group_name, module_name)
 
     # Creates a group and a module within the group
     _test_command(sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=0)
@@ -66,7 +68,7 @@ def test_init_create_group_module():
     )
     assert (
         result.exception.args[0]
-        == f"The module {module_name} already exists under {config.OPS_ROOT}/modules/{group_name}."
+        == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
     )
 
     # Checks if a file from the project template was created within the new module
@@ -75,7 +77,7 @@ def test_init_create_group_module():
 
 @pytest.mark.init
 def test_init_create_project():
-    expected_project_path = os.path.join(config.OPS_ROOT, config.PROJECT)
+    expected_project_path = os.path.join(_OPS_ROOT, _PROJECT)
 
     # Creates a new project
     _test_command(sub_command=init, options=["project"], exit_code=0, return_result=False)
@@ -83,7 +85,7 @@ def test_init_create_project():
     # Creates a project that already exist
     result = _test_command(sub_command=init, options=["project"], exit_code=1, return_result=True)
     assert (
-        result.exception.args[0] == f'Error: "{os.path.join(config.OPS_ROOT, config.PROJECT)}" directory already exists'
+        result.exception.args[0] == f'Error: "{os.path.join(_OPS_ROOT, _PROJECT)}" directory already exists'
     )
 
     # Checks if file exists from the project template
@@ -109,14 +111,14 @@ def test_apply_help():
 @pytest.mark.apply_working_module
 def test_apply_deployment():
     # Deploys a functioning module
-    deployment_manifest = "manifests/module-test/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
 
     _test_command(sub_command=apply, options=deployment_manifest, exit_code=0)
 
 
 @pytest.mark.apply
 def test_apply_missing_deployment():
-    deployment_manifest = "manifests/test-missing-deployment-manifest/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-manifest/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     assert result.exception.args[1] == "No such file or directory"
@@ -124,7 +126,7 @@ def test_apply_missing_deployment():
 
 @pytest.mark.apply
 def test_apply_missing_group_manifest():
-    deployment_manifest = "manifests/test-missing-group-manifest/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-group-manifest/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     assert result.exception.args[1] == "No such file or directory"
@@ -132,15 +134,16 @@ def test_apply_missing_group_manifest():
 
 @pytest.mark.apply
 def test_apply_missing_deployment_group_name():
-    deployment_manifest = "manifests/test-missing-deployment-group-name/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-name/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     assert result.exception.args[0][0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
 
 
+@pytest.mark.apply2
 @pytest.mark.apply
 def test_apply_missing_deployment_group_path():
-    deployment_manifest = "manifests/test-missing-deployment-group-path/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-path/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     assert result.exception.args[0] == "One of the `path` or `modules` attributes must be defined on a Group"
@@ -148,7 +151,7 @@ def test_apply_missing_deployment_group_path():
 
 @pytest.mark.apply
 def test_apply_missing_deployment_name():
-    deployment_manifest = "manifests/test-missing-deployment-name/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     assert result.exception.args[0][0].exc.msg_template == "none is not an allowed value"
@@ -156,7 +159,7 @@ def test_apply_missing_deployment_name():
 
 @pytest.mark.apply
 def test_apply_broken_deploy_phase():
-    deployment_manifest = "manifests/test-broken-deployspec-deploy/deployment.yaml"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-broken-deployspec-deploy/deployment.yaml"
 
     _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
     # assert result.exception.args[0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
@@ -165,7 +168,7 @@ def test_apply_broken_deploy_phase():
 # # TODO add test for broken destroy phase
 # @pytest.mark.destroy
 # def test_destroy_broken_deploy_phase():
-#     deployment_manifest = "manifests/test-broken-deployspec-destroy/deployment.yaml"
+#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-broken-deployspec-destroy/deployment.yaml"
 
 #     result = _test_command(sub_command=destroy, options=deployment_manifest, exit_code=1, return_result=True)
 #     assert result.exception.args[0][0].exc.errors()[0]['msg'] == "none is not an allowed value"

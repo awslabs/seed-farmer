@@ -2,7 +2,7 @@ name: example-test-dev
 toolchainRegion: us-west-2
 groups:
   - name: test
-    path: manifests/module-test/test-modules.yaml
+    path: test/unit-test/mock_data/manifests/module-test/test-modules.yaml
 targetAccountMappings:
   - alias: primary
     accountId:

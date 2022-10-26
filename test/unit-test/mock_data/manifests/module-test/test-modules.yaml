@@ -1,5 +1,5 @@
 name: test-module
-path: modules/module-test/
+path: test/unit-test/mock_data/modules/module-test/
 parameters:
-  - name: domain_name_prefix
-    value: testdomaindomaintester-a
+  - name: event_bridge_enabled
+    value: "False"

@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- new `generateName` attribute on DeploymentManifest for dynamic creation of the deployment `name`
+
 ### Changes
 
 ### Fixes

@@ -214,6 +214,43 @@ class TargetAccountMapping(CamelModel):
         return self._default_region
 
 
+class NameGenerator(CamelModel):
+    """
+    NameGenerator
+    This class decrbites how to dynamically generate the name of a DeploymentManifest
+    """
+
+    prefix: Union[str, ValueFromRef]
+    suffix: Union[str, ValueFromRef]
+
+    def _get_value(self, value: Union[str, ValueFromRef]) -> str:
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, ValueFromRef):
+            if value.value_from and value.value_from.module_metadata is not None:
+                raise ValueError("Loading value from Module Metadata is not supported on a NameGenerator")
+            elif value.value_from and value.value_from.env_variable:
+                env_value = os.getenv(value.value_from.env_variable, None)
+                if env_value is None:
+                    raise ValueError(
+                        (
+                            "Unable to resolve value from Environment Variable:"
+                            f" {value.value_from.env_variable}"
+                        )
+                    )
+                return env_value
+            else:
+                raise ValueError("Unsupported valueFrom type")
+        else:
+            raise ValueError("Unsupported value type")
+
+    def generate_name(self):
+        prefix = self._get_value(self.prefix)
+        suffix = self._get_value(self.suffix)
+
+        return f"{prefix}{suffix}"
+
+
 class DeploymentManifest(CamelModel):
     """
     DeploymentManifest
@@ -222,7 +259,8 @@ class DeploymentManifest(CamelModel):
     and a policy that is applied to all build roles.
     """
 
-    name: str
+    name: Optional[str] = None
+    name_generator: Optional[NameGenerator] = None
     toolchainRegion: str
     groups: List[ModulesManifest] = []
     description: Optional[str]
@@ -235,6 +273,19 @@ class DeploymentManifest(CamelModel):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
+
+        if self.name is None and self.name_generator is None:
+            raise ValueError("One of 'name' or 'name_generator' is required")
+
+        if self.name is not None and self.name_generator is not None:
+            raise ValueError("Only one of 'name' or 'name_generator' can be specified")
+
+        # Generate a name and then reset the name_generator to None so that any SerDe done later on does not
+        # generate a new name
+        if self.name_generator is not None:
+            self.name = self.name_generator.generate_name()
+            self.name_generator = None
+
         for ta in self.target_account_mappings:
             if ta.default:
                 self._default_account = ta

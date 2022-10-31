@@ -97,7 +97,7 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
                 .get_or_create()
                 .get_deployment_session(account_id=args["account_id"], region_name=args["region"])
             )
-            module_info = mi.get_parameter_data_cache(deployment=deployment_manifest.name, session=session)
+            module_info = mi.get_parameter_data_cache(deployment=cast(str, deployment_manifest.name), session=session)
             for key, value in module_info.items():
                 key_parts = key.split("/")[1:]
                 if len(key_parts) < 4:
@@ -127,7 +127,7 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
     deployment_manifest : DeploymentManifest
         The deployment manifest ojject to store
     """
-    deployment_name = deployment_manifest.name
+    deployment_name = cast(str, deployment_manifest.name)
     for group in deployment_manifest.groups:
         delattr(group, "modules")
     session = SessionManager().get_or_create().toolchain_session
@@ -292,7 +292,7 @@ def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index:
     DeploymentManifest
         A populated DeploymentManifest object with the modules needed to be destroyed
     """
-    deployment_name = apply_manifest.name
+    deployment_name = cast(str, apply_manifest.name)
 
     destroy_manifest = apply_manifest.copy()
     delattr(destroy_manifest, "groups")

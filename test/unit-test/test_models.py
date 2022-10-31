@@ -114,7 +114,7 @@ def test_deployment_manifest_name_generator():
     os.environ.setdefault("PYTEST_MODEL_USER", "TESTUSER")
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 nameGenerator:
   prefix: test-
   suffix:
@@ -131,7 +131,7 @@ targetAccountMappings: []
     assert deployment_manifest.name_generator is None
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 nameGenerator:
   prefix:
     valueFrom:
@@ -148,7 +148,7 @@ targetAccountMappings: []
     assert deployment_manifest.name_generator is None
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 name: test-name
 nameGenerator:
   prefix: test
@@ -164,7 +164,7 @@ targetAccountMappings: []
     assert str(e.value) == "Only one of 'name' or 'name_generator' can be specified"
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 toolchainRegion: us-west-2
 groups: []
 targetAccountMappings: []
@@ -176,7 +176,7 @@ targetAccountMappings: []
     assert str(e.value) == "One of 'name' or 'name_generator' is required"
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 nameGenerator:
   prefix: test-
   suffix:
@@ -195,7 +195,7 @@ targetAccountMappings: []
     assert str(e.value) == "Loading value from Module Metadata is not supported on a NameGenerator"
 
     generator_yaml = yaml.safe_load(
-    """
+        """
 nameGenerator:
   prefix: test-
   suffix:

@@ -233,10 +233,7 @@ class NameGenerator(CamelModel):
                 env_value = os.getenv(value.value_from.env_variable, None)
                 if env_value is None:
                     raise ValueError(
-                        (
-                            "Unable to resolve value from Environment Variable:"
-                            f" {value.value_from.env_variable}"
-                        )
+                        ("Unable to resolve value from Environment Variable:" f" {value.value_from.env_variable}")
                     )
                 return env_value
             else:
@@ -244,7 +241,7 @@ class NameGenerator(CamelModel):
         else:
             raise ValueError("Unsupported value type")
 
-    def generate_name(self):
+    def generate_name(self) -> str:
         prefix = self._get_value(self.prefix)
         suffix = self._get_value(self.suffix)
 

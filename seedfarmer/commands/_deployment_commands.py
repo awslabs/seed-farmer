@@ -158,6 +158,7 @@ def _execute_deploy(
 def _execute_destroy(
     group_name: str,
     module_manifest: ModuleManifest,
+    module_path: str,
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
@@ -169,7 +170,7 @@ def _execute_destroy(
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
-        module_path=module_manifest.path,
+        module_path=module_path,
         module_deploy_spec=module_manifest.deploy_spec,
         module_manifest_name=module_manifest.name,
         account_id=cast(str, module_manifest.get_target_account_id()),
@@ -366,6 +367,9 @@ def destroy_deployment(
                         {
                             "group_name": _group.name,
                             "module_manifest": _module,
+                            "module_path": _clone_module_repo(_module.path)
+                            if _module.path.startswith("git::")
+                            else _module.path,
                             "deployment_manifest": destroy_manifest,
                             "docker_credentials_secret": destroy_manifest.get_parameter_value(
                                 "dockerCredentialsSecret",

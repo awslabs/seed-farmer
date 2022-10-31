@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- unable to destroy when module sourced from remote git repository 
+
 
 ## v2.2.1 (2022-10-25)
 

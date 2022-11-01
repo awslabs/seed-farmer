@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 import logging
+import os
 from copy import deepcopy
 
 import pytest
@@ -105,6 +106,110 @@ def test_deployment_manifest_get_parameter_without_defaults():
     assert manifest.get_parameter_value("dockerCredentialsSecret") is None
     assert manifest.default_target_account_mapping is None
     assert manifest.target_account_mappings[0].default_region_mapping is None
+
+
+@pytest.mark.models
+@pytest.mark.models_deployment_manifest
+def test_deployment_manifest_name_generator():
+    os.environ.setdefault("PYTEST_MODEL_USER", "TESTUSER")
+
+    generator_yaml = yaml.safe_load(
+        """
+nameGenerator:
+  prefix: test-
+  suffix:
+    valueFrom:
+      envVariable: PYTEST_MODEL_USER
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert deployment_manifest.name == "test-TESTUSER"
+    assert deployment_manifest.name_generator is None
+
+    generator_yaml = yaml.safe_load(
+        """
+nameGenerator:
+  prefix:
+    valueFrom:
+      envVariable: PYTEST_MODEL_USER
+  suffix: -test
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert deployment_manifest.name == "TESTUSER-test"
+    assert deployment_manifest.name_generator is None
+
+    generator_yaml = yaml.safe_load(
+        """
+name: test-name
+nameGenerator:
+  prefix: test
+  suffix: -test
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    with pytest.raises(ValueError) as e:
+        deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert str(e.value) == "Only one of 'name' or 'name_generator' can be specified"
+
+    generator_yaml = yaml.safe_load(
+        """
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    with pytest.raises(ValueError) as e:
+        deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert str(e.value) == "One of 'name' or 'name_generator' is required"
+
+    generator_yaml = yaml.safe_load(
+        """
+nameGenerator:
+  prefix: test-
+  suffix:
+    valueFrom:
+      moduleMetadata:
+        group: none
+        name: none
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    with pytest.raises(ValueError) as e:
+        deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert str(e.value) == "Loading value from Module Metadata is not supported on a NameGenerator"
+
+    generator_yaml = yaml.safe_load(
+        """
+nameGenerator:
+  prefix: test-
+  suffix:
+    valueFrom:
+      envVariable: PYTEST_NO_VAR
+toolchainRegion: us-west-2
+groups: []
+targetAccountMappings: []
+"""
+    )
+
+    with pytest.raises(ValueError) as e:
+        deployment_manifest = DeploymentManifest(**generator_yaml)
+    assert str(e.value) == "Unable to resolve value from Environment Variable: PYTEST_NO_VAR"
 
 
 @pytest.mark.models

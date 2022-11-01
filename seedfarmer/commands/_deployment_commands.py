@@ -106,7 +106,7 @@ def _execute_deploy(
     permissions_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     parameters = load_parameter_values(
-        deployment_name=deployment_manifest.name,
+        deployment_name=cast(str, deployment_manifest.name),
         parameters=module_manifest.parameters,
         deployment_manifest=deployment_manifest,
     )
@@ -116,7 +116,7 @@ def _execute_deploy(
     # Deploys the IAM role per module
     commands.deploy_module_stack(
         get_modulestack_path(module_manifest.path),
-        deployment_manifest.name,
+        cast(str, deployment_manifest.name),
         group_name,
         module_manifest.name,
         target_account_id,
@@ -131,7 +131,7 @@ def _execute_deploy(
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
     module_metadata = json.dumps(
-        get_module_metadata(deployment_manifest.name, group_name, module_manifest.name, session=session)
+        get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
     )
 
     if module_manifest.deploy_spec is None:
@@ -140,7 +140,7 @@ def _execute_deploy(
         )
 
     return commands.deploy_module(
-        deployment_name=deployment_manifest.name,
+        deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
         module_path=os.path.join(config.OPS_ROOT, module_manifest.path),
         module_deploy_spec=module_manifest.deploy_spec,
@@ -158,6 +158,7 @@ def _execute_deploy(
 def _execute_destroy(
     group_name: str,
     module_manifest: ModuleManifest,
+    module_path: str,
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
@@ -167,15 +168,15 @@ def _execute_destroy(
         )
 
     resp = commands.destroy_module(
-        deployment_name=deployment_manifest.name,
+        deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
-        module_path=module_manifest.path,
+        module_path=module_path,
         module_deploy_spec=module_manifest.deploy_spec,
         module_manifest_name=module_manifest.name,
         account_id=cast(str, module_manifest.get_target_account_id()),
         region=cast(str, module_manifest.target_region),
         parameters=load_parameter_values(
-            deployment_name=deployment_manifest.name,
+            deployment_name=cast(str, deployment_manifest.name),
             parameters=module_manifest.parameters,
             deployment_manifest=deployment_manifest,
         ),
@@ -184,7 +185,7 @@ def _execute_destroy(
 
     if resp.status == StatusType.SUCCESS.value:
         commands.destroy_module_stack(
-            deployment_manifest.name,
+            cast(str, deployment_manifest.name),
             group_name,
             module_manifest.name,
             account_id=cast(str, module_manifest.get_target_account_id()),
@@ -348,7 +349,7 @@ def destroy_deployment(
         return
     print_manifest_inventory(f"Modules removed from manifest: {destroy_manifest.name}", destroy_manifest, False, "red")
 
-    deployment_name = destroy_manifest.name
+    deployment_name = cast(str, destroy_manifest.name)
 
     print_manifest_inventory(
         f"Modules scheduled to be destroyed for: {destroy_manifest.name}", destroy_manifest, False, "red"
@@ -366,6 +367,9 @@ def destroy_deployment(
                         {
                             "group_name": _group.name,
                             "module_manifest": _module,
+                            "module_path": _clone_module_repo(_module.path)
+                            if _module.path.startswith("git::")
+                            else _module.path,
                             "deployment_manifest": destroy_manifest,
                             "docker_credentials_secret": destroy_manifest.get_parameter_value(
                                 "dockerCredentialsSecret",
@@ -422,7 +426,7 @@ def deploy_deployment(
         By default False
     """
     deployment_manifest_wip = deployment_manifest.copy()
-    deployment_name = deployment_manifest_wip.name
+    deployment_name = cast(str, deployment_manifest_wip.name)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
     print_manifest_inventory(
@@ -556,7 +560,7 @@ def apply(
     )
     if not dryrun:
         write_deployment_manifest(
-            deployment_manifest.name, deployment_manifest.dict(), session=session_manager.toolchain_session
+            cast(str, deployment_manifest.name), deployment_manifest.dict(), session=session_manager.toolchain_session
         )
 
     for module_group in deployment_manifest.groups:

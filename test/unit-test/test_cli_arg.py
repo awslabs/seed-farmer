@@ -67,8 +67,7 @@ def test_init_create_group_module():
         sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=1, return_result=True
     )
     assert (
-        result.exception.args[0]
-        == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
+        result.exception.args[0] == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
     )
 
     # Checks if a file from the project template was created within the new module
@@ -84,9 +83,7 @@ def test_init_create_project():
 
     # Creates a project that already exist
     result = _test_command(sub_command=init, options=["project"], exit_code=1, return_result=True)
-    assert (
-        result.exception.args[0] == f'Error: "{os.path.join(_OPS_ROOT, _PROJECT)}" directory already exists'
-    )
+    assert result.exception.args[0] == f'Error: "{os.path.join(_OPS_ROOT, _PROJECT)}" directory already exists'
 
     # Checks if file exists from the project template
     assert os.path.exists(os.path.join(expected_project_path, "seedfarmer.yaml"))

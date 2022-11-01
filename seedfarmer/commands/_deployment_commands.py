@@ -193,9 +193,6 @@ def _execute_destroy(
             docker_credentials_secret=docker_credentials_secret,
         )
 
-    # TODO: Confirm whether this is needed, commenting for now
-    # if not get_deployed_modules(deployment=d_name, group=g_name):
-    #     remove_group_info(d_name, g_name)
     return resp
 
 
@@ -438,8 +435,6 @@ def deploy_deployment(
     for group in deployment_manifest_wip.groups:
         # working_group = group.copy()
         group_name = group.name
-        # TODO: Investigate whether we need the group manifest, for now commenting
-        # du.write_group_manifest(deployment_name=deployment_name, group_manifest=working_group)
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         for module in group.modules:

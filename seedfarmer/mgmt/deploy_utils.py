@@ -163,8 +163,6 @@ def generate_deployed_manifest(
         deployed_manifest = DeploymentManifest(**dep_manifest_dict)
         module_info_index = populate_module_info_index(deployment_manifest=deployed_manifest)
         for module_group in dep_manifest_dict["groups"] if dep_manifest_dict["groups"] else []:
-            # TODO: Investigate whether this group manifest in SSM is needed, for now load from index
-            # from_ssm = mi.get_group_manifest(deployment_name, group_name, module_info_index.get_keys_for_group())
             group_name = module_group["name"]
             module_group["modules"] = _populate_group_modules_from_index(
                 deployment_name=deployment_name,
@@ -334,8 +332,6 @@ def _populate_groups_to_remove(
     _logger.debug("Groups already deployed that will be DESTROYED : %s", destroy_groups)
     destroy_group_list = []
     for destroy_group in destroy_groups:
-        # TODO: Investigate whether it's necessary to read the existing group manifest from SSM
-        # group_manifest = mi.get_group_manifest(deployment_name, destroy_group, deployment_params_cache)
         group_manifest = {
             "name": destroy_group,
             "modules": _populate_group_modules_from_index(

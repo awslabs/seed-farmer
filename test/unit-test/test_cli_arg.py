@@ -150,7 +150,7 @@ def test_apply_missing_deployment_name():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-    assert result.exception.args[0][0].exc.msg_template == "none is not an allowed value"
+    assert result.exception.args[0] == "One of 'name' or 'name_generator' is required"
 
 
 @pytest.mark.apply

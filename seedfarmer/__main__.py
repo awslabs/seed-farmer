@@ -68,18 +68,35 @@ def version() -> None:
     default=False,
     help="Enable detailed logging.",
     show_default=True,
+    type=bool,
 )
 @click.option(
     "--dry-run/--no-dry-run",
     default=False,
     help="Apply but do not execute....",
     show_default=True,
+    type=bool,
 )
 @click.option(
     "--show-manifest/--no-show-manifest",
     default=False,
     help="Write out the generated deployment manifest",
     show_default=True,
+    type=bool,
+)
+@click.option(
+    "--enable-session-timeout/--disable-session-timeout",
+    default=False,
+    help="Enable boto3 Session timeouts. If enabled, boto3 Sessions will be reset on the timeout interval",
+    show_default=True,
+    type=bool,
+)
+@click.option(
+    "--session-timeout-interval",
+    default=900,
+    help="If --enable-session-timeout, the interval, in seconds, to reset boto3 Sessions",
+    show_default=True,
+    type=int,
 )
 def apply(
     spec: str,
@@ -89,6 +106,8 @@ def apply(
     debug: bool,
     dry_run: bool,
     show_manifest: bool,
+    enable_session_timeout: bool,
+    session_timeout_interval: int,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
@@ -102,7 +121,13 @@ def apply(
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
 
     commands.apply(
-        deployment_manifest_path=spec, profile=profile, region_name=region, dryrun=dry_run, show_manifest=show_manifest
+        deployment_manifest_path=spec,
+        profile=profile,
+        region_name=region,
+        dryrun=dry_run,
+        show_manifest=show_manifest,
+        enable_session_timeout=enable_session_timeout,
+        session_timeout_interval=session_timeout_interval,
     )
 
 
@@ -148,6 +173,20 @@ def apply(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--enable-session-timeout/--disable-session-timeout",
+    default=False,
+    help="Enable boto3 Session timeouts. If enabled, boto3 Sessions will be reset on the timeout interval",
+    show_default=True,
+    type=bool,
+)
+@click.option(
+    "--session-timeout-interval",
+    default=900,
+    help="If --enable-session-timeout, the interval, in seconds, to reset boto3 Sessions",
+    show_default=True,
+    type=int,
+)
 def destroy(
     deployment: str,
     dry_run: bool,
@@ -156,6 +195,8 @@ def destroy(
     region: Optional[str],
     env_file: str,
     debug: bool,
+    enable_session_timeout: bool,
+    session_timeout_interval: int,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
@@ -173,7 +214,13 @@ def destroy(
         print_bolded(" ***   This is a dry-run...NO ACTIONS WILL BE TAKEN  *** ", "white")
 
     commands.destroy(
-        deployment_name=deployment, profile=profile, region_name=region, dryrun=dry_run, show_manifest=show_manifest
+        deployment_name=deployment,
+        profile=profile,
+        region_name=region,
+        dryrun=dry_run,
+        show_manifest=show_manifest,
+        enable_session_timeout=enable_session_timeout,
+        session_timeout_interval=session_timeout_interval,
     )
 
 

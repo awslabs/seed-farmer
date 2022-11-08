@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 - new `generateName` attribute on DeploymentManifest for dynamic creation of the deployment `name`
 - added documentation for git sourcing of modules
+- new --enable-session-timeout and --session-timeout-interval CLI options on apply and destroy
 
 ### Changes
 

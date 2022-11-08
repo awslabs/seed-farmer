@@ -509,6 +509,8 @@ def apply(
     region_name: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
+    enable_session_timeout: bool = False,
+    session_timeout_interval: int = 900,
 ) -> None:
     """
     apply
@@ -535,6 +537,10 @@ def apply(
         This flag indicates to print out the DeploymentManifest object as s dictionary.
 
         By default False
+    enable_session_timeout: bool
+        If enabled, boto3 Sessions will be reset on the timeout interval
+    session_timeout_interval: int
+        The interval, in seconds, to reset boto3 Sessions
 
     Raises
     ------
@@ -551,7 +557,11 @@ def apply(
 
     # Initialize the SessionManager for the entire project
     session_manager = SessionManager().get_or_create(
-        project_name=config.PROJECT, profile=profile, region_name=region_name
+        project_name=config.PROJECT,
+        profile=profile,
+        region_name=region_name,
+        enable_reaper=enable_session_timeout,
+        reaper_interval=session_timeout_interval,
     )
     if not dryrun:
         write_deployment_manifest(
@@ -596,6 +606,8 @@ def destroy(
     dryrun: bool = False,
     show_manifest: bool = False,
     retain_seedkit: bool = False,
+    enable_session_timeout: bool = False,
+    session_timeout_interval: int = 900,
 ) -> None:
     """
     destroy
@@ -618,11 +630,22 @@ def destroy(
         This flag indicates to print out the DeploymentManifest object as s dictionary.
 
         By default False
+    enable_session_timeout: bool
+        If enabled, boto3 Sessions will be reset on the timeout interval
+    session_timeout_interval: int
+        The interval, in seconds, to reset boto3 Sessions
+
 
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
-    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region_name)
+    SessionManager().get_or_create(
+        project_name=project,
+        profile=profile,
+        region_name=region_name,
+        enable_reaper=enable_session_timeout,
+        reaper_interval=session_timeout_interval,
+    )
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
     if destroy_manifest:
         destroy_manifest.validate_and_set_module_defaults()

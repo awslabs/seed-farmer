@@ -239,7 +239,9 @@ def _execute_module_commands(
     session: Optional[Session] = None
 
     if not codeseeder.EXECUTING_REMOTELY:
-        session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+        def session_getter() -> Session:
+            return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+        session = session_getter()
 
     @codeseeder.remote_function(
         config.PROJECT.lower(),
@@ -257,7 +259,7 @@ def _execute_module_commands(
         bundle_id=module_manifest_name,
         codebuild_compute_type=codebuild_compute_type,
         extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},
-        boto3_session=session,
+        boto3_session=session_getter,
     )
     def _execute_module_commands(
         deployment_name: str,

@@ -239,8 +239,10 @@ def _execute_module_commands(
     session: Optional[Session] = None
 
     if not codeseeder.EXECUTING_REMOTELY:
+
         def session_getter() -> Session:
             return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+
         session = session_getter()
 
     @codeseeder.remote_function(

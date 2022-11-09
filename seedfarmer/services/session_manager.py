@@ -64,7 +64,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     config: Dict[Any, Any] = {}
     created: bool = False
     reaper: Thread = None  # type: ignore
-    reaperInterval: int = 3000  # every 50 minutes
+    reaper_interval: int = 900  # every 15 minutes
 
     def __init__(self) -> None:
         super().__init__()
@@ -75,6 +75,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         project_name: Optional[str] = None,
         region_name: Optional[str] = None,
         profile: Optional[str] = None,
+        reaper_interval: Optional[int] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
     ) -> ISessionManager:
@@ -86,6 +87,9 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.config["profile"] = profile
             self.config = {**self.config, **kwargs}
             self.toolchain_role_name = f"seedfarmer-{project_name}-toolchain-role"
+
+            if reaper_interval is not None:
+                self.reaper_interval = reaper_interval
 
             if enable_reaper and (not self.reaper or not self.reaper.is_alive()):
                 self._setup_reaper()
@@ -131,7 +135,6 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.sessions[session_key] = {self.SESSION: deployment_session, self.ROLE: deployment_role}
             return deployment_session
         else:
-            _logger.info(f"Session Found for {session_key}")
             return self.sessions[session_key][self.SESSION]
 
     # These methods below should not be called outside of this class
@@ -166,7 +169,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
 
     def _setup_reaper(self) -> None:
         _logger.info("Starting Session Reaper")
-        t = Thread(target=self._reap_sessions, args=(self.reaperInterval,), daemon=True, name="SessionReaper")
+        t = Thread(target=self._reap_sessions, args=(self.reaper_interval,), daemon=True, name="SessionReaper")
         t.start()
         self.reaper = t
 

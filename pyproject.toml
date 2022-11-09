@@ -15,6 +15,7 @@ exclude = '''
   | build
   | dist
   | codeseeder.out
+  | seedfarmer.gitmodules
 )/
 '''
 

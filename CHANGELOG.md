@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v2.3.0 (2022-11-09)
+
+### New
 - new `generateName` attribute on DeploymentManifest for dynamic creation of the deployment `name`
 - added documentation for git sourcing of modules
 - new --enable-session-timeout and --session-timeout-interval CLI options on apply and destroy
@@ -14,7 +22,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-- unable to destroy when module sourced from remote git repository 
+- unable to destroy when module sourced from remote git repository
 
 
 ## v2.2.1 (2022-10-25)

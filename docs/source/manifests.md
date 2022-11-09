@@ -90,10 +90,24 @@ parameters:
         key: VpcId
 ```
 - **name** - the name of the group
-- **path** - the relative path to the module code in the project
+- **path** - this element supports two sources of code:
+  - the relative path to the module code in the project
+  - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings 
 - **parameters** - the parameters section .... see [Parameters](parameters)
+
+Here is a sample manifest referencing a git repo:
+```yaml
+name: networking
+path: git::git@github.com:awslabs/seed-farmer.git//examples/exampleproject/modules/optionals/networking/?ref=release/0.1.4&depth=1
+targetAccount: secondary
+parameters:
+  - name: internet-accessible
+    value: true
+```
+
+
 
 (parameters)=
 ## Parameters

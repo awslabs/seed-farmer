@@ -67,8 +67,7 @@ def test_init_create_group_module():
         sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=1, return_result=True
     )
     assert (
-        result.exception.args[0]
-        == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
+        result.exception.args[0] == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
     )
 
     # Checks if a file from the project template was created within the new module
@@ -84,9 +83,7 @@ def test_init_create_project():
 
     # Creates a project that already exist
     result = _test_command(sub_command=init, options=["project"], exit_code=1, return_result=True)
-    assert (
-        result.exception.args[0] == f'Error: "{os.path.join(_OPS_ROOT, _PROJECT)}" directory already exists'
-    )
+    assert result.exception.args[0] == f'Error: "{os.path.join(_OPS_ROOT, _PROJECT)}" directory already exists'
 
     # Checks if file exists from the project template
     assert os.path.exists(os.path.join(expected_project_path, "seedfarmer.yaml"))
@@ -140,7 +137,6 @@ def test_apply_missing_deployment_group_name():
     assert result.exception.args[0][0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
 
 
-@pytest.mark.apply2
 @pytest.mark.apply
 def test_apply_missing_deployment_group_path():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-path/deployment.yaml"
@@ -154,7 +150,7 @@ def test_apply_missing_deployment_name():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-    assert result.exception.args[0][0].exc.msg_template == "none is not an allowed value"
+    assert result.exception.args[0] == "One of 'name' or 'name_generator' is required"
 
 
 @pytest.mark.apply

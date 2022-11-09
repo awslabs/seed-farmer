@@ -17,7 +17,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from aws_codeseeder import EnvVar, codeseeder
@@ -237,12 +237,14 @@ def _execute_module_commands(
     codebuild_compute_type: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session: Optional[Session] = None
+    session_getter: Optional[Callable[[], Session]] = None
 
     if not codeseeder.EXECUTING_REMOTELY:
 
-        def session_getter() -> Session:
+        def _session_getter() -> Session:
             return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
 
+        session_getter = _session_getter
         session = session_getter()
 
     @codeseeder.remote_function(

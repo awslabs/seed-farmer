@@ -446,7 +446,7 @@ def deploy_deployment(
 
             deployspec_path = get_deployspec_path(module_path)
             with open(deployspec_path) as module_spec_file:
-                module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
+                deployspec = DeploySpec(**yaml.safe_load(module_spec_file))
 
             # This MD5 is generated from the module manifest content before setting the generated values
             # of `bundle_md5` and `deploy_spec` below
@@ -459,7 +459,7 @@ def deploy_deployment(
                 deployment_name=deployment_name,
                 group_name=group_name,
                 module_manifest=module,
-                module_deployspec=module.deploy_spec,
+                module_deployspec=deployspec,
                 module_deployspec_md5=module_deployspec_md5,
                 module_manifest_md5=module_manifest_md5,
                 dryrun=dryrun,
@@ -476,6 +476,7 @@ def deploy_deployment(
                 )
             else:
                 module.path = module_path
+                module.deploy_spec = deployspec
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:

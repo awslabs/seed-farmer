@@ -126,6 +126,8 @@ class ModuleManifest(CamelModel):
     name: str
     path: str
     bundle_md5: Optional[str]
+    manifest_md5: Optional[str]
+    deployspec_md5: Optional[str]
     parameters: List[ModuleParameter] = []
     deploy_spec: Optional[DeploySpec] = None
     target_account: Optional[str] = None

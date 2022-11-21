@@ -139,6 +139,14 @@ def _execute_deploy(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
+    du.prepare_ssm_for_deploy(
+        deployment_name=deployment_manifest.name,
+        group_name=group_name,
+        module_manifest=module_manifest,
+        account_id=target_account_id,
+        region=target_region,
+    ) if deployment_manifest.name else None
+
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
@@ -446,23 +454,16 @@ def deploy_deployment(
 
             deployspec_path = get_deployspec_path(module_path)
             with open(deployspec_path) as module_spec_file:
-                deployspec = DeploySpec(**yaml.safe_load(module_spec_file))
+                module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
-            # This MD5 is generated from the module manifest content before setting the generated values
-            # of `bundle_md5` and `deploy_spec` below
-            module_manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
-
+            module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
             module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module_path))
-            module_deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
+            module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(
                 deployment_name=deployment_name,
                 group_name=group_name,
                 module_manifest=module,
-                module_deployspec=deployspec,
-                module_deployspec_md5=module_deployspec_md5,
-                module_manifest_md5=module_manifest_md5,
-                dryrun=dryrun,
                 deployment_params_cache=module_info_index.get_module_info(
                     group=group_name,
                     account_id=cast(str, module.get_target_account_id()),
@@ -476,7 +477,6 @@ def deploy_deployment(
                 )
             else:
                 module.path = module_path
-                module.deploy_spec = deployspec
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:

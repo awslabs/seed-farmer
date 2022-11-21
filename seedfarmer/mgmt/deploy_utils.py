@@ -117,6 +117,52 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
     return module_info_index
 
 
+def prepare_ssm_for_deploy(
+    deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str
+) -> None:
+    # Remove the deployspec before writing...remove bloat as we write deployspec separately
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    module_manifest_wip = module_manifest.copy()
+    module_manifest_wip.deploy_spec = None
+    mi.write_module_manifest(
+        deployment=deployment_name,
+        group=group_name,
+        module=module_manifest.name,
+        data=module_manifest_wip.dict(),
+        session=session,
+    )
+    mi.write_deployspec(
+        deployment=deployment_name,
+        group=group_name,
+        module=module_manifest.name,
+        data=module_manifest.deploy_spec.dict(),
+        session=session,
+    ) if module_manifest.deploy_spec else None
+    mi.write_module_md5(
+        deployment=deployment_name,
+        group=group_name,
+        module=module_manifest.name,
+        hash=module_manifest.deployspec_md5,
+        type=mi.ModuleConst.DEPLOYSPEC,
+        session=session,
+    ) if module_manifest.deployspec_md5 else None
+    mi.write_module_md5(
+        deployment=deployment_name,
+        group=group_name,
+        module=module_manifest.name,
+        hash=module_manifest.manifest_md5,
+        type=mi.ModuleConst.MANIFEST,
+        session=session,
+    ) if module_manifest.manifest_md5 else None
+    mi.remove_module_md5(
+        deployment=deployment_name,
+        group=group_name,
+        module=module_manifest.name,
+        type=mi.ModuleConst.BUNDLE,
+        session=session,
+    )
+
+
 def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) -> None:
     """
     write_deployed_deployment_manifest
@@ -178,10 +224,6 @@ def need_to_build(
     deployment_name: str,
     group_name: str,
     module_manifest: ModuleManifest,
-    module_deployspec: DeploySpec,
-    module_deployspec_md5: str,
-    module_manifest_md5: str,
-    dryrun: bool = False,
     deployment_params_cache: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """
@@ -196,13 +238,9 @@ def need_to_build(
     group_name : str
         A name of the corresponding group
     module_manifest : ModuleManifest
-        A populated ModuleManifest Object corrresponding to the module
-    module_deployspec : DeploySpec
-        A populated DeploySpec Object corrresponding to the module
-    module_deployspec_md5 : str
-        The MD5 hash of the deployspec file
-    module_manifest_md5 : str
-        The MD5 hash of the module manifest file
+        The populated ModuleManifest Object
+    deployment_params_cache: Dict[str, Any]
+        A cache of deployment commands
 
     Returns
     -------
@@ -212,10 +250,6 @@ def need_to_build(
         False - no, do not build it
     """
 
-    d = deployment_name
-    g = group_name
-    m = module_manifest.name if module_manifest.name else ""
-    module_bundle_md5 = module_manifest.bundle_md5 if module_manifest.bundle_md5 else ""
     session = (
         SessionManager()
         .get_or_create()
@@ -226,32 +260,35 @@ def need_to_build(
     )
     if (
         mi.does_md5_match(
-            d, g, m, str(module_bundle_md5), mi.ModuleConst.BUNDLE, deployment_params_cache, session=session
+            deployment_name,
+            group_name,
+            module_manifest.name,
+            module_manifest.bundle_md5,  # type: ignore
+            mi.ModuleConst.BUNDLE,
+            deployment_params_cache,
+            session=session,
         )
         and mi.does_md5_match(
-            d, g, m, module_deployspec_md5, mi.ModuleConst.DEPLOYSPEC, deployment_params_cache, session=session
+            deployment_name,
+            group_name,
+            module_manifest.name,
+            module_manifest.deployspec_md5,  # type: ignore
+            mi.ModuleConst.DEPLOYSPEC,
+            deployment_params_cache,
+            session=session,
         )
         and mi.does_md5_match(
-            d, g, m, module_manifest_md5, mi.ModuleConst.MANIFEST, deployment_params_cache, session=session
+            deployment_name,
+            group_name,
+            module_manifest.name,
+            module_manifest.manifest_md5,  # type: ignore
+            mi.ModuleConst.MANIFEST,
+            deployment_params_cache,
+            session=session,
         )
     ):
         return False
     else:
-        if not dryrun:
-            mi.write_deployspec(deployment=d, group=g, module=m, data=module_deployspec.dict(), session=session)
-            mi.write_module_manifest(deployment=d, group=g, module=m, data=module_manifest.dict(), session=session)
-            mi.write_module_md5(
-                deployment=d,
-                group=g,
-                module=m,
-                hash=module_deployspec_md5,
-                type=mi.ModuleConst.DEPLOYSPEC,
-                session=session,
-            )
-            mi.write_module_md5(
-                deployment=d, group=g, module=m, hash=module_manifest_md5, type=mi.ModuleConst.MANIFEST, session=session
-            )
-            mi.remove_module_md5(deployment=d, group=g, module=m, type=mi.ModuleConst.BUNDLE, session=session)
         return True
 
 

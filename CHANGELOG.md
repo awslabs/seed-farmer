@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - removed the serialized deployspec from the module manifest ssm to prevent bloat (Issue #186)
+- corrected logic for mutating SSM for each module deployment (Issue #188)
 
 ## v2.3.0 (2022-11-09)
 

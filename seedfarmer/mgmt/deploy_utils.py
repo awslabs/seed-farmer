@@ -22,6 +22,7 @@ from boto3 import Session
 
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -117,9 +118,60 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
     return module_info_index
 
 
+def validate_group_parameters(group: ModulesManifest) -> None:
+    """
+    validate_group_parameters
+        This will verify that there are no intra-group dependencies in the parameter references
+
+    Parameters
+    ----------
+    group: ModulesManifest
+        The ModulesManifest representing a group
+
+    Returns
+    -------
+    None
+    """
+    _logger.debug(f"Inspecting group {group.name} for intra-dependencies")
+    group_wip = set({})
+    for module in group.modules:
+        if module.parameters:
+            for parameter in module.parameters:
+                (
+                    group_wip.add(parameter.value_from.module_metadata.group)
+                    if parameter.value_from and parameter.value_from.module_metadata
+                    else None
+                )
+    if group.name in group_wip:
+        message = f"""
+        ERROR!!!  An intra-group dependency for was found in a module reference for group {group.name}
+          No module can refer to its own group for parameter lookups!!
+        """
+        print_bolded(message=message, color="red")
+        exit(1)
+
+
 def prepare_ssm_for_deploy(
     deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str
 ) -> None:
+    """
+    prepare_ssm_for_deploy
+        This method takes the populated ModuleManifest and updates SSM to prepare for deployment
+
+    Parameters
+    ----------
+    deployment_name : str
+        The deployment name
+    group_name : str
+        The group name
+    module_manifest : ModuleManifest
+        The Module Manifect opject
+    account_id : str
+        The Account Id of where this module is to be deployed
+    region : str
+        The Region of where this module is to be deployed
+    """
+
     # Remove the deployspec before writing...remove bloat as we write deployspec separately
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     module_manifest_wip = module_manifest.copy()

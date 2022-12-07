@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- Added intra-group validation of parameter references (prevent any intra-group dependencies)
 
 ### Changes
 

@@ -441,10 +441,10 @@ def deploy_deployment(
     groups_to_deploy = []
     unchanged_modules = []
     for group in deployment_manifest_wip.groups:
-        # working_group = group.copy()
         group_name = group.name
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
+        du.validate_group_parameters(group=group)
         for module in group.modules:
             _logger.debug("Working on -- %s", module)
             if not module.path:

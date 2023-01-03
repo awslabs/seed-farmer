@@ -272,6 +272,18 @@ def generate_deployed_manifest(
     return deployed_manifest
 
 
+def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
+    session_manager = SessionManager().get_or_create()
+    dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
+    if dep_manifest_dict is None:
+        # No successful deployments, just use what was last requested
+        dep_manifest_dict = mi.get_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
+    ordering = {}
+    for idx, val in enumerate(dep_manifest_dict["groups"]):  # type: ignore
+        ordering[val["name"]] = idx
+    return ordering
+
+
 def need_to_build(
     deployment_name: str,
     group_name: str,
@@ -390,6 +402,18 @@ def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index:
         if destroy_module_list:
             to_destroy = ModulesManifest(name=group.name, path=group.path, modules=destroy_module_list)
             destroy_manifest.groups.append(to_destroy)
+
+    # Make sure the groups are sorted in proper order of the deployment
+    try:
+        ordering = get_deployed_group_ordering(deployment_name)
+
+        def groupOrderingFilter(module: ModulesManifest):
+            return ordering.get(module.name, 99)
+
+        destroy_manifest.groups.sort(key=groupOrderingFilter)
+    except Exception as e:
+        _logger.info(f"Threw and error trying to sort the groups for destroy, ignoring and moving on {e}")
+
     destroy_manifest.validate_and_set_module_defaults()
     return destroy_manifest
 

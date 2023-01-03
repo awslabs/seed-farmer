@@ -10,7 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Added intra-group validation of parameter references (prevent any intra-group dependencies)
 
 ### Changes
-- catch exceptions when deleteing a deployment but the project policy (stack) is still in use elewhere
+- catch exceptions when deleting a deployment but the project policy (stack) is still in use elewhere
+- respect group ordering when destroying modules in an existing deployment
 
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)

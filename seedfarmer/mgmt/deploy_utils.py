@@ -407,7 +407,7 @@ def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index:
     try:
         ordering = get_deployed_group_ordering(deployment_name)
 
-        def groupOrderingFilter(module: ModulesManifest):
+        def groupOrderingFilter(module: ModulesManifest) -> int:
             return ordering.get(module.name, 99)
 
         destroy_manifest.groups.sort(key=groupOrderingFilter)

@@ -24,7 +24,13 @@ from dotenv import load_dotenv
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.output_utils import print_bolded, print_deployment_inventory, print_json, print_manifest_inventory
+from seedfarmer.output_utils import (
+    print_bolded,
+    print_dependency_list,
+    print_deployment_inventory,
+    print_json,
+    print_manifest_inventory,
+)
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -43,6 +49,92 @@ def _load_project() -> str:
 def list() -> None:
     """List module data"""
     pass
+
+
+@list.command(name="dependencies", help="List all dependencies of a module")
+@click.option(
+    "--deployment",
+    "-d",
+    type=str,
+    help="The Deployment Name",
+    required=True,
+)
+@click.option(
+    "--group",
+    "-g",
+    type=str,
+    help="The Group Name",
+    required=True,
+)
+@click.option(
+    "--module",
+    "-m",
+    type=str,
+    help="The Module Name",
+    required=True,
+)
+@click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Enable detailed logging.",
+    show_default=True,
+)
+def list_dependencies(
+    deployment: str,
+    group: str,
+    module: str,
+    project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
+    env_file: str,
+    debug: bool,
+) -> None:
+    if debug:
+        enable_debug(format=DEBUG_LOGGING_FORMAT)
+    _logger.debug("We are fetching the dependencies for %s in %s of deployment %s", module, group, deployment)
+
+    if project is None:
+        project = _load_project()
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+
+    if dep_manifest:
+        module_depends_on_dict, module_dependencies_dict = du.generate_dependency_maps(manifest=dep_manifest)
+        print_dependency_list(
+            header_message=f"Modules that {module} in {group} of {deployment} DEPENDS ON : ",
+            modules=module_depends_on_dict[f"{group}-{module}"],
+        ) if module_depends_on_dict.get(f"{group}-{module}") else None
+        print_dependency_list(
+            header_message=f"Modules that ARE DEPENDENT ON {module} in {group} of {deployment} : ",
+            modules=module_dependencies_dict[f"{group}-{module}"],
+        ) if module_dependencies_dict.get(f"{group}-{module}") else None
 
 
 @list.command(name="deployspec", help="List the stored deployspec of a module")

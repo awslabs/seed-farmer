@@ -194,7 +194,6 @@ def validate_module_dependencies(
         )
         if mod_dep:
             v = [module for module in mod_dep if module not in module_destroy_list]
-            print(f"{destroy_mod_candidate} had these dependencies: {v}")
             violation = {destroy_mod_candidate: v}
             volations.append(violation)
 

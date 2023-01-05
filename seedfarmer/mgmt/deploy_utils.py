@@ -152,7 +152,7 @@ def validate_group_parameters(group: ModulesManifest) -> None:
 
 
 def validate_module_dependencies(
-    module_dependencies: Dict[str, List], destroy_manifest: DeploymentManifest
+    module_dependencies: Dict[str, List[str]], destroy_manifest: DeploymentManifest
 ) -> List[Dict[str, List[str]]]:
     """
     This will compare a dictionary of the module dependencies and a destroy manifest object to make sure there
@@ -201,7 +201,7 @@ def validate_module_dependencies(
     return volations
 
 
-def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List], Dict[str, List]]:
+def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List[str]], Dict[str, List]]:
     """
     Takes a deployment manifest object and returns two (2) dictionaries that contain:
         1. all the other modules that a given module depends on (module_depends_on)
@@ -220,7 +220,7 @@ def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, Li
             2. `module_dependencies` - all the modules that are dependent on the given module
     """
 
-    def add_to_list(target_dict: Dict[str, Any], key: str, val: str):
+    def add_to_list(target_dict: Dict[str, Any], key: str, val: str) -> None:
         active_list = target_dict.get(key) if target_dict.get(key) else []
         active_list.append(val) if val not in active_list else None  # type: ignore
         target_dict[key] = active_list

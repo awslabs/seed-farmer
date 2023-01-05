@@ -201,7 +201,7 @@ def validate_module_dependencies(
     return volations
 
 
-def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List[str]], Dict[str, List]]:
+def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
     """
     Takes a deployment manifest object and returns two (2) dictionaries that contain:
         1. all the other modules that a given module depends on (module_depends_on)

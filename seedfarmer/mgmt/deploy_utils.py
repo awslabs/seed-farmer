@@ -151,6 +151,95 @@ def validate_group_parameters(group: ModulesManifest) -> None:
         exit(1)
 
 
+def validate_module_dependencies(
+    module_dependencies: Dict[str, List], destroy_manifest: DeploymentManifest
+) -> List[Dict[str, List[str]]]:
+    """
+    This will compare a dictionary of the module dependencies and a destroy manifest object to make sure there
+    are no modules scheduled to be destroyed that are referenced by modules that will be / are deployed
+
+    Parameters
+    ----------
+    module_dependencies : Dict[str,List]
+        A dict that is that has the module as the key (in form of `<group>-<module_name>`) and the value is a list
+        of modules (in form of `[<group>-<module_name>]`) that are dependent on that module
+    destroy_manifest : DeploymentManifest
+        The manifest object representing all modules that should be destroyed
+
+    Returns
+    -------
+    List[Dict[str,List[str]]]
+        A list of dictionaries of the modules that have dependencies that are blocking deletion:
+        ```
+        [
+            {<group>-<module_name>:[<group>-<module_name>,<group>-<module_name>]}
+        ]
+        ```
+
+    """
+
+    def _get_module_list(manifest: DeploymentManifest) -> List[str]:
+
+        module_list = []
+        for group in manifest.groups:
+            for module in group.modules:
+                module_list.append(f"{group.name}-{module.name}")
+        return module_list
+
+    volations = []
+    module_destroy_list = _get_module_list(destroy_manifest)
+    for destroy_mod_candidate in module_destroy_list:
+        mod_dep = (
+            module_dependencies.get(destroy_mod_candidate) if module_dependencies.get(destroy_mod_candidate) else None
+        )
+        if mod_dep:
+            v = [module for module in mod_dep if module not in module_destroy_list]
+            print(f"{destroy_mod_candidate} had these dependencies: {v}")
+            violation = {destroy_mod_candidate: v}
+            volations.append(violation)
+
+    return volations
+
+
+def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List], Dict[str, List]]:
+    """
+    Takes a deployment manifest object and returns two (2) dictionaries that contain:
+        1. all the other modules that a given module depends on (module_depends_on)
+        2. all the modules that are dependent on a given module (module_dependencies)
+
+    Parameters
+    ----------
+    manifest : DeploymentManifest
+        A fully populated deployment manifest object
+
+    Returns
+    -------
+    Tuple[Dict[str, List], Dict[str, List]]
+        2 Dictionaries:
+            1. `module_depends_on` - all the other modules that a given module depends on
+            2. `module_dependencies` - all the modules that are dependent on the given module
+    """
+
+    def add_to_list(target_dict: Dict[str, Any], key: str, val: str):
+        active_list = target_dict.get(key) if target_dict.get(key) else []
+        active_list.append(val) if val not in active_list else None  # type: ignore
+        target_dict[key] = active_list
+
+    module_depends_on: Dict[str, Any] = {}
+    module_dependencies: Dict[str, Any] = {}
+    for group in manifest.groups:
+        for module in group.modules:
+            group_module_name = f"{group.name}-{module.name}"
+            for parameter in module.parameters:
+                if parameter.value_from and parameter.value_from.module_metadata:
+                    parameter_module_reference = (
+                        f"{parameter.value_from.module_metadata.group}-{parameter.value_from.module_metadata.name}"
+                    )
+                    add_to_list(module_depends_on, group_module_name, parameter_module_reference)
+                    add_to_list(module_dependencies, parameter_module_reference, group_module_name)
+    return module_depends_on, module_dependencies
+
+
 def prepare_ssm_for_deploy(
     deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str
 ) -> None:
@@ -273,6 +362,19 @@ def generate_deployed_manifest(
 
 
 def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
+    """
+    This generates a dict of the groups deployed and the index representing the proper deployment ordering
+
+    Parameters
+    ----------
+    deployment_name : str
+        The name of the deployment
+
+    Returns
+    -------
+    Dict[str, int]
+        A dict with the name of the group as the key and an int as the value of the index
+    """
     session_manager = SessionManager().get_or_create()
     dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     if dep_manifest_dict is None:

@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Added intra-group validation of parameter references (prevent any intra-group dependencies)
 - Added validation of module deletion to prevent deleting modules that have dependencies
 - Added CLI lookup `seedfarmer list dependencies` to provide dependencies of a module
+- Added CLI lookup `seedfarmer list buildparams` to provide the build env params of an existing build (based on build-id) of a module
 
 ### Changes
 - catch exceptions when deleting a deployment but the project policy (stack) is still in use elewhere

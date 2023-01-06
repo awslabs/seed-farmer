@@ -21,7 +21,7 @@ from boto3 import Session
 
 from seedfarmer import config
 from seedfarmer.services import _secrets_manager as secrets
-from seedfarmer.services import _ssm as store
+from seedfarmer.services import _ssm as ssm
 from seedfarmer.utils import generate_hash, generate_session_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ def get_parameter_data_cache(deployment: str, session: Session) -> Dict[str, Any
     Dict[str,Any]
         A dictionary representation of what is in the store (SSM for DDB) of the modules deployed
     """
-    return store.get_all_parameter_data_by_path(prefix=_deployment_key(deployment), session=session)
+    return ssm.get_all_parameter_data_by_path(prefix=_deployment_key(deployment), session=session)
 
 
 def get_all_deployments(session: Optional[Session] = None) -> List[str]:
@@ -73,7 +73,7 @@ def get_all_deployments(session: Optional[Session] = None) -> List[str]:
     prefix = f"/{config.PROJECT}"
     _filter = f"{ModuleConst.MANIFEST.value}"
     ret = set()
-    params = store.list_parameters_with_filter(prefix=prefix, contains_string=_filter, session=session)
+    params = ssm.list_parameters_with_filter(prefix=prefix, contains_string=_filter, session=session)
     for param in params:
         _logger.debug(param)
         p = param.split("/")[3]
@@ -109,7 +109,7 @@ def get_all_groups(
     params = (
         params_cache.keys()
         if params_cache
-        else store.list_parameters_with_filter(prefix=prefix, contains_string=_filter, session=session)
+        else ssm.list_parameters_with_filter(prefix=prefix, contains_string=_filter, session=session)
     )
     for param in params:
         p = param.split("/")[3]
@@ -143,9 +143,7 @@ def get_deployed_modules(
     """
     prefix = f"/{config.PROJECT}/{deployment}/{group}"
     _filter = f"{ModuleConst.MD5.value}/{ModuleConst.BUNDLE.value}"
-    params = (
-        params_cache.keys() if params_cache else store.list_parameters_with_filter(prefix, _filter, session=session)
-    )
+    params = params_cache.keys() if params_cache else ssm.list_parameters_with_filter(prefix, _filter, session=session)
     ret: List[str] = []
     for param in params:
         ret.append(param.split("/")[4]) if _filter in param else None
@@ -182,7 +180,7 @@ def get_module_md5(
         The md5 hash as a string
     """
     name = _md5_module_key(deployment, group, module, type)
-    p = store.get_parameter_if_exists(name=name, session=session)
+    p = ssm.get_parameter_if_exists(name=name, session=session)
     return p["hash"] if p else None
 
 
@@ -412,7 +410,7 @@ def does_md5_match(
     """
     name = _md5_module_key(deployment, group, module, type)
     if not deployment_params_cache:
-        p = store.get_parameter_if_exists(name=name, session=session)
+        p = ssm.get_parameter_if_exists(name=name, session=session)
     else:
         p = deployment_params_cache[name] if name in deployment_params_cache.keys() else None
     if not p:
@@ -444,7 +442,7 @@ def does_module_exist(deployment: str, group: str, module: str, session: Optiona
     bool
         Whether the module is deployed
     """
-    return store.does_parameter_exist(
+    return ssm.does_parameter_exist(
         name=_md5_module_key(deployment, group, module, ModuleConst.BUNDLE), session=session
     )
 
@@ -469,7 +467,7 @@ def write_metadata(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.put_parameter(name=_metadata_key(deployment, group, module), obj=data, session=session)
+    ssm.put_parameter(name=_metadata_key(deployment, group, module), obj=data, session=session)
 
 
 def write_group_manifest(deployment: str, group: str, data: Dict[str, Any], session: Optional[Session] = None) -> None:
@@ -488,7 +486,7 @@ def write_group_manifest(deployment: str, group: str, data: Dict[str, Any], sess
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.put_parameter(name=_group_key(deployment, group), obj=data, session=session)
+    ssm.put_parameter(name=_group_key(deployment, group), obj=data, session=session)
 
 
 def write_module_manifest(
@@ -511,7 +509,7 @@ def write_module_manifest(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.put_parameter(name=_manifest_key(deployment, group, module), obj=data, session=session)
+    ssm.put_parameter(name=_manifest_key(deployment, group, module), obj=data, session=session)
 
 
 def write_deployspec(
@@ -534,7 +532,7 @@ def write_deployspec(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.put_parameter(name=_deployspec_key(deployment, group, module), obj=data, session=session)
+    ssm.put_parameter(name=_deployspec_key(deployment, group, module), obj=data, session=session)
 
 
 def write_module_md5(
@@ -563,7 +561,7 @@ def write_module_md5(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.put_parameter(name=_md5_module_key(deployment, group, module, type), obj={"hash": hash}, session=session)
+    ssm.put_parameter(name=_md5_module_key(deployment, group, module, type), obj={"hash": hash}, session=session)
 
 
 def write_deployment_manifest(deployment: str, data: Dict[str, Any], session: Optional[Session] = None) -> None:
@@ -582,7 +580,7 @@ def write_deployment_manifest(deployment: str, data: Dict[str, Any], session: Op
     """
     if _logger.isEnabledFor(logging.DEBUG):
         _logger.debug("Writing to %s values %s", _deployment_manifest_key(deployment), data)
-    store.put_parameter(name=_deployment_manifest_key(deployment), obj=data, session=session)
+    ssm.put_parameter(name=_deployment_manifest_key(deployment), obj=data, session=session)
 
 
 def write_deployed_deployment_manifest(
@@ -604,7 +602,7 @@ def write_deployed_deployment_manifest(
     key = _deployed_deployment_manifest_key(deployment)
     _logger.debug("Writing to %s value %s", key, data)
 
-    store.put_parameter(name=key, obj=data, session=session)
+    ssm.put_parameter(name=key, obj=data, session=session)
 
 
 def remove_module_info(deployment: str, group: str, module: str, session: Optional[Session] = None) -> None:
@@ -623,7 +621,7 @@ def remove_module_info(deployment: str, group: str, module: str, session: Option
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.delete_parameters(parameters=_all_module_keys(deployment, group, module), session=session)
+    ssm.delete_parameters(parameters=_all_module_keys(deployment, group, module), session=session)
 
 
 def remove_group_info(deployment: str, group: str, session: Optional[Session] = None) -> None:
@@ -640,7 +638,7 @@ def remove_group_info(deployment: str, group: str, session: Optional[Session] = 
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.delete_parameters(parameters=(_all_group_keys(deployment, group)), session=session)
+    ssm.delete_parameters(parameters=(_all_group_keys(deployment, group)), session=session)
 
 
 def remove_module_md5(
@@ -667,7 +665,7 @@ def remove_module_md5(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.delete_parameters(parameters=[_md5_module_key(deployment, group, module, type)], session=session)
+    ssm.delete_parameters(parameters=[_md5_module_key(deployment, group, module, type)], session=session)
 
 
 def remove_deployment_manifest(deployment: str, session: Optional[Session] = None) -> None:
@@ -682,7 +680,7 @@ def remove_deployment_manifest(deployment: str, session: Optional[Session] = Non
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.delete_parameters(parameters=[_deployment_manifest_key(deployment)], session=session)
+    ssm.delete_parameters(parameters=[_deployment_manifest_key(deployment)], session=session)
 
 
 def remove_deployed_deployment_manifest(deployment: str, session: Optional[Session] = None) -> None:
@@ -697,7 +695,7 @@ def remove_deployed_deployment_manifest(deployment: str, session: Optional[Sessi
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    store.delete_parameters(parameters=[_deployed_deployment_manifest_key(deployment)], session=session)
+    ssm.delete_parameters(parameters=[_deployed_deployment_manifest_key(deployment)], session=session)
 
 
 def _metadata_key(deployment: str, group: str, module: str) -> str:
@@ -757,7 +755,7 @@ def _fetch_helper(
     if params_cache:
         return params_cache.get(name, None)
     else:
-        return store.get_parameter_if_exists(name=name, session=session)
+        return ssm.get_parameter_if_exists(name=name, session=session)
 
 
 def get_module_stack_names(

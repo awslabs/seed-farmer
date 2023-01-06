@@ -29,17 +29,17 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 def generate_export_env_params(metadata: Optional[Dict[str, Any]]) -> Optional[List[str]]:
     envs: List[str] = []
-    if metadata is not None and metadata.keys() is not None:
+    if metadata is not None:
         envs = [
-            f"export {config.PROJECT.upper()}_PARAMETER_{upper_snake_case(k)}={metadata[k]}" for k in metadata.keys()
+            f"export {config.PROJECT.upper()}_PARAMETER_{upper_snake_case(k)}='{metadata[k]}'" for k in metadata.keys()
         ]
     return envs
 
 
 def generate_export_raw_env_params(metadata: Optional[Dict[str, Any]]) -> Optional[List[str]]:
     envs: List[str] = []
-    if metadata is not None and metadata.keys() is not None:
-        envs = [f"export {upper_snake_case(k)}={metadata[k]}" for k in metadata.keys()]
+    if metadata is not None:
+        envs = [f"export {upper_snake_case(k)}='{metadata[k]}'" for k in metadata.keys()]
     return envs
 
 

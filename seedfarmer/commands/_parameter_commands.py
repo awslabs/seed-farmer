@@ -36,6 +36,13 @@ def generate_export_env_params(metadata: Optional[Dict[str, Any]]) -> Optional[L
     return envs
 
 
+def generate_export_raw_env_params(metadata: Optional[Dict[str, Any]]) -> Optional[List[str]]:
+    envs: List[str] = []
+    if metadata is not None and metadata.keys() is not None:
+        envs = [f"export {upper_snake_case(k)}={metadata[k]}" for k in metadata.keys()]
+    return envs
+
+
 def load_parameter_values(
     deployment_name: str, parameters: List[ModuleParameter], deployment_manifest: DeploymentManifest
 ) -> List[ModuleParameter]:

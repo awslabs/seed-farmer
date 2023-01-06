@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from boto3 import Session
 
@@ -26,7 +26,7 @@ def get_build_data(build_ids: List[str], session: Optional[Session] = None) -> O
     client = boto3_client(service_name="codebuild", session=session)
 
     try:
-        return client.batch_get_builds(ids=build_ids)
+        return cast(Dict[str, Any], client.batch_get_builds(ids=build_ids))
     except Exception as e:
         _logger.error("An error occurred fetching the build info for %s - %s", build_ids, e)
         return None

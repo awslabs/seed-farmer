@@ -50,7 +50,7 @@ def _evaluate_file(filename: str, ignore_maps: Dict[str, Any]) -> bool:
     return False
 
 
-def _generate_file_hash(filepath):
+def _generate_file_hash(filepath) -> str:
     hash = hashlib.md5()
     blocksize = 64 * 1024
 
@@ -67,7 +67,7 @@ def _generate_file_hash(filepath):
     return digest
 
 
-def _consolidate_hash(hashlist):
+def _consolidate_hash(hashlist) -> str:
     hash = hashlib.md5()
     for hashvalue in sorted(hashlist):
         hash.update(hashvalue.encode("utf-8"))
@@ -101,7 +101,7 @@ def get_module_md5(project_path: str, module_path: str, excluded_files: List[str
 
     all_files = []
 
-    def scandir(dirname) -> List[str]:
+    def scandir(dirname: str) -> List[str]:
         files = [
             f.path
             for f in os.scandir(dirname)

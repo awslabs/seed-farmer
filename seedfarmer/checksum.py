@@ -16,7 +16,7 @@
 import hashlib
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, cast
 
 from gitignore_parser import parse_gitignore
 
@@ -31,6 +31,7 @@ def _evaluate_gitignore(project_path: str, module_path: str) -> Dict[str, Any]:
         if os.path.realpath(working_dir) != os.path.realpath(project_path):
             _get_paths(str(Path(os.path.join(working_dir, os.pardir)).resolve()))
 
+    # If the .gitignore path exists, parse_gitignore returns a function that is callable
     _get_paths(os.path.join(project_path, module_path))
     for ignore_path in ignore_paths:
         if os.path.exists(ignore_path):
@@ -40,13 +41,15 @@ def _evaluate_gitignore(project_path: str, module_path: str) -> Dict[str, Any]:
 
 
 def _evaluate_file(filename: str, ignore_maps: Dict[str, Any]) -> bool:
+    # The map of functions representing .gitignore is called with
+    # the filename as a parameter, returning a boolean whether or not
+    # to exclude the file (i.e it is present in gitignore)
     if ignore_maps is None:
         return False
     for ignore_key in ignore_maps.keys():
-        if ignore_maps.get(ignore_key):
-            inIgnore = (ignore_maps.get(ignore_key))(filename)  # type: ignore
-            if inIgnore:
-                return True
+        in_ignore = (ignore_maps.get(ignore_key))(filename)  # type: ignore
+        if in_ignore:
+            return True
     return False
 
 
@@ -74,7 +77,7 @@ def _consolidate_hash(hashlist: List[str]) -> str:
     return hash.hexdigest()
 
 
-def get_module_md5(project_path: str, module_path: str, excluded_files: List[str] = []) -> str:
+def get_module_md5(project_path: str, module_path: str, excluded_files: Optional[List[str]] = []) -> str:
     """
     This will generate an MD5 of the module source code, respecting .gitingore starting at
     the module level
@@ -105,7 +108,9 @@ def get_module_md5(project_path: str, module_path: str, excluded_files: List[str
         files = [
             f.path
             for f in os.scandir(dirname)
-            if f.is_file() and os.path.split(f)[1] not in excluded_files and not _evaluate_file(f.path, ignore_maps)
+            if f.is_file()
+            and os.path.split(f)[1] not in cast(List[str], excluded_files)
+            and not _evaluate_file(f.path, ignore_maps)
         ]
         all_files.extend(files)
         subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]

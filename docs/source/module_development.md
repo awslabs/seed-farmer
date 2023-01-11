@@ -228,9 +228,51 @@ Resources:
       PolicyName: "myapp-modulespecific-policy"
       Roles: [!Ref RoleName]
 ```
+### Parameters
+As mentioned above, we strongly recommend a least-priviledge policy to promote security best practices. The `modulestack.yaml` automatically has access to the parameters that were defined in your manifest file. Those passed parameters can help make your policy more explicit by using parameter names to limit permissions to a resource.
+
+Below is an example of how to make use of this functionality.
+
+Lets say we want to deploy the Cloud9 module. This module, on top of deploying a Cloud9 instance, also executes a few boto3 calls after the CDK deploys the Cloud9 environment. This example will focus on the boto3 call that modifies the volume of the instance. So we need to give permission to execute that boto3 call and we also want to restrict which instance to modify
+
+Suppose this is our manifest. We want our modulestack.yaml to limit modification to our instance named `cloud9-ml-project-dev`
+```
+name: workbench
+path: modules/workbench/cloud9/
+parameters:
+  ...
+  - name: instance_type
+    value: t3.micro
+  - name: instance_name
+    value: cloud9-ml-project-dev
+  ...
+```
+
+The parameter names in your module manifest are resolved in `CamelCase` in the modulestack.yaml file. The `instance_name` parameter will resolve to `InstanceName`. Back in our modulestack.yaml, we can now add a policy that will allow modification of volume of our specific instance
+
+```
+...
+Parameters:
+  InstanceName:
+    Type: String
+    Description: The name of the Cloud9 instance
+
+Resources:
+  Policy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - "ec2:ModifyVolume"
+            Resource: "*"
+            Condition:
+              StringLike:
+                ec2:ResourceTag/Name: !Sub 'aws-cloud9-${InstanceName}-*'
+          ...
+```
+Side note, the `aws-cloud9-` prefix is added by the Cloud9 deployment automatically
 
 ## Add the Manifests
 Create a new module manifest (see [manifests](module_manifest)) and place it in the `manifests/` directory, under a logical directory.  If the `deployment.yaml` manifest does not exist, create it also.  Add your `module manifest` to the `deployment manifest`.
-
-
-

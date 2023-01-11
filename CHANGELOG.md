@@ -11,11 +11,13 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Added validation of module deletion to prevent deleting modules that have dependencies
 - Added CLI lookup `seedfarmer list dependencies` to provide dependencies of a module
 - Added CLI lookup `seedfarmer list buildparams` to provide the build env params of an existing build (based on build-id) of a module
+- Added support for gitignore when getting MD5 for module bundles
 
 ### Changes
 - catch exceptions when deleting a deployment but the project policy (stack) is still in use elewhere
 - respect group ordering when destroying modules in an existing deployment
 - in `module_info` changed alias of import from `store` to `ssm`
+- modifiled bundle md5: removed `checksumdir`, added custom alg to respect directories and gitignore
 - include module reference info to `Source version` of Codebuild console
 - added documentation on how to use manifest parameters in the modulestack
 

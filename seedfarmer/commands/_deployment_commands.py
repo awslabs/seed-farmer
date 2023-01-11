@@ -20,10 +20,10 @@ import os
 from typing import Any, Dict, List, Optional, cast
 from urllib.parse import parse_qs
 
-import checksumdir
 import yaml
 from git import Repo  # type: ignore
 
+import seedfarmer.checksum as checksum
 import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values
@@ -457,8 +457,19 @@ def deploy_deployment(
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
+            md5_excluded_module_files = [
+                "README.md",
+                "modulestack.template",
+                "setup.cfg",
+                "requirements-dev.txt",
+                "requirements-dev.in",
+                ".gitignore",
+            ]
+
+            module.bundle_md5 = checksum.get_module_md5(
+                project_path=config.OPS_ROOT, module_path=module_path, excluded_files=md5_excluded_module_files
+            )
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
-            module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module_path))
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(

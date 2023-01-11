@@ -248,7 +248,7 @@ parameters:
   ...
 ```
 
-The parameter names in your module manifest are resolved in `CamelCase` in the modulestack.yaml file. The `instance_name` parameter will resolve to `InstanceName`. Back in our modulestack.yaml, we can now add a policy that will allow modification of volume of our specific instance
+The parameter names in your module manifest are resolved in `CamelCase` in the modulestack.yaml file. The `instance_name` parameter will resolve to `InstanceName`. Back in our modulestack.yaml, under `Parameters`, the manifest parameter `instance_name` is added as `InstanceName`. Now we can add a policy that will allow modification of volume of our specific instance by referencing the parameter we specified
 
 ```
 ...

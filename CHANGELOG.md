@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - respect group ordering when destroying modules in an existing deployment
 - in `module_info` changed alias of import from `store` to `ssm`
 - modifiled bundle md5: removed `checksumdir`, added custom alg to respect directories and gitignore
+- include module reference info to `Source version` of Codebuild console
 
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)

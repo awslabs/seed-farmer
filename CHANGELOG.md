@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - catch exceptions when deleting a deployment but the project policy (stack) is still in use elewhere
 - respect group ordering when destroying modules in an existing deployment
 - in `module_info` changed alias of import from `store` to `ssm`
+- include module reference info to `Source version` of Codebuild console
 
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)

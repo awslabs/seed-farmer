@@ -42,14 +42,17 @@ def _evaluate_gitignore(project_path: str, module_path: str) -> Dict[str, Any]:
 
 def _evaluate_file(filename: str, ignore_maps: Dict[str, Any]) -> bool:
     # The map of functions representing .gitignore is called with
-    # the filename as a parameter, returning a boolean whether or not
-    # to exclude the file (i.e it is present in gitignore)
+    # the filename as a parameter, returning a boolean.
+    # If the filename is present .gitignore return True
+    # else return False
     if ignore_maps is None:
         return False
+
     for ignore_key in ignore_maps.keys():
-        in_ignore = (ignore_maps.get(ignore_key))(filename)  # type: ignore
-        if in_ignore:
-            return True
+        if ignore_maps.get(ignore_key) is not None:
+            in_ignore = (ignore_maps.get(ignore_key))(filename)  # type: ignore
+            if in_ignore:
+                return True
     return False
 
 

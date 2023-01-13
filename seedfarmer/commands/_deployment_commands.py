@@ -20,10 +20,10 @@ import os
 from typing import Any, Dict, List, Optional, cast
 from urllib.parse import parse_qs
 
-import checksumdir
 import yaml
 from git import Repo  # type: ignore
 
+import seedfarmer.checksum as checksum
 import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values
@@ -40,6 +40,7 @@ from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleMa
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
+    print_dependency_error_list,
     print_errored_modules,
     print_manifest_inventory,
     print_manifest_json,
@@ -441,10 +442,10 @@ def deploy_deployment(
     groups_to_deploy = []
     unchanged_modules = []
     for group in deployment_manifest_wip.groups:
-        # working_group = group.copy()
         group_name = group.name
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
+        du.validate_group_parameters(group=group)
         for module in group.modules:
             _logger.debug("Working on -- %s", module)
             if not module.path:
@@ -456,8 +457,19 @@ def deploy_deployment(
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
+            md5_excluded_module_files = [
+                "README.md",
+                "modulestack.template",
+                "setup.cfg",
+                "requirements-dev.txt",
+                "requirements-dev.in",
+                ".gitignore",
+            ]
+
+            module.bundle_md5 = checksum.get_module_md5(
+                project_path=config.OPS_ROOT, module_path=module_path, excluded_files=md5_excluded_module_files
+            )
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
-            module.bundle_md5 = checksumdir.dirhash(os.path.join(config.OPS_ROOT, module_path))
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(
@@ -585,6 +597,17 @@ def apply(
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)
+
+    module_depends_on_dict, module_dependencies_dict = du.generate_dependency_maps(manifest=deployment_manifest)
+    _logger.debug("module_depends_on_dict: %s", json.dumps(module_depends_on_dict))
+    _logger.debug("module_dependencies_dict: %s", json.dumps(module_dependencies_dict))
+    violations = du.validate_module_dependencies(module_dependencies_dict, destroy_manifest)
+    if violations:
+        print_dependency_error_list(
+            header_message="The following modules requested for destroy have dependencies that prevent destruction:",
+            errored_list=violations,
+        )
+        exit(1)
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,

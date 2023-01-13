@@ -11,6 +11,32 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+
+## v2.4.0 (2023-01-13)
+
+### New
+- Added intra-group validation of parameter references (prevent any intra-group dependencies)
+- Added validation of module deletion to prevent deleting modules that have dependencies
+- Added CLI lookup `seedfarmer list dependencies` to provide dependencies of a module
+- Added CLI lookup `seedfarmer list buildparams` to provide the build env params of an existing build (based on build-id) of a module
+- Added support for gitignore when getting MD5 for module bundles
+
+### Changes
+- catch exceptions when deleting a deployment but the project policy (stack) is still in use elewhere
+- respect group ordering when destroying modules in an existing deployment
+- in `module_info` changed alias of import from `store` to `ssm`
+- modifiled bundle md5: removed `checksumdir`, added custom alg to respect directories and gitignore
+- include module reference info to `Source version` of Codebuild console
+- added documentation on how to use manifest parameters in the modulestack
+- updating version of `aws-codeseeder` dependency to 0.7.0
+
+### Fixes
+- updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)
+
+
+
 ## v2.3.1 (2022-11-22)
 
 ### New

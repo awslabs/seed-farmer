@@ -160,3 +160,36 @@ def print_errored_modules(
             console.print(
                 f"    {r_obj.codeseeder_metadata.build_url}", crop=False
             ) if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url else None
+
+
+def print_dependency_error_list(header_message: str, errored_list: List[Dict[str, List[str]]]) -> None:
+    """
+    Print out a list of error strings
+
+    Parameters
+    ----------
+    header_message : str
+        The header message printed first
+    errored_list : List[Dict[str, List[str]]]
+        A list of dictionaries of lists to print
+    """
+    console.print(f"[bold yellow] {header_message}")
+    for entry in errored_list:
+        for mod in entry.keys():
+            console.print(f"  [bold cyan]{mod} ")
+            console.print(f"    [cyan]{entry.get(mod)}")
+
+
+def print_dependency_list(header_message: str, modules: List[str]) -> None:
+    """
+    Prints the list of modules
+
+    Parameters
+    ----------
+    header_message : str
+         The header message printed first
+    modules : List[str]
+        The module names in a list
+    """
+    console.print(f"[bold yellow] {header_message}")
+    console.print(f"  [cyan]{modules} ")

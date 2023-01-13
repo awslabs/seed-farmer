@@ -109,10 +109,17 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
         _logger.info(
             "Destroying Stack %s in Account/Region: %s/%s", info.PROJECT_MANAGED_POLICY_CFN_NAME, account_id, region
         )
-        services.cfn.destroy_stack(
-            stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
-            session=session,
-        )
+        import botocore.exceptions
+
+        try:
+            services.cfn.destroy_stack(
+                stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
+                session=session,
+            )
+        except (botocore.exceptions.WaiterError, botocore.exceptions.ClientError):
+            _logger.info(
+                f"Failed to delete project stack {info.PROJECT_MANAGED_POLICY_CFN_NAME}, ignoring and moving on"
+            )
 
 
 def destroy_module_stack(

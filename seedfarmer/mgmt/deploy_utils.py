@@ -22,6 +22,7 @@ from boto3 import Session
 
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -117,9 +118,148 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
     return module_info_index
 
 
+def validate_group_parameters(group: ModulesManifest) -> None:
+    """
+    validate_group_parameters
+        This will verify that there are no intra-group dependencies in the parameter references
+
+    Parameters
+    ----------
+    group: ModulesManifest
+        The ModulesManifest representing a group
+
+    Returns
+    -------
+    None
+    """
+    _logger.debug(f"Inspecting group {group.name} for intra-dependencies")
+    group_wip = set({})
+    for module in group.modules:
+        if module.parameters:
+            for parameter in module.parameters:
+                (
+                    group_wip.add(parameter.value_from.module_metadata.group)
+                    if parameter.value_from and parameter.value_from.module_metadata
+                    else None
+                )
+    if group.name in group_wip:
+        message = f"""
+        ERROR!!!  An intra-group dependency for was found in a module reference for group {group.name}
+          No module can refer to its own group for parameter lookups!!
+        """
+        print_bolded(message=message, color="red")
+        exit(1)
+
+
+def validate_module_dependencies(
+    module_dependencies: Dict[str, List[str]], destroy_manifest: DeploymentManifest
+) -> List[Dict[str, List[str]]]:
+    """
+    This will compare a dictionary of the module dependencies and a destroy manifest object to make sure there
+    are no modules scheduled to be destroyed that are referenced by modules that will be / are deployed
+
+    Parameters
+    ----------
+    module_dependencies : Dict[str,List]
+        A dict that is that has the module as the key (in form of `<group>-<module_name>`) and the value is a list
+        of modules (in form of `[<group>-<module_name>]`) that are dependent on that module
+    destroy_manifest : DeploymentManifest
+        The manifest object representing all modules that should be destroyed
+
+    Returns
+    -------
+    List[Dict[str,List[str]]]
+        A list of dictionaries of the modules that have dependencies that are blocking deletion:
+        ```
+        [
+            {<group>-<module_name>:[<group>-<module_name>,<group>-<module_name>]}
+        ]
+        ```
+
+    """
+
+    def _get_module_list(manifest: DeploymentManifest) -> List[str]:
+
+        module_list = []
+        for group in manifest.groups:
+            for module in group.modules:
+                module_list.append(f"{group.name}-{module.name}")
+        return module_list
+
+    volations = []
+    module_destroy_list = _get_module_list(destroy_manifest)
+    for destroy_mod_candidate in module_destroy_list:
+        mod_dep = (
+            module_dependencies.get(destroy_mod_candidate) if module_dependencies.get(destroy_mod_candidate) else None
+        )
+        if mod_dep:
+            v = [module for module in mod_dep if module not in module_destroy_list]
+            violation = {destroy_mod_candidate: v}
+            volations.append(violation)
+
+    return volations
+
+
+def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
+    """
+    Takes a deployment manifest object and returns two (2) dictionaries that contain:
+        1. all the other modules that a given module depends on (module_depends_on)
+        2. all the modules that are dependent on a given module (module_dependencies)
+
+    Parameters
+    ----------
+    manifest : DeploymentManifest
+        A fully populated deployment manifest object
+
+    Returns
+    -------
+    Tuple[Dict[str, List], Dict[str, List]]
+        2 Dictionaries:
+            1. `module_depends_on` - all the other modules that a given module depends on
+            2. `module_dependencies` - all the modules that are dependent on the given module
+    """
+
+    def add_to_list(target_dict: Dict[str, Any], key: str, val: str) -> None:
+        active_list = target_dict.get(key) if target_dict.get(key) else []
+        active_list.append(val) if val not in active_list else None  # type: ignore
+        target_dict[key] = active_list
+
+    module_depends_on: Dict[str, Any] = {}
+    module_dependencies: Dict[str, Any] = {}
+    for group in manifest.groups:
+        for module in group.modules:
+            group_module_name = f"{group.name}-{module.name}"
+            for parameter in module.parameters:
+                if parameter.value_from and parameter.value_from.module_metadata:
+                    parameter_module_reference = (
+                        f"{parameter.value_from.module_metadata.group}-{parameter.value_from.module_metadata.name}"
+                    )
+                    add_to_list(module_depends_on, group_module_name, parameter_module_reference)
+                    add_to_list(module_dependencies, parameter_module_reference, group_module_name)
+    return module_depends_on, module_dependencies
+
+
 def prepare_ssm_for_deploy(
     deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str
 ) -> None:
+    """
+    prepare_ssm_for_deploy
+        This method takes the populated ModuleManifest and updates SSM to prepare for deployment
+
+    Parameters
+    ----------
+    deployment_name : str
+        The deployment name
+    group_name : str
+        The group name
+    module_manifest : ModuleManifest
+        The Module Manifect opject
+    account_id : str
+        The Account Id of where this module is to be deployed
+    region : str
+        The Region of where this module is to be deployed
+    """
+
     # Remove the deployspec before writing...remove bloat as we write deployspec separately
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     module_manifest_wip = module_manifest.copy()
@@ -218,6 +358,31 @@ def generate_deployed_manifest(
             )
         deployed_manifest.groups = [ModulesManifest(**group) for group in dep_manifest_dict["groups"]]
     return deployed_manifest
+
+
+def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
+    """
+    This generates a dict of the groups deployed and the index representing the proper deployment ordering
+
+    Parameters
+    ----------
+    deployment_name : str
+        The name of the deployment
+
+    Returns
+    -------
+    Dict[str, int]
+        A dict with the name of the group as the key and an int as the value of the index
+    """
+    session_manager = SessionManager().get_or_create()
+    dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
+    if dep_manifest_dict is None:
+        # No successful deployments, just use what was last requested
+        dep_manifest_dict = mi.get_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
+    ordering = {}
+    for idx, val in enumerate(dep_manifest_dict["groups"]):  # type: ignore
+        ordering[val["name"]] = idx
+    return ordering
 
 
 def need_to_build(
@@ -338,6 +503,18 @@ def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index:
         if destroy_module_list:
             to_destroy = ModulesManifest(name=group.name, path=group.path, modules=destroy_module_list)
             destroy_manifest.groups.append(to_destroy)
+
+    # Make sure the groups are sorted in proper order of the deployment
+    try:
+        ordering = get_deployed_group_ordering(deployment_name)
+
+        def groupOrderingFilter(module: ModulesManifest) -> int:
+            return ordering.get(module.name, 99)
+
+        destroy_manifest.groups.sort(key=groupOrderingFilter)
+    except Exception as e:
+        _logger.info(f"Threw and error trying to sort the groups for destroy, ignoring and moving on {e}")
+
     destroy_manifest.validate_and_set_module_defaults()
     return destroy_manifest
 

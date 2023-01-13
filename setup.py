@@ -45,17 +45,17 @@ setup(
     keywords=["aws", "cdk"],
     python_requires=">=3.7",
     install_requires=[
-        "aws-codeseeder~=0.6.0",
+        "aws-codeseeder~=0.7.0",
         "cookiecutter~=2.1.0",
         "pyhumps~=3.5.0",
         "pydantic~=1.9.0",
         "executor~=23.2",
         "typing-extensions~=4.2.0",
-        "checksumdir~=1.2.0",
         "rich~=12.4.0",
         "requests==2.28.1",
         "python-dotenv~=0.21.0",
         "gitpython~=3.1.27",
+        "gitignore-parser~=0.1.2"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

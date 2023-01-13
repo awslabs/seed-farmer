@@ -7,6 +7,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+
+
+## v2.4.0 (2023-01-13)
+
+### New
 - Added intra-group validation of parameter references (prevent any intra-group dependencies)
 - Added validation of module deletion to prevent deleting modules that have dependencies
 - Added CLI lookup `seedfarmer list dependencies` to provide dependencies of a module
@@ -24,6 +34,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)
+
 
 ## v2.3.1 (2022-11-22)
 

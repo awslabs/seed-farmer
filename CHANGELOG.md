@@ -20,6 +20,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - modifiled bundle md5: removed `checksumdir`, added custom alg to respect directories and gitignore
 - include module reference info to `Source version` of Codebuild console
 - added documentation on how to use manifest parameters in the modulestack
+- updating version of `aws-codeseeder` dependency to 0.7.0
 
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)

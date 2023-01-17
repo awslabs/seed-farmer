@@ -36,6 +36,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 - updated pip library to `certifi~=2022.12.7` in requirements-dev (ref dependabot #4)
 
+
+
 ## v2.3.1 (2022-11-22)
 
 ### New

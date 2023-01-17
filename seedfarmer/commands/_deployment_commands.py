@@ -392,7 +392,7 @@ def destroy_deployment(
                         if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to destroy...exiting deployment")
                             print_errored_modules("The following modules had errors destroying ", destroy_response)
-                            exit(0)
+                            exit(1)
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:

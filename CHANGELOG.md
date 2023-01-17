@@ -13,6 +13,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v2.4.1 (2023-01-17)
+
+### New
+
+### Changes
+
+### Fixes
+- exit code of failed deleted modules changed from `0` to `1`
 
 ## v2.4.0 (2023-01-13)
 

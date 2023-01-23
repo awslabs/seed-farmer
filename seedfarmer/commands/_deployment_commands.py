@@ -176,6 +176,15 @@ def _execute_destroy(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
+    target_account_id = cast(str, module_manifest.get_target_account_id())
+    target_region = cast(str, module_manifest.target_region)
+    session = (
+        SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
+    )
+    module_metadata = json.dumps(
+        get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
+    )
+
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
@@ -189,7 +198,7 @@ def _execute_destroy(
             parameters=module_manifest.parameters,
             deployment_manifest=deployment_manifest,
         ),
-        module_metadata=None,
+        module_metadata=module_metadata,
     )
 
     if resp.status == StatusType.SUCCESS.value:

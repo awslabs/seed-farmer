@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- added module metadata to environment parameters on destroy of module
 
 
 ## v2.4.1 (2023-01-17)

@@ -260,7 +260,7 @@ class DeploymentManifest(CamelModel):
 
     name: Optional[str] = None
     name_generator: Optional[NameGenerator] = None
-    toolchainRegion: str
+    toolchain_region: str
     groups: List[ModulesManifest] = []
     description: Optional[str]
     target_account_mappings: List[TargetAccountMapping] = []

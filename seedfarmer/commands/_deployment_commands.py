@@ -581,6 +581,7 @@ def apply(
     session_manager = SessionManager().get_or_create(
         project_name=config.PROJECT,
         profile=profile,
+        toolchain_region=deployment_manifest.toolchain_region,
         region_name=region_name,
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,

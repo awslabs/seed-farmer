@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - added module metadata to environment parameters on destroy of module
+- forced the `apply` of a deployment to respect the `toolchainRegion` parameter
 
 
 ## v2.4.1 (2023-01-17)

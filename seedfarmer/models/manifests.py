@@ -378,7 +378,7 @@ class DeploymentManifest(CamelModel):
         account_id: Optional[str] = None,
         region: Optional[str] = None,
         default: Optional[str] = None,
-    ) -> Optional[str]:
+    ) -> Optional[Any]:
         if account_alias is not None and account_id is not None:
             raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
 

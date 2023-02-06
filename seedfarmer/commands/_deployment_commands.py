@@ -106,10 +106,13 @@ def _execute_deploy(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
+
     parameters = load_parameter_values(
         deployment_name=cast(str, deployment_manifest.name),
         parameters=module_manifest.parameters,
         deployment_manifest=deployment_manifest,
+        target_account=module_manifest.target_account,
+        target_region=module_manifest.target_region,
     )
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
@@ -197,6 +200,8 @@ def _execute_destroy(
             deployment_name=cast(str, deployment_manifest.name),
             parameters=module_manifest.parameters,
             deployment_manifest=deployment_manifest,
+            target_account=module_manifest.target_account,
+            target_region=module_manifest.target_region,
         ),
         module_metadata=module_metadata,
     )
@@ -306,10 +311,18 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
             commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-        params = [
-            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
-            for target_account_region in deployment_manifest.target_accounts_regions
-        ]
+        params = []
+        for target_account_region in deployment_manifest.target_accounts_regions:
+
+            param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            if target_account_region["network"]:
+                network = target_account_region["network"]
+                param_d["vpc_id"] = network.vpc_id  # type: ignore
+                param_d["subnet_ids"] = network.subnet_ids  # type: ignore
+                param_d["security_group_ids"] = network.security_group_ids  # type: ignore
+
+            params.append(param_d)
+
         _ = list(workers.map(_prime_accounts, params))
 
 

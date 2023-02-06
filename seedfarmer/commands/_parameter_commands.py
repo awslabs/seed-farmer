@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
@@ -44,7 +45,11 @@ def generate_export_raw_env_params(metadata: Optional[Dict[str, Any]]) -> Option
 
 
 def load_parameter_values(
-    deployment_name: str, parameters: List[ModuleParameter], deployment_manifest: DeploymentManifest
+    deployment_name: str,
+    parameters: List[ModuleParameter],
+    deployment_manifest: DeploymentManifest,
+    target_account: Optional[str],
+    target_region: Optional[str],
 ) -> List[ModuleParameter]:
     parameter_values = []
     parameter_values_cache: Dict[Tuple[str, str, str], Any] = {}
@@ -79,6 +84,14 @@ def load_parameter_values(
                         value=EnvVar(value=parameter.value_from.secrets_manager, type=EnvVarType.SECRETS_MANAGER),
                     ),
                 )
+            elif parameter.value_from.parameter_value:
+                p_value = deployment_manifest.get_parameter_value(
+                    parameter=parameter.value_from.parameter_value, account_alias=target_account, region=target_region
+                )
+                if p_value:
+                    p_value = str(p_value) if isinstance(p_value, str) else json.dumps(p_value)
+                    parameter_values.append(ModuleParameter(name=parameter.name, value=p_value))
+
     return parameter_values
 
 

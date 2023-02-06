@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -47,7 +47,7 @@ info = StackInfo()
 
 
 def deploy_managed_policy_stack(
-    deployment_manifest: DeploymentManifest, account_id: str, region: str, **kwargs
+    deployment_manifest: DeploymentManifest, account_id: str, region: str, **kwargs: Any
 ) -> None:
     """
     deploy_managed_policy_stack

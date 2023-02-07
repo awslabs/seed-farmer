@@ -7,12 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- added VPC support of isolated subnets for `seedkit` - flow thru to codeseeder
 
 ### Changes
 
 ### Fixes
 - added module metadata to environment parameters on destroy of module
 - forced the `apply` of a deployment to respect the `toolchainRegion` parameter
+- allow fetch of build info of modules not successfully deployed
 
 
 ## v2.4.1 (2023-01-17)

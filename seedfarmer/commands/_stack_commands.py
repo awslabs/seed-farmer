@@ -344,7 +344,7 @@ def deploy_seedkit(
     account_id: str,
     region: str,
     vpc_id: Optional[str] = None,
-    subnet_ids: Optional[List[str]] = None,
+    private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
 ) -> None:
     """
@@ -359,10 +359,10 @@ def deploy_seedkit(
         The region where seedkit is deployed
     vpc_id: Optional[str]
         The VPC to associate seedkit with (codebuild)
-    subnet_ids: Optional[List[str]]
+    private_subnet_ids: Optional[List[str]]
         The Subnet IDs to associate seedkit with (codebuild)
     security_group_ids: Optional[List[str]]
-        The Securit Group IDs to associate seedkit with (codebuild)
+        The Security Group IDs to associate seedkit with (codebuild)
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
@@ -376,7 +376,7 @@ def deploy_seedkit(
         deploy_codeartifact=deploy_codeartifact,
         session=session,
         vpc_id=vpc_id,
-        subnet_ids=subnet_ids,
+        subnet_ids=private_subnet_ids,
         security_group_ids=security_group_ids,
     )
 

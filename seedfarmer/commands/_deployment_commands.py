@@ -318,7 +318,7 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
             if target_account_region["network"]:
                 network = target_account_region["network"]
                 param_d["vpc_id"] = network.vpc_id  # type: ignore
-                param_d["subnet_ids"] = network.subnet_ids  # type: ignore
+                param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
                 param_d["security_group_ids"] = network.security_group_ids  # type: ignore
 
             params.append(param_d)

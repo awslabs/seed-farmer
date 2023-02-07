@@ -162,7 +162,7 @@ class NetworkMapping(CamelModel):
     """
 
     vpc_id: Union[str, ValueFromRef]
-    subnet_ids: Union[List[str], ValueFromRef]
+    private_subnet_ids: Union[List[str], ValueFromRef]
     security_group_ids: Union[List[str], ValueFromRef]
 
     def __init__(self, **kwargs: Any) -> None:
@@ -190,11 +190,11 @@ class RegionMapping(CamelModel):
                     str,
                     self.parameters_regional.get(str(self.network.vpc_id.value_from.parameter_value)),  # type: ignore
                 )
-            if isinstance(self.network.subnet_ids, ValueFromRef):
-                self.network.subnet_ids = cast(
+            if isinstance(self.network.private_subnet_ids, ValueFromRef):
+                self.network.private_subnet_ids = cast(
                     List[str],
                     self.parameters_regional.get(
-                        str(self.network.subnet_ids.value_from.parameter_value)  # type: ignore
+                        str(self.network.private_subnet_ids.value_from.parameter_value)  # type: ignore
                     ),
                 )
             if isinstance(self.network.security_group_ids, ValueFromRef):

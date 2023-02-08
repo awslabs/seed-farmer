@@ -7,6 +7,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+
+## v2.5.0 (2023-02-08)
+
+### New
 - added VPC support of isolated subnets for `seedkit` - flow thru to codeseeder
 
 ### Changes

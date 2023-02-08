@@ -1,0 +1,50 @@
+name: examples
+toolchainRegion: us-west-2
+groups:
+  - name: optionals
+    path: manifests-multi/examples/optional-modules.yaml
+  - name: optionals-2
+    path: manifests-multi/examples/optional-modules-2.yaml
+targetAccountMappings:
+  - alias: primary
+    accountId:
+      valueFrom:
+        envVariable: PRIMARY_ACCOUNT
+    default: true
+    regionMappings:
+      - region: us-east-1
+        default: true
+        parametersRegional:
+          dockerCredentialsSecret: aws-addf-docker-credentials
+          vpcId: vpc-XXXXXXXXX
+          publicSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          privateSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          isolatedSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          securityGroupIds:
+            - sg-XXXXXXXXX
+        network: 
+          vpcId:
+            valueFrom:
+              parameterValue: vpcId
+          privateSubnetIds:
+            valueFrom:
+              parameterValue: privateSubnetIds
+          securityGroupIds:
+            valueFrom:
+              parameterValue: securityGroupIds
+      - region: us-east-2
+  - alias: secondary
+    accountId:
+      valueFrom:
+        envVariable: SECONDARY_ACCOUNT
+    default: false
+    regionMappings:
+      - region: us-west-2
+      - region: us-east-2
+        default: true

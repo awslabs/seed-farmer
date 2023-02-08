@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import List, Optional, cast
+from typing import Any, List, Optional, cast
 
 from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -46,7 +46,9 @@ class StackInfo(object):
 info = StackInfo()
 
 
-def deploy_managed_policy_stack(deployment_manifest: DeploymentManifest, account_id: str, region: str) -> None:
+def deploy_managed_policy_stack(
+    deployment_manifest: DeploymentManifest, account_id: str, region: str, **kwargs: Any
+) -> None:
     """
     deploy_managed_policy_stack
         This function deploys the deployment-specific policy to allow CodeSeeder to deploy.
@@ -58,7 +60,7 @@ def deploy_managed_policy_stack(deployment_manifest: DeploymentManifest, account
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region wher
+        The region
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
@@ -338,7 +340,13 @@ def deploy_module_stack(
         )
 
 
-def deploy_seedkit(account_id: str, region: str) -> None:
+def deploy_seedkit(
+    account_id: str,
+    region: str,
+    vpc_id: Optional[str] = None,
+    private_subnet_ids: Optional[List[str]] = None,
+    security_group_ids: Optional[List[str]] = None,
+) -> None:
     """
     deploy_seedkit
         Accessor method to CodeSeeder to deploy the SeedKit if not deployed
@@ -346,9 +354,16 @@ def deploy_seedkit(account_id: str, region: str) -> None:
     Parameters
     ----------
     account_id: str
-        The Account Id where the module is deployed
+        The Account Id where the seedkit is deployed
     region: str
-        The region wher"""
+        The region where seedkit is deployed
+    vpc_id: Optional[str]
+        The VPC to associate seedkit with (codebuild)
+    private_subnet_ids: Optional[List[str]]
+        The Subnet IDs to associate seedkit with (codebuild)
+    security_group_ids: Optional[List[str]]
+        The Security Group IDs to associate seedkit with (codebuild)
+    """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
@@ -356,7 +371,14 @@ def deploy_seedkit(account_id: str, region: str) -> None:
         _logger.debug("Updating SeedKit for Account/Region: %s/%s", account_id, region)
     else:
         _logger.debug("Initializing SeedKit for Account/Region: %s/%s", account_id, region)
-    commands.deploy_seedkit(seedkit_name=config.PROJECT, deploy_codeartifact=deploy_codeartifact, session=session)
+    commands.deploy_seedkit(
+        seedkit_name=config.PROJECT,
+        deploy_codeartifact=deploy_codeartifact,
+        session=session,
+        vpc_id=vpc_id,
+        subnet_ids=private_subnet_ids,
+        security_group_ids=security_group_ids,
+    )
 
 
 def destroy_seedkit(account_id: str, region: str) -> None:

@@ -57,7 +57,7 @@ commonmark==0.9.1
     # via rich
 coverage[toml]==6.4.1
     # via pytest-cov
-cryptography==38.0.4
+cryptography==39.0.1
     # via secretstorage
 docutils==0.16
     # via
@@ -202,7 +202,7 @@ pyyaml==5.4.1
     #   sphinx-autoapi
 readme-renderer==35.0
     # via twine
-requests==2.28.0
+requests==2.28.2
     # via
     #   pyroma
     #   requests-toolbelt

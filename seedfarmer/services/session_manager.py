@@ -40,6 +40,7 @@ class ISessionManager(object):
         *,
         project_name: Optional[str] = None,
         region_name: Optional[str] = None,
+        toolchain_region: Optional[str] = None,
         profile: Optional[str] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -75,6 +76,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         project_name: Optional[str] = None,
         region_name: Optional[str] = None,
         profile: Optional[str] = None,
+        toolchain_region: Optional[str] = None,
         reaper_interval: Optional[int] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -85,6 +87,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.config["project_name"] = project_name
             self.config["region_name"] = region_name
             self.config["profile"] = profile
+            self.config["toolchain_region"] = toolchain_region
             self.config = {**self.config, **kwargs}
             self.toolchain_role_name = f"seedfarmer-{project_name}-toolchain-role"
 
@@ -148,6 +151,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     def _get_toolchain(self) -> Tuple[Session, Dict[Any, Any]]:
         region_name = self.config.get("region_name")
         profile_name = self.config.get("profile")
+        toolchain_region = self.config.get("toolchain_region")
         _logger.debug("Getting toolchain role")
         user_session = create_new_session(region_name=region_name, profile=profile_name)
         user_client = boto3_client(service_name="sts", session=user_session)
@@ -162,7 +166,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
             aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
             aws_session_token=toolchain_role["Credentials"]["SessionToken"],
-            region_name=region_name,
+            region_name=toolchain_region if toolchain_region else region_name,
         )
 
         return toolchain_session, toolchain_role

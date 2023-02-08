@@ -529,7 +529,9 @@ def list_build_env_params(
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
     session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
-    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+    dep_manifest = du.generate_deployed_manifest(
+        deployment_name=deployment, skip_deploy_spec=True, ignore_deployed=True
+    )
 
     if dep_manifest is None:
         print(f"No module data found for {deployment}-{group}-{module}")

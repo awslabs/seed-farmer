@@ -13,6 +13,22 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v2.5.0 (2023-02-08)
+
+### New
+- added VPC support of isolated subnets for `seedkit` - flow thru to codeseeder
+
+### Changes
+- updated manifest docs for isolated subnet support
+- implemented Global and Regional Parameter name/value pair lookups
+- updated manifest docs for Global and Regional Parameter support
+
+### Fixes
+- added module metadata to environment parameters on destroy of module
+- forced the `apply` of a deployment to respect the `toolchainRegion` parameter
+- allow fetch of build info of modules not successfully deployed
+
+
 ## v2.4.1 (2023-01-17)
 
 ### New

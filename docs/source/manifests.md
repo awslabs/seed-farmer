@@ -25,12 +25,33 @@ targetAccountMappings:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
     regionMappings:
-      - region: us-west-2
+      - region: us-east-2
         default: true
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
-      - region: us-east-2
+          vpcId: vpc-XXXXXXXXX
+          publicSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          privateSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          isolatedSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          securityGroupsId:
+            - sg-XXXXXXXXX
+        network: 
+          vpcId:
+            valueFrom:
+              parameterValue: vpcId
+          privateSubnetIds:
+            valueFrom:
+              parameterValue: privateSubnetIds
+          securityGroupIds:
+            valueFrom:
+              parameterValue: securityGroupIds
   - alias: secondary
     accountId: 123456789012
     regionMappings:
@@ -60,7 +81,16 @@ targetAccountMappings:
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
+        - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
       - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
+        - This is a NAMED PARAMETER...in that `permissionsBoundaryName` is recognized by `seed-farmer`
+      - Any other parameter in this list is NOT a NAMED PARAMETER (ex. `vpcId`,`privateSubnetIds`,`publicSubnetIds`, etc,) and is soley for the use of lookup in:
+        - module manifests
+        - the `network` object in the `regionMappings` (see examples above)
+    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isloated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREEE parameters are required!
+      - **vpcId** - the VPC ID the Codebuild Project should be associated to 
+      - **privateSubnetIds** - the private subnets the Codebuild Project should be associated to 
+      - **securityGroupIds** - the Security Groups the Codebuild Project should be associated to -- a limit of 5 is allowed
 
 
 (module_manifest)=
@@ -116,7 +146,8 @@ Parameters are defined in the [Module Manifests](module_manifest) as Key/Value p
 
 Modules should be parameterized to promote extensibility.  The CLI and [Module Manifests](module_manifest) support parameters of multiple types:
 - [User Defined](user_defined) - a simple key/value string
-- [Module Metadata](modulemetadata) from other deployed modules 
+- [Module Metadata](modulemetadata) from other deployed modules
+- [Global and Regional Parameters](globalregionalparameters)  
 - [Environment Variables](envVariable)
 - [AWS SSM Parameter](ssm_parameter)
 - [AWS Secrets Manager](secrets_manager)
@@ -183,6 +214,56 @@ In this example, the `opensearch` module is referencing a module metadata parame
 
 The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the vpc-id that is exported from the `networking` module.  They can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
 
+
+(globalregionalparameters)
+### Global and Regional Parameters
+Global and Regional Parameters are simple name/value pairs that can be defined and are applied to the account referenced in their affiliated sections.  The Global Parameters are available to all regions in the defiend account  The Regional Parameters are available in the region they are defined in.
+```yaml
+targetAccountMappings:
+  - alias: primary
+    accountId: 123456789012
+    default: true
+    parametersGlobal:
+      dockerCredentialsSecret: nameofsecret
+      permissionsBoundaryName: policyname
+      mygreatkey: mygreatvalue
+    regionMappings:
+      - region: us-east-2
+        default: true
+        parametersRegional:
+          dockerCredentialsSecret: nameofsecret
+          permissionsBoundaryName: policyname
+          vpcId: vpc-XXXXXXXXX
+          publicSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          privateSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          isolatedSubnetIds:
+            - subnet-XXXXXXXXX
+            - subnet-XXXXXXXXX
+          securityGroupsId:
+            - sg-XXXXXXXXX
+```
+In the above example, the Global and Regional Parameters are defined (ex. `mygreatkey` in Global and `privateSubnetIds` in Regional).  They can be referenced by a module in the module manifest using the `parameterValue` keyword:
+
+```yaml
+name: efs
+path: modules/core/efs/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      parameterValue: vpcId
+  - name: removal-policy
+    value: DESTROY
+  - name: testitout
+    valueFrom:
+      parameterValue: mygreatkey
+```
+`seed-farrmer` will first look in the Regional Parameters for a matching key, and return a string object (all json convert to a string) represening the value.  If not found, `seed-farrmer` will look in the Global Parameters for the same key and return that string-ified value.
+
+NOTE: the `network` section of the [deployment manifest](deployment_manifest) leverages Regional Parameters only!
 
 (ssm_parameter)=
 ### AWS SSM Parameter

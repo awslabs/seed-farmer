@@ -323,6 +323,7 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
 def generate_deployed_manifest(
     deployment_name: str,
     skip_deploy_spec: bool = False,
+    ignore_deployed: Optional[bool] = False,
 ) -> Optional[DeploymentManifest]:
     """
     Generate a DeploymentManifest object from based off deployed modules in a deployment
@@ -333,6 +334,9 @@ def generate_deployed_manifest(
         The name of the deployment the manifest is generated for
     skip_deploy_spec : bool, optional
         Skip populating each module deployspec - handy for getting the list of deployed modules quickly
+    ignore_deployed : Optional[bool]
+        When fetching the deployment manifest stored, ignore the successfully deployed modules,
+        forcing a fetch of the last requested deployment (to include modules that failed to deploy)
 
     Returns
     -------
@@ -341,7 +345,7 @@ def generate_deployed_manifest(
     """
     session_manager = SessionManager().get_or_create()
     dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
-    if dep_manifest_dict is None:
+    if dep_manifest_dict is None or ignore_deployed:
         # No successful deployments, just use what was last requested
         dep_manifest_dict = mi.get_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     deployed_manifest = None

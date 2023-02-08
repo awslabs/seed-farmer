@@ -106,10 +106,13 @@ def _execute_deploy(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
+
     parameters = load_parameter_values(
         deployment_name=cast(str, deployment_manifest.name),
         parameters=module_manifest.parameters,
         deployment_manifest=deployment_manifest,
+        target_account=module_manifest.target_account,
+        target_region=module_manifest.target_region,
     )
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
@@ -176,6 +179,15 @@ def _execute_destroy(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
+    target_account_id = cast(str, module_manifest.get_target_account_id())
+    target_region = cast(str, module_manifest.target_region)
+    session = (
+        SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
+    )
+    module_metadata = json.dumps(
+        get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
+    )
+
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
@@ -188,8 +200,10 @@ def _execute_destroy(
             deployment_name=cast(str, deployment_manifest.name),
             parameters=module_manifest.parameters,
             deployment_manifest=deployment_manifest,
+            target_account=module_manifest.target_account,
+            target_region=module_manifest.target_region,
         ),
-        module_metadata=None,
+        module_metadata=module_metadata,
     )
 
     if resp.status == StatusType.SUCCESS.value:
@@ -297,10 +311,18 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
             commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-        params = [
-            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
-            for target_account_region in deployment_manifest.target_accounts_regions
-        ]
+        params = []
+        for target_account_region in deployment_manifest.target_accounts_regions:
+
+            param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            if target_account_region["network"]:
+                network = target_account_region["network"]
+                param_d["vpc_id"] = network.vpc_id  # type: ignore
+                param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
+                param_d["security_group_ids"] = network.security_group_ids  # type: ignore
+
+            params.append(param_d)
+
         _ = list(workers.map(_prime_accounts, params))
 
 
@@ -572,6 +594,7 @@ def apply(
     session_manager = SessionManager().get_or_create(
         project_name=config.PROJECT,
         profile=profile,
+        toolchain_region=deployment_manifest.toolchain_region,
         region_name=region_name,
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,

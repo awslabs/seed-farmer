@@ -10,6 +10,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added VPC support of isolated subnets for `seedkit` - flow thru to codeseeder
 
 ### Changes
+- updated manifest docs for isolated subnet support
+- implemented Global and Regional Parameter name/value pair lookups
+- updated manifest docs for Global and Regional Parameter support
 
 ### Fixes
 - added module metadata to environment parameters on destroy of module

@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- Adding more descriptions in the README with links to read-the-docs
 
 
 ## v2.5.0 (2023-02-08)

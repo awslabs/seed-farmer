@@ -23,6 +23,7 @@ from seedfarmer.commands._stack_commands import (
     destroy_managed_policy_stack,
     destroy_module_stack,
     destroy_seedkit,
+    get_module_stack_info,
 )
 
 __all__ = [
@@ -36,6 +37,7 @@ __all__ = [
     "destroy_module_stack",
     "deploy_seedkit",
     "destroy_seedkit",
+    "get_module_stack_info",
     "generate_export_env_params",
     "generate_export_raw_env_params",
     "bootstrap_toolchain_account",

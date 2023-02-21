@@ -8,7 +8,7 @@ project_name = os.getenv("AWS_CODESEEDER_NAME")
 
 
 def _proj(name: str) -> str:
-    return f"{project_name.upper()}_{name}"
+    return f"{project_name.upper()}_{name}".replace("-","_")
 
 
 def _param(name: str) -> str:

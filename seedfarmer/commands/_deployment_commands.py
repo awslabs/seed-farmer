@@ -118,7 +118,7 @@ def _execute_deploy(
     target_account_id = cast(str, module_manifest.get_target_account_id())
     target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
-    commands.deploy_module_stack(
+    module_stack_name, module_role_name = commands.deploy_module_stack(
         get_modulestack_path(module_manifest.path),
         cast(str, deployment_manifest.name),
         group_name,
@@ -154,16 +154,14 @@ def _execute_deploy(
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
-        module_path=os.path.join(config.OPS_ROOT, module_manifest.path),
-        module_deploy_spec=module_manifest.deploy_spec,
-        module_manifest_name=module_manifest.name,
+        module_manifest=module_manifest,
         account_id=target_account_id,
         region=target_region,
         parameters=parameters,
         module_metadata=module_metadata,
-        module_bundle_md5=module_manifest.bundle_md5,
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
+        module_role_name=module_role_name,
     )
 
 
@@ -188,14 +186,21 @@ def _execute_destroy(
         get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
     )
 
+    module_stack_name, module_role_name = commands.get_module_stack_info(
+        deployment_name=cast(str, deployment_manifest.name),
+        group_name=group_name,
+        module_name=module_manifest.name,
+        account_id=target_account_id,
+        region=target_region,
+    )
+
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
         module_path=module_path,
-        module_deploy_spec=module_manifest.deploy_spec,
-        module_manifest_name=module_manifest.name,
-        account_id=cast(str, module_manifest.get_target_account_id()),
-        region=cast(str, module_manifest.target_region),
+        module_manifest=module_manifest,
+        account_id=target_account_id,
+        region=target_region,
         parameters=load_parameter_values(
             deployment_name=cast(str, deployment_manifest.name),
             parameters=module_manifest.parameters,
@@ -204,6 +209,7 @@ def _execute_destroy(
             target_region=module_manifest.target_region,
         ),
         module_metadata=module_metadata,
+        module_role_name=module_role_name,
     )
 
     if resp.status == StatusType.SUCCESS.value:

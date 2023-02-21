@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, Tuple, cast
 
 from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -200,7 +200,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
-) -> None:
+) -> Tuple[str, str]:
     """
     deploy_module_stack
         This function deploys the module stack (modulestack.yaml) to support the module
@@ -338,6 +338,47 @@ def deploy_module_stack(
         iam.attach_inline_policy(
             role_name=module_role_name, policy_body=policy_body, policy_name=docker_credentials_secret, session=session
         )
+
+    return module_stack_name, module_role_name
+
+
+def get_module_stack_info(
+    deployment_name: str,
+    group_name: str,
+    module_name: str,
+    account_id: str,
+    region: str,
+) -> Tuple[str, str]:
+    """
+    get_module_stack_info
+        This function returns the name of the role and the name of the stack associated with the
+        module deployment role
+
+    Parameters
+    ----------
+    deployment_name : str
+        Deployment Name
+    group_name : str
+        Group name
+    module_name : str
+        Module Name
+    account_id : str
+        The account id where deployed
+    region : str
+        The region where deployed
+
+    Returns
+    -------
+    Tuple[str, str]
+        A tuple with the  module_stack_name and  module_role_name
+        [ module_stack_name, module_role_name ]
+    """
+
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    module_stack_name, module_role_name = get_module_stack_names(
+        deployment_name, group_name, module_name, session=session
+    )
+    return module_stack_name, module_role_name
 
 
 def deploy_seedkit(

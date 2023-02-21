@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - Adding more descriptions in the README with links to read-the-docs
+- Fix codebuild role name reference
+- Fix support for project names with `-` characters
 
 
 ## v2.5.0 (2023-02-08)

@@ -46,6 +46,12 @@ def _load_project() -> str:
         raise click.ClickException("Failed to determine project identifier")
 
 
+def _error_messaging(deployment: str, group: str, module: str) -> None:
+    print(f"No module data found for {deployment}-{group}-{module}")
+    print_bolded("To see all deployments, run seedfarmer list deployments")
+    print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+
+
 @click.group(name="list", help="List the relative data (module or deployment)")
 def list() -> None:
     """List module data"""
@@ -217,10 +223,14 @@ def list_deployspec(
         return
 
     dep_manifest.validate_and_set_module_defaults()
-    session = session.get_deployment_session(
-        account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
-        region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
-    )
+    try:
+        session = session.get_deployment_session(
+            account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
+            region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
+        )
+    except Exception:
+        _error_messaging(deployment, group, module)
+        return
 
     val = mi.get_deployspec(deployment=deployment, group=group, module=module, session=session)
     print_json(val)
@@ -308,16 +318,18 @@ def list_module_metadata(
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
     if dep_manifest is None:
-        print(f"No module data found for {deployment}-{group}-{module}")
-        print_bolded("To see all deployments, run seedfarmer list deployments")
-        print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+        _error_messaging(deployment, group, module)
         return
 
     dep_manifest.validate_and_set_module_defaults()
-    session = session.get_deployment_session(
-        account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
-        region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
-    )
+    try:
+        session = session.get_deployment_session(
+            account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
+            region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
+        )
+    except Exception:
+        _error_messaging(deployment, group, module)
+        return
 
     metadata_json = mi.get_module_metadata(deployment, group, module, session=session)
     if not export_local_env:
@@ -329,9 +341,7 @@ def list_module_metadata(
                 sys.stdout.write(exp)
                 sys.stdout.write("\n")
         else:
-            print(f"No module data found for {deployment}-{group}-{module}")
-            print_bolded("To see all deployments, run seedfarmer list deployments")
-            print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+            _error_messaging(deployment, group, module)
 
 
 @list.command(name="modules", help="List the modules in a deployment")
@@ -534,16 +544,18 @@ def list_build_env_params(
     )
 
     if dep_manifest is None:
-        print(f"No module data found for {deployment}-{group}-{module}")
-        print_bolded("To see all deployments, run seedfarmer list deployments")
-        print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+        _error_messaging(deployment, group, module)
         return
 
     dep_manifest.validate_and_set_module_defaults()
-    session = session.get_deployment_session(
-        account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
-        region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
-    )
+    try:
+        session = session.get_deployment_session(
+            account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
+            region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
+        )
+    except Exception:
+        _error_messaging(deployment, group, module)
+        return
 
     metadata_json = bi.get_build_env_params(build_ids=[build_id], session=session)
     if not export_local_env:
@@ -555,6 +567,4 @@ def list_build_env_params(
                 sys.stdout.write(exp)
                 sys.stdout.write("\n")
         else:
-            print(f"No module data found for {deployment}-{group}-{module}")
-            print_bolded("To see all deployments, run seedfarmer list deployments")
-            print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+            _error_messaging(deployment, group, module)

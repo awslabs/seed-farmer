@@ -110,7 +110,7 @@ keyring==23.6.0
     # via twine
 lazy-object-proxy==1.7.1
     # via astroid
-markdown-it-py==2.1.0
+markdown-it-py==2.2.0
     # via
     #   mdit-py-plugins
     #   myst-parser

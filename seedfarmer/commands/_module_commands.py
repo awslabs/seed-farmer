@@ -81,6 +81,7 @@ def deploy_module(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     module_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     env_vars = _env_vars(
         deployment_name=deployment_name,
@@ -129,6 +130,9 @@ def deploy_module(
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=module_role_name,
+            codebuild_image=module_manifest.codebuild_image
+            if module_manifest.codebuild_image is not None
+            else codebuild_image,
         )
         _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
@@ -163,6 +167,7 @@ def destroy_module(
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
     module_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     env_vars = _env_vars(
         deployment_name=deployment_name,
@@ -201,6 +206,9 @@ def destroy_module(
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=module_role_name,
+            codebuild_image=module_manifest.codebuild_image
+            if module_manifest.codebuild_image is not None
+            else codebuild_image,
         )
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
@@ -236,6 +244,7 @@ def _execute_module_commands(
     extra_env_vars: Optional[Dict[str, Any]] = None,
     codebuild_compute_type: Optional[str] = None,
     codebuild_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session_getter: Optional[Callable[[], Session]] = None
 
@@ -256,6 +265,7 @@ def _execute_module_commands(
         extra_env_vars=extra_env_vars,
         extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
         codebuild_role=codebuild_role_name,
+        codebuild_image=codebuild_image,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
         codebuild_compute_type=codebuild_compute_type,
         extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},

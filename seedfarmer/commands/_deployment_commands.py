@@ -105,6 +105,7 @@ def _execute_deploy(
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
 
     parameters = load_parameter_values(
@@ -162,6 +163,7 @@ def _execute_deploy(
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
         module_role_name=module_role_name,
+        codebuild_image=codebuild_image,
     )
 
 
@@ -171,6 +173,7 @@ def _execute_destroy(
     module_path: str,
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
     if module_manifest.deploy_spec is None:
         raise ValueError(
@@ -210,6 +213,7 @@ def _execute_destroy(
         ),
         module_metadata=module_metadata,
         module_role_name=module_role_name,
+        codebuild_image=codebuild_image,
     )
 
     if resp.status == StatusType.SUCCESS.value:
@@ -275,6 +279,9 @@ def _deploy_deployment_is_not_dry_run(
                                     account_alias=_module.target_account,
                                     region=_module.target_region,
                                 ),
+                            ),
+                            "codebuild_image": deployment_manifest_wip.get_region_codebuild_image(
+                                account_alias=_module.target_account, region=_module.target_region
                             ),
                         }
                         for _module in _group.modules
@@ -409,6 +416,9 @@ def destroy_deployment(
                                 "dockerCredentialsSecret",
                                 account_alias=_module.target_account,
                                 region=_module.target_region,
+                            ),
+                            "codebuild_image": destroy_manifest.get_region_codebuild_image(
+                                account_alias=_module.target_account, region=_module.target_region
                             ),
                         }
                         for _module in _group.modules

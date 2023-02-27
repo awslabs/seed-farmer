@@ -133,6 +133,7 @@ class ModuleManifest(CamelModel):
     deploy_spec: Optional[DeploySpec] = None
     target_account: Optional[str] = None
     target_region: Optional[str] = None
+    codebuild_image: Optional[str] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
 
     def set_target_account_id(self, account_id: str) -> None:
@@ -181,6 +182,7 @@ class RegionMapping(CamelModel):
     default: bool = False
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping]
+    codebuild_image: Optional[str] = None
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -221,6 +223,7 @@ class TargetAccountMapping(CamelModel):
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
+    codebuild_image: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
 
@@ -366,6 +369,7 @@ class DeploymentManifest(CamelModel):
                             "account_id": target_account.actual_account_id,
                             "region": region.region,
                             "network": region.network,  # type: ignore
+                            "codebuild_image": cast(str, region.codebuild_image),
                         }
                     )
         return self._accounts_regions
@@ -403,6 +407,36 @@ class DeploymentManifest(CamelModel):
                 return target_account.parameters_global.get(parameter, default)
         else:
             return default
+
+    def get_region_codebuild_image(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the codebuild_image is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        return (
+                            region_mapping.codebuild_image
+                            if region_mapping.codebuild_image is not None
+                            else target_account.codebuild_image
+                        )
+        else:
+            return None
 
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:

@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
-
+- Adding support for customer codebuild image overrides.  This IS backward-compatible
 ### Changes
 
 ### Fixes

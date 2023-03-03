@@ -4,24 +4,14 @@ import aws_cdk
 from aws_cdk import App, CfnOutput
 from stack import BucketsStack
 
-project_name = os.getenv("AWS_CODESEEDER_NAME")
+project_name = os.getenv("SEEDFARMER_PROJECT_NAME", "")
+deployment_name = os.getenv("SEEDFARMER_DEPLOYMENT_NAME", "")
+module_name = os.getenv("SEEDFARMER_MODULE_NAME", "")
+hash = os.getenv("SEEDFARMER_HASH", "")
 
 
-def _proj(name: str) -> str:
-    return f"{project_name.upper()}_{name}".replace("-","_")
-
-
-def _param(name: str) -> str:
-    return f"{project_name.upper()}_PARAMETER_{name}"
-
-
-deployment_name = os.getenv(_proj("DEPLOYMENT_NAME"), "")
-module_name = os.getenv(_proj("MODULE_NAME"), "")
-hash = os.getenv(_proj("HASH"), "")
-
-
-buckets_encryption_type = os.getenv(_param("ENCRYPTION_TYPE"), "SSE")
-buckets_retention = os.getenv(_param("RETENTION_TYPE"), "DESTROY")
+buckets_encryption_type = os.getenv("SEEDFARMER_PARAMETER_ENCRYPTION_TYPE", "SSE")
+buckets_retention = os.getenv("SEEDFARMER_PARAMETER_RETENTION_TYPE", "DESTROY")
 
 
 app = App()

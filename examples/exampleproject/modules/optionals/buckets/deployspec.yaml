@@ -1,8 +1,9 @@
+publishGenericEnvVariables: true
 deploy:
   phases:
     install:
       commands:
-      # Install whatever additional build libraries 
+      # Install whatever additional build libraries
       - npm install -g aws-cdk@2.20.0
       - pip install -r requirements.txt
     build:
@@ -15,12 +16,10 @@ destroy:
   phases:
     install:
       commands:
-      # Install whatever additional build libraries 
+      # Install whatever additional build libraries
       - npm install -g aws-cdk@2.20.0
       - pip install -r requirements.txt
     build:
       commands:
       # execute the CDK
       - cdk destroy --force --app "python app.py"
-
-

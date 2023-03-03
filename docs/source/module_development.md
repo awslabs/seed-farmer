@@ -84,7 +84,7 @@ The currently supported values are:
 - BUILD_GENERAL1_2XLARGE
 ```
 
-TThe parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specif modules (ex ADDF).  This parameter defaults tp `false` implying the prefix of the project to the pertient environment parameters in the codeubuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
+TThe parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specif modules (ex ADDF).  This parameter defaults to `false` implying the prefix of the project to the pertient environment parameters in the codeubuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
 
 [This Pull Request goes into detail ...please read](https://github.com/awslabs/seed-farmer/pull/249).  Here is an exerpt:
 

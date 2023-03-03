@@ -1,3 +1,4 @@
+publishGenericEnvVariables: true
 deploy:
   phases:
     install:
@@ -22,5 +23,3 @@ destroy:
       commands:
       # execute the CDK
       - cdk destroy --force --app "python app.py"
-
-

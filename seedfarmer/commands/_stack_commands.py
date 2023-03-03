@@ -256,6 +256,7 @@ def deploy_module_stack(
         upper_snake_case_parameters = {
             **{p.upper_snake_case: p.value for p in parameters},
             **{
+                "PROJECT_NAME": config.PROJECT,
                 "DEPLOYMENT_NAME": deployment_name,
                 "MODULE_NAME": group_module_name,
                 "ROLE_NAME": module_role_name,

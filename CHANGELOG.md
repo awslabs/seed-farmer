@@ -8,7 +8,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 - Adding support for customer codebuild image overrides.  This IS backward-compatible
+- Enable use of generic SEEDFARMER prefixed Env Variables in CodeBuild
+- Example modules demonstrate use of SEEDFARMER generic Env Variables
+
 ### Changes
+- {ProjectName}_PROJECT_NAME and SEEDFARMER_PROJECT_NAME Env Variables added to CodeBuild
+- ProjectName Parameter passed to modulestack.yaml CFN Template
 
 ### Fixes
 - Adding more descriptions in the README with links to read-the-docs

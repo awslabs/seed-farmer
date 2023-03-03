@@ -64,9 +64,15 @@ destroy:
       commands:
       - echo "Destroy successful"
 build_type: BUILD_GENERAL1_LARGE
+publishGenericEnvVariables: true
 ```
 
 The deployspec is broken into 2 major areas of focus: `deploy `and `destroy`.  Each of these areas have 4 distinct phases in which commands can be executed (ex. installing supporting libraries, setting environment variables, etc.)  It is in these sections that AWS CodeSeeder makes calls to deploy/destroy on the modules' behalf.  The example below will highlight.
+
+### Deployspec Parameters of Interest
+There are two parameters at the root level of importance:
+- `build_type` 
+- `publishGenericEnvVariables`
 
 The parameter `build_type` allows module developers to choose the size of the compute instance AWS CodeSeeder will leverage as defined [HERE](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).  This parameter is defaulted to `BUILD_GENERAL1_SMALL`
 
@@ -78,9 +84,17 @@ The currently supported values are:
 - BUILD_GENERAL1_2XLARGE
 ```
 
+TThe parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specif modules (ex ADDF).  This parameter defaults tp `false` implying the prefix of the project to the pertient environment parameters in the codeubuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
+
+[This Pull Request goes into detail ...please read](https://github.com/awslabs/seed-farmer/pull/249).  Here is an exerpt:
+
+*When creating a module, builders can now specify the optional publishGenericEnvVariables attribute in the module deployspec.yaml. When set to true the Env Variables passed to CodeBuild for SeedFarmer metadata (ProjectName, DeploymentName, ModuleName, etc) are prefixed with SEEDFARMER_ rather than the UPPER ProjectName. From the included exampleproj project in examples: EXAMPLEPROJ_DEPLOYMENT_NAME would be SEEDFARMER_DEPLOYMENT_NAME. And for Module Parameters, EXAMPLEPROJ_PARAMETER_SOME_PARAMETER would be SEEDFARMER_PARAMETER_SOME_PARAMETER.*
+
+
+
 
 #### Example
-The following is an example deployspec that issues a series of commands.  This is only an example...
+The following is an example deployspec that issues a series of commands. This is a project-specific module with a project named `MYAPP`. This is only an example...
 
 ```yaml
 deploy:
@@ -106,7 +120,7 @@ deploy:
         - cd service/ && docker build -t $REPOSITORY_URI:latest .
         - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
         - docker push $REPOSITORY_URI:latest && docker push $REPOSITORY_URI:$IMAGE_TAG
-        - cd .. && cdk deploy --all --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
+        - cd.. && cdk deploy --all --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
         - export MYAPP_MODULE_METADATA=$(python -c "import json; file=open('cdk-exports.json'); print(json.load(file)['myapp-${MYAPP_DEPLOYMENT_NAME}-${MYAPP_MODULE_NAME}']['metadata'])")
 destroy:
   phases:
@@ -120,7 +134,50 @@ destroy:
 build_type: BUILD_GENERAL1_LARGE
 ```
 
-In the above example, a different CDKv2 version is being installed as an example, AWS CLI commands are issued, and the actual deployment script (AWS CDK) is executed with the output of the CDK being written to SSM as a JSON document so other modules can leverage it.
+The following is an example deployspec that issues a series of commands. This is a generic module. This is only an example...
+
+```yaml
+deploy:
+  phases:
+    install:
+      commands:
+        - npm install -g aws-cdk@2.20.0
+        - apt-get install jq
+        - pip install -r requirements.txt
+    build:
+      commands:
+        - aws iam create-service-linked-role --aws-service-name elasticmapreduce.amazonaws.com || true
+        - export ECR_REPO_NAME=$(echo $SEEDFARMER_PARAMETER_FARGATE | jq -r '."ecr-repository-name"')
+        - aws ecr describe-repositories --repository-names ${ECR_REPO_NAME} || aws ecr create-repository --repository-name ${ECR_REPO_NAME}
+        - export IMAGE_NAME=$(echo $SEEDFARMER_PARAMETER_FARGATE | jq -r '."image-name"')
+        - export COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+        - export IMAGE_TAG=${COMMIT_HASH:=latest}
+        - export REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPO_NAME
+        - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+        - >
+          echo "SEEDFARMER_PARAMETER_SHARED_BUCKET_NAME: ${SEEDFARMER_PARAMETER_SHARED_BUCKET_NAME}"
+        - echo Building the Docker image...          
+        - cd service/ && docker build -t $REPOSITORY_URI:latest .
+        - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+        - docker push $REPOSITORY_URI:latest && docker push $REPOSITORY_URI:$IMAGE_TAG
+        - cd.. && cdk deploy --all --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
+        - export SEEDFARMER_MODULE_METADATA=$(python -c "import json; file=open('cdk-exports.json'); print(json.load(file)['seedfarmer-${SEEDFARMER_DEPLOYMENT_NAME}-${SEEDFARMER_MODULE_NAME}']['metadata'])")
+destroy:
+  phases:
+    install:
+      commands:
+      - npm install -g aws-cdk@2.20.0
+      - pip install -r requirements.txt
+    build:
+      commands:
+      - cdk destroy --all --force --app "python app.py"
+build_type: BUILD_GENERAL1_LARGE
+publishGenericEnvVariables: true
+```
+
+
+
+In the above examples, a different CDKv2 version is being installed as an example, AWS CLI commands are issued, and the actual deployment script (AWS CDK) is executed with the output of the CDK being written to SSM as a JSON document so other modules can leverage it.
 
 (module_readme)=
 ## Module ReadMe

@@ -73,6 +73,7 @@ class DeploySpec(CamelModel):
     deploy: Optional[ExecutionType] = None
     destroy: Optional[ExecutionType] = None
     build_type: Optional[str] = None
+    publish_generic_env_variables: Optional[bool] = False
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

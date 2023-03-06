@@ -244,7 +244,16 @@ def deploy_module_stack(
         ],
     }
 
-    iam.create_check_iam_role(trust_policy, module_role_name, permissions_boundary_arn, session=session)
+    iam.create_check_iam_role(
+        project_name=config.PROJECT,
+        deployment_name=deployment_name,
+        group_name=group_name,
+        module_name=module_name,
+        trust_policy=trust_policy,
+        role_name=module_role_name,
+        permissions_boundary_arn=permissions_boundary_arn,
+        session=session,
+    )
 
     group_module_name = f"{group_name}-{module_name}"
 

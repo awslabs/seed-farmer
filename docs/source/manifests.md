@@ -21,12 +21,14 @@ targetAccountMappings:
       valueFrom:
         envVariable: PRIMARY_ACCOUNT
     default: true
+    codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
     regionMappings:
       - region: us-east-2
         default: true
+        codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
@@ -73,12 +75,14 @@ targetAccountMappings:
   - **alias** - the logical name for an account, referenced by [`module manifests`](module_manifest)
   - **account** - the account id tied to the alias.  This parameter also supports [Environment Variables](envVariable)
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
+  - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
   - **regionMappings** - section to define region-specific configurations for the defined account, this is a list
     - **region** - the region name
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
+    - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
@@ -109,6 +113,7 @@ name: buckets
 path: modules/optionals/buckets
 targetAccount: secondary
 targetRegion: us-west-2
+codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
 parameters:
   - name: encryption-type
     value: SSE
@@ -124,7 +129,8 @@ parameters:
   - the relative path to the module code in the project
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
-- **targetRegion** - the name of the region to deploy to - this overrides any mappings 
+- **targetRegion** - the name of the region to deploy to - this overrides any mappings
+- **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
 - **parameters** - the parameters section .... see [Parameters](parameters)
 
 Here is a sample manifest referencing a git repo:
@@ -136,6 +142,26 @@ parameters:
   - name: internet-accessible
     value: true
 ```
+
+(custombuildimage)=
+## Custom Codebuild Image
+`seed-farmer` is preconfigued to use the optimal build image and we recommend using it as-is (no need to leverage the `codebuildImage` manifest named paramter).  But, we get it....no one wants to be boxed in.</br>
+<b>USER BEWARE</b> - this is a feature meant for advanced users...use at own risk!
+
+### The Build Image
+An AWS Codebuild complaint image is provided for use with `seed-farmer` and the CLI is configured by default to use this image.  Advanced users have the option of building their own image and configuring their deployment to use it.  If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).
+
+### Logic for Rules -- Application
+There are three (3) places to configure a custom build image:
+- at the module level
+- at the account/region mapping level
+- at the account level
+
+`seed-farmer` is an module-centric deployment framework.  You CAN have a custom image configured at each of the levels defined above, and the following logic is applied:
+1. if the image is defined at the module level --- USE IT... ELSE
+2. if the image is defined at the account/region level --- USE IT... ELSE
+3. if the image is defined at the account level --- USE IT... ELSE
+4. use the default image 
 
 
 

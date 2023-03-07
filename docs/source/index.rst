@@ -15,6 +15,7 @@ It has a CommandLine Interface (CLI) based in Python.
    :caption: Contents:
    
    overview
+   quick_start
    architecture
    installation
    bootstrapping

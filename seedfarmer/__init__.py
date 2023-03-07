@@ -33,6 +33,7 @@ DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
 INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 
 
 def enable_debug(format: str) -> None:
@@ -79,6 +80,11 @@ class Config(object):
             config_data: Dict[str, Any] = yaml.safe_load(file)
             self._PROJECT = config_data["project"]
             self._DESCRIPTION = config_data["description"] if "description" in config_data else "NEW PROJECT"
+            self._PROJECT_POLICY_PATH = (
+                os.path.join(self._OPS_ROOT, config_data["projectPolicyPath"])
+                if "projectPolicyPath" in config_data and config_data["projectPolicyPath"] is not None
+                else os.path.join(CLI_ROOT, PROJECT_POLICY_PATH)
+            )
 
         @codeseeder.configure(cast(str, self._PROJECT).lower(), deploy_if_not_exists=True)
         def configure(configuration: CodeSeederConfig) -> None:
@@ -112,6 +118,12 @@ class Config(object):
         if self._OPS_ROOT is None:
             self._load_config_data()
         return str(self._OPS_ROOT)
+
+    @property
+    def PROJECT_POLICY_PATH(self) -> str:
+        if self._PROJECT_POLICY_PATH is None:
+            self._load_config_data()
+        return str(self._PROJECT_POLICY_PATH)
 
 
 config = Config()

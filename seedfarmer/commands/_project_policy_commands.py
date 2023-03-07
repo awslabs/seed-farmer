@@ -12,11 +12,17 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from seedfarmer.cli_groups._bootstrap_group import bootstrap
-from seedfarmer.cli_groups._init_group import init
-from seedfarmer.cli_groups._list_group import list
-from seedfarmer.cli_groups._project_group import projectpolicy
-from seedfarmer.cli_groups._remove_group import remove
-from seedfarmer.cli_groups._store_group import store
+import os
+import sys
 
-__all__ = ["bootstrap", "init", "list", "remove", "store", "projectpolicy"]
+import yaml
+
+from seedfarmer import CLI_ROOT, PROJECT_POLICY_PATH
+
+
+def get_project_policy() -> None:
+    with open((os.path.join(CLI_ROOT, PROJECT_POLICY_PATH)), "r") as f:
+        policy = yaml.load(f, Loader=yaml.BaseLoader)
+
+    # Need to use yaml.BaseLoader to accommodate the !Ref w/o a custom class
+    yaml.dump(policy, sys.stdout)

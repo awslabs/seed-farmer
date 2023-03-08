@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, List, Optional, Tuple
 
 from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -34,7 +34,6 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 class StackInfo(object):
     _PROJECT_MANAGED_POLICY_CFN_NAME: Optional[str] = None
-    PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 
     @property
     def PROJECT_MANAGED_POLICY_CFN_NAME(self) -> str:
@@ -68,19 +67,13 @@ def deploy_managed_policy_stack(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
     if not project_managed_policy_stack_exists:
-        project_managed_policy_template = cast(
-            str,
-            deployment_manifest.get_parameter_value(
-                "projectPolicy", account_id=account_id, region=region, default=info.PROJECT_POLICY_PATH
-            ),
-        )
-        project_managed_policy_template = os.path.join(config.OPS_ROOT, project_managed_policy_template)
+        project_managed_policy_template = config.PROJECT_POLICY_PATH
+        _logger.info("Resolved the ProjectPolicyPath %s", project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
             raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")
-        _logger.debug(
-            f"Validated the existence of Project Managed Policy Template at: {project_managed_policy_template}"
+        _logger.info(
+            "Deploying %s from the path %s", info.PROJECT_MANAGED_POLICY_CFN_NAME, project_managed_policy_template
         )
-        _logger.info("Deploying %s", info.PROJECT_MANAGED_POLICY_CFN_NAME)
         services.cfn.deploy_template(
             stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,

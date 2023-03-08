@@ -26,7 +26,15 @@ It is important to have the ```seedfarmer.yaml``` at the root of your project.  
 ```yaml
 project: <your project name>
 description: <your project description>
+projectPolicyPath: <relativepath/policyname.yaml>
 ```
+- **project** (REQUIRED) - this is the name of the project that all deployments will reference 
+- **description** (OPTIONAL) - this is the description of the project
+- **projectPolicyPath** (OPTIONAL) - this allows advanced users change the project policy that has the basic minimim permissions seedfarmer needs
+  - it consists of a path relative to the project root and MUST be a valid relative path
+  - to synth the existing project policy, run `seedfarmer projectpolicy synth` 
+
+
 
 (project_initalization)=
 ## Initialization

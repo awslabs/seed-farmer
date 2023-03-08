@@ -25,7 +25,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 @click.group(name="projectpolicy", help="Fetch info about the project policy")
 def projectpolicy() -> None:
-    """Bootstrap a Toolchain or Target account"""
+    """Get info about the Project Policy"""
     pass
 
 

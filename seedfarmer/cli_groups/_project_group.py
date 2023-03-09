@@ -18,7 +18,7 @@ import logging
 import click
 
 from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
-from seedfarmer.commands import get_project_policy
+from seedfarmer.commands import get_default_project_policy
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -40,4 +40,4 @@ def policy_synth(
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
-    get_project_policy()
+    get_default_project_policy()

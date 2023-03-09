@@ -12,13 +12,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import os
-import shutil
-import sys
+from typing import Optional
 
-from seedfarmer import CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH
+from seedfarmer.models._base import CamelModel
 
 
-def get_default_project_policy() -> None:
-    with open(os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH), "rb") as f:
-        shutil.copyfileobj(f, sys.stdout.buffer)
+class ProjectSpec(CamelModel):
+    """
+    ProjectSpec
+    This represents the project configuration specification. This class is
+    typically populated from the project's top-level seedfarmer.yaml file.
+    """
+
+    project: str
+    description: Optional[str] = None
+    project_policy_path: Optional[str] = None

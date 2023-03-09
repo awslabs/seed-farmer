@@ -35,8 +35,9 @@ from seedfarmer.mgmt.module_info import (
     remove_deployment_manifest,
     write_deployment_manifest,
 )
+from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,

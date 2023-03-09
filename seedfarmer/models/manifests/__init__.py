@@ -12,13 +12,23 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import os
-import shutil
-import sys
+from seedfarmer.models.manifests._deployment_manifest import (
+    DeploymentManifest,
+    ModulesManifest,
+    NameGenerator,
+    NetworkMapping,
+    RegionMapping,
+    TargetAccountMapping,
+)
+from seedfarmer.models.manifests._module_manifest import ModuleManifest, ModuleParameter
 
-from seedfarmer import CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH
-
-
-def get_default_project_policy() -> None:
-    with open(os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH), "rb") as f:
-        shutil.copyfileobj(f, sys.stdout.buffer)
+__all__ = [
+    "DeploymentManifest",
+    "ModulesManifest",
+    "NameGenerator",
+    "NetworkMapping",
+    "RegionMapping",
+    "TargetAccountMapping",
+    "ModuleManifest",
+    "ModuleParameter",
+]

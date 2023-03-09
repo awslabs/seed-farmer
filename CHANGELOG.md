@@ -24,7 +24,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Fix support for project names with `-` characters
 - Error handling around `list` commands when a module is not found
 - Force seedfarmer to ingore project policies in module projects unless configred to use it
-
+- Safe_load all yaml files (ref: V741010817)
 
 ## v2.5.0 (2023-02-08)
 

@@ -13,16 +13,12 @@
 #    limitations under the License.
 
 import os
+import shutil
 import sys
-
-import yaml
 
 from seedfarmer import CLI_ROOT, PROJECT_POLICY_PATH
 
 
 def get_project_policy() -> None:
-    with open((os.path.join(CLI_ROOT, PROJECT_POLICY_PATH)), "r") as f:
-        policy = yaml.load(f, Loader=yaml.BaseLoader)
-
-    # Need to use yaml.BaseLoader to accommodate the !Ref w/o a custom class
-    yaml.dump(policy, sys.stdout)
+    with open(os.path.join(CLI_ROOT, PROJECT_POLICY_PATH), "rb") as f:
+        shutil.copyfileobj(f, sys.stdout.buffer)

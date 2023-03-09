@@ -22,7 +22,7 @@ from boto3 import Session
 
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
-from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug, utils
+from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 
@@ -234,7 +234,7 @@ def store_module_metadata(
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
-    d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
+    d = yaml.safe_load(sys.stdin.read())
     if d:
         mi.write_metadata(deployment=deployment, group=group, module=module, data=d, session=session)
     else:

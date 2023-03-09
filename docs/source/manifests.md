@@ -241,7 +241,7 @@ In this example, the `opensearch` module is referencing a module metadata parame
 The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the vpc-id that is exported from the `networking` module.  They can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
 
 
-(globalregionalparameters)
+(globalregionalparameters)=
 ### Global and Regional Parameters
 Global and Regional Parameters are simple name/value pairs that can be defined and are applied to the account referenced in their affiliated sections.  The Global Parameters are available to all regions in the defiend account  The Regional Parameters are available in the region they are defined in.
 ```yaml

@@ -12,19 +12,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from seedfarmer.models._base import CamelModel, ModuleRef, ValueFromRef, ValueRef
-from seedfarmer.models._deploy_spec import BuildPhase, BuildPhases, BuildType, DeploySpec, ExecutionType
-from seedfarmer.models._project_spec import ProjectSpec
+from typing import Optional
 
-__all__ = [
-    "CamelModel",
-    "ModuleRef",
-    "ValueFromRef",
-    "ValueRef",
-    "BuildPhase",
-    "BuildPhases",
-    "BuildType",
-    "DeploySpec",
-    "ExecutionType",
-    "ProjectSpec",
-]
+from seedfarmer.models._base import CamelModel
+
+
+class ProjectSpec(CamelModel):
+    """
+    ProjectSpec
+    This represents the project configuration specification. This class is
+    typically populated from the project's top-level seedfarmer.yaml file.
+    """
+
+    project: str
+    description: Optional[str] = None
+    project_policy_path: Optional[str] = None

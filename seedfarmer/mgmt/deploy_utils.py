@@ -21,7 +21,8 @@ import yaml
 from boto3 import Session
 
 import seedfarmer.mgmt.module_info as mi
-from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.models import DeploySpec
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 

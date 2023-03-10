@@ -12,19 +12,23 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from seedfarmer.models._base import CamelModel, ModuleRef, ValueFromRef, ValueRef
-from seedfarmer.models._deploy_spec import BuildPhase, BuildPhases, BuildType, DeploySpec, ExecutionType
-from seedfarmer.models._project_spec import ProjectSpec
+from seedfarmer.models.manifests._deployment_manifest import (
+    DeploymentManifest,
+    ModulesManifest,
+    NameGenerator,
+    NetworkMapping,
+    RegionMapping,
+    TargetAccountMapping,
+)
+from seedfarmer.models.manifests._module_manifest import ModuleManifest, ModuleParameter
 
 __all__ = [
-    "CamelModel",
-    "ModuleRef",
-    "ValueFromRef",
-    "ValueRef",
-    "BuildPhase",
-    "BuildPhases",
-    "BuildType",
-    "DeploySpec",
-    "ExecutionType",
-    "ProjectSpec",
+    "DeploymentManifest",
+    "ModulesManifest",
+    "NameGenerator",
+    "NetworkMapping",
+    "RegionMapping",
+    "TargetAccountMapping",
+    "ModuleManifest",
+    "ModuleParameter",
 ]

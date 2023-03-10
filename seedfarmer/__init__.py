@@ -24,6 +24,7 @@ from aws_codeseeder import LOGGER, codeseeder
 from aws_codeseeder.codeseeder import CodeSeederConfig
 
 from seedfarmer.__metadata__ import __description__, __license__, __title__
+from seedfarmer.models import ProjectSpec
 
 _logger: logging.Logger = logging.getLogger(__name__)
 __all__ = ["__description__", "__license__", "__title__"]
@@ -33,7 +34,7 @@ DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
 INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
-PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
+DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 
 
 def enable_debug(format: str) -> None:
@@ -60,8 +61,8 @@ enable_info(INFO_LOGGING_FORMAT)
 class Config(object):
     CONFIG_FILE = "seedfarmer.yaml"
     _OPS_ROOT: Optional[str] = None
-    _PROJECT: Optional[str] = None
-    _DESCRIPTION: Optional[str] = None
+
+    _project_spec: Optional[ProjectSpec] = None
 
     def _load_config_data(self) -> None:
         count = 0
@@ -76,17 +77,20 @@ class Config(object):
                 self._OPS_ROOT = pathlib.Path(self._OPS_ROOT).parent  # type: ignore
                 count += 1
 
-        with open(os.path.join(self.OPS_ROOT, self.CONFIG_FILE), "r") as file:
+        with open(os.path.join(self._OPS_ROOT, self.CONFIG_FILE), "r") as file:
             config_data: Dict[str, Any] = yaml.safe_load(file)
-            self._PROJECT = config_data["project"]
-            self._DESCRIPTION = config_data["description"] if "description" in config_data else "NEW PROJECT"
-            self._PROJECT_POLICY_PATH = (
-                os.path.join(self._OPS_ROOT, config_data["projectPolicyPath"])
-                if "projectPolicyPath" in config_data and config_data["projectPolicyPath"] is not None
-                else os.path.join(CLI_ROOT, PROJECT_POLICY_PATH)
+            self._project_spec = ProjectSpec(**config_data)
+
+            self._project_spec.description = (
+                "NEW PROJECT" if self._project_spec.description is None else self._project_spec.description
+            )
+            self._project_spec.project_policy_path = (
+                os.path.join(self._OPS_ROOT, self._project_spec.project_policy_path)
+                if self._project_spec.project_policy_path
+                else os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH)
             )
 
-        @codeseeder.configure(cast(str, self._PROJECT).lower(), deploy_if_not_exists=True)
+        @codeseeder.configure(self._project_spec.project.lower(), deploy_if_not_exists=True)
         def configure(configuration: CodeSeederConfig) -> None:
             LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {self.OPS_ROOT}")
             configuration.timeout = 120
@@ -103,27 +107,27 @@ class Config(object):
 
     @property
     def PROJECT(self) -> str:
-        if self._PROJECT is None:
+        if self._project_spec is None:
             self._load_config_data()
-        return str(self._PROJECT)
+        return str(cast(ProjectSpec, self._project_spec).project)
 
     @property
     def DESCRIPTION(self) -> str:
-        if self._DESCRIPTION is None:
+        if self._project_spec is None:
             self._load_config_data()
-        return str(self._DESCRIPTION)
+        return str(cast(ProjectSpec, self._project_spec).description)
 
     @property
     def OPS_ROOT(self) -> str:
-        if self._OPS_ROOT is None:
+        if self._project_spec is None:
             self._load_config_data()
         return str(self._OPS_ROOT)
 
     @property
     def PROJECT_POLICY_PATH(self) -> str:
-        if self._PROJECT_POLICY_PATH is None:
+        if self._project_spec is None:
             self._load_config_data()
-        return str(self._PROJECT_POLICY_PATH)
+        return str(cast(ProjectSpec, self._project_spec).project_policy_path)
 
 
 config = Config()

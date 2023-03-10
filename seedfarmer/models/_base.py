@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from typing import cast
+from typing import Optional, cast
 
 import humps
 from pydantic import BaseModel
@@ -27,3 +27,21 @@ class CamelModel(BaseModel):
         alias_generator = to_camel
         allow_population_by_field_name = True
         underscore_attrs_are_private = True
+
+
+class ModuleRef(CamelModel):
+    name: str
+    group: str
+    key: Optional[str] = None
+
+
+class ValueRef(CamelModel):
+    module_metadata: Optional[ModuleRef] = None
+    env_variable: Optional[str] = None
+    parameter_store: Optional[str] = None
+    secrets_manager: Optional[str] = None
+    parameter_value: Optional[str] = None
+
+
+class ValueFromRef(CamelModel):
+    value_from: Optional[ValueRef] = None

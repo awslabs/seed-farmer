@@ -26,15 +26,16 @@ from boto3 import Session
 
 from seedfarmer import config
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DeploySpec, ModuleParameter
+from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import generate_session_hash
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _param(key: str) -> str:
-    return f"{config.PROJECT.upper()}_{key}"
+def _param(key: str, use_project_prefix: Optional[bool] = True) -> str:
+    p = config.PROJECT.upper().replace("-", "_") if use_project_prefix else "SEEDFARMER"
+    return f"{p}_{key}"
 
 
 def _env_vars(
@@ -46,10 +47,11 @@ def _env_vars(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     session: Optional[Session] = None,
+    use_project_prefix: Optional[bool] = True,
 ) -> Dict[str, str]:
     env_vars = (
         {
-            f"{_param('PARAMETER')}_{p.upper_snake_case}": p.value
+            f"{_param('PARAMETER', use_project_prefix)}_{p.upper_snake_case}": p.value
             if isinstance(p.value, str) or isinstance(p.value, EnvVar)
             else json.dumps(p.value)
             for p in parameters
@@ -57,84 +59,95 @@ def _env_vars(
         if parameters
         else {}
     )
+    _logger.debug(f"use_project_prefix: {use_project_prefix}")
     _logger.debug(f"env_vars: {env_vars}")
-    env_vars[_param("DEPLOYMENT_NAME")] = deployment_name
-    env_vars[_param("MODULE_METADATA")] = module_metadata if module_metadata is not None else ""
-    env_vars[_param("MODULE_NAME")] = f"{group_name}-{module_manifest_name}"
-    env_vars[_param("HASH")] = generate_session_hash(session=session)
+    env_vars[_param("PROJECT_NAME", use_project_prefix)] = config.PROJECT
+    env_vars[_param("DEPLOYMENT_NAME", use_project_prefix)] = deployment_name
+    env_vars[_param("MODULE_METADATA", use_project_prefix)] = module_metadata if module_metadata is not None else ""
+    env_vars[_param("MODULE_NAME", use_project_prefix)] = f"{group_name}-{module_manifest_name}"
+    env_vars[_param("HASH", use_project_prefix)] = generate_session_hash(session=session)
     if docker_credentials_secret:
         env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
     if permissions_boundary_arn:
-        env_vars[_param("PERMISSIONS_BOUNDARY_ARN")] = permissions_boundary_arn
+        env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
     return env_vars
 
 
 def deploy_module(
     deployment_name: str,
     group_name: str,
-    module_path: str,
-    module_deploy_spec: DeploySpec,
-    module_manifest_name: str,
+    module_manifest: ModuleManifest,
     account_id: str,
     region: str,
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
-    module_bundle_md5: Optional[str] = None,
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    module_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
+    if module_manifest.deploy_spec is None or module_manifest.deploy_spec.deploy is None:
+        raise ValueError("Missing `deploy` in module's deployspec.yaml")
+
+    use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
         deployment_name=deployment_name,
         group_name=group_name,
-        module_manifest_name=module_manifest_name,
+        module_manifest_name=module_manifest.name,
         parameters=parameters,
         module_metadata=module_metadata,
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
         session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
+        use_project_prefix=use_project_prefix,
     )
-    env_vars[_param("MODULE_MD5")] = module_bundle_md5 if module_bundle_md5 is not None else ""
+    env_vars[_param("MODULE_MD5", use_project_prefix)] = (
+        module_manifest.bundle_md5 if module_manifest.bundle_md5 is not None else ""
+    )
 
     md5_put = [
         (
-            f"echo {module_bundle_md5} | seedfarmer store md5 -d {deployment_name} "
-            f"-g {group_name} -m {module_manifest_name} -t bundle --debug ;"
+            f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {deployment_name} "
+            f"-g {group_name} -m {module_manifest.name} -t bundle --debug ;"
         )
     ]
-    pmd = _param("MODULE_METADATA")
+    metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
     metadata_put = [
-        f"if [[ -f {pmd} ]]; then export {pmd}=$(cat {pmd}); fi",
+        f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
         (
-            f"echo ${pmd} | seedfarmer store moduledata "
-            f"-d {deployment_name} -g {group_name} -m {module_manifest_name}"
+            f"echo ${metadata_env_variable} | seedfarmer store moduledata "
+            f"-d {deployment_name} -g {group_name} -m {module_manifest.name}"
         ),
     ]
 
-    if module_deploy_spec.deploy is None:
-        raise ValueError("Missing `deploy` in module's deployspec.yaml")
-
-    _phases = module_deploy_spec.deploy.phases
+    module_path = os.path.join(config.OPS_ROOT, module_manifest.path)
+    _phases = module_manifest.deploy_spec.deploy.phases
     try:
         resp_dict_str, dict_metadata = _execute_module_commands(
             deployment_name=deployment_name,
             group_name=group_name,
-            module_manifest_name=module_manifest_name,
+            module_manifest_name=module_manifest.name,
             account_id=account_id,
             region=region,
+            metadata_env_variable=metadata_env_variable,
             extra_dirs={"module": module_path},
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
             extra_build_commands=["cd module/"] + _phases.build.commands,
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + md5_put + metadata_put,
             extra_env_vars=env_vars,
-            codebuild_compute_type=module_deploy_spec.build_type,
+            codebuild_compute_type=module_manifest.deploy_spec.build_type,
+            codebuild_role_name=module_role_name,
+            codebuild_image=module_manifest.codebuild_image
+            if module_manifest.codebuild_image is not None
+            else codebuild_image,
         )
         _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
             group=group_name,
-            module=module_manifest_name,
+            module=module_manifest.name,
             status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
             codeseeder_output=dict_metadata,
@@ -145,7 +158,7 @@ def deploy_module(
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
             group=group_name,
-            module=module_manifest_name,
+            module=module_manifest.name,
             status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
         )
@@ -156,56 +169,63 @@ def destroy_module(
     deployment_name: str,
     group_name: str,
     module_path: str,
-    module_deploy_spec: DeploySpec,
-    module_manifest_name: str,
+    module_manifest: ModuleManifest,
     account_id: str,
     region: str,
     parameters: Optional[List[ModuleParameter]] = None,
     module_metadata: Optional[str] = None,
+    module_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
+    if module_manifest.deploy_spec is None or module_manifest.deploy_spec.destroy is None:
+        raise ValueError(f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml")
+
+    use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
         deployment_name=deployment_name,
         group_name=group_name,
-        module_manifest_name=module_manifest_name,
+        module_manifest_name=module_manifest.name,
         parameters=parameters,
         module_metadata=module_metadata,
         session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
+        use_project_prefix=use_project_prefix,
     )
 
-    remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest_name}"]
+    remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"]
 
     export_info = [
         f"export DEPLOYMENT={deployment_name}",
         f"export GROUP={group_name}",
-        f"export MODULE={module_manifest_name}",
+        f"export MODULE={module_manifest.name}",
     ]
 
-    if module_deploy_spec.destroy is None:
-        raise ValueError(
-            f"Missing `destroy` in module: {module_manifest_name} with {module_deploy_spec.destroy} deployspec.yaml"
-        )
-
-    _phases = module_deploy_spec.destroy.phases
+    _phases = module_manifest.deploy_spec.destroy.phases
+    metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
 
     try:
         resp_dict_str, _ = _execute_module_commands(
             deployment_name=deployment_name,
             group_name=group_name,
-            module_manifest_name=module_manifest_name,
+            module_manifest_name=module_manifest.name,
             account_id=account_id,
             region=region,
+            metadata_env_variable=metadata_env_variable,
             extra_dirs={"module": module_path},
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
             extra_build_commands=["cd module/"] + _phases.build.commands,
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
             extra_env_vars=env_vars,
-            codebuild_compute_type=module_deploy_spec.build_type,
+            codebuild_compute_type=module_manifest.deploy_spec.build_type,
+            codebuild_role_name=module_role_name,
+            codebuild_image=module_manifest.codebuild_image
+            if module_manifest.codebuild_image is not None
+            else codebuild_image,
         )
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
             group=group_name,
-            module=module_manifest_name,
+            module=module_manifest.name,
             status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
         )
@@ -215,7 +235,7 @@ def destroy_module(
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
             group=group_name,
-            module=module_manifest_name,
+            module=module_manifest.name,
             status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
         )
@@ -228,6 +248,7 @@ def _execute_module_commands(
     module_manifest_name: str,
     account_id: str,
     region: str,
+    metadata_env_variable: str,
     extra_dirs: Optional[Dict[str, Any]] = None,
     extra_install_commands: Optional[List[str]] = None,
     extra_pre_build_commands: Optional[List[str]] = None,
@@ -235,8 +256,9 @@ def _execute_module_commands(
     extra_post_build_commands: Optional[List[str]] = None,
     extra_env_vars: Optional[Dict[str, Any]] = None,
     codebuild_compute_type: Optional[str] = None,
+    codebuild_role_name: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
-    session: Optional[Session] = None
     session_getter: Optional[Callable[[], Session]] = None
 
     if not codeseeder.EXECUTING_REMOTELY:
@@ -245,7 +267,6 @@ def _execute_module_commands(
             return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
 
         session_getter = _session_getter
-        session = session_getter()
 
     @codeseeder.remote_function(
         config.PROJECT.lower(),
@@ -255,11 +276,9 @@ def _execute_module_commands(
         extra_build_commands=extra_build_commands,
         extra_post_build_commands=extra_post_build_commands,
         extra_env_vars=extra_env_vars,
-        extra_exported_env_vars=[f"{_param('MODULE_METADATA')}"],
-        codebuild_role=(
-            f"{config.PROJECT.lower()}-{deployment_name}-{group_name}"
-            f"-{module_manifest_name}-{generate_session_hash(session=session)}"
-        ),
+        extra_exported_env_vars=[metadata_env_variable],
+        codebuild_role=codebuild_role_name,
+        codebuild_image=codebuild_image,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
         codebuild_compute_type=codebuild_compute_type,
         extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},
@@ -271,6 +290,7 @@ def _execute_module_commands(
         module_manifest_name: str,
         account_id: str,
         region: str,
+        metadata_env_variable: str,
         extra_dirs: Optional[Dict[str, Any]] = None,
         extra_install_commands: Optional[List[str]] = None,
         extra_pre_build_commands: Optional[List[str]] = None,
@@ -299,6 +319,7 @@ def _execute_module_commands(
                     module_manifest_name=module_manifest_name,
                     account_id=account_id,
                     region=region,
+                    metadata_env_variable=metadata_env_variable,
                 ),
             )
         except botocore.exceptions.ClientError as ex:

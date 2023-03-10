@@ -4,22 +4,12 @@ import aws_cdk
 from aws_cdk import App, CfnOutput
 from stack import NetworkingStack
 
-project_name = os.getenv("AWS_CODESEEDER_NAME")
+project_name = os.getenv("SEEDFARMER_PROJECT_NAME", "")
+deployment_name = os.getenv("SEEDFARMER_DEPLOYMENT_NAME", "")
+module_name = os.getenv("SEEDFARMER_MODULE_NAME", "")
+hash = os.getenv("SEEDFARMER_HASH", "")
 
-
-def _proj(name: str) -> str:
-    return f"{project_name.upper()}_{name}"
-
-
-def _param(name: str) -> str:
-    return f"{project_name.upper()}_PARAMETER_{name}"
-
-
-# get the env parameters with proper prefixes
-deployment_name = os.getenv(_proj("DEPLOYMENT_NAME"), "")
-module_name = os.getenv(_proj("MODULE_NAME"), "")
-hash = os.getenv(_proj("HASH"), "")
-internet_accessible = os.getenv(_param("INTERNET_ACCESSIBLE"), True)
+internet_accessible = os.getenv("SEEDFARMER_PARAMETER_INTERNET_ACCESSIBLE", "true").lower() == "true"
 
 app = App()
 

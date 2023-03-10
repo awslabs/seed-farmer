@@ -1,0 +1,17 @@
+name: networking
+path: modules/optionals/networking/
+targetAccount: primary
+parameters:
+  - name: internet-accessible
+    value: true
+---
+name: buckets
+path: modules/optionals/buckets
+targetAccount: secondary
+targetRegion: us-west-2
+parameters:
+  - name: encryption-type
+    value: SSE
+  - name: vpc-id
+    valueFrom:
+      parameterValue: vpcId

@@ -16,6 +16,7 @@ from seedfarmer.commands._bootstrap_commands import bootstrap_target_account, bo
 from seedfarmer.commands._deployment_commands import apply, destroy
 from seedfarmer.commands._module_commands import deploy_module, destroy_module
 from seedfarmer.commands._parameter_commands import generate_export_env_params, generate_export_raw_env_params
+from seedfarmer.commands._project_policy_commands import get_default_project_policy
 from seedfarmer.commands._stack_commands import (
     deploy_managed_policy_stack,
     deploy_module_stack,
@@ -23,6 +24,7 @@ from seedfarmer.commands._stack_commands import (
     destroy_managed_policy_stack,
     destroy_module_stack,
     destroy_seedkit,
+    get_module_stack_info,
 )
 
 __all__ = [
@@ -36,8 +38,10 @@ __all__ = [
     "destroy_module_stack",
     "deploy_seedkit",
     "destroy_seedkit",
+    "get_module_stack_info",
     "generate_export_env_params",
     "generate_export_raw_env_params",
     "bootstrap_toolchain_account",
     "bootstrap_target_account",
+    "get_default_project_policy",
 ]

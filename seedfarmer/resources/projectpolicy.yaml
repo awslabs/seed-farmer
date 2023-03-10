@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "This stack deploys Project deployment policy"
+Description: "This stack deploys the Policy for seed-farmer projects"
 Parameters:
   ProjectName:
     Type: String
@@ -44,7 +44,7 @@ Resources:
               - ssm:DeleteParameter
               - ssm:DeleteParameters
             Resource:
-              -  !Sub "arn:aws:ssm::${AWS::AccountId}:parameter/${ProjectName}*"
+              -  !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}*"
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -54,12 +54,12 @@ Resources:
               - logs:GetLogGroupFields
               - logs:GetQueryResults
             Resource:
-              - !Sub "arn:aws:logs::${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
+              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
           - Effect: Allow
             Action:
               - ssm:GetParameter
             Resource:
-              -  !Sub "arn:aws:ssm::${AWS::AccountId}:parameter/cdk-bootstrap*"
+              -  !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap*"
           - Effect: Allow
             Action:
               - iam:UpdateAssumeRolePolicy

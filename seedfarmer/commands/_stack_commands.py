@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, Tuple
 
 from aws_codeseeder import EnvVar, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -34,7 +34,6 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 class StackInfo(object):
     _PROJECT_MANAGED_POLICY_CFN_NAME: Optional[str] = None
-    PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 
     @property
     def PROJECT_MANAGED_POLICY_CFN_NAME(self) -> str:
@@ -68,19 +67,13 @@ def deploy_managed_policy_stack(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
     if not project_managed_policy_stack_exists:
-        project_managed_policy_template = cast(
-            str,
-            deployment_manifest.get_parameter_value(
-                "projectPolicy", account_id=account_id, region=region, default=info.PROJECT_POLICY_PATH
-            ),
-        )
-        project_managed_policy_template = os.path.join(config.OPS_ROOT, project_managed_policy_template)
+        project_managed_policy_template = config.PROJECT_POLICY_PATH
+        _logger.info("Resolved the ProjectPolicyPath %s", project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
             raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")
-        _logger.debug(
-            f"Validated the existence of Project Managed Policy Template at: {project_managed_policy_template}"
+        _logger.info(
+            "Deploying %s from the path %s", info.PROJECT_MANAGED_POLICY_CFN_NAME, project_managed_policy_template
         )
-        _logger.info("Deploying %s", info.PROJECT_MANAGED_POLICY_CFN_NAME)
         services.cfn.deploy_template(
             stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,
@@ -200,7 +193,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
-) -> None:
+) -> Tuple[str, str]:
     """
     deploy_module_stack
         This function deploys the module stack (modulestack.yaml) to support the module
@@ -244,7 +237,16 @@ def deploy_module_stack(
         ],
     }
 
-    iam.create_check_iam_role(trust_policy, module_role_name, permissions_boundary_arn, session=session)
+    iam.create_check_iam_role(
+        project_name=config.PROJECT,
+        deployment_name=deployment_name,
+        group_name=group_name,
+        module_name=module_name,
+        trust_policy=trust_policy,
+        role_name=module_role_name,
+        permissions_boundary_arn=permissions_boundary_arn,
+        session=session,
+    )
 
     group_module_name = f"{group_name}-{module_name}"
 
@@ -256,6 +258,7 @@ def deploy_module_stack(
         upper_snake_case_parameters = {
             **{p.upper_snake_case: p.value for p in parameters},
             **{
+                "PROJECT_NAME": config.PROJECT,
                 "DEPLOYMENT_NAME": deployment_name,
                 "MODULE_NAME": group_module_name,
                 "ROLE_NAME": module_role_name,
@@ -338,6 +341,47 @@ def deploy_module_stack(
         iam.attach_inline_policy(
             role_name=module_role_name, policy_body=policy_body, policy_name=docker_credentials_secret, session=session
         )
+
+    return module_stack_name, module_role_name
+
+
+def get_module_stack_info(
+    deployment_name: str,
+    group_name: str,
+    module_name: str,
+    account_id: str,
+    region: str,
+) -> Tuple[str, str]:
+    """
+    get_module_stack_info
+        This function returns the name of the role and the name of the stack associated with the
+        module deployment role
+
+    Parameters
+    ----------
+    deployment_name : str
+        Deployment Name
+    group_name : str
+        Group name
+    module_name : str
+        Module Name
+    account_id : str
+        The account id where deployed
+    region : str
+        The region where deployed
+
+    Returns
+    -------
+    Tuple[str, str]
+        A tuple with the  module_stack_name and  module_role_name
+        [ module_stack_name, module_role_name ]
+    """
+
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    module_stack_name, module_role_name = get_module_stack_names(
+        deployment_name, group_name, module_name, session=session
+    )
+    return module_stack_name, module_role_name
 
 
 def deploy_seedkit(

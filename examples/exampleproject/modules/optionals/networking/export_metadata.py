@@ -1,8 +1,12 @@
 import json
 import os
 
-p = os.getenv("AWS_CODESEEDER_NAME")
-d = os.getenv(f"{p.upper()}_DEPLOYMENT_NAME")
-m = os.getenv(f"{p.upper()}_MODULE_NAME")
-file = open("cdk-exports.json")
-print(json.load(file)[f"{p}-{d}-{m}"]["metadata"])
+p = os.getenv("SEEDFARMER_PROJECT_NAME")
+d = os.getenv("SEEDFARMER_DEPLOYMENT_NAME")
+m = os.getenv("SEEDFARMER_MODULE_NAME")
+
+cdk_output = open("cdk-exports.json")
+data = json.load(cdk_output)[f"{p}-{d}-{m}"]["metadata"]
+
+with open("SEEDFARMER_MODULE_METADATA", 'w') as f:
+    f.write(data)

@@ -34,7 +34,7 @@ do
         shift # Remove --python from processing
         ;;
         --path)
-        VALIDATE_PATH="${DIR}/../${2}"
+        VALIDATE_PATH="${2}"
         shift # Remove --path from processing
         shift # Remove $2 from processing
         ;;
@@ -45,19 +45,18 @@ do
     esac
 done
 
-cd ${VALIDATE_PATH}
-VALIDATE_PATH=`pwd`
+cd ${DIR}/..
 
-echo "Validating: ${VALIDATE_PATH}, Language: ${LANGUAGE}"
+echo "Validating: $(cd "$(dirname "$VALIDATE_PATH")"; pwd)/$(basename "$VALIDATE_PATH"), Language: ${LANGUAGE}"
 
 echo "Validating Formatting"
 if [[ $LANGUAGE == "python" ]]; then
     echo "Checking isort, black"
-    isort --check .
-    black --check .
+    isort --check ${VALIDATE_PATH}
+    black --check ${VALIDATE_PATH}
 elif [[ $LANGUAGE == "typescript" ]]; then
     echo "Checking prettier"
-    npx prettier -c .
+    npx prettier -c ${VALIDATE_PATH}
 else
     echo "ERROR Language: ${LANGUAGE}"
     exit 1
@@ -67,8 +66,8 @@ if [[ $SKIP_STATIC_CHECKS == "false" ]]; then
     echo "Validating Static Checks"
     if [[ $LANGUAGE == "python" ]]; then
         echo "Checking flake8, mypy"
-        flake8 .
-        mypy --ignore-missing-imports .
+        flake8 ${VALIDATE_PATH}
+        mypy --ignore-missing-imports ${VALIDATE_PATH}
     else
         echo "ERROR Language: ${LANGUAGE}"
         exit 1

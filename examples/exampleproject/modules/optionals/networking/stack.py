@@ -22,7 +22,6 @@ from constructs import Construct, IConstruct
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
-
 class NetworkingStack(Stack):  # type: ignore
     def __init__(
         self,

@@ -13,133 +13,12 @@
 #    limitations under the License.
 
 import os
-from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from pydantic import PrivateAttr
 
-from seedfarmer.models._base import CamelModel
-from seedfarmer.utils import upper_snake_case
-
-
-class BuildType(Enum):
-    BUILD_GENERAL1_SMALL = "BUILD_GENERAL1_SMALL"
-    BUILD_GENERAL1_MEDIUM = "BUILD_GENERAL1_MEDIUM"
-    BUILD_GENERAL1_LARGE = "BUILD_GENERAL1_LARGE"
-    BUILD_GENERAL1_2XLARGE = "BUILD_GENERAL1_2XLARGE"
-
-
-class BuildPhase(CamelModel):
-    """
-    BuildPhase
-    This is a list of strings that are passed to CodeSeeder to be executed
-    in their respective phases as commands
-    """
-
-    commands: List[str] = []
-
-
-class BuildPhases(CamelModel):
-    """
-    BuildPhases
-    This object has the individual commands for each of the define build phases:
-    install, pre_build,  build, post_build
-    """
-
-    install: BuildPhase = BuildPhase()
-    pre_build: BuildPhase = BuildPhase()
-    build: BuildPhase = BuildPhase()
-    post_build: BuildPhase = BuildPhase()
-
-
-class ExecutionType(CamelModel):
-    """
-    ExecutionType
-    This an object that contains the Build Phases object for the destroy or deploy
-    object of the DeploySpec
-    """
-
-    phases: BuildPhases = BuildPhases()
-
-
-class DeploySpec(CamelModel):
-    """
-    DeploySpec
-    This represents the commands passed to CodeSeeder that will be executed
-    on behalf of the module to be built.
-    The deploy and the destroy objects each have an ExecutionType object.
-    """
-
-    deploy: Optional[ExecutionType] = None
-    destroy: Optional[ExecutionType] = None
-    build_type: Optional[str] = None
-
-    def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
-        if data.get("build_type"):
-            chk = str(data["build_type"]).upper()
-            self.build_type = chk if chk in BuildType.__members__.keys() else BuildType.BUILD_GENERAL1_SMALL.value
-        else:
-            self.build_type = BuildType.BUILD_GENERAL1_SMALL.value
-
-
-class ModuleRef(CamelModel):
-    name: str
-    group: str
-    key: Optional[str] = None
-
-
-class ValueRef(CamelModel):
-    module_metadata: Optional[ModuleRef] = None
-    env_variable: Optional[str] = None
-    parameter_store: Optional[str] = None
-    secrets_manager: Optional[str] = None
-    parameter_value: Optional[str] = None
-
-
-class ValueFromRef(CamelModel):
-    value_from: Optional[ValueRef] = None
-
-
-class ModuleParameter(ValueFromRef):
-    _upper_snake_case: str = PrivateAttr()
-
-    name: str
-    value: Optional[Any] = None
-
-    def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
-        self._upper_snake_case = upper_snake_case(self.name)
-
-    @property
-    def upper_snake_case(self) -> str:
-        return self._upper_snake_case
-
-
-class ModuleManifest(CamelModel):
-    """
-    ModuleManifest
-    This is a module in a group of the deployment and consists of a name,
-    the path of the module manifest, any ModuleParameters for deployment, and
-    the DeploySpec.
-    """
-
-    name: str
-    path: str
-    bundle_md5: Optional[str]
-    manifest_md5: Optional[str]
-    deployspec_md5: Optional[str]
-    parameters: List[ModuleParameter] = []
-    deploy_spec: Optional[DeploySpec] = None
-    target_account: Optional[str] = None
-    target_region: Optional[str] = None
-    _target_account_id: Optional[str] = PrivateAttr(default=None)
-
-    def set_target_account_id(self, account_id: str) -> None:
-        self._target_account_id = account_id
-
-    def get_target_account_id(self) -> Optional[str]:
-        return self._target_account_id
+from seedfarmer.models._base import CamelModel, ValueFromRef
+from seedfarmer.models.manifests._module_manifest import ModuleManifest
 
 
 class ModulesManifest(CamelModel):
@@ -181,6 +60,7 @@ class RegionMapping(CamelModel):
     default: bool = False
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping]
+    codebuild_image: Optional[str] = None
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -221,6 +101,7 @@ class TargetAccountMapping(CamelModel):
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
+    codebuild_image: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
 
@@ -366,6 +247,7 @@ class DeploymentManifest(CamelModel):
                             "account_id": target_account.actual_account_id,
                             "region": region.region,
                             "network": region.network,  # type: ignore
+                            "codebuild_image": cast(str, region.codebuild_image),
                         }
                     )
         return self._accounts_regions
@@ -403,6 +285,36 @@ class DeploymentManifest(CamelModel):
                 return target_account.parameters_global.get(parameter, default)
         else:
             return default
+
+    def get_region_codebuild_image(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the codebuild_image is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        return (
+                            region_mapping.codebuild_image
+                            if region_mapping.codebuild_image is not None
+                            else target_account.codebuild_image
+                        )
+        else:
+            return None
 
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:

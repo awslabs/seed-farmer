@@ -35,8 +35,9 @@ from seedfarmer.mgmt.module_info import (
     remove_deployment_manifest,
     write_deployment_manifest,
 )
+from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DeploymentManifest, DeploySpec, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
@@ -105,6 +106,7 @@ def _execute_deploy(
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
 
     parameters = load_parameter_values(
@@ -118,7 +120,7 @@ def _execute_deploy(
     target_account_id = cast(str, module_manifest.get_target_account_id())
     target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
-    commands.deploy_module_stack(
+    module_stack_name, module_role_name = commands.deploy_module_stack(
         get_modulestack_path(module_manifest.path),
         cast(str, deployment_manifest.name),
         group_name,
@@ -154,16 +156,15 @@ def _execute_deploy(
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
-        module_path=os.path.join(config.OPS_ROOT, module_manifest.path),
-        module_deploy_spec=module_manifest.deploy_spec,
-        module_manifest_name=module_manifest.name,
+        module_manifest=module_manifest,
         account_id=target_account_id,
         region=target_region,
         parameters=parameters,
         module_metadata=module_metadata,
-        module_bundle_md5=module_manifest.bundle_md5,
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
+        module_role_name=module_role_name,
+        codebuild_image=codebuild_image,
     )
 
 
@@ -173,6 +174,7 @@ def _execute_destroy(
     module_path: str,
     deployment_manifest: DeploymentManifest,
     docker_credentials_secret: Optional[str] = None,
+    codebuild_image: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
     if module_manifest.deploy_spec is None:
         raise ValueError(
@@ -188,14 +190,21 @@ def _execute_destroy(
         get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
     )
 
+    module_stack_name, module_role_name = commands.get_module_stack_info(
+        deployment_name=cast(str, deployment_manifest.name),
+        group_name=group_name,
+        module_name=module_manifest.name,
+        account_id=target_account_id,
+        region=target_region,
+    )
+
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         group_name=group_name,
         module_path=module_path,
-        module_deploy_spec=module_manifest.deploy_spec,
-        module_manifest_name=module_manifest.name,
-        account_id=cast(str, module_manifest.get_target_account_id()),
-        region=cast(str, module_manifest.target_region),
+        module_manifest=module_manifest,
+        account_id=target_account_id,
+        region=target_region,
         parameters=load_parameter_values(
             deployment_name=cast(str, deployment_manifest.name),
             parameters=module_manifest.parameters,
@@ -204,6 +213,8 @@ def _execute_destroy(
             target_region=module_manifest.target_region,
         ),
         module_metadata=module_metadata,
+        module_role_name=module_role_name,
+        codebuild_image=codebuild_image,
     )
 
     if resp.status == StatusType.SUCCESS.value:
@@ -269,6 +280,9 @@ def _deploy_deployment_is_not_dry_run(
                                     account_alias=_module.target_account,
                                     region=_module.target_region,
                                 ),
+                            ),
+                            "codebuild_image": deployment_manifest_wip.get_region_codebuild_image(
+                                account_alias=_module.target_account, region=_module.target_region
                             ),
                         }
                         for _module in _group.modules
@@ -403,6 +417,9 @@ def destroy_deployment(
                                 "dockerCredentialsSecret",
                                 account_alias=_module.target_account,
                                 region=_module.target_region,
+                            ),
+                            "codebuild_image": destroy_manifest.get_region_codebuild_image(
+                                account_alias=_module.target_account, region=_module.target_region
                             ),
                         }
                         for _module in _group.modules

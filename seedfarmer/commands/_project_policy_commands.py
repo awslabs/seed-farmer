@@ -12,19 +12,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from seedfarmer.models._base import CamelModel, ModuleRef, ValueFromRef, ValueRef
-from seedfarmer.models._deploy_spec import BuildPhase, BuildPhases, BuildType, DeploySpec, ExecutionType
-from seedfarmer.models._project_spec import ProjectSpec
+import os
+import shutil
+import sys
 
-__all__ = [
-    "CamelModel",
-    "ModuleRef",
-    "ValueFromRef",
-    "ValueRef",
-    "BuildPhase",
-    "BuildPhases",
-    "BuildType",
-    "DeploySpec",
-    "ExecutionType",
-    "ProjectSpec",
-]
+from seedfarmer import CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH
+
+
+def get_default_project_policy() -> None:
+    with open(os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH), "rb") as f:
+        shutil.copyfileobj(f, sys.stdout.buffer)

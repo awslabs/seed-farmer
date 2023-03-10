@@ -13,6 +13,28 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v2.6.0 (2023-03-10)
+
+### New
+- Adding support for customer codebuild image overrides.  This IS backward-compatible
+- Enable use of generic SEEDFARMER prefixed Env Variables in CodeBuild
+- Example modules demonstrate use of SEEDFARMER generic Env Variables
+- Adding `SeedFarmerProject` `SeedFarmerModule` `SeedFarmerDeployment` tags to module role
+- Adding CLI support to synthesize the project policy for modification
+- Add `projectPolicyPath` suppprt to `seedfarmer.yaml` to allow override of default project policy
+
+### Changes
+- {ProjectName}_PROJECT_NAME and SEEDFARMER_PROJECT_NAME Env Variables added to CodeBuild
+- ProjectName Parameter passed to modulestack.yaml CFN Template
+
+### Fixes
+- Adding more descriptions in the README with links to read-the-docs
+- Fix codebuild role name reference
+- Fix support for project names with `-` characters
+- Error handling around `list` commands when a module is not found
+- Force seedfarmer to ingore project policies in module projects unless configred to use it
+- Safe_load all yaml files (ref: V741010817)
+
 ## v2.5.0 (2023-02-08)
 
 ### New

@@ -90,7 +90,7 @@ class Config(object):
                 else os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH)
             )
 
-        @codeseeder.configure(cast(str, self._project_spec.project).lower(), deploy_if_not_exists=True)
+        @codeseeder.configure(self._project_spec.project.lower(), deploy_if_not_exists=True)
         def configure(configuration: CodeSeederConfig) -> None:
             LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {self.OPS_ROOT}")
             configuration.timeout = 120

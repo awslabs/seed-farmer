@@ -29,7 +29,7 @@ do
         shift # Remove $2 from processing
         ;;
         --path)
-        FIX_PATH="${DIR}/../${2}"
+        FIX_PATH="${2}"
         shift # Remove --path from processing
         shift # Remove $2 from processing
         ;;
@@ -40,18 +40,17 @@ do
     esac
 done
 
-cd ${FIX_PATH}
-FIX_PATH=`pwd`
+cd ${DIR}/..
 
-echo "Fixing: ${FIX_PATH}, Language: ${LANGUAGE}"
+echo "Fixing: $(cd "$(dirname "$FIX_PATH")"; pwd)/$(basename "$FIX_PATH"), Language: ${LANGUAGE}"
 
 if [[ $LANGUAGE == "python" ]]; then
     echo "Running isort, black"
-    isort .
-    black .
+    isort ${FIX_PATH}
+    black ${FIX_PATH}
 elif [[ $LANGUAGE == "typescript" ]]; then
     echo "Running prettier"
-    npx prettier --write .
+    npx prettier --write ${FIX_PATH}
 else
     echo "Language: ${LANGUAGE}"
     exit 1

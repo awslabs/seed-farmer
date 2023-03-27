@@ -1,11 +1,11 @@
 name: networking
-path: modules/optionals/networking/
+path: git::https://github.com/awslabs/seedfarmer-modules.git//modules/network/basic-cdk/
 parameters:
   - name: internet-accessible
     value: true
 ---
 name: buckets
-path: modules/optionals/buckets
+path: git::https://github.com/awslabs/seedfarmer-modules.git//modules/storage/buckets/
 parameters:
   - name: encryption-type
     value: SSE

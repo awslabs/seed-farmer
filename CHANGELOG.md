@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- removed modules as they now are in `https://github.com/awslabs/seedfarmer-modules`
 
 ### Fixes
 

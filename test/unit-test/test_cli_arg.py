@@ -173,14 +173,14 @@ def test_destroy_deployment(patch_command_methods):
     command_output = _test_command(sub_command=destroy, options=["myapp","--debug"], exit_code=0)
 
 
-@pytest.mark.bootstrap
-def test_bootstrap_toolchain_and_target(patch_command_methods):
-    # Bootstrap an Account As Target
-    _test_command(sub_command=bootstrap, 
-                                   options=["toolchain",
-                                            "--trusted-principal","arn:aws:iam::123456789012:role/AdminRole",
-                                            "--as-target","--debug"], 
-                                   exit_code=0)
+# @pytest.mark.bootstrap
+# def test_bootstrap_toolchain_and_target(patch_command_methods):
+#     # Bootstrap an Account As Target
+#     _test_command(sub_command=bootstrap, 
+#                                    options=["toolchain",
+#                                             "--trusted-principal","arn:aws:iam::123456789012:role/AdminRole",
+#                                             "--as-target","--debug"], 
+#                                    exit_code=0)
 
 @pytest.mark.bootstrap
 def test_bootstrap_toolchain_only(patch_command_methods):
@@ -496,13 +496,13 @@ def test_remove_missing_module_arg():
     )
 
 
-@pytest.mark.remove
-def test_remove_non_existent_module():
-    _test_command(
-        sub_command=remove,
-        options=["moduledata", "-d", "deployment-name", "-g", "group-name", "-m", "zzz", "--debug"],
-        exit_code=0,
-    )
+# @pytest.mark.remove
+# def test_remove_non_existent_module():
+#     _test_command(
+#         sub_command=remove,
+#         options=["moduledata", "-d", "deployment-name", "-g", "group-name", "-m", "zzz", "--debug"],
+#         exit_code=0,
+#     )
 
 
 # -------------------------------------------

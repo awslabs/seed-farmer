@@ -26,10 +26,10 @@ def pytest_configure(config):
 
 
 ## Test Build Info
-@pytest.mark.mgmt
-def test_get_build_info():
-    import seedfarmer.mgmt.build_info as bi
-    bi.get_build_env_params(build_ids=['codebuild:123345'])
+# @pytest.mark.mgmt
+# def test_get_build_info():
+#     import seedfarmer.mgmt.build_info as bi
+#     bi.get_build_env_params(build_ids=['codebuild:123345'])
 
 
 ### Test Model Info

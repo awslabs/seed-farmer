@@ -12,7 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - removed modules as they now are in `https://github.com/awslabs/seedfarmer-modules`
 
 ### Fixes
-
+- fix for `gitpython` assuming that codecommit repos are unsafe 
 
 ## v2.6.0 (2023-03-10)
 

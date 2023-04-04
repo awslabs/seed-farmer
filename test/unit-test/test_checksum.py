@@ -13,10 +13,10 @@
 #    limitations under the License.
 
 import logging
-import pathlib, os
+import os
+import pathlib
 
 import pytest
-
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -28,19 +28,21 @@ def pytest_configure(config):
 @pytest.mark.checksum
 def test_checksum():
     import seedfarmer.checksum as checksum
+
     pass
     root = pathlib.Path(os.getcwd())
-    project_path = os.path.join(root,"test","unit-test","mock_data")
-    module_path = os.path.join(project_path,"modules","module-test")
-    _checksum = checksum.get_module_md5(project_path=project_path,module_path=module_path)
-    assert _checksum =='6a97a8aabba291d22221b1f649fba945'
+    project_path = os.path.join(root, "test", "unit-test", "mock_data")
+    module_path = os.path.join(project_path, "modules", "module-test")
+    _checksum = checksum.get_module_md5(project_path=project_path, module_path=module_path)
+    assert _checksum == "6a97a8aabba291d22221b1f649fba945"
+
 
 @pytest.mark.checksum
 def test_private_methods_checksum():
     import seedfarmer.checksum as checksum
-    file_tst = os.path.abspath(__file__)    
+
+    file_tst = os.path.abspath(__file__)
     assert False == checksum._evaluate_file(filename=file_tst, ignore_maps=None)
-    
+
     _check_non = checksum._generate_file_hash(filepath=f"{file_tst}_bak")
     assert _check_non == "d41d8cd98f00b204e9800998ecf8427e"
-

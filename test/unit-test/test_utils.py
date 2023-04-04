@@ -13,34 +13,32 @@
 #    limitations under the License.
 
 import logging
-
 from copy import deepcopy
 
 import pytest
-
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "utils")
-    config.addinivalue_line("markers", "utils_test")    
+    config.addinivalue_line("markers", "utils_test")
 
 
 @pytest.mark.utils_test
 def test_utils():
     import seedfarmer.utils as utils
-    hash = utils.generate_hash(string="test",length=8)
-    assert hash == 'a94a8fe5'
-    
-    utils.generate_codebuild_url(account_id='123456789012',region='us-east-1',codebuild_id='XXXXXX')
-    utils.generate_codebuild_url(account_id=None,region=None,codebuild_id=None)
-    
-    c_case = utils.upper_snake_case("camelCase")
-    assert c_case=='CAMEL_CASE'
-    cap_case = utils.upper_snake_case("CapitalCase")
-    assert cap_case=='CAPITAL_CASE'
-    pascal_case = utils.upper_snake_case("Pascal_Case")
-    assert pascal_case=='PASCAL_CASE'
-    #session_hash = utils.generate_session_hash()
 
+    hash = utils.generate_hash(string="test", length=8)
+    assert hash == "a94a8fe5"
+
+    utils.generate_codebuild_url(account_id="123456789012", region="us-east-1", codebuild_id="XXXXXX")
+    utils.generate_codebuild_url(account_id=None, region=None, codebuild_id=None)
+
+    c_case = utils.upper_snake_case("camelCase")
+    assert c_case == "CAMEL_CASE"
+    cap_case = utils.upper_snake_case("CapitalCase")
+    assert cap_case == "CAPITAL_CASE"
+    pascal_case = utils.upper_snake_case("Pascal_Case")
+    assert pascal_case == "PASCAL_CASE"
+    # session_hash = utils.generate_session_hash()

@@ -10,17 +10,20 @@
 
 import logging
 import os
-import boto3, botocore
 
+import boto3
+import botocore
 import pytest
-from moto import mock_iam, mock_codebuild, mock_ssm, mock_sts, mock_secretsmanager
-from  seedfarmer.services import _service_utils
+from moto import mock_codebuild, mock_iam, mock_secretsmanager, mock_ssm, mock_sts
+
+from seedfarmer.services import _service_utils
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "service")
+
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -56,15 +59,17 @@ def test_utils_boto3_resource(aws_credentials, session):
 
 @pytest.mark.parametrize("session", [None, boto3.Session()])
 def test_utils_get_region(sts_client, session):
-    assert _service_utils.get_region(session) == "us-east-1"    
+    assert _service_utils.get_region(session) == "us-east-1"
 
 
 def test_utils_get_account_id(sts_client):
     assert _service_utils.get_account_id() == "123456789012"
 
+
 # def test_utils_get_account_id_failed(sts_client, session):
 #     with pytest.raises(botocore.exceptions.ClientError):
 #         assert _service_utils.get_account_id(boto3.Session) == "123456789012"
+
 
 @pytest.fixture(scope="function")
 def iam_client(aws_credentials):
@@ -72,108 +77,126 @@ def iam_client(aws_credentials):
         yield _service_utils.boto3_client(service_name="iam", session=None)
 
 
-
-    
 ### Codebuild
 @pytest.mark.service
-def test_codebuild(session)->None:
+def test_codebuild(session) -> None:
     import seedfarmer.services._codebuild as codebuild
+
     with mock_codebuild():
         codebuild.get_build_data(build_ids=["codebuild:12345"], session=session)
         codebuild.get_build_data(build_ids=["12345"], session=session)
-        
+
+
 ### IAM
 @pytest.mark.service
-def test_iam(iam_client,session)->None:
+def test_iam(iam_client, session) -> None:
     import seedfarmer.services._iam as iam
+
     with mock_iam():
         iam.create_check_iam_role(
-                                project_name="test",
-                                deployment_name="test",
-                                group_name="test",
-                                module_name="test",
-                                trust_policy=None,
-                                role_name="test",
-                                permissions_boundary_arn="arn:aws:iam::aws:policy/AdministratorAccess",
-                                session=session)
-        r = iam.get_role(role_name="test",session=session)
-        assert r['Role']['RoleName'] == 'test'
-        iam.get_role(role_name="garbage",session=session)
-        iam.attach_policy_to_role(role_name="test",
-                                  policies=["arn:aws:iam::aws:policy/AdministratorAccess"],
-                                  session=session)
-        #Test tolerance if policy already attached..this is not a typo
-        iam.attach_policy_to_role(role_name="test",
-                                  policies=["arn:aws:iam::aws:policy/AdministratorAccess"],
-                                  session=session)
+            project_name="test",
+            deployment_name="test",
+            group_name="test",
+            module_name="test",
+            trust_policy=None,
+            role_name="test",
+            permissions_boundary_arn="arn:aws:iam::aws:policy/AdministratorAccess",
+            session=session,
+        )
+        r = iam.get_role(role_name="test", session=session)
+        assert r["Role"]["RoleName"] == "test"
+        iam.get_role(role_name="garbage", session=session)
+        iam.attach_policy_to_role(
+            role_name="test", policies=["arn:aws:iam::aws:policy/AdministratorAccess"], session=session
+        )
+        # Test tolerance if policy already attached..this is not a typo
+        iam.attach_policy_to_role(
+            role_name="test", policies=["arn:aws:iam::aws:policy/AdministratorAccess"], session=session
+        )
         with pytest.raises(Exception):
-            iam.attach_policy_to_role(role_name="test",
-                                    policies=["blah"],
-                                    session=session)
-            
-        iam.attach_inline_policy(role_name="test",
-                                 policy_body='{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Action": "*","Resource": "*"}]}',
-                                 policy_name='testinline', 
-                                 session=session)
-         
+            iam.attach_policy_to_role(role_name="test", policies=["blah"], session=session)
+
+        iam.attach_inline_policy(
+            role_name="test",
+            policy_body='{"Version": "2012-10-17","Statement": [{"Effect": "Allow","Action": "*","Resource": "*"}]}',
+            policy_name="testinline",
+            session=session,
+        )
+
         with pytest.raises(Exception):
-            iam.attach_inline_policy(role_name="test",
-                                policy_body='{"blah":"Blah"}',
-                                policy_name='testinline', 
-                                session=session)   
-        iam.detach_inline_policy_from_role(role_name="test",policy_name='testinline', session=session)
+            iam.attach_inline_policy(
+                role_name="test", policy_body='{"blah":"Blah"}', policy_name="testinline", session=session
+            )
+        iam.detach_inline_policy_from_role(role_name="test", policy_name="testinline", session=session)
         with pytest.raises(Exception):
-            iam.detach_inline_policy_from_role(role_name="test",policy_name='testinlinedoesnexist', session=session)
-        iam.detach_policy_from_role(role_name="test",policy_arn="arn:aws:iam::aws:policy/AdministratorAccess", session=session)
-        iam.detach_policy_from_role(role_name="test",policy_arn="arn:aws:iam::aws:policy/AdministratorAccess2", session=session)
+            iam.detach_inline_policy_from_role(role_name="test", policy_name="testinlinedoesnexist", session=session)
+        iam.detach_policy_from_role(
+            role_name="test", policy_arn="arn:aws:iam::aws:policy/AdministratorAccess", session=session
+        )
+        iam.detach_policy_from_role(
+            role_name="test", policy_arn="arn:aws:iam::aws:policy/AdministratorAccess2", session=session
+        )
         iam.delete_role(role_name="test", session=session)
         iam.delete_role(role_name="dontexist", session=session)
-        
+
+
 ### SSM
 
+
 @pytest.mark.service
-def test_get_ssm_params(session)->None:
+def test_get_ssm_params(session) -> None:
     import seedfarmer.services._ssm as ssm
+
     with mock_ssm():
-        ssm.put_parameter(name="/myapp/test/",obj={"Hey":"tsting"} , session=session)
+        ssm.put_parameter(name="/myapp/test/", obj={"Hey": "tsting"}, session=session)
         ssm.does_parameter_exist(name="/myapp/test/", session=session)
         ssm.does_parameter_exist(name="/garbage/", session=session)
         ssm.get_all_parameter_data_by_path(prefix="/myapp/", session=session)
         ssm.get_parameter_if_exists(name="/myapp/test/", session=session)
         ssm.get_parameter_if_exists(name="/garbage/", session=session)
         ssm.get_parameter(name="/myapp/test/", session=session)
-        
+
+
 @pytest.mark.service
-def test_put_ssm_param(session)->None:
+def test_put_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
+
     with mock_ssm():
-        ssm.put_parameter(name="/myapp/test/",obj={"Hey":"tsting"} , session=session)
-        
-        
+        ssm.put_parameter(name="/myapp/test/", obj={"Hey": "tsting"}, session=session)
+
+
 @pytest.mark.service
-def test_list_ssm_param(session)->None:
+def test_list_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
+
     with mock_ssm():
-        ssm.put_parameter(name="/myapp/test/",obj={"Hey":"testing"} , session=session)
+        ssm.put_parameter(name="/myapp/test/", obj={"Hey": "testing"}, session=session)
         ssm.list_parameters(prefix="/myapp/test/", session=session)
-        ssm.list_parameters_with_filter(prefix="/myapp/",contains_string="test", session=session)
-        
+        ssm.list_parameters_with_filter(prefix="/myapp/", contains_string="test", session=session)
+
+
 @pytest.mark.service
-def test_delete_ssm_param(session)->None:
+def test_delete_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
+
     with mock_ssm():
-        ssm.delete_parameters(parameters=["/myapp","/myapp/test/"], session=session)
-        ssm.delete_parameters(parameters=["/myapp",
-                                          "/myapp/test1/",
-                                          "/myapp/test2/",
-                                          "/myapp/test3/",
-                                          "/myapp/test4/",
-                                          "/myapp/test5/",
-                                          "/myapp/test6/",
-                                          "/myapp/test7/",
-                                          "/myapp/test8/",
-                                          "/myapp/test9/"], 
-                              session=session)
+        ssm.delete_parameters(parameters=["/myapp", "/myapp/test/"], session=session)
+        ssm.delete_parameters(
+            parameters=[
+                "/myapp",
+                "/myapp/test1/",
+                "/myapp/test2/",
+                "/myapp/test3/",
+                "/myapp/test4/",
+                "/myapp/test5/",
+                "/myapp/test6/",
+                "/myapp/test7/",
+                "/myapp/test8/",
+                "/myapp/test9/",
+            ],
+            session=session,
+        )
+
 
 ### SecretsManager
 # @pytest.mark.service
@@ -181,19 +204,19 @@ def test_delete_ssm_param(session)->None:
 #     import seedfarmer.services._secrets_manager as sm
 #     mocker.patch("seedfarmer.services._service_utils.get_account_id", return_value="123456789012")
 #     mocker.patch("seedfarmer.services._service_utils.get_region", return_value="us-east-1")
-    
+
 #     with mock_secretsmanager():
 #         sm.get_secret_secrets_manager(name="test",session=session)
 #         pass
 
 ### Sessions Manager
-##REF -- https://gist.github.com/k-bx/5861641    
-    
+##REF -- https://gist.github.com/k-bx/5861641
+
 # @pytest.mark.service
 # def test_get_params(aws_credentials)->None:
 #     from seedfarmer.services.session_manager import SessionManager
 #     session = SessionManager().get_or_create(
 #         project_name="myapp",
-#         account_id=os.environ["AWS_DEFAULT_REGION"], 
+#         account_id=os.environ["AWS_DEFAULT_REGION"],
 #         region_name=os.environ["AWS_DEFAULT_REGION"]).get_deployment_session(
-#)
+# )

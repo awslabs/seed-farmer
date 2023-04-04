@@ -69,6 +69,10 @@ def _clone_module_repo(git_path: str) -> str:
     str
         The local directory within the codeseeder.out/ where the repository was cloned
     """
+    # gitpython library has started blocking non https and ssh protocols by default
+    # codecommit is not _actually_ unsafe
+    allow_unsafe_protocols = git_path.startswith("git::codecommit")
+
     git_path = git_path.replace("git::", "")
     ref: Optional[str] = None
     depth: Optional[int] = None
@@ -92,10 +96,10 @@ def _clone_module_repo(git_path: str) -> str:
     os.makedirs(working_dir, exist_ok=True)
     if not os.listdir(working_dir):
         _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth)
+        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols)
     else:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        Repo(working_dir).remotes["origin"].pull()
+        Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
 
     return os.path.join(working_dir, module_directory)
 

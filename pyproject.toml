@@ -63,7 +63,7 @@ markers = [
     "version: marks all `version` tests"
 ]
 log_cli_level = "INFO"
-addopts = "-v --cov=. --cov-report term -cov-report html --cov-config=coverage.ini --cov-fail-under=50"
+addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=50"
 pythonpath = [
   "."
 ]

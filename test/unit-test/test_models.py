@@ -29,11 +29,6 @@ from seedfarmer.models.manifests._module_manifest import DeploySpec
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "models")
-    config.addinivalue_line("markers", "models_deployment_manifest")
-
-
 deployment_yaml = yaml.safe_load(
     """
 name: test

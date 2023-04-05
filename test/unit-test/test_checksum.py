@@ -21,10 +21,6 @@ import pytest
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "checksum")
-
-
 @pytest.mark.checksum
 def test_checksum():
     import seedfarmer.checksum as checksum

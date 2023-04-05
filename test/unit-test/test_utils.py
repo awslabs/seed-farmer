@@ -20,11 +20,6 @@ import pytest
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "utils")
-    config.addinivalue_line("markers", "utils_test")
-
-
 @pytest.mark.utils_test
 def test_utils():
     import seedfarmer.utils as utils

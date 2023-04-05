@@ -22,10 +22,6 @@ import pytest
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "mgmt")
-    config.addinivalue_line("markers", "module_info")
-
 @pytest.fixture(scope="function")
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
@@ -48,7 +44,7 @@ def session(aws_credentials):
 def test_get_all_deployments(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter",
                  return_value=["/myapp/test/hey"])
     mi.get_all_deployments(session=session)
 
@@ -57,96 +53,96 @@ def test_get_all_deployments(aws_credentials,session,mocker):
 def test_get_all_deployments_with_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter",
                  return_value=["/myapp/test/manifest"])
     mi.get_all_deployments(session=session)
-    
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_all_deployments_with_nothing(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter",
                  return_value=[])
     mi.get_all_deployments(session=session)
-    
-    
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_all_groups(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter",
                  return_value=["/myapp/test/manifest","/myapp/test/optionals","/myapp/test/core"])
     mi.get_all_groups(deployment="myapp", session=session)
-    
-    
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_deployed_modules(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.list_parameters_with_filter",
                  return_value=["/myapp/test/manifest","/myapp/test/optionals","/myapp/test/core"])
-    mi.get_deployed_modules(deployment="myapp", 
+    mi.get_deployed_modules(deployment="myapp",
                             group='test',
-                            session=session)   
-    
+                            session=session)
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_module_md5(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
 
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists",
                  return_value={"hash":"12345678"})
-    mi.get_module_md5(deployment="myapp", 
+    mi.get_module_md5(deployment="myapp",
                             group='test',
                             module="mymodule",
                             type=mi.ModuleConst.METADATA,
-                            session=session)      
-    
-    mi.get_module_md5(deployment="myapp", 
+                            session=session)
+
+    mi.get_module_md5(deployment="myapp",
                             group='test',
                             module="mymodule",
                             type=mi.ModuleConst.BUNDLE,
-                            session=session) 
-    
-    mi.get_module_md5(deployment="myapp", 
+                            session=session)
+
+    mi.get_module_md5(deployment="myapp",
                             group='test',
                             module="mymodule",
                             type=mi.ModuleConst.DEPLOYSPEC,
-                            session=session) 
-    mi.get_module_md5(deployment="myapp", 
+                            session=session)
+    mi.get_module_md5(deployment="myapp",
                             group='test',
                             module="mymodule",
                             type=mi.ModuleConst.METADATA,
-                            session=session) 
-    
-    
+                            session=session)
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_module_metadata(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_module_metadata(deployment="myapp", 
+    mi.get_module_metadata(deployment="myapp",
                             group='test',
                             module="mymodule",
                             session=session)
-    
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_module_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_module_manifest(deployment="myapp", 
+    mi.get_module_manifest(deployment="myapp",
                             group='test',
                             module="mymodule",
-                            session=session)  
+                            session=session)
 
 
 @pytest.mark.mgmt
@@ -154,85 +150,85 @@ def test_get_module_manifest(aws_credentials,session,mocker):
 def test_get_deployment_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_deployment_manifest(deployment="myapp", session=session)  
+    mi.get_deployment_manifest(deployment="myapp", session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_deployed_deployment_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_deployed_deployment_manifest(deployment="myapp",session=session)  
-    
+    mi.get_deployed_deployment_manifest(deployment="myapp",session=session)
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_deployspec(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_deployspec(deployment="myapp", 
+    mi.get_deployspec(deployment="myapp",
                             group='test',
                             module="mymodule",
-                            session=session)   
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_group_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper", 
+    mocker.patch("seedfarmer.mgmt.module_info._fetch_helper",
                  return_value={"hey":"yo"})
-    mi.get_group_manifest(deployment="myapp", 
+    mi.get_group_manifest(deployment="myapp",
                             group='test',
-                            session=session)     
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_does_module_exist(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.does_parameter_exist", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.does_parameter_exist",
                  return_value=True)
-    mi.does_module_exist(deployment="myapp", 
+    mi.does_module_exist(deployment="myapp",
                             group='test',
                             module='mymodule',
-                            session=session)  
+                            session=session)
 
-    
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_does_md5_match(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists",
                  return_value={"hash":"12345678"})
-    mi.does_md5_match(deployment="myapp", 
+    mi.does_md5_match(deployment="myapp",
                             group='test',
                             module="mymodule",
                             hash="12345678",
                             type=mi.ModuleConst.BUNDLE,
                             session=session)
 
-    mi.does_md5_match(deployment="myapp", 
+    mi.does_md5_match(deployment="myapp",
                             group='test',
                             module="mymodule",
                             hash="blah",
                             type=mi.ModuleConst.BUNDLE,
                             session=session)
-    
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_does_md5_match_no(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists", 
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists",
                  return_value=None)
-    
-    mi.does_md5_match(deployment="myapp", 
+
+    mi.does_md5_match(deployment="myapp",
                             group='test',
                             module="mymodule",
                             hash="blah",
@@ -246,11 +242,11 @@ def test_write_metadata(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_metadata(deployment="myapp", 
+    mi.write_metadata(deployment="myapp",
                             group='test',
                             module='mymodule',
                             data={"Hey","Yo"},
-                            session=session)  
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
@@ -258,10 +254,10 @@ def test_write_group_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_group_manifest(deployment="myapp", 
+    mi.write_group_manifest(deployment="myapp",
                             group='test',
                             data={"Hey","Yo"},
-                            session=session) 
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
@@ -269,11 +265,11 @@ def test_write_module_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_module_manifest(deployment="myapp", 
+    mi.write_module_manifest(deployment="myapp",
                             group='test',
                             module='mymodule',
                             data={"Hey","Yo"},
-                            session=session) 
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
@@ -281,11 +277,11 @@ def test_write_deployspec(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_deployspec(deployment="myapp", 
+    mi.write_deployspec(deployment="myapp",
                             group='test',
                             module='mymodule',
                             data={"Hey","Yo"},
-                            session=session) 
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
@@ -293,12 +289,12 @@ def test_write_module_md5(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_module_md5(deployment="myapp", 
+    mi.write_module_md5(deployment="myapp",
                             group='test',
                             module='mymodule',
                             hash="12345",
                             type=mi.ModuleConst.BUNDLE,
-                            session=session) 
+                            session=session)
 
 
 @pytest.mark.mgmt
@@ -307,9 +303,9 @@ def test_write_deployment_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_deployment_manifest(deployment="myapp", 
+    mi.write_deployment_manifest(deployment="myapp",
                             data={"Hey","Yo"},
-                            session=session) 
+                            session=session)
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
@@ -317,9 +313,9 @@ def test_write_deployed_deployment_manifest(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_deployed_deployment_manifest(deployment="myapp", 
+    mi.write_deployed_deployment_manifest(deployment="myapp",
                                           data={"Hey","Yo"},
-                                          session=session) 
+                                          session=session)
 
 
 @pytest.mark.mgmt
@@ -329,19 +325,19 @@ def test_remove_all_info(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.delete_parameters", return_value=True)
     mi.remove_deployed_deployment_manifest(deployment="myapp",session=session)
-    mi.remove_deployment_manifest(deployment="myapp",session=session) 
+    mi.remove_deployment_manifest(deployment="myapp",session=session)
     mi.remove_group_info(deployment="myapp",
                          group="mygroup",
-                         session=session) 
+                         session=session)
     mi.remove_module_info(deployment="myapp",
                          group="mygroup",
                          module='mymodule',
-                         session=session) 
+                         session=session)
     mi.remove_module_md5(deployment="myapp",
                          group="mygroup",
                          module='mymodule',
                          type=mi.ModuleConst.BUNDLE,
-                         session=session) 
+                         session=session)
 
 
 
@@ -354,7 +350,7 @@ def test_get_module_stack_names(mocker,session):
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="1234")
     mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="1234dade")
-    mi.get_module_stack_names(deployment_name="myapp", 
+    mi.get_module_stack_names(deployment_name="myapp",
                             group_name='test',
                             module_name="mymodule",
                             session=session)
@@ -365,22 +361,22 @@ def test_get_module_stack_names(mocker,session):
 def test_get_modulestack_path():
     import seedfarmer.mgmt.module_info as mi
     mi.get_modulestack_path(module_path="modules/basic/something")
-    
-    
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_deployspec_path():
     import seedfarmer.mgmt.module_info as mi
     with pytest.raises(Exception):
         mi.get_deployspec_path(module_path="modules/basic/something")
-        
-        
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_fetch_helper(aws_credentials,session,mocker):
 
     import seedfarmer.mgmt.module_info as mi
     mocker.patch("seedfarmer.mgmt.module_info.ssm.get_parameter_if_exists", return_value={})
-    mi._fetch_helper(name="myapp", session=session) 
+    mi._fetch_helper(name="myapp", session=session)
 
-    mi._fetch_helper(name="myapp",params_cache={"myapp":"yo"}, session=session) 
+    mi._fetch_helper(name="myapp",params_cache={"myapp":"yo"}, session=session)

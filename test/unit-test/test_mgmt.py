@@ -22,10 +22,6 @@ import pytest
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def pytest_configure(config):
-    config.addinivalue_line("markers", "mgmt")
-
-
 ## Test Build Info
 # @pytest.mark.mgmt
 # def test_get_build_info():

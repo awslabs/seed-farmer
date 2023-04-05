@@ -29,7 +29,6 @@ def pytest_configure(config):
 def test_checksum():
     import seedfarmer.checksum as checksum
 
-    pass
     root = pathlib.Path(os.getcwd())
     project_path = os.path.join(root, "test", "unit-test", "mock_data")
     module_path = os.path.join(project_path, "modules", "module-test")

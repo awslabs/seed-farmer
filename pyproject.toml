@@ -61,11 +61,13 @@ markers = [
     "commands: marks all `commands` tests",
     "bootstrap: marks all `commands_bootstrap` tests",
     "mgmt: marks all `mgmt` tests",
+    "mgmt_module_info: marks all `mgmt_module_info` tests",
+    "mgmt_deployment_utils: marks all `mgmt_deployment_utils` tests",
     "service: marks all `services` tests",
     "projectpolicy: marks all `projectpolic` tests",
     "version: marks all `version` tests",
     "session_manager: marks all `session_manager` tests",
-    "mgmt_module_info: marks all `mgmt_module_info` tests",
+
 ]
 log_cli_level = "INFO"
 addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=50"

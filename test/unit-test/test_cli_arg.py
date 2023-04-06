@@ -22,6 +22,14 @@ from seedfarmer import config
 from seedfarmer.__main__ import apply, bootstrap, destroy, init
 from seedfarmer.__main__ import list as list
 from seedfarmer.__main__ import projectpolicy, remove, store, version
+from seedfarmer.services._service_utils import boto3_client
+from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
+from seedfarmer.models._deploy_spec import DeploySpec
+import mock_manifests
+
+from moto import mock_sts
+
 
 # Override OPS_ROOT to reflect path of resource policy needed for some testing #
 _OPS_ROOT = config.OPS_ROOT
@@ -49,6 +57,32 @@ def patch_mgmt_methods(mocker):
     mocker.patch("seedfarmer.mgmt.module_init.create_project", return_value=None)
     mocker.patch("seedfarmer.mgmt.module_init.create_module_dir", return_value=None)
     mocker.patch("seedfarmer.output_utils.print_deployment_inventory", return_value=None)
+
+@pytest.fixture(scope="function")
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+    os.environ["MOTO_ACCOUNT_ID"] = "123456789012"
+
+@pytest.fixture(scope="function")
+def sts_client(aws_credentials):
+    with mock_sts():
+        yield boto3_client(service_name="sts", session=None)
+
+@pytest.fixture(scope="function")       
+def session_manager(sts_client):
+    SessionManager._instances={}
+    SessionManager().get_or_create(
+        project_name="test",
+        region_name="us-east-1",
+        toolchain_region="us-east-1",
+        enable_reaper=False,
+    )
+
 
 
 # -------------------------------------------
@@ -114,7 +148,7 @@ def test_init_create_project(patch_mgmt_methods):
 
 
 @pytest.mark.version
-def test_version(patch_command_methods):
+def test_version():
     _test_command(
         sub_command=version,
         options=None,
@@ -261,6 +295,13 @@ def test_bootstrap_target_account(patch_command_methods):
 # -----  Test the sub-command `list`    -----
 # -------------------------------------------
 
+# Test Deployspec
+
+@pytest.mark.list
+def test_error_messaging():
+    import seedfarmer.cli_groups._list_group as lg
+    
+    lg._error_messaging(deployment='test-dep',group='test-group',module='test-module')
 
 @pytest.mark.list
 def test_list_help():
@@ -271,7 +312,112 @@ def test_list_help():
         expected_output="List the relative data (module or deployment",
     )
 
+@pytest.mark.list
+@pytest.mark.list_deployspec
+@pytest.mark.parametrize("session", [None, boto3_client])
+def test_list_deployspec_deployed_error(session,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    _test_command(
+        list,
+        options=["deployspec",
+                "-d","test",
+                "-g","test-group",
+                "-m","test-module",
+                "-p","myapp",
+                "--debug",
+                ],
+        exit_code=1
+    )
 
+
+@pytest.mark.list
+@pytest.mark.list_deployspec
+def test_list_deployspec_deployed_none(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    _test_command(
+        list,
+        options=["deployspec",
+                 "-d","test",
+                 "-g","test-group",
+                 "-m","test-module",
+                 "-p","myapp",
+                 "--debug",
+                 ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_deployspec
+def test_list_deployspec_missing_session(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec", return_value={"deploy":{"commands":"echo"}})
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec",return_value=DeploySpec(**mock_manifests.deployspec))
+    _test_command(
+        list,
+        options=["deployspec",
+                 "-d","myapp",
+                 "-g","messsedup",
+                 "-m","networking",
+                 "-p","myapp",
+                 "--debug",
+                 ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_deployspec
+def test_list_deployspec(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec", return_value={"deploy":{"commands":"echo"}})
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_deployspec",return_value=DeploySpec(**mock_manifests.deployspec))
+    _test_command(
+        list,
+        options=["deployspec",
+                 "-d","myapp",
+                 "-g","optionals",
+                 "-m","networking",
+                 "-p","myapp",
+                 "--debug",
+                 ],
+        exit_code=0
+    )
+    
+# Test list dependencies
+@pytest.mark.list
+@pytest.mark.list_dependencies
+def test_list_dependencies_no_deployed_manifest(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_dependency_maps", return_value=None)
+    _test_command(
+        list,
+        options=["dependencies",
+                 "-d","test",
+                 "-g","test-group",
+                 "-m","test-module",
+                 "-p","myapp",
+                 "--debug",
+                 ],
+         exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_dependencies
+def test_list_dependencies(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_dependency_maps", return_value=None)
+    _test_command(
+        list,
+        options=["dependencies",
+                 "-d","test",
+                 "-g","test-group",
+                 "-m","test-module",
+                 "-p","myapp",
+                 "--debug",
+                 ],
+         exit_code=1
+    )
 # # Test `list deployments` #
 
 
@@ -289,6 +435,7 @@ def test_list_deployments_help(patch_mgmt_methods):
 @pytest.mark.list
 @pytest.mark.list_deployments
 def test_list_deployments_extra_args(patch_mgmt_methods):
+    
     _test_command(
         sub_command=list,
         options=[
@@ -300,15 +447,15 @@ def test_list_deployments_extra_args(patch_mgmt_methods):
     )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_deployments
-# def test_list_deployments(patch_mgmt_methods):
-#     _test_command(
-#         sub_command=list,
-#         options=["deployments", "-p","myapp", "--debug"],
-#         exit_code=0,
-#         expected_output="myapp",
-#     )
+@pytest.mark.list
+@pytest.mark.list_deployments
+def test_list_deployments(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_all_deployments", return_value=None)
+    _test_command(
+        sub_command=list,
+        options=["deployments", "-p","myapp", "--debug"],
+        exit_code=1,
+    )
 
 
 # # TODO test for no deployments
@@ -316,133 +463,310 @@ def test_list_deployments_extra_args(patch_mgmt_methods):
 # # Test `list moduledata` #
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_help():
-#     _test_command(
-#         sub_command=list,
-#         options=["moduledata", "--help"],
-#         exit_code=0,
-#         expected_output="Fetch the module metadata",
-#     )
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_help():
+    _test_command(
+        sub_command=list,
+        options=["moduledata", "--help"],
+        exit_code=0,
+        expected_output="Fetch the module metadata",
+    )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_deployment_option():
-#     _test_command(
-#         sub_command=list,
-#         options=[
-#             "moduledata",
-#         ],
-#         exit_code=2,
-#     )
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_missing_deployment_option():
+    _test_command(
+        sub_command=list,
+        options=[
+            "moduledata",
+        ],
+        exit_code=2,
+    )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_deployment_arg():
-#     _test_command(sub_command=list, options=["moduledata", "-d"], exit_code=2)
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_no_dep_manifest(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    _test_command(
+        sub_command=list,
+        options=[
+            "moduledata",
+            "-d","test",
+            "-g","test-group",
+            "-m","test-module",
+            "-p","myapp",
+            "--debug",
+            ],
+        exit_code=0,
+    )
+
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_module_metadata",return_value=mock_manifests.sample_metadata)
+
+    _test_command(
+        sub_command=list,
+        options=[
+            "moduledata",
+            "-d","test",
+            "-g","optionals",
+            "-m","networking",
+            "-p","myapp",
+            "--debug",
+            ],
+        exit_code=0,
+    )
+ 
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_export_envs(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_module_metadata",return_value=mock_manifests.sample_metadata)
+    mocker.patch("seedfarmer.cli_groups._list_group.commands.generate_export_env_params",return_value=["export SOMETHING=yo"])
+
+    _test_command(
+        sub_command=list,
+        options=[
+            "moduledata",
+            "-d","test",
+            "-g","optionals",
+            "-m","networking",
+            "-p","myapp",
+            "--export-local-env",
+            "--debug",
+            ],
+        exit_code=0
+    )
+ 
+    
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_mod_not_found(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_module_metadata",return_value=mock_manifests.sample_metadata)
+
+    _test_command(
+        sub_command=list,
+        options=[
+            "moduledata",
+            "-d","test",
+            "-g","somethingcrazy",
+            "-m","networking",
+            "-p","myapp",
+            "--debug",
+            ],
+        exit_code=0,
+    )
+
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_missing_deployment_arg():
+    _test_command(sub_command=list, options=["moduledata", "-d"], exit_code=2)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_group_option():
-#     _test_command(sub_command=list, options=["moduledata", "-d", "test-deployment"], exit_code=2)
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_missing_group_option():
+    _test_command(sub_command=list, options=["moduledata", "-d", "test-deployment"], exit_code=2)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_group_arg():
-#     _test_command(sub_command=list, options=["moduledata", "-d", "test-deployment", "-g"], exit_code=2)
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_missing_group_arg():
+    _test_command(sub_command=list, options=["moduledata", "-d", "test-deployment", "-g"], exit_code=2)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_module_option():
-#     _test_command(sub_command=list, options=["moduledata", "-d", "test-deployment", "-g", "group-name"], exit_code=2)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_missing_module_arg():
-#     _test_command(
-#         sub_command=list, options=["moduledata", "-d", "test-deployment", "-g", "group-name", "-m"], exit_code=2
-#     )
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_missing_module_arg():
+    _test_command(
+        sub_command=list, options=["moduledata", "-d", "test-deployment", "-g", "group-name", "-m"], exit_code=2
+    )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_moduledata
-# def test_list_moduledata_non_existent_module():
-#     _test_command(
-#         sub_command=list,
-#         options=["moduledata", "-d", "test-deployment", "-g", "group-name", "-m", "module-name"],
-#         exit_code=0,
-#         expected_output="No module data found for test-deployment-group-name-module-name",
-#     )
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_moduledata_non_existent_module():
+    _test_command(
+        sub_command=list,
+        options=["moduledata", "-d", "test-deployment", "-g", "group-name", "-m", "module-name"],
+        exit_code=1,
+        return_result=True,
+    )
 
-
-# # temp disabled
-# # @pytest.mark.list
-# # @pytest.mark.list_moduledata
-# # def test_list_moduledata():
-# #     result = _test_command(
-# #         sub_command=list,
-# #         options=["moduledata", "-d", "example-test-dev", "-g", "test", "-m", "test-module"],
-# #         exit_code=0,
-# #         return_result=True,
-# #     )
-# #     assert json.loads(result.output).get("CognitoDomainName") == "testdomaindomaintester"
 
 
 # # Test `list modules` #
 
 
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules_help():
-#     _test_command(
-#         sub_command=list,
-#         options=["modules", "--help"],
-#         exit_code=0,
-#         expected_output="List the modules in a deployment",
-#     )
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules_help():
+    _test_command(
+        sub_command=list,
+        options=["modules", "--help"],
+        exit_code=0,
+        expected_output="List the modules in a deployment",
+    )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules_incomplete_subcommand():
-#     _test_command(
-#         sub_command=list,
-#         options=[
-#             "modules",
-#         ],
-#         exit_code=2,
-#     )
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules_incomplete_subcommand():
+    _test_command(
+        sub_command=list,
+        options=[
+            "modules",
+        ],
+        exit_code=2,
+    )
 
 
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules_missing_deployment_arg():
-#     _test_command(sub_command=list, options=["modules", "-d"], exit_code=2)
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules_missing_deployment_arg():
+    _test_command(sub_command=list, options=["modules", "-d"], exit_code=2)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules_non_existent_module():
-#     _test_command(sub_command=list, options=["modules", "-d", "zzz"], exit_code=0, return_result=True)
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules_non_existent_module():
+    _test_command(sub_command=list, options=["modules", "-d", "zzz"], exit_code=1, return_result=True)
 
 
-# @pytest.mark.list
-# @pytest.mark.list_modules
-# def test_list_modules():
-#     _test_command(
-#         sub_command=list,
-#         options=["modules", "-d", "example-test-dev"],
-#         exit_code=0,
-#         expected_output="example-test-dev",
-#     )
+@pytest.mark.list
+@pytest.mark.list_modules
+def test_list_modules(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    _test_command(
+        sub_command=list,
+        options=["modules", 
+                 "-p", "myapp",
+                 "-d", "example-test-dev", 
+                 "--debug"],
+        exit_code=0
+    )
 
+
+
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","optionals",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "--export-local-env",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params_no_dep_manifest(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","somethingcrazy",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "--export-local-env",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params_no_with_params(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._list_group.bi.get_build_env_params", return_value={"SEEDFARMER_PARAMETER":"AGreatName"})
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","optionals",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "--export-local-env",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
+    
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params_session_error(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.bi.get_build_env_params", return_value={"SEEDFARMER_PARAMETER":"AGreatName"})
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","fsafasf",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "--export-local-env",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params_no_export_param(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.bi.get_build_env_params", return_value={"SEEDFARMER_PARAMETER":"AGreatName"})
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","optionals",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
+
+@pytest.mark.list
+@pytest.mark.list_build_env_params
+def test_list_build_env_params_export_param(session_manager, mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.bi.get_build_env_params", return_value={"SEEDFARMER_PARAMETER":"AGreatName"})
+    mocker.patch("seedfarmer.cli_groups._list_group.commands.generate_export_raw_env_params",return_value={"SEEDFARMER_PARAMETER":"AGreatName"})
+    _test_command(
+        sub_command=list,
+        options=["buildparams", 
+                "-d","test",
+                "-g","optionals",
+                "-m","networking",
+                "--build-id","codebuild:12345",
+                "--export-local-env",
+                "-p","myapp",
+                "--debug",
+            ],
+        exit_code=0
+    )
 
 # -------------------------------------------
 # -----  Test the sub-command `remove`  -----
@@ -562,15 +886,14 @@ def test_store_md5_missing_module_option(patch_mgmt_methods):
 @pytest.mark.store
 @pytest.mark.store_md5
 def test_store_md5_missing_module_arg(patch_mgmt_methods):
-    _test_command(sub_command=store, options=["md5", "-d", "deployment-name", "-g", "group-name", "-m"], exit_code=2)
+    _test_command(sub_command=store, 
+                  options=["md5", 
+                           "-d", "deployment-name", 
+                           "-g", "group-name", 
+                           "-m"], 
+                  exit_code=2
+    )
 
-    # TODO Missing type option
-    # this should fail, but exit code is 0
-    # _test_command(
-    #     sub_command=store,
-    #     options=["moduledata", "-d", "deployment-name", "-g", "group-name", "-m", "module-name"],
-    #     exit_code=2
-    # )
 
 
 @pytest.mark.store

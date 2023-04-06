@@ -22,6 +22,11 @@ from seedfarmer.services.session_manager import SessionManager
 
 
 @pytest.fixture(scope="function")
+def session_manager():
+    SessionManager._instances = {}
+
+
+@pytest.fixture(scope="function")
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
@@ -38,13 +43,15 @@ def sts_client(aws_credentials):
         yield boto3_client(service_name="sts", session=None)
 
 
-def test_failed_creation():
+@pytest.mark.session_manager
+def test_failed_creation(session_manager):
     with pytest.raises(ValueError) as e:
         SessionManager().get_or_create()
     assert "A 'project_name' is required for first time initialization of the SessionManager" in str(e)
 
 
-def test_singleton(sts_client):
+@pytest.mark.session_manager
+def test_singleton(session_manager, sts_client):
     session_manager_1 = SessionManager().get_or_create(
         project_name="test",
         region_name="us-east-1",
@@ -57,5 +64,6 @@ def test_singleton(sts_client):
     assert session_manager_1.toolchain_session == session_manager_2.toolchain_session
 
 
-def test_deployment_session(sts_client):
-    SessionManager().get_or_create().get_deployment_session(account_id="111111111111", region_name="us-east-1")
+@pytest.mark.session_manager
+def test_deployment_session(session_manager, sts_client):
+    SessionManager().get_or_create(project_name="test").get_deployment_session(account_id="111111111111", region_name="us-east-1")

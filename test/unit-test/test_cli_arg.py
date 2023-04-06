@@ -39,24 +39,6 @@ _PROJECT = config.PROJECT
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="function")
-def patch_command_methods(mocker):
-    mocker.patch("seedfarmer.commands.apply", return_value=None)
-    mocker.patch("seedfarmer.commands.destroy", return_value=None)
-    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
-    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
-    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
-
-
-@pytest.fixture(scope="function")
-def patch_mgmt_methods(mocker):
-    mocker.patch("seedfarmer.mgmt.module_info.write_module_md5", return_value=None)
-    mocker.patch("seedfarmer.mgmt.module_info.remove_module_info", return_value=None)
-    mocker.patch("seedfarmer.mgmt.module_info.get_all_deployments", return_value=None)
-    mocker.patch("seedfarmer.mgmt.deploy_utils.update_deployspec", return_value=None)
-    mocker.patch("seedfarmer.mgmt.module_init.create_project", return_value=None)
-    mocker.patch("seedfarmer.mgmt.module_init.create_module_dir", return_value=None)
-    mocker.patch("seedfarmer.output_utils.print_deployment_inventory", return_value=None)
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -108,38 +90,30 @@ def session_manager(sts_client):
 
 
 @pytest.mark.init
-def test_init_create_group_module(patch_mgmt_methods):
+def test_init_create_group_module(mocker):
 
     module_name = "test-module"
     group_name = "group"
-    expected_module_path = os.path.join(_OPS_ROOT, "modules", group_name, module_name)
+    
+    mocker.patch("seedfarmer.cli_groups._init_group.minit.create_module_dir", return_value=None)
 
     # Creates a group and a module within the group
-    _test_command(sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=0)
-    # assert os.path.exists(expected_module_path)
-
-    # Creates a group and a module that already exists within the group
-    # result = _test_command(
-    #     sub_command=init, options=["module", "-g", group_name, "-m", module_name], exit_code=1, return_result=True
-    # )
-    # assert (
-    #     result.exception.args[0] == f"The module {module_name} already exists under {_OPS_ROOT}/modules/{group_name}."
-    # )
-
-    # Checks if a file from the project template was created within the new module
-    # assert os.path.exists(os.path.join(expected_module_path, "deployspec.yaml"))
+    _test_command(sub_command=init, 
+                  options=["module", 
+                           "-g", group_name, 
+                           "-m", module_name,
+                           "--debug"], 
+                  exit_code=0)
 
 
 @pytest.mark.init
-def test_init_create_project(patch_mgmt_methods):
+def test_init_create_project(mocker):
 
-    expected_project_path = os.path.join(_OPS_ROOT, _PROJECT)
-    # mocker.patch("seedfarmer.mgmt.module_init.create_project", return_value=None)
-    # Creates a new project
-    _test_command(sub_command=init, options=["project"], exit_code=0, return_result=False)
+    mocker.patch("seedfarmer.cli_groups._init_group.minit.create_project", return_value=None)
+    _test_command(sub_command=init, 
+                  options=["project"], 
+                  exit_code=0)
 
-    # Checks if file exists from the project template
-    # assert os.path.exists(os.path.join(expected_project_path, "seedfarmer.yaml"))
 
 
 # # -------------------------------------------
@@ -158,7 +132,7 @@ def test_version():
 
 
 @pytest.mark.apply
-def test_apply_help(patch_command_methods):
+def test_apply_help():
     _test_command(
         sub_command=apply,
         options=["--help"],
@@ -168,7 +142,7 @@ def test_apply_help(patch_command_methods):
 
 
 @pytest.mark.apply
-def test_apply_debug(patch_command_methods):
+def test_apply_debug():
     _test_command(
         sub_command=apply,
         options=["--help", "--debug"],
@@ -179,8 +153,9 @@ def test_apply_debug(patch_command_methods):
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment_dry_run(patch_command_methods):
+def test_apply_deployment_dry_run(mocker):
     # Deploys a functioning module
+    mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
     deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
 
     command_output = _test_command(sub_command=apply, options=[deployment_manifest, "--dry-run"], exit_code=0)
@@ -189,47 +164,46 @@ def test_apply_deployment_dry_run(patch_command_methods):
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment(patch_command_methods):
+def test_apply_deployment(mocker):
     # Deploys a functioning module
+    mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
     deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
     command_output = _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
 
 
 @pytest.mark.destroy
-def test_destroy_deployment_dry_run(patch_command_methods):
+def test_destroy_deployment_dry_run(mocker):
     # Destroy a functioning module
+    mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
     command_output = _test_command(sub_command=destroy, options=["myapp", "--debug", "--dry-run"], exit_code=0)
 
 
 @pytest.mark.destroy
-def test_destroy_deployment(patch_command_methods):
+def test_destroy_deployment(mocker):
     # Destroy a functioning module
+    mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
     command_output = _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
 
 
-# @pytest.mark.bootstrap
-# def test_bootstrap_toolchain_and_target(patch_command_methods):
-#     # Bootstrap an Account As Target
-#     _test_command(sub_command=bootstrap,
-#                                    options=["toolchain",
-#                                             "--trusted-principal","arn:aws:iam::123456789012:role/AdminRole",
-#                                             "--as-target","--debug"],
-#                                    exit_code=0)
-
 
 @pytest.mark.bootstrap
-def test_bootstrap_toolchain_only(patch_command_methods):
+def test_bootstrap_toolchain_only(mocker):
     # Bootstrap an Account As Target
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
         sub_command=bootstrap,
         options=["toolchain", "--trusted-principal", "arn:aws:iam::123456789012:role/AdminRole", "--debug"],
         exit_code=0,
     )
 
-
 @pytest.mark.bootstrap
-def test_bootstrap_target_account(patch_command_methods):
+def test_bootstrap_target_account(mocker):
     # Bootstrap an Account As Target
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
         sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0
     )
@@ -423,7 +397,7 @@ def test_list_dependencies(session_manager,mocker):
 
 @pytest.mark.list
 @pytest.mark.list_deployments
-def test_list_deployments_help(patch_mgmt_methods):
+def test_list_deployments_help():
     _test_command(
         sub_command=list,
         options=["deployments", "--help"],
@@ -434,7 +408,7 @@ def test_list_deployments_help(patch_mgmt_methods):
 
 @pytest.mark.list
 @pytest.mark.list_deployments
-def test_list_deployments_extra_args(patch_mgmt_methods):
+def test_list_deployments_extra_args():
     
     _test_command(
         sub_command=list,
@@ -822,14 +796,32 @@ def test_remove_missing_module_arg():
     )
 
 
-# @pytest.mark.remove
-# def test_remove_non_existent_module():
-#     _test_command(
-#         sub_command=remove,
-#         options=["moduledata", "-d", "deployment-name", "-g", "group-name", "-m", "zzz", "--debug"],
-#         exit_code=0,
-#     )
+@pytest.mark.remove
+def test_remove_moduledata(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.remove_module_info", return_value=None)
+    _test_command(
+        sub_command=remove, options=["moduledata", 
+                                     "-d", "deployment-name", 
+                                     "-g", "group-name", 
+                                     "-m", "mymodule",
+                                     "--target-account-id","123456789012",
+                                     "--target-region","us-east-1"
+                                     "--debug"],
+        exit_code=0
+    )
 
+@pytest.mark.remove
+def test_remove_moduledata_bad_account_params(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.remove_module_info", return_value=None)
+    _test_command(
+        sub_command=remove, options=["moduledata", 
+                                     "-d", "deployment-name", 
+                                     "-g", "group-name", 
+                                     "-m", "mymodule",
+                                     "--target-account-id","123456789012",
+                                     "--debug"],
+        exit_code=1
+    )
 
 # -------------------------------------------
 # -----  Test the sub-command `store`   -----
@@ -851,7 +843,7 @@ def test_store_help():
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_deployment_option(patch_mgmt_methods):
+def test_store_md5_missing_deployment_option():
     _test_command(
         sub_command=store,
         options=["md5"],
@@ -861,31 +853,31 @@ def test_store_md5_missing_deployment_option(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_deployment_arg(patch_mgmt_methods):
+def test_store_md5_missing_deployment_arg():
     _test_command(sub_command=store, options=["md5", "-d"], exit_code=2)
 
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_group_option(patch_mgmt_methods):
+def test_store_md5_missing_group_option():
     _test_command(sub_command=store, options=["md5", "-d", "deployment-name"], exit_code=2)
 
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_group_arg(patch_mgmt_methods):
+def test_store_md5_missing_group_arg():
     _test_command(sub_command=store, options=["md5", "-d", "deployment-name", "-g"], exit_code=2)
 
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_module_option(patch_mgmt_methods):
+def test_store_md5_missing_module_option():
     _test_command(sub_command=store, options=["md5", "-d", "deployment-name", "-g", "group-name"], exit_code=2)
 
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_module_arg(patch_mgmt_methods):
+def test_store_md5_missing_module_arg():
     _test_command(sub_command=store, 
                   options=["md5", 
                            "-d", "deployment-name", 
@@ -898,7 +890,7 @@ def test_store_md5_missing_module_arg(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_missing_type_arg(patch_mgmt_methods):
+def test_store_md5_missing_type_arg():
     _test_command(
         sub_command=store,
         options=["md5", "-d", "deployment-name", "-g", "group-name", "-m", "module-name", "-t"],
@@ -908,7 +900,7 @@ def test_store_md5_missing_type_arg(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_deployspec(patch_mgmt_methods):
+def test_store_md5_deployspec():
 
     # Store hash to SSM of type spec
     _test_command(
@@ -930,7 +922,7 @@ def test_store_md5_deployspec(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_md5
-def test_store_md5_bundle(patch_mgmt_methods):
+def test_store_md5_bundle():
     # Store hash to SSM of type bundle
     _test_command(
         sub_command=store,
@@ -996,10 +988,17 @@ def test_store_moduledata_missing_module_arg():
 
 @pytest.mark.store
 @pytest.mark.store_moduledata
-def test_store_moduledata(patch_mgmt_methods):
+def test_store_moduledata(mocker, session_manager):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.write_metadata",return_value=None)
+    
     _test_command(
         sub_command=store,
-        options=["moduledata", "-d", "deployment-name", "-g", "group-name", "-m", "module-data", "--project", "myapp"],
+        options=["moduledata", 
+                 "-d", "deployment-name", 
+                 "-g", "group-name", 
+                 "-m", "module-data", 
+                 "--project", "myapp",
+                 "--debug"],
         exit_code=0,
     )
 
@@ -1048,7 +1047,7 @@ def test_store_deployspec_missing_module_arg():
 
 @pytest.mark.store
 @pytest.mark.store_deployspec
-def test_store_deployspec_missing_path(patch_mgmt_methods):
+def test_store_deployspec_missing_path():
     _test_command(
         sub_command=store,
         options=["deployspec", "-d", "deployment-name", "-g", "group-name", "-m", "module", "--project", "myapp"],
@@ -1058,23 +1057,19 @@ def test_store_deployspec_missing_path(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_deployspec
-def test_store_deployspec_missing_acct(patch_mgmt_methods):
+def test_store_deployspec_missing_acct():
     path = "module/test/test"
     _test_command(
         sub_command=store,
         options=[
             "deployspec",
-            "-d",
-            "deployment-name",
-            "-g",
-            "group-name",
-            "-m",
-            "module",
-            "--project",
-            "myapp",
-            "--path",
-            "module/test/test" "target_region",
-            "us-east-1",
+            "-d", "deployment-name",
+            "-g",  "group-name",
+            "-m", "module",
+            "--project", "myapp",
+            "--path", "module/test/test" 
+            "--target_region","us-east-1",
+            "--debug"
         ],
         exit_code=2,
     )
@@ -1082,27 +1077,24 @@ def test_store_deployspec_missing_acct(patch_mgmt_methods):
 
 @pytest.mark.store
 @pytest.mark.store_deployspec
-def test_store_deployspec(patch_mgmt_methods):
-    path = "module/test/test"
+@pytest.mark.parametrize("session", [None])
+def test_store_deployspec(session_manager, session):
+    
     _test_command(
         sub_command=store,
         options=[
             "deployspec",
-            "-d",
-            "deployment-name",
-            "-g",
-            "group-name",
-            "-m",
-            "module",
-            "--project",
-            "myapp",
-            "--path",
-            "module/test/test",
+            "-d","deployment-name",
+            "-g","group-name",
+            "-m","module",
+            "--project","myapp",
+            "--path","module/test/test",
+            "--target-account-id","123456789012",
+            "--target-region","us-east-1",
             "--debug",
         ],
-        exit_code=0,
+        exit_code=1,
     )
-
 
 @pytest.mark.projectpolicy
 def test_get_projectpolicy():

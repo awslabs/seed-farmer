@@ -26,7 +26,7 @@ from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
 from seedfarmer.models._deploy_spec import DeploySpec
-import mock_manifests
+import mock_data.mock_manifests as mock_manifests
 
 from moto import mock_sts
 

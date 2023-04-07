@@ -63,6 +63,7 @@ markers = [
     "mgmt: marks all `mgmt` tests",
     "mgmt_module_info: marks all `mgmt_module_info` tests",
     "mgmt_deployment_utils: marks all `mgmt_deployment_utils` tests",
+    "mgmt_deployment_utils_filter: marks all `mgmt_deployment_utils_filter` tests",
     "service: marks all `services` tests",
     "projectpolicy: marks all `projectpolic` tests",
     "version: marks all `version` tests",

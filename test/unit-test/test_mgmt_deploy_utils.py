@@ -22,8 +22,12 @@ import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
-import mock_manifests
+import mock_data.mock_manifests as mock_manifests
+import mock_data.mock_module_info_huge as mock_module_info_huge
+import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
+import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 from moto import mock_sts
+
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -106,13 +110,21 @@ def test_need_to_build_yes(mocker,session_manager):
  
     
 #---------------------------------
-# Test SSM methods in deploy_utils
+# Test Write / SSM methods in deploy_utils
 #---------------------------------
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils
 def test_write_deployed_deployment_manifest(mocker,session_manager):
     mocker.patch("seedfarmer.mgmt.deploy_utils.mi.write_deployed_deployment_manifest", return_value=None)
     du.write_deployed_deployment_manifest(DeploymentManifest(**mock_manifests.deployment_manifest))
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils
+def test_write_group_manifest(mocker,session_manager):
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.write_group_manifest", return_value=None)
+    du.write_group_manifest(DeploymentManifest(**mock_manifests.deployment_manifest), ModulesManifest(**mock_manifests.modules_manifest))
+
     
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils
@@ -172,3 +184,80 @@ def test_get_deployed_group_ordering_deployed(mocker,session_manager):
     mocker.patch("seedfarmer.mgmt.deploy_utils.populate_module_info_index", return_value=None)
     mocker.patch("seedfarmer.mgmt.deploy_utils._populate_group_modules_from_index",return_value=mock_manifests.deployment_manifest['groups'])
     du.get_deployed_group_ordering(deployment_name="myapp")
+    
+    
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils
+@pytest.mark.parametrize("session", [None, boto3.Session()])
+def test_update_deployspec(mocker,session):
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.write_deployspec", return_value=mock_manifests.deployment_manifest)
+    du.update_deployspec(deployment="myapp", 
+                         group="test-group",
+                         module="test-module",
+                         module_path="test/unit-test/mock_data/modules/module-test",
+                         session=session
+                         )
+    
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils    
+def test_populate_module_info_index(session_manager,mocker):
+    import json
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",return_value=mock_module_info_huge.module_index_info_huge)
+    module_info_index=du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_manifests.deployment_manifest))
+    
+    
+#-----------------------
+# Test Filtering for Deploy / Destroy
+#-----------------------
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils_filter   
+def test_filter_destroy_deploy(session_manager,mocker):
+    import json
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",return_value=mock_module_info_huge.module_index_info_huge)
+    module_info_index=du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest))
+    deployment_manifest = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    du.filter_deploy_destroy(apply_manifest=deployment_manifest,module_info_index=module_info_index)
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils_filter   
+def test_filter_destroy_deploy_with_destroy(session_manager,mocker):
+    import json
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",return_value=mock_module_info_huge.module_index_info_huge)
+    module_info_index=du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest))
+    deployment_manifest_destroy = DeploymentManifest(**mock_deployment_manifest_for_destroy.deployment_manifest)
+    du.filter_deploy_destroy(apply_manifest=deployment_manifest_destroy,
+                             module_info_index=module_info_index)
+
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils_filter   
+def test_populate_groups_to_remove(session_manager,mocker):
+    import json
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",return_value=mock_module_info_huge.module_index_info_huge)
+    module_info_index=du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest))
+    deployment_manifest_destroy = DeploymentManifest(**mock_deployment_manifest_for_destroy.deployment_manifest)
+    modules_to_destory_list=du._populate_groups_to_remove(deployment_name=deployment_manifest_destroy.name,
+                                  apply_groups=deployment_manifest_destroy.groups,
+                                  module_info_index=module_info_index)
+    found_for_delete = False
+    false_found_for_delete= False
+    for module in modules_to_destory_list:
+        if module.name in ['users']:
+            found_for_delete = True
+        if module.name in ["networking"]:
+            false_found_for_delete =True
+    assert found_for_delete ==True
+    assert false_found_for_delete == False
+    
+    
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils_filter   
+def test_validate_module_dependencies():
+    du.validate_module_dependencies(module_dependencies=mock_deployment_manifest_for_destroy.module_dependencies,
+                                    destroy_manifest=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest)
+        
+    )

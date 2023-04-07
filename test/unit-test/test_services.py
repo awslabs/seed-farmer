@@ -15,7 +15,8 @@ import boto3
 import botocore
 import pytest
 from moto import mock_codebuild, mock_iam, mock_secretsmanager, mock_ssm, mock_sts
-
+from seedfarmer.services._service_utils import boto3_client
+from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.services import _service_utils
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -40,8 +41,23 @@ def session(aws_credentials):
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
     with mock_sts():
-        yield _service_utils.boto3_client(service_name="sts", session=None)
+        yield boto3_client(service_name="sts", session=None)
 
+
+@pytest.fixture(scope="function")       
+def session_manager(sts_client):
+    SessionManager._instances={}
+    SessionManager().get_or_create(
+        project_name="test",
+        region_name="us-east-1",
+        toolchain_region="us-east-1",
+        enable_reaper=False,
+    )
+
+@pytest.fixture(scope="function")
+def secretsmanager_client(aws_credentials, session_manager):
+    with mock_sts():
+        yield boto3_client(service_name="secretsmanager", session=None)
 
 @pytest.mark.parametrize("session", [None, boto3.Session()])
 def test_utils_boto3_client(aws_credentials, session):
@@ -194,16 +210,14 @@ def test_delete_ssm_param(session) -> None:
         )
 
 
-### SecretsManager
+# ### SecretsManager
 # @pytest.mark.service
-# def test_get_params(session, mocker)->None:
+# def test_secrets_manager(session_manager, mocker, secretsmanager_client)->None:
 #     import seedfarmer.services._secrets_manager as sm
-#     mocker.patch("seedfarmer.services._service_utils.get_account_id", return_value="123456789012")
-#     mocker.patch("seedfarmer.services._service_utils.get_region", return_value="us-east-1")
-
+#    #mocker.patch("seedfarmer.services._secrets_manager.boto3_client", return_value=secretsmanager_client)
 #     with mock_secretsmanager():
-#         sm.get_secret_secrets_manager(name="test",session=session)
-#         pass
+#         sm.get_secret_secrets_manager(name="test")
+
 
 ### Sessions Manager
 ##REF -- https://gist.github.com/k-bx/5861641

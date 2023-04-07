@@ -26,7 +26,7 @@ from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
 from seedfarmer.models._deploy_spec import DeploySpec
-import mock_manifests
+import mock_data.mock_manifests as mock_manifests
 
 from moto import mock_sts
 
@@ -997,6 +997,24 @@ def test_store_moduledata(mocker, session_manager):
                  "-d", "deployment-name", 
                  "-g", "group-name", 
                  "-m", "module-data", 
+                 "--project", "myapp",
+                 "--debug"],
+        exit_code=0,
+    )
+
+@pytest.mark.store
+@pytest.mark.store_moduledata
+def test_store_moduledata_with_account(mocker, session_manager):
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.write_metadata",return_value=None)
+    
+    _test_command(
+        sub_command=store,
+        options=["moduledata", 
+                 "-d", "deployment-name", 
+                 "-g", "group-name", 
+                 "-m", "module-data",
+                 "--target-account-id","123456789012",
+                 "--target-region","us-east-1",
                  "--project", "myapp",
                  "--debug"],
         exit_code=0,

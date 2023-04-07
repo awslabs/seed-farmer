@@ -58,7 +58,6 @@ markers = [
     "models_deployresponses: marks all `DeploymentResponses` tests",
     "utils_test: marks all `utils_test` tests",
     "checksum: marks all `checksum` tests",
-    "commands: marks all `commands` tests",
     "bootstrap: marks all `commands_bootstrap` tests",
     "mgmt: marks all `mgmt` tests",
     "mgmt_module_info: marks all `mgmt_module_info` tests",
@@ -68,6 +67,8 @@ markers = [
     "projectpolicy: marks all `projectpolic` tests",
     "version: marks all `version` tests",
     "session_manager: marks all `session_manager` tests",
+    "commands_stack: marks all `comands_stacks` tests",
+    "commands: marks all `commands` tests",
 
 ]
 log_cli_level = "INFO"

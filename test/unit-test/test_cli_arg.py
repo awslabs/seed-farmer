@@ -265,10 +265,10 @@ def test_list_deployspec_deployed_error(session,mocker):
     _test_command(
         list,
         options=["deployspec",
-                "-d","test",
+                "-d","crazystuff",
                 "-g","test-group",
                 "-m","test-module",
-                "-p","myapp",
+                "-p","something",
                 "--debug",
                 ],
         exit_code=1

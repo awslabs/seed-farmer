@@ -633,8 +633,14 @@ def apply(
             _logger.debug("module_group: %s", module_group)
             raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
         if module_group.path:
-            with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
-                module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            try:
+                with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
+                    module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            except Exception as e:
+                _logger.error(e)
+                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                _logger.error("Verify that elemts are filled out and yaml compliant")
+                exit(1)
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(deployment_manifest=deployment_manifest)

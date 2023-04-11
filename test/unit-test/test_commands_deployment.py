@@ -80,7 +80,7 @@ def test_apply_clean(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.deploy_deployment", return_value=None)
-    dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment.yaml",
+    dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-hc.yaml",
              dryrun=True)
 
 @pytest.mark.commands
@@ -94,7 +94,7 @@ def test_apply_violations(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=[{"module1":["moduleA","moduleB"]}])
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment.yaml")
+        dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-hc.yaml")
     assert pytest_wrapped_e.type == SystemExit
     
 

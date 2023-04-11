@@ -209,61 +209,31 @@ def test_bootstrap_target_account(mocker):
     )
 
 
-# @pytest.mark.apply
-# def test_apply_missing_deployment():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-manifest/deployment.yaml"
+@pytest.mark.apply
+def test_apply_missing_deployment():
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-manifest/deployment.yaml"
 
-#     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     assert result.exception.args[1] == "No such file or directory"
-
-
-# @pytest.mark.apply
-# def test_apply_missing_group_manifest():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-group-manifest/deployment.yaml"
-
-#     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     assert result.exception.args[1] == "No such file or directory"
+    result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
+    assert result.exception.args[1] == "No such file or directory"
 
 
-# @pytest.mark.apply
-# def test_apply_missing_deployment_group_name():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-name/deployment.yaml"
+@pytest.mark.apply
+def test_apply_missing_deployment_group_name():
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-name/deployment.yaml"
 
-#     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     assert result.exception.args[0][0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
-
-
-# @pytest.mark.apply
-# def test_apply_missing_deployment_group_path():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-path/deployment.yaml"
-
-#     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     assert result.exception.args[0] == "One of the `path` or `modules` attributes must be defined on a Group"
+    result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
+    assert result.exception.args[0][0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
 
 
-# @pytest.mark.apply
-# def test_apply_missing_deployment_name():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
-#     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     assert result.exception.args[0] == "One of 'name' or 'name_generator' is required"
+@pytest.mark.apply
+def test_apply_missing_deployment_name():
+    deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
-
-# @pytest.mark.apply
-# def test_apply_broken_deploy_phase():
-#     deployment_manifest = f"{_TEST_ROOT}/manifests/test-broken-deployspec-deploy/deployment.yaml"
-
-#     _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-#     # assert result.exception.args[0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
+    result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
+    assert result.exception.args[0] == "One of 'name' or 'name_generator' is required"
 
 
-# # # TODO add test for broken destroy phase
-# # @pytest.mark.destroy
-# # def test_destroy_broken_deploy_phase():
-# #     deployment_manifest = f"{_TEST_ROOT}/manifests/test-broken-deployspec-destroy/deployment.yaml"
-
-# #     result = _test_command(sub_command=destroy, options=deployment_manifest, exit_code=1, return_result=True)
-# #     assert result.exception.args[0][0].exc.errors()[0]['msg'] == "none is not an allowed value"
 
 # -------------------------------------------
 # -----  Test the sub-command `list`    -----

@@ -124,7 +124,28 @@ deployment_manifest_json = {
                             "value_from": {
                                 "parameterValue": "testRegionalParam"
                             }
-                        },                       
+                        }, 
+                        {
+                            "name": "booltest1",
+                            "value" : False
+                        },   
+                        
+                        {
+                            "name": "booltest2",
+                            "value" : "False"
+                        }, 
+                       {
+                            "name": "booltest3",
+                            "value" : True
+                        },
+                        {
+                            "name": "booltest4",
+                            "value" : "No"
+                        },
+                        {
+                            "name": "booltest5",
+                            "value" : "True"
+                        }                    
                         
                     ],
                     "target_account": "primary",
@@ -189,6 +210,7 @@ def test_load_parameter_values(session_manager,mocker):
                              target_region="us-east-1",
         )
     names = []
+    print(params)
     for module_parameter in params:
         names.append(module_parameter.name)
     assert ('removal-policy' in names) == True

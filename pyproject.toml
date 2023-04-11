@@ -74,7 +74,7 @@ markers = [
     "commands_deployment: marks all `commands_deployment` tests",
 ]
 log_cli_level = "INFO"
-addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=75"
+addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=80"
 pythonpath = [
   "."
 ]

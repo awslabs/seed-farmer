@@ -12,6 +12,9 @@ from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
+import mock_data.mock_module_info_huge as mock_module_info_huge
+import mock_data.mock_manifests as mock_manifests
+import mock_data.mock_deployspec as mock_deployspec
 
 
 from moto import mock_sts
@@ -42,30 +45,6 @@ def session_manager(sts_client):
         enable_reaper=False,
     )
  
-
-dummy_deployspec = yaml.safe_load(
-    """
-publishGenericEnvVariables: true
-deploy:
-  phases:
-    install:
-      commands:
-      - npm install -g aws-cdk@2.20.0
-      - pip install -r requirements.txt
-    build:
-      commands:
-      - echo "This Dummy Module does nothing"
-destroy:
-  phases:
-    install:
-      commands:
-      - npm install -g aws-cdk@2.20.0
-      - pip install -r requirements.txt
-    build:
-      commands:
-      - echo 'Look Ma....destroying'                                  
-    """)
-
 
 
 @pytest.mark.commands
@@ -177,7 +156,7 @@ def test_execute_deploy(session_manager,mocker):
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     group = dep.groups[0]
     module_manifest=group.modules[0]
-    module_manifest.deploy_spec=DeploySpec(**dummy_deployspec)
+    module_manifest.deploy_spec=DeploySpec(**mock_deployspec.dummy_deployspec)
     dc._execute_deploy(group_name=group.name,
                        module_manifest=module_manifest,
                        deployment_manifest = dep,
@@ -185,3 +164,78 @@ def test_execute_deploy(session_manager,mocker):
                        permissions_boundary_arn=None,
                        codebuild_image=None)  
     
+    
+    
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_execute_destroy_invalid_spec(session_manager,mocker):
+    from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
+    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    group = dep.groups[0]
+    module_manifest=group.modules[0]
+    mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals",module="metworking", status="SUCCESS")
+
+    
+    mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
+                 return_value=("stack_name","role_name"))
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module",return_value=mod_resp)
+    with pytest.raises( ValueError):
+        dc._execute_destroy(group_name=group.name,
+                        module_manifest=module_manifest,
+                        module_path="to/my/module",
+                        deployment_manifest = dep,
+                        docker_credentials_secret=None,
+                        codebuild_image=None)  
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_execute_destroy(session_manager,mocker):
+    from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
+    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    group = dep.groups[0]
+    module_manifest=group.modules[0]
+    mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals",module="metworking", status="SUCCESS")
+    mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
+                 return_value=("stack_name","role_name"))
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module",return_value=mod_resp)
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack",return_value=None)
+    module_manifest.deploy_spec=DeploySpec(**mock_deployspec.dummy_deployspec)
+    dc._execute_destroy(group_name=group.name,
+                    module_manifest=module_manifest,
+                    module_path="to/my/module",
+                    deployment_manifest = dep,
+                    docker_credentials_secret=None,
+                    codebuild_image=None)  
+
+
+    
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_deploy_deployment(session_manager,mocker):
+    import hashlib
+    mock_hashlib = hashlib.md5(json.dumps({"hey":"yp"}, sort_keys=True).encode("utf-8"))
+    
+    import seedfarmer.mgmt.deploy_utils as du
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",return_value=mock_module_info_huge.module_index_info_huge)
+    module_info_index=du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_manifests.deployment_manifest))
+    
+    
+    
+    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    mocker.patch("seedfarmer.commands._deployment_commands.print_manifest_inventory",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.validate_group_parameters",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.get_deployspec_path", 
+                 return_value='test/unit-test/mock_data/mock_deployspec.yaml')
+    mocker.patch("seedfarmer.commands._deployment_commands.checksum.get_module_md5",return_value="asfsadfsdfa")
+    mocker.patch("seedfarmer.commands._deployment_commands.hashlib.md5",return_value=mock_hashlib)
+    
+    
+    mocker.patch("seedfarmer.commands._deployment_commands._deploy_deployment_is_not_dry_run",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.need_to_build",
+                 return_value=None)
+    # mocker.patch("seedfarmer.commands._deployment_commands.module_info_index.get_module_info",
+    #              return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.print_bolded",return_value=None)
+    dc.deploy_deployment(deployment_manifest=dep,module_info_index=module_info_index)

@@ -1,5 +1,5 @@
 name: test-module
-path: git::https://github.com/awslabs/seed-farmer.git//test/unit-test/mock_data/modules/module-test/
+path: test/unit-test/mock_data/modules/module-test/
 parameters:
   - name: event_bridge_enabled
     value: "False"

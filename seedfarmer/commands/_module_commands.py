@@ -120,7 +120,7 @@ def deploy_module(
         ),
     ]
 
-    module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+    module_path = os.path.join(config.OPS_ROOT, module_manifest.path)
     _phases = module_manifest.deploy_spec.deploy.phases
     try:
         resp_dict_str, dict_metadata = _execute_module_commands(

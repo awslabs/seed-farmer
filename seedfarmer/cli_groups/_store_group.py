@@ -68,6 +68,7 @@ def store() -> None:
 )
 @click.option(
     "--path",
+    "-p",
     type=str,
     help="The relative module path (ex. modules/optionals/networking) -- *** DO NOT PASS IN filename `deployspec.yaml`",
     required=True,

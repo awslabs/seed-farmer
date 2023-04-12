@@ -1,3 +1,4 @@
+
 [tool.black]
 line-length = 120
 target-version = ["py36", "py37", "py38"]
@@ -15,7 +16,6 @@ exclude = '''
   | build
   | dist
   | codeseeder.out
-  | seedfarmer.gitmodules
 )/
 '''
 
@@ -26,6 +26,5 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 120
-src_paths = ["seedfarmer"]
 py_version = 36
 skip_gitignore = false

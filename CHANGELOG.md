@@ -9,15 +9,6 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
-
-### Fixes
-
-
-## v2.6.1 (2023-04-12)
-
-### New
-
-### Changes
 - removed modules as they now are in `https://github.com/awslabs/seedfarmer-modules`
 
 ### Fixes

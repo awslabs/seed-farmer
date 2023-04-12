@@ -12,6 +12,9 @@ targetRegion: us-west-2
 parameters:
   - name: encryption-type
     value: SSE
-  - name: vpc-id
+  - name: some-name
     valueFrom:
-      parameterValue: vpcId
+      moduleMetadata:
+        group: optionals
+        name: networking
+        key: VpcId

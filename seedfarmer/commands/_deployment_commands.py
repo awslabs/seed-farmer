@@ -409,26 +409,27 @@ def destroy_deployment(
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
                         return _execute_destroy(**args)
 
-                    params = [
-                        {
-                            "group_name": _group.name,
-                            "module_manifest": _module,
-                            "module_path": _clone_module_repo(_module.path)
-                            if _module.path.startswith("git::")
-                            else _module.path,
-                            "deployment_manifest": destroy_manifest,
-                            "docker_credentials_secret": destroy_manifest.get_parameter_value(
-                                "dockerCredentialsSecret",
-                                account_alias=_module.target_account,
-                                region=_module.target_region,
-                            ),
-                            "codebuild_image": destroy_manifest.get_region_codebuild_image(
-                                account_alias=_module.target_account, region=_module.target_region
-                            ),
-                        }
-                        for _module in _group.modules
-                        if _module and _module.deploy_spec
-                    ]
+                    for _module in _group.modules:
+                        if _module.path.startswith("git::"):
+                            _module.set_local_path(_clone_module_repo(_module.path))
+                        if _module and _module.deploy_spec:
+                            params = [
+                                {
+                                    "group_name": _group.name,
+                                    "module_manifest": _module,
+                                    "module_path": _module._local_path,
+                                    "deployment_manifest": destroy_manifest,
+                                    "docker_credentials_secret": destroy_manifest.get_parameter_value(
+                                        "dockerCredentialsSecret",
+                                        account_alias=_module.target_account,
+                                        region=_module.target_region,
+                                    ),
+                                    "codebuild_image": destroy_manifest.get_region_codebuild_image(
+                                        account_alias=_module.target_account, region=_module.target_region
+                                    ),
+                                }
+                                for _module in _group.modules
+                            ]
                     destroy_response = list(workers.map(_exec_destroy, params))
                     _logger.debug(destroy_response)
                     for dep_resp_object in destroy_response:
@@ -494,9 +495,10 @@ def deploy_deployment(
             if not module.path:
                 raise ValueError("Unable to parse module manifest, `path` not specified")
 
-            module_path = _clone_module_repo(module.path) if module.path.startswith("git::") else module.path
+            if module.path.startswith("git::"):
+                module.set_local_path(_clone_module_repo(module.path))
 
-            deployspec_path = get_deployspec_path(module_path)
+            deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
@@ -510,7 +512,9 @@ def deploy_deployment(
             ]
 
             module.bundle_md5 = checksum.get_module_md5(
-                project_path=config.OPS_ROOT, module_path=module_path, excluded_files=md5_excluded_module_files
+                project_path=config.OPS_ROOT,
+                module_path=str(module.get_local_path()),
+                excluded_files=md5_excluded_module_files,
             )
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
@@ -531,7 +535,6 @@ def deploy_deployment(
                     [module.target_account, module.target_region, deployment_name, group_name, module.name]
                 )
             else:
-                module.path = module_path
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:

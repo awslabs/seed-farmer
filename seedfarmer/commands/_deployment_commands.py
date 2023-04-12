@@ -417,7 +417,7 @@ def destroy_deployment(
                                 {
                                     "group_name": _group.name,
                                     "module_manifest": _module,
-                                    "module_path": _module._local_path,
+                                    "module_path": str(_module.get_local_path()),
                                     "deployment_manifest": destroy_manifest,
                                     "docker_credentials_secret": destroy_manifest.get_parameter_value(
                                         "dockerCredentialsSecret",

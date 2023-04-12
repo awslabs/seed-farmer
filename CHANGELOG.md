@@ -9,10 +9,18 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+## v2.6.1 (2023-04-12)## Unreleased
+
+### New
+
+### Changes
 - removed modules as they now are in `https://github.com/awslabs/seedfarmer-modules`
 
 ### Fixes
-- fix for `gitpython` assuming that codecommit repos are unsafe 
+- fix for `gitpython` assuming that codecommit repos are unsafe
 - fix resolution of parameters that have a False value
 - fix adding verbose error messages when a manifest cannot be loaded
 - fix destroy of modules sourced from git via disparate (non-cached) cli invocations

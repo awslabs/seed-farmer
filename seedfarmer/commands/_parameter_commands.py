@@ -57,7 +57,7 @@ def load_parameter_values(
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug("parameter: %s", parameter.dict())
 
-        if parameter.value is not None:
+        if parameter.value:
             _logger.debug("static parameter value: %s", parameter.value)
             parameter_values.append(parameter)
         elif parameter.value_from:

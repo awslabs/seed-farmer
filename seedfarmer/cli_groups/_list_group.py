@@ -303,7 +303,7 @@ def list_module_metadata(
     profile: Optional[str],
     region: Optional[str],
     env_file: str,
-    export_local_env: bool,
+    export_local_env: str,
     debug: bool,
 ) -> None:
     if debug:

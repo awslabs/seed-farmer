@@ -55,9 +55,20 @@ class ModuleManifest(CamelModel):
     target_region: Optional[str] = None
     codebuild_image: Optional[str] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
+    _local_path: Optional[str] = PrivateAttr(default=None)
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self._local_path = self.path
 
     def set_target_account_id(self, account_id: str) -> None:
         self._target_account_id = account_id
 
     def get_target_account_id(self) -> Optional[str]:
         return self._target_account_id
+
+    def set_local_path(self, local_path: str) -> None:
+        self._local_path = local_path
+
+    def get_local_path(self) -> Optional[str]:
+        return self._local_path

@@ -29,3 +29,52 @@ line_length = 120
 src_paths = ["seedfarmer"]
 py_version = 36
 skip_gitignore = false
+
+[tool.pytest.ini_options]
+markers = [
+    "first: marks the first test to run",
+    "second: marks the seconds test to run",
+    "last: marks the last test to run",
+    "apply: marks `seedfarmer apply` tests",
+    "apply_working_module: marks `seedfarmer apply` test that creates a functioning module",
+    "destroy: marks `seedfarmer destroy` tests",
+    "init: marks `seedfarmer init` tests",
+    "list: marks all `seedfarmer list` tests",
+    "list_deployments: marks all `seedfarmer list deployments` tests",
+    "list_deployspec: marks all `seedfarmer list deployspec` tests",
+    "list_moduledata: marks all `seedfarmer list moduledata` tests",
+    "list_dependencies: marks all `seedfarmer list dependencies` tests",
+    "list_modules: marks all `seedfarmer list modules` tests",
+    "list_build_env_params: marks all `seedfarmer list buildparams` tests",
+    "remove: marks all `seedfarmer remove` tests",
+    "store: marks all `seedfarmer store` tests",
+    "store_md5: marks all `seedfarmer store` tests",
+    "store_deployspec: marks all `seedfarmer store` tests",
+    "store_moduledata: marks all `seedfarmer store` tests",
+    "models: marks all `models` tests",
+    "models_deployment_manifest: marks all `DeploymentManifest` tests",
+    "models_module_manifest: marks all `ModuleManifest` tests",
+    "models_deployspec: marks all `DeploySpec` tests",
+    "models_deployresponses: marks all `DeploymentResponses` tests",
+    "utils_test: marks all `utils_test` tests",
+    "checksum: marks all `checksum` tests",
+    "bootstrap: marks all `commands_bootstrap` tests",
+    "mgmt: marks all `mgmt` tests",
+    "mgmt_module_info: marks all `mgmt_module_info` tests",
+    "mgmt_deployment_utils: marks all `mgmt_deployment_utils` tests",
+    "mgmt_deployment_utils_filter: marks all `mgmt_deployment_utils_filter` tests",
+    "service: marks all `services` tests",
+    "projectpolicy: marks all `projectpolic` tests",
+    "version: marks all `version` tests",
+    "session_manager: marks all `session_manager` tests",
+    "commands: marks all `commands` tests",
+    "commands_stack: marks all `comands_stacks` tests",
+    "commands_parameters: marks all `commands_parameters` tests",
+    "commands_modules: marks all `commands_modules` tests",
+    "commands_deployment: marks all `commands_deployment` tests",
+]
+log_cli_level = "INFO"
+addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=80"
+pythonpath = [
+  "."
+]

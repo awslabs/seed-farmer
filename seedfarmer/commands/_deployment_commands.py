@@ -69,6 +69,10 @@ def _clone_module_repo(git_path: str) -> str:
     str
         The local directory within the codeseeder.out/ where the repository was cloned
     """
+    # gitpython library has started blocking non https and ssh protocols by default
+    # codecommit is not _actually_ unsafe
+    allow_unsafe_protocols = git_path.startswith("git::codecommit")
+
     git_path = git_path.replace("git::", "")
     ref: Optional[str] = None
     depth: Optional[int] = None
@@ -92,10 +96,10 @@ def _clone_module_repo(git_path: str) -> str:
     os.makedirs(working_dir, exist_ok=True)
     if not os.listdir(working_dir):
         _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth)
+        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols)
     else:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        Repo(working_dir).remotes["origin"].pull()
+        Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
 
     return os.path.join(working_dir, module_directory)
 
@@ -405,26 +409,27 @@ def destroy_deployment(
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
                         return _execute_destroy(**args)
 
-                    params = [
-                        {
-                            "group_name": _group.name,
-                            "module_manifest": _module,
-                            "module_path": _clone_module_repo(_module.path)
-                            if _module.path.startswith("git::")
-                            else _module.path,
-                            "deployment_manifest": destroy_manifest,
-                            "docker_credentials_secret": destroy_manifest.get_parameter_value(
-                                "dockerCredentialsSecret",
-                                account_alias=_module.target_account,
-                                region=_module.target_region,
-                            ),
-                            "codebuild_image": destroy_manifest.get_region_codebuild_image(
-                                account_alias=_module.target_account, region=_module.target_region
-                            ),
-                        }
-                        for _module in _group.modules
-                        if _module and _module.deploy_spec
-                    ]
+                    for _module in _group.modules:
+                        if _module.path.startswith("git::"):
+                            _module.set_local_path(_clone_module_repo(_module.path))
+                        if _module and _module.deploy_spec:
+                            params = [
+                                {
+                                    "group_name": _group.name,
+                                    "module_manifest": _module,
+                                    "module_path": str(_module.get_local_path()),
+                                    "deployment_manifest": destroy_manifest,
+                                    "docker_credentials_secret": destroy_manifest.get_parameter_value(
+                                        "dockerCredentialsSecret",
+                                        account_alias=_module.target_account,
+                                        region=_module.target_region,
+                                    ),
+                                    "codebuild_image": destroy_manifest.get_region_codebuild_image(
+                                        account_alias=_module.target_account, region=_module.target_region
+                                    ),
+                                }
+                                for _module in _group.modules
+                            ]
                     destroy_response = list(workers.map(_exec_destroy, params))
                     _logger.debug(destroy_response)
                     for dep_resp_object in destroy_response:
@@ -490,9 +495,10 @@ def deploy_deployment(
             if not module.path:
                 raise ValueError("Unable to parse module manifest, `path` not specified")
 
-            module_path = _clone_module_repo(module.path) if module.path.startswith("git::") else module.path
+            if module.path.startswith("git::"):
+                module.set_local_path(_clone_module_repo(module.path))
 
-            deployspec_path = get_deployspec_path(module_path)
+            deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
@@ -506,7 +512,9 @@ def deploy_deployment(
             ]
 
             module.bundle_md5 = checksum.get_module_md5(
-                project_path=config.OPS_ROOT, module_path=module_path, excluded_files=md5_excluded_module_files
+                project_path=config.OPS_ROOT,
+                module_path=str(module.get_local_path()),
+                excluded_files=md5_excluded_module_files,
             )
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
@@ -527,7 +535,6 @@ def deploy_deployment(
                     [module.target_account, module.target_region, deployment_name, group_name, module.name]
                 )
             else:
-                module.path = module_path
                 modules_to_deploy.append(module)
 
         if modules_to_deploy:
@@ -629,8 +636,14 @@ def apply(
             _logger.debug("module_group: %s", module_group)
             raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
         if module_group.path:
-            with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
-                module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            try:
+                with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
+                    module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            except Exception as e:
+                _logger.error(e)
+                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                _logger.error("Verify that elemts are filled out and yaml compliant")
+                exit(1)
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(deployment_manifest=deployment_manifest)

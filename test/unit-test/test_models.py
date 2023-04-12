@@ -19,17 +19,14 @@ from copy import deepcopy
 import pytest
 import yaml
 
+from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
+from seedfarmer.models.manifests._module_manifest import DeploySpec
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #
 # _sc.OPS_ROOT = os.path.join(_sc.OPS_ROOT, "test/unit-test/mock_data")
 
 _logger: logging.Logger = logging.getLogger(__name__)
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers", "models")
-    config.addinivalue_line("markers", "models_deployment_manifest")
 
 
 deployment_yaml = yaml.safe_load(
@@ -328,3 +325,74 @@ targetRegion: us-west-2
 
     with pytest.raises(ValueError):
         manifest.validate_and_set_module_defaults()
+
+
+@pytest.mark.models
+@pytest.mark.models_deployspec
+def test_deployspec():
+    # Clear targetAccountMapping and regionMapping defaults
+    updated_deployment_yaml = deepcopy(deployment_yaml)
+    updated_deployment_yaml["targetAccountMappings"][0]["default"] = False
+    updated_deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["default"] = False
+    manifest = DeploymentManifest(**updated_deployment_yaml)
+
+    deployspec_yaml = yaml.safe_load(
+        """
+deploy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+    build:
+      commands:
+      - echo "Hi
+destroy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+      - npm install -g aws-cdk@2.20.0
+    build:
+      commands:
+      - echo "Hi
+build_type: BUILD_GENERAL1_SMALL
+"""
+    )
+
+    deploy_spec = DeploySpec(**deployspec_yaml)
+
+    deploy_spec_default = yaml.safe_load(
+        """
+deploy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+    build:
+      commands:
+      - echo "Hi
+destroy:
+  phases:
+    install:
+      commands:
+      - pip install -r requirements.txt
+      - npm install -g aws-cdk@2.20.0
+    build:
+      commands:
+      - echo "Hi
+"""
+    )
+    deploy_spec_default = DeploySpec(**deploy_spec_default)
+
+
+### DeployResponses
+@pytest.mark.models
+@pytest.mark.models_deployresponses
+def test_deployresponses():
+    cm = CodeSeederMetadata(
+        aws_account_id="123456789012",
+        aws_region="us-east-1",
+        codebuild_build_id="codebuild:12345",
+        codebuild_log_path="/somepath",
+        status="success",
+    )

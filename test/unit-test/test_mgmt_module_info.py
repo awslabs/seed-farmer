@@ -380,3 +380,40 @@ def test_fetch_helper(aws_credentials,session,mocker):
     mi._fetch_helper(name="myapp", session=session)
 
     mi._fetch_helper(name="myapp",params_cache={"myapp":"yo"}, session=session)
+    
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_secrets_parameter_version(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.get_current_version", return_value="fdsfasfioasofasf")
+    val = mi.get_secrets_parameter_version("sometest",session=session)
+    
+    assert val == "fdsfasfioasofasf"
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_secrets_parameter_version_failure(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.get_current_version", return_value=None)
+    with pytest.raises(Exception):
+        mi.get_secrets_parameter_version("sometest",session=session)
+    
+    
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_ssm_parameter_version(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_current_version", return_value=5)
+    val = mi.get_ssm_parameter_version("sometest",session=session)
+    
+    assert val == 5
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_ssm_parameter_version_failure(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_current_version", return_value=None)
+    with pytest.raises(Exception):
+        mi.get_ssm_parameter_version("sometest",session=session)

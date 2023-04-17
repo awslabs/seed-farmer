@@ -347,6 +347,30 @@ def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> 
     return secrets.get_secret_secrets_manager(name=name, session=session)
 
 
+def get_secrets_parameter_version(
+    secret_parameter_name: str,
+    session: Optional[Session] = None,
+) -> str:
+    version = secrets.get_current_version(name=secret_parameter_name, session=session)
+    if version is None:
+        _logger.error("The Secrets Manager parameter %s could not be fetched", secret_parameter_name)
+        raise Exception("The Secrets Manager parameter could not be fetched")
+    else:
+        return str(version)
+
+
+def get_ssm_parameter_version(
+    ssm_parameter_name: str,
+    session: Optional[Session] = None,
+) -> int:
+    version = ssm.get_current_version(name=ssm_parameter_name, session=session)
+    if version is None:
+        _logger.error("The SSM parameter %s could not be fetched", ssm_parameter_name)
+        raise Exception("The SSM parameter could not be fetched")
+    else:
+        return int(version)
+
+
 def get_group_manifest(
     deployment: str, group: str, params_cache: Optional[Dict[str, Any]] = None, session: Optional[Session] = None
 ) -> Optional[Dict[str, Any]]:

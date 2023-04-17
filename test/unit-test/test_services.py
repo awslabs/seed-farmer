@@ -210,6 +210,15 @@ def test_delete_ssm_param(session) -> None:
         )
 
 
+@pytest.mark.service
+def test_get_ssm_current_version(session) -> None:
+    import seedfarmer.services._ssm as ssm
+
+    with mock_ssm():
+        ssm.put_parameter(name="/myapp/test/", obj={"Hey": "testing"}, session=session)
+        ssm.get_current_version(name="/myapp/test/", session=session)
+
+
 # ### SecretsManager
 # @pytest.mark.service
 # def test_secrets_manager(session_manager, mocker, secretsmanager_client)->None:

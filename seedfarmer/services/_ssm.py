@@ -149,3 +149,21 @@ def delete_parameters(parameters: List[str], session: Optional[Session] = None) 
         else:
             delete_parameters(parameters[0:9], session=session)
             delete_parameters(parameters[9:], session=session)
+
+
+def get_current_version(name: str, session: Optional[Session] = None) -> Optional[int]:
+    client = boto3_client(service_name="ssm", session=session)
+    resp = client.describe_parameters(
+        ParameterFilters=[
+            {
+                "Key": "Type",
+                "Option": "Equals",
+                "Values": [
+                    "String",
+                ],
+            },
+            {"Key": "Name", "Option": "Equals", "Values": [name]},
+        ],
+    )
+
+    return (resp["Parameters"][0]["Version"]) if len(resp["Parameters"]) > 0 else None

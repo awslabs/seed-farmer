@@ -25,6 +25,7 @@ from git import Repo  # type: ignore
 
 import seedfarmer.checksum as checksum
 import seedfarmer.mgmt.deploy_utils as du
+import seedfarmer.mgmt.module_info as mi
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values
 from seedfarmer.mgmt.module_info import (
@@ -516,6 +517,34 @@ def deploy_deployment(
                 module_path=str(module.get_local_path()),
                 excluded_files=md5_excluded_module_files,
             )
+
+            for param in module.parameters:
+                if param.value_from and param.value_from.parameter_store:
+                    param.version = int(
+                        mi.get_ssm_parameter_version(
+                            ssm_parameter_name=param.value_from.parameter_store,
+                            session=SessionManager()
+                            .get_or_create()
+                            .get_deployment_session(
+                                account_id=cast(str, module.get_target_account_id()),
+                                region_name=cast(str, module.target_region),
+                            ),
+                        )
+                    )
+
+                elif param.value_from and param.value_from.secrets_manager:
+                    param.version = str(
+                        mi.get_secrets_parameter_version(
+                            secret_parameter_name=param.value_from.secrets_manager,
+                            session=SessionManager()
+                            .get_or_create()
+                            .get_deployment_session(
+                                account_id=cast(str, module.get_target_account_id()),
+                                region_name=cast(str, module.target_region),
+                            ),
+                        )
+                    )
+
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 

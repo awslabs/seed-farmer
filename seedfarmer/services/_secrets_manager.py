@@ -25,3 +25,13 @@ def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> 
     secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
     json_str: str = client.get_secret_value(SecretId=secret_arn).get("SecretString")
     return cast(Dict[str, Any], json.loads(json_str))
+
+
+def get_current_version(name: str, session: Optional[Session] = None) -> Optional[str]:
+    client = boto3_client(service_name="secretsmanager", session=session)
+    secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
+    resp = client.describe_secret(SecretId=secret_arn)
+    for version_entry in resp["VersionIdsToStages"]:
+        if "AWSCURRENT" in resp["VersionIdsToStages"].get(version_entry):
+            return str(version_entry)
+    return None

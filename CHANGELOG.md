@@ -3,8 +3,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
-
 ## Unreleased
+
+### New
+
+### Changes
+
+### Fixes
+
+
+## v2.6.2 (2023-04-17)
 
 ### New
 
@@ -13,7 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 - update gitparser version to be 3.1.30
 
-## v2.6.1 (2023-04-12)## Unreleased
+## v2.6.1 (2023-04-12)
 
 ### New
 

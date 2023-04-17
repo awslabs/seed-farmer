@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- update gitparser version to be 3.1.30
 
 ## v2.6.1 (2023-04-12)## Unreleased
 

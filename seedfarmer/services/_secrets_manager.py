@@ -13,15 +13,22 @@
 #    limitations under the License.
 
 import json
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from boto3 import Session
 
 from seedfarmer.services._service_utils import boto3_client, get_account_id, get_region
 
 
-def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
+def get_secrets_manager_value(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
     json_str: str = client.get_secret_value(SecretId=secret_arn).get("SecretString")
     return cast(Dict[str, Any], json.loads(json_str))
+
+
+def list_secret_version_ids(name: str, session: Optional[Session] = None) -> Optional[List[Any]]:
+    client = boto3_client(service_name="secretsmanager", session=session)
+    secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
+    resp = client.list_secret_version_ids(SecretId=secret_arn)
+    return client.list_secret_version_ids(SecretId=secret_arn)["Versions"] if resp else None

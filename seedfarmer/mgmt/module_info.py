@@ -344,7 +344,35 @@ def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> 
     Dict[str, Any]
         The object in the Secrets Manager
     """
-    return secrets.get_secret_secrets_manager(name=name, session=session)
+    return secrets.get_secrets_manager_value(name=name, session=session)
+
+
+def get_secrets_version(
+    secret_name: str,
+    version_ref: Optional[str] = "AWSCURRENT",
+    session: Optional[Session] = None,
+) -> Optional[str]:
+    versions = secrets.list_secret_version_ids(name=secret_name, session=session)
+
+    if versions:
+        for version in versions:
+            version_id = version["VersionId"]
+            version_stages = version["VersionStages"]
+            if (version_id == version_ref) or (version_ref in version_stages):
+                return str(version_id)
+    return None
+
+
+def get_ssm_parameter_version(
+    ssm_parameter_name: str,
+    session: Optional[Session] = None,
+) -> Optional[int]:
+    resp = ssm.describe_parameter(name=ssm_parameter_name, session=session)
+    if resp is None:
+        _logger.error("The SSM parameter %s could not be fetched", ssm_parameter_name)
+        raise Exception("The SSM parameter could not be fetched")
+    else:
+        return int(resp["Parameters"][0]["Version"]) if len(resp["Parameters"]) > 0 else None
 
 
 def get_group_manifest(

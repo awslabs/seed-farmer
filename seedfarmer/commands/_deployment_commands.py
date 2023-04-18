@@ -520,29 +520,26 @@ def deploy_deployment(
 
             for param in module.parameters:
                 if param.value_from and param.value_from.parameter_store:
-                    param.version = int(
-                        mi.get_ssm_parameter_version(
-                            ssm_parameter_name=param.value_from.parameter_store,
-                            session=SessionManager()
-                            .get_or_create()
-                            .get_deployment_session(
-                                account_id=cast(str, module.get_target_account_id()),
-                                region_name=cast(str, module.target_region),
-                            ),
-                        )
+
+                    param.version = mi.get_ssm_parameter_version(
+                        ssm_parameter_name=param.value_from.parameter_store,
+                        session=SessionManager()
+                        .get_or_create()
+                        .get_deployment_session(
+                            account_id=cast(str, module.get_target_account_id()),
+                            region_name=cast(str, module.target_region),
+                        ),
                     )
 
                 elif param.value_from and param.value_from.secrets_manager:
-                    param.version = str(
-                        mi.get_secrets_parameter_version(
-                            secret_parameter_name=param.value_from.secrets_manager,
-                            session=SessionManager()
-                            .get_or_create()
-                            .get_deployment_session(
-                                account_id=cast(str, module.get_target_account_id()),
-                                region_name=cast(str, module.target_region),
-                            ),
-                        )
+                    param.version = mi.get_secrets_parameter_version(
+                        secret_parameter_name=param.value_from.secrets_manager,
+                        session=SessionManager()
+                        .get_or_create()
+                        .get_deployment_session(
+                            account_id=cast(str, module.get_target_account_id()),
+                            region_name=cast(str, module.target_region),
+                        ),
                     )
 
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()

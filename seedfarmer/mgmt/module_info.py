@@ -344,31 +344,34 @@ def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> 
     Dict[str, Any]
         The object in the Secrets Manager
     """
-    return secrets.get_secret_secrets_manager(name=name, session=session)
+    return secrets.get_secrets_manager_value(name=name, session=session)
 
 
 def get_secrets_parameter_version(
     secret_parameter_name: str,
     session: Optional[Session] = None,
-) -> str:
-    version = secrets.get_current_version(name=secret_parameter_name, session=session)
-    if version is None:
+) -> Optional[str]:
+    resp = secrets.describe_secret(name=secret_parameter_name, session=session)
+    if resp is None:
         _logger.error("The Secrets Manager parameter %s could not be fetched", secret_parameter_name)
         raise Exception("The Secrets Manager parameter could not be fetched")
     else:
-        return str(version)
+        for version_entry in resp["VersionIdsToStages"]:
+            if "AWSCURRENT" in resp["VersionIdsToStages"].get(version_entry):
+                return str(version_entry)
+        return None
 
 
 def get_ssm_parameter_version(
     ssm_parameter_name: str,
     session: Optional[Session] = None,
-) -> int:
-    version = ssm.get_current_version(name=ssm_parameter_name, session=session)
-    if version is None:
+) -> Optional[int]:
+    resp = ssm.describe_parameter(name=ssm_parameter_name, session=session)
+    if resp is None:
         _logger.error("The SSM parameter %s could not be fetched", ssm_parameter_name)
         raise Exception("The SSM parameter could not be fetched")
     else:
-        return int(version)
+        return int(resp["Parameters"][0]["Version"]) if len(resp["Parameters"]) > 0 else None
 
 
 def get_group_manifest(

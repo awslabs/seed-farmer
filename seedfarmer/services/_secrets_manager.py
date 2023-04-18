@@ -20,18 +20,14 @@ from boto3 import Session
 from seedfarmer.services._service_utils import boto3_client, get_account_id, get_region
 
 
-def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
+def get_secrets_manager_value(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
     json_str: str = client.get_secret_value(SecretId=secret_arn).get("SecretString")
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def get_current_version(name: str, session: Optional[Session] = None) -> Optional[str]:
+def describe_secret(name: str, session: Optional[Session] = None) -> Optional[Any]:
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
-    resp = client.describe_secret(SecretId=secret_arn)
-    for version_entry in resp["VersionIdsToStages"]:
-        if "AWSCURRENT" in resp["VersionIdsToStages"].get(version_entry):
-            return str(version_entry)
-    return None
+    return client.describe_secret(SecretId=secret_arn)

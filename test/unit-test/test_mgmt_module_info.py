@@ -386,16 +386,37 @@ def test_fetch_helper(aws_credentials,session,mocker):
 @pytest.mark.mgmt_module_info
 def test_get_secrets_parameter_version(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.secrets.get_current_version", return_value="fdsfasfioasofasf")
+    test_json = {
+            "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:testderek-oFFYl7",
+            "Name": "testderek",
+            "VersionIdsToStages": {
+                "2b872dd3-f8dc-42db-acce-19055abb4bd5": ["AWSCURRENT"]
+            },
+            "ResponseMetadata": {
+                "RequestId": "a6eec7fc-a844-4744-ad26-558e7a4884dc",
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {
+                "x-amzn-requestid": "a6eec7fc-a844-4744-ad26-558e7a4884dc",
+                "content-type": "application/x-amz-json-1.1",
+                "content-length": "272",
+                "date": "Tue, 18 Apr 2023 00:13:58 GMT"
+                },
+                "RetryAttempts": 0
+            }
+            }
+    
+    
+    
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.describe_secret", return_value=test_json)
     val = mi.get_secrets_parameter_version("sometest",session=session)
     
-    assert val == "fdsfasfioasofasf"
+    assert val == "2b872dd3-f8dc-42db-acce-19055abb4bd5"
     
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
 def test_get_secrets_parameter_version_failure(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.secrets.get_current_version", return_value=None)
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.describe_secret", return_value=None)
     with pytest.raises(Exception):
         mi.get_secrets_parameter_version("sometest",session=session)
     
@@ -405,7 +426,36 @@ def test_get_secrets_parameter_version_failure(aws_credentials,session,mocker):
 @pytest.mark.mgmt_module_info
 def test_get_ssm_parameter_version(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_current_version", return_value=5)
+    test_json = {
+            "Parameters": [
+                {
+                "Name": "testingversioning",
+                "Type": "String",
+                "LastModifiedUser": "arn:aws:sts::123456789012:assumed-role/Admin/someone-Isengard",
+                "Version": 5,
+                "Tier": "Standard",
+                "Policies": [],
+                "DataType": "text"
+                }
+            ],
+            "ResponseMetadata": {
+                "RequestId": "693a5834-1802-4aa1-8254-879f942e9f5b",
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {
+                "server": "Server",
+                "date": "Mon, 17 Apr 2023 23:45:53 GMT",
+                "content-type": "application/x-amz-json-1.1",
+                "content-length": "243",
+                "connection": "keep-alive",
+                "x-amzn-requestid": "693a5834-1802-4aa1-8254-879f942e9f5b"
+                },
+                "RetryAttempts": 0
+            }
+            }
+    
+    
+    
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.describe_parameter", return_value=test_json)
     val = mi.get_ssm_parameter_version("sometest",session=session)
     
     assert val == 5
@@ -414,6 +464,6 @@ def test_get_ssm_parameter_version(aws_credentials,session,mocker):
 @pytest.mark.mgmt_module_info
 def test_get_ssm_parameter_version_failure(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.ssm.get_current_version", return_value=None)
+    mocker.patch("seedfarmer.mgmt.module_info.ssm.describe_parameter", return_value=None)
     with pytest.raises(Exception):
         mi.get_ssm_parameter_version("sometest",session=session)

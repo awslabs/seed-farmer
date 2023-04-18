@@ -306,6 +306,10 @@ In this example, the `opensearch` module is referencing an SSM parameter named `
 
 The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the parameter that is fetched.  It can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.
 
+`SeedFarmer` will respect changes to the SSM parameter via versioning.  If a module is deployed with an SSM Parameter, and then that parameter value is changed (invoking a version change of the parameter), `SeedFarmer` will detect that change and redeploy the module.  
+
+NOTE: AWS CodeBuild does not currently respect passing in versions, so you cannot pass in a particular version in the manifest.  In other words, passing in `my-vpc-id:3` as a value for `parameterStore` will cause a failure.
+
 (secrets_manager)=
 ### AWS SecretsManager
 Parameters can leverage secured secrets in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html).  You will need to know the name of the secret.  It leverages the `valueFrom` keyword and has a nested definiton. Below is an example:
@@ -320,6 +324,10 @@ parameters:
 In this example, the `opensearch` module is referencing a secret named `my-secret-vpc-id` from AWS Secrets Manager. <br>
 
 The `opensearch` module deployment will then have an environment parameter set in the environment to the value of the secret that is fetched.  It can then be referenced as an [environment parameter](params_in_codeseeder) in the deployment.  NOTE: the value will be obfusticated in the AWS CodeBuild console in the Environments Section for security purposes.
+
+`SeedFarmer` will respect changes to the SecretsManager secret via version-id and version-stage.  If the version-id referenced has changed, `SeedFarmer` will detect and indicate a redeploy of the module(s) that refer to that secret. 
+
+NOTE: AWS CodeBuild does currently respect passing in version-id and version-stage, as defined in the [documentation HERE](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.env.secrets-manager).  If no version-stage or version-id is passed in, then we will look for the version-id corresponding to the version-stage of `AWSCURRENT`. 
 
 
 (dockerCredentialsSecret)=

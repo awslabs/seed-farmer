@@ -520,7 +520,10 @@ def deploy_deployment(
 
             for param in module.parameters:
                 if param.value_from and param.value_from.parameter_store:
-
+                    if ":" in param.value_from.parameter_store:
+                        raise Exception(
+                            f"CodeBuild does not support Versioned SSM Parameters -- see {group_name}-{module.name}"
+                        )
                     param.version = mi.get_ssm_parameter_version(
                         ssm_parameter_name=param.value_from.parameter_store,
                         session=SessionManager()

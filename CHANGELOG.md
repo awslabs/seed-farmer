@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+
+## v2.6.3 (2023-04-18)
+
+### New
+
+### Changes
 - adding support for evaluating the version of SSM and secretsmanager when calculating md5 of code (for redeploy)
 
 ### Fixes

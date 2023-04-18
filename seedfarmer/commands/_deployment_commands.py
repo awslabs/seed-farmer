@@ -532,8 +532,16 @@ def deploy_deployment(
                     )
 
                 elif param.value_from and param.value_from.secrets_manager:
-                    param.version = mi.get_secrets_parameter_version(
-                        secret_parameter_name=param.value_from.secrets_manager,
+                    param_name = param.value_from.secrets_manager
+                    version_ref = None
+                    if ":" in param_name:
+                        parsed = param_name.split(":")
+                        param_name = parsed[0]
+                        version_ref = parsed[2] if len(parsed) == 3 else None
+
+                    param.version = mi.get_secrets_version(
+                        secret_name=param_name,
+                        version_ref=version_ref,
                         session=SessionManager()
                         .get_or_create()
                         .get_deployment_session(

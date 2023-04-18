@@ -347,19 +347,20 @@ def get_secret_secrets_manager(name: str, session: Optional[Session] = None) -> 
     return secrets.get_secrets_manager_value(name=name, session=session)
 
 
-def get_secrets_parameter_version(
-    secret_parameter_name: str,
+def get_secrets_version(
+    secret_name: str,
+    version_ref: Optional[str] = "AWSCURRENT",
     session: Optional[Session] = None,
 ) -> Optional[str]:
-    resp = secrets.describe_secret(name=secret_parameter_name, session=session)
-    if resp is None:
-        _logger.error("The Secrets Manager parameter %s could not be fetched", secret_parameter_name)
-        raise Exception("The Secrets Manager parameter could not be fetched")
-    else:
-        for version_entry in resp["VersionIdsToStages"]:
-            if "AWSCURRENT" in resp["VersionIdsToStages"].get(version_entry):
-                return str(version_entry)
-        return None
+    versions = secrets.list_secret_version_ids(name=secret_name, session=session)
+
+    if versions:
+        for version in versions:
+            version_id = version["VersionId"]
+            version_stages = version["VersionStages"]
+            if (version_id == version_ref) or (version_ref in version_stages):
+                return str(version_id)
+    return None
 
 
 def get_ssm_parameter_version(

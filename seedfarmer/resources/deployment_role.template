@@ -82,7 +82,7 @@ Resources:
             - Action:
               - iam:ListPolicies
               - ssm:DescribeParameters
-              - secretsmanager:DescribeSecret
+              - secretsmanager:ListSecretVersionIds
               - codebuild:ListProjects
               - cloudformation:Describe*
               - cloudformation:GetTemplate

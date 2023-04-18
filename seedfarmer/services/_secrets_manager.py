@@ -13,7 +13,7 @@
 #    limitations under the License.
 
 import json
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from boto3 import Session
 
@@ -27,7 +27,8 @@ def get_secrets_manager_value(name: str, session: Optional[Session] = None) -> D
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def describe_secret(name: str, session: Optional[Session] = None) -> Optional[Any]:
+def list_secret_version_ids(name: str, session: Optional[Session] = None) -> Optional[List[Any]]:
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}:secret:{name}"
-    return client.describe_secret(SecretId=secret_arn)
+    resp = client.list_secret_version_ids(SecretId=secret_arn)
+    return client.list_secret_version_ids(SecretId=secret_arn)["Versions"] if resp else None

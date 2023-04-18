@@ -381,46 +381,92 @@ def test_fetch_helper(aws_credentials,session,mocker):
 
     mi._fetch_helper(name="myapp",params_cache={"myapp":"yo"}, session=session)
     
-    
-@pytest.mark.mgmt
-@pytest.mark.mgmt_module_info
-def test_get_secrets_parameter_version(aws_credentials,session,mocker):
-    import seedfarmer.mgmt.module_info as mi
-    test_json = {
-            "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:testderek-oFFYl7",
-            "Name": "testderek",
-            "VersionIdsToStages": {
-                "2b872dd3-f8dc-42db-acce-19055abb4bd5": ["AWSCURRENT"]
+
+secrets_manager_mock_data = {
+        "Versions": [
+            {
+                "VersionId": "17853545-211c-461b-938c-6f9bf36652ce",
+                "VersionStages": [
+                    "AWSPREVIOUS",
+                    "WTFTESTING"
+                ],
+                "LastAccessedDate": "2023-04-17 20:00:00-04:00",
+                "CreatedDate": "2023-04-17 20:52:11.327000-04:00",
+                "KmsKeyIds": [
+                    "DefaultEncryptionKey"
+                ]
             },
-            "ResponseMetadata": {
-                "RequestId": "a6eec7fc-a844-4744-ad26-558e7a4884dc",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                "x-amzn-requestid": "a6eec7fc-a844-4744-ad26-558e7a4884dc",
+            {
+                "VersionId": "3ae24b7a-a4dc-4ee3-ba47-ef4969c1e687",
+                "VersionStages": [
+                    "USEME",
+                    "AWSCURRENT"
+                ],
+                "LastAccessedDate": "2023-04-17 20:00:00-04:00",
+                "CreatedDate": "2023-04-17 20:53:26.644000-04:00",
+                "KmsKeyIds": [
+                    "DefaultEncryptionKey"
+                ]
+            }
+        ],
+        "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:testderekaddf-QZHkSe",
+        "Name": "testderekaddf",
+        "ResponseMetadata": {
+            "RequestId": "078d54ce-4005-43ad-af49-722dd1016e36",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "078d54ce-4005-43ad-af49-722dd1016e36",
                 "content-type": "application/x-amz-json-1.1",
-                "content-length": "272",
-                "date": "Tue, 18 Apr 2023 00:13:58 GMT"
-                },
-                "RetryAttempts": 0
-            }
-            }
-    
-    
-    
-    mocker.patch("seedfarmer.mgmt.module_info.secrets.describe_secret", return_value=test_json)
-    val = mi.get_secrets_parameter_version("sometest",session=session)
-    
-    assert val == "2b872dd3-f8dc-42db-acce-19055abb4bd5"
+                "content-length": "505",
+                "date": "Tue, 18 Apr 2023 02:06:29 GMT"
+            },
+            "RetryAttempts": 0
+        }
+    }
+
     
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
-def test_get_secrets_parameter_version_failure(aws_credentials,session,mocker):
+def test_get_secrets_version_with_version_id(aws_credentials,session,mocker):
     import seedfarmer.mgmt.module_info as mi
-    mocker.patch("seedfarmer.mgmt.module_info.secrets.describe_secret", return_value=None)
-    with pytest.raises(Exception):
-        mi.get_secrets_parameter_version("sometest",session=session)
     
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.list_secret_version_ids", 
+                 return_value=secrets_manager_mock_data['Versions'])
     
+    val = mi.get_secrets_version(secret_name="sometest",
+                                 version_ref="17853545-211c-461b-938c-6f9bf36652ce",
+                                 session=session)
+    
+    assert val == "17853545-211c-461b-938c-6f9bf36652ce"
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_secrets_version_with_no_ref(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.list_secret_version_ids", 
+                 return_value=secrets_manager_mock_data['Versions'])
+    
+    val = mi.get_secrets_version(secret_name="sometest",
+                                 session=session)
+    
+    assert val == "3ae24b7a-a4dc-4ee3-ba47-ef4969c1e687"
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_secrets_version_with_status(aws_credentials,session,mocker):
+    import seedfarmer.mgmt.module_info as mi
+    
+    mocker.patch("seedfarmer.mgmt.module_info.secrets.list_secret_version_ids", 
+                 return_value=secrets_manager_mock_data['Versions'])
+    
+    val = mi.get_secrets_version(secret_name="sometest:username",
+                                 version_ref="USEME",
+                                 session=session)
+    
+    assert val == "3ae24b7a-a4dc-4ee3-ba47-ef4969c1e687"
+        
     
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info

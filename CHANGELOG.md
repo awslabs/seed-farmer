@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
-
+- adding synth for both bootstrap templates when issuing `--as-target`
 ### Fixes
 
 

@@ -61,11 +61,7 @@ def get_deployment_template(
     return dict(json.loads(t))
 
 
-def write_template(template: Dict[Any, Any], description: Optional[str] = None) -> None:
-    if description:
-        print(description)
-        print("")
-
+def write_template(template: Dict[Any, Any]) -> None:
     yaml.dump(template, sys.stdout)
     print("")
 
@@ -95,7 +91,7 @@ def bootstrap_toolchain_account(
                 session=session,
             )
     else:
-        write_template(template=template, description="The Toolchain Template")
+        write_template(template=template)
         if as_target:
             bootstrap_target_account(
                 toolchain_account_id="123456789012",
@@ -129,7 +125,7 @@ def bootstrap_target_account(
         )
         apply_deploy_logic(template=template, role_name=role_name, stack_name=stack_name, session=session)
     else:
-        write_template(template=template, description="The Target Template")
+        write_template(template=template)
     return template
 
 

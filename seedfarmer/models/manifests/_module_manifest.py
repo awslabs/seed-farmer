@@ -37,6 +37,29 @@ class ModuleParameter(ValueFromRef):
         return self._upper_snake_case
 
 
+class DataFile(CamelModel):
+    file_path: str
+    _local_file_path: Optional[str] = PrivateAttr(default=None)
+    _bundle_path: Optional[str] = PrivateAttr(default=None)
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self._local_file_path = "."
+        self._bundle_path = self.file_path
+
+    def set_local_file_path(self, _local_file_path: str) -> None:
+        self._local_file_path = _local_file_path
+
+    def get_local_file_path(self) -> Optional[str]:
+        return self._local_file_path
+
+    def set_bundle_path(self, bundle_path: str) -> None:
+        self._bundle_path = bundle_path
+
+    def get_bundle_path(self) -> Optional[str]:
+        return self._bundle_path
+
+
 class ModuleManifest(CamelModel):
     """
     ModuleManifest
@@ -55,6 +78,7 @@ class ModuleManifest(CamelModel):
     target_account: Optional[str] = None
     target_region: Optional[str] = None
     codebuild_image: Optional[str] = None
+    data_files: Optional[List[DataFile]] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
     _local_path: Optional[str] = PrivateAttr(default=None)
 

@@ -123,6 +123,10 @@ parameters:
         group: optionals
         name: networking
         key: VpcId
+dataFiles:
+  - filePath: data/test2.txt
+  - filePath: test1.txt
+  - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
 ```
 - **name** - the name of the group
 - **path** - this element supports two sources of code:
@@ -132,16 +136,29 @@ parameters:
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
 - **parameters** - the parameters section .... see [Parameters](parameters)
+- **dataFiles** - additional files to add to the bundle that are outside of the module code
+  - this is LIST and EVERY element in the list must have the keyword **filePath**
+  - the **filePath** does support pulls from Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/)
 
 Here is a sample manifest referencing a git repo:
 ```yaml
 name: networking
-path: git::git@github.com:awslabs/seed-farmer.git//examples/exampleproject/modules/optionals/networking/?ref=release/0.1.4&depth=1
+path: git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk?ref=release/1.0.0&depth=1
 targetAccount: secondary
 parameters:
   - name: internet-accessible
     value: true
 ```
+
+### A Word About DataFiles ###
+The **dataFile** support for modules is intended to take a file(s) located outside of the module code and packaged them as if they were apart of the module.  The use case: there are data files that are shared amongst multiple modules, or are dynamic and can change over time.  As you leverage the Git Path functionality (for sourcing modules in manifest), being able to modify these data files would have meant a change to the module code - which is not feasible as it will cause all deployments that leverage the same code to redeploy.
+
+This feature will allow you to stage files locally in your SeedFarmer Project (MUST be located relative to `seedfarmer.yaml`) or are contained in a Git Repository.  These files will be packaged UNDER the module when deploying as if they are apart of the module code.  The relative paths remain intact UNDER the module when packaged.  
+
+When using this feature, any change to these file(s) (modifying, add to manifest, removing from manifest) will indicate to SeedFarmer that a redeployment is necessary.
+
+***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everthing so wet??)***
+
 
 (custombuildimage)=
 ## Custom Codebuild Image
@@ -200,7 +217,7 @@ In this example, the `glue-db-suffix` parameter will be exposed to the CodeBuild
 
 (envVariable)=
 ### Environment Variables
-`seedfarmer` supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement.  Wen a file names `.env` is placed at the projecr root (where `seedfarmer.yaml` resides), any value in a manifest with a key of `envVariable` will be matched and replaced with the corresponding environment variable.
+`SeedFarmer` supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement.  When a file named `.env` is placed at the projecr root (where `seedfarmer.yaml` resides), any value in a manifest with a key of `envVariable` will be matched and replaced with the corresponding environment variable.  You can pass in overriding `.env` files by using the `--env-file` on CLI command invocation.
 
 ```yaml
 name: opensearch

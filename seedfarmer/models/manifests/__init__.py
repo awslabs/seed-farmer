@@ -20,7 +20,7 @@ from seedfarmer.models.manifests._deployment_manifest import (
     RegionMapping,
     TargetAccountMapping,
 )
-from seedfarmer.models.manifests._module_manifest import ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests._module_manifest import DataFile, ModuleManifest, ModuleParameter
 
 __all__ = [
     "DeploymentManifest",
@@ -31,4 +31,5 @@ __all__ = [
     "TargetAccountMapping",
     "ModuleManifest",
     "ModuleParameter",
+    "DataFile",
 ]

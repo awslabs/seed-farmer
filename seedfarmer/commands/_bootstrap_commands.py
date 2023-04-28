@@ -63,6 +63,7 @@ def get_deployment_template(
 
 def write_template(template: Dict[Any, Any]) -> None:
     yaml.dump(template, sys.stdout)
+    print("")
 
 
 def bootstrap_toolchain_account(
@@ -91,6 +92,16 @@ def bootstrap_toolchain_account(
             )
     else:
         write_template(template=template)
+        if as_target:
+            bootstrap_target_account(
+                toolchain_account_id="123456789012",
+                project_name=project_name,
+                permissions_boundary_arn=permissions_boundary_arn,
+                profile=profile,
+                region_name=region_name,
+                session=None,
+                synthesize=synthesize,
+            )
     return template
 
 

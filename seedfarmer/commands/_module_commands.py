@@ -121,6 +121,14 @@ def deploy_module(
     ]
 
     module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+
+    extra_files = {}
+    if module_manifest.data_files is not None:
+        extra_files = {
+            f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+            for data_file in module_manifest.data_files
+        }
+
     _phases = module_manifest.deploy_spec.deploy.phases
     try:
         resp_dict_str, dict_metadata = _execute_module_commands(
@@ -131,6 +139,7 @@ def deploy_module(
             region=region,
             metadata_env_variable=metadata_env_variable,
             extra_dirs={"module": module_path},
+            extra_files=extra_files,
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
             extra_build_commands=["cd module/"] + _phases.build.commands,
@@ -202,6 +211,13 @@ def destroy_module(
     _phases = module_manifest.deploy_spec.destroy.phases
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
 
+    extra_files = {}
+    if module_manifest.data_files is not None:
+        extra_files = {
+            f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+            for data_file in module_manifest.data_files
+        }
+
     try:
         resp_dict_str, _ = _execute_module_commands(
             deployment_name=deployment_name,
@@ -211,6 +227,7 @@ def destroy_module(
             region=region,
             metadata_env_variable=metadata_env_variable,
             extra_dirs={"module": module_path},
+            extra_files=extra_files,
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
             extra_build_commands=["cd module/"] + _phases.build.commands,
@@ -250,6 +267,7 @@ def _execute_module_commands(
     region: str,
     metadata_env_variable: str,
     extra_dirs: Optional[Dict[str, Any]] = None,
+    extra_files: Optional[Dict[str, Any]] = None,
     extra_install_commands: Optional[List[str]] = None,
     extra_pre_build_commands: Optional[List[str]] = None,
     extra_build_commands: Optional[List[str]] = None,
@@ -268,6 +286,10 @@ def _execute_module_commands(
 
         session_getter = _session_getter
 
+    extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
+    if extra_files is not None:
+        extra_file_bundle.update(extra_files)
+
     @codeseeder.remote_function(
         config.PROJECT.lower(),
         extra_dirs=extra_dirs,
@@ -281,7 +303,7 @@ def _execute_module_commands(
         codebuild_image=codebuild_image,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
         codebuild_compute_type=codebuild_compute_type,
-        extra_files={config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)},
+        extra_files=extra_file_bundle,
         boto3_session=session_getter,
     )
     def _execute_module_commands(
@@ -292,6 +314,7 @@ def _execute_module_commands(
         region: str,
         metadata_env_variable: str,
         extra_dirs: Optional[Dict[str, Any]] = None,
+        extra_files: Optional[Dict[str, Any]] = None,
         extra_install_commands: Optional[List[str]] = None,
         extra_pre_build_commands: Optional[List[str]] = None,
         extra_build_commands: Optional[List[str]] = None,

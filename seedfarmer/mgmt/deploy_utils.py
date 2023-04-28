@@ -14,6 +14,7 @@
 
 import concurrent.futures
 import logging
+import os
 from threading import Lock
 from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
@@ -22,7 +23,7 @@ from boto3 import Session
 
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models import DeploySpec
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager
 
@@ -117,6 +118,29 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
         _ = list(workers.map(_get_module_info, params))
 
     return module_info_index
+
+
+def validate_data_files(data_files: Optional[List[DataFile]]) -> List[str]:
+    """
+    validate_data_files
+        This will determine if all data files requested are available, and return the files that are not available.
+
+    Parameters
+    ----------
+    data_files : Optional[List[DataFile]]
+        The list of DataFile objects to evaluate
+
+    Returns
+    -------
+    List[str]
+        The list of data file paths not found
+    """
+    missing_files = []
+    if data_files is not None:
+        missing_files = [
+            data_file.file_path for data_file in data_files if not os.path.isfile(str(data_file.get_local_file_path()))
+        ]
+    return missing_files
 
 
 def validate_group_parameters(group: ModulesManifest) -> None:

@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - adding synth for both bootstrap templates when issuing `--as-target`
+- addind `dataFile` support for local files and from git
+- changed default codebuild image base to 3.0.0
 ### Fixes
 
 

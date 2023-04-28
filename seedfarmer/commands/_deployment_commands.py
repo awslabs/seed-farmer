@@ -17,7 +17,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
 import yaml
@@ -38,7 +38,7 @@ from seedfarmer.mgmt.module_info import (
 )
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
@@ -52,7 +52,7 @@ from seedfarmer.services.session_manager import SessionManager
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _clone_module_repo(git_path: str) -> str:
+def _clone_module_repo(git_path: str) -> Tuple[str, str]:
     """Clone a git repo and return directory it is cloned into
 
     Rather than reinventing the wheel, we implement the Generic Git Repository functionality introduced by
@@ -102,7 +102,29 @@ def _clone_module_repo(git_path: str) -> str:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
         Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
 
-    return os.path.join(working_dir, module_directory)
+    return (working_dir, module_directory)
+
+
+def _process_module_path(module: ModuleManifest) -> None:
+    working_dir, module_directory = _clone_module_repo(module.path)
+    module.set_local_path(os.path.join(working_dir, module_directory))
+
+
+def _process_data_files(data_files: List[DataFile], module_name: str, group_name: str) -> None:
+    for data_file in data_files:
+        if data_file.file_path.startswith("git::"):
+            working_dir, module_directory = _clone_module_repo(data_file.file_path)
+            data_file.set_local_file_path(os.path.join(working_dir, module_directory))
+            data_file.set_bundle_path(module_directory)
+        else:
+            data_file.set_local_file_path(os.path.join(config.OPS_ROOT, data_file.file_path))
+    missing_files = du.validate_data_files(data_files)
+    if len(missing_files) > 0:
+        print(f"The following data files cannot be fetched for module {group_name}-{module_name}:")
+        for missing_file in missing_files:
+            print(f"  {missing_file}")
+        print_bolded(message="Exiting Deployment", color="red")
+        exit(1)
 
 
 def _execute_deploy(
@@ -411,8 +433,12 @@ def destroy_deployment(
                         return _execute_destroy(**args)
 
                     for _module in _group.modules:
-                        if _module.path.startswith("git::"):
-                            _module.set_local_path(_clone_module_repo(_module.path))
+                        _process_module_path(module=_module) if _module.path.startswith("git::") else None
+
+                        _process_data_files(
+                            data_files=_module.data_files, module_name=_module.name, group_name=_group.name
+                        ) if _module.data_files is not None else None
+
                         if _module and _module.deploy_spec:
                             params = [
                                 {
@@ -496,8 +522,11 @@ def deploy_deployment(
             if not module.path:
                 raise ValueError("Unable to parse module manifest, `path` not specified")
 
-            if module.path.startswith("git::"):
-                module.set_local_path(_clone_module_repo(module.path))
+            _process_module_path(module=module) if module.path.startswith("git::") else None
+
+            _process_data_files(
+                data_files=module.data_files, module_name=module.name, group_name=group.name
+            ) if module.data_files is not None else None
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
@@ -515,6 +544,7 @@ def deploy_deployment(
             module.bundle_md5 = checksum.get_module_md5(
                 project_path=config.OPS_ROOT,
                 module_path=str(module.get_local_path()),
+                data_files=module.data_files,
                 excluded_files=md5_excluded_module_files,
             )
 

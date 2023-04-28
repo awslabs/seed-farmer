@@ -20,6 +20,8 @@ from typing import Any, Dict, List, Optional, cast
 
 from gitignore_parser import parse_gitignore
 
+from seedfarmer.models.manifests._module_manifest import DataFile
+
 
 def _evaluate_gitignore(project_path: str, module_path: str) -> Dict[str, Any]:
     ignore_paths: List[str] = []
@@ -80,7 +82,12 @@ def _consolidate_hash(hashlist: List[str]) -> str:
     return hash.hexdigest()
 
 
-def get_module_md5(project_path: str, module_path: str, excluded_files: Optional[List[str]] = []) -> str:
+def get_module_md5(
+    project_path: str,
+    module_path: str,
+    data_files: Optional[List[DataFile]] = None,
+    excluded_files: Optional[List[str]] = [],
+) -> str:
     """
     This will generate an MD5 of the module source code, respecting .gitingore starting at
     the module level
@@ -91,6 +98,8 @@ def get_module_md5(project_path: str, module_path: str, excluded_files: Optional
        The OPS_ROOT full path (full path of the project)
     module_path : str
         The relative path of the module code (relative to OPS_ROOT)
+    data_files: Optional[List[DataFile]]
+        List of DataFile objects to be packaged in the bundle
     excluded_files : List[str], optional
         A list of additional files not in .gitignore that will be exclude from the bundle md5
             NOTE: this list of files is ONLY at the module level, not subdirecties of
@@ -125,6 +134,15 @@ def get_module_md5(project_path: str, module_path: str, excluded_files: Optional
         return subfolders
 
     _ = scandir(os.path.join(project_path, module_path))
+
+    # Add in the extra files
+    if data_files is not None:
+        for data_file in data_files:
+            (
+                all_files.append(os.path.join(data_file.get_local_file_path(), data_file.file_path))  # type: ignore
+                if os.path.isfile(os.path.join(data_file.get_local_file_path(), data_file.file_path))  # type: ignore
+                else None
+            )
 
     hashvalues: List[str] = []
     for viable_file in all_files:

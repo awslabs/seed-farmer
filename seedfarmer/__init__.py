@@ -94,7 +94,7 @@ class Config(object):
         def configure(configuration: CodeSeederConfig) -> None:
             LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {self.OPS_ROOT}")
             configuration.timeout = 120
-            configuration.codebuild_image = "public.ecr.aws/v3o4w1g6/aws-codeseeder/code-build-base:3.0.0"
+            # Below is needed for Docker in Docker scenario on Ubuntu images
             configuration.pre_build_commands = [
                 (
                     "nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock"
@@ -103,7 +103,7 @@ class Config(object):
                 'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
             ]
             configuration.python_modules = [f"seed-farmer=={__version__}"]
-            configuration.runtime_versions = {"nodejs": "14", "python": "3.9"}
+            configuration.runtime_versions = {"nodejs": "16", "python": "3.10"}
 
     @property
     def PROJECT(self) -> str:

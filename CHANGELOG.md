@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 
+### Fixes
+
+## v2.6.5 (2023-05-03)
+
+### New
+
+### Changes
+
 - removed overriding build image from seedfarmer which defaults the codebuild image to ubuntu 6.0 (which comes from codeseeder as default)
 - updated codeseeder to 0.9.0
 

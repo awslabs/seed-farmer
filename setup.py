@@ -43,7 +43,7 @@ setup(
     license=about["__license__"],
     packages=find_packages(include=["seed-farmer", "seedfarmer", "seedfarmer.*", "seed-farmer.*"]),
     keywords=["aws", "cdk"],
-    python_requires=">=3.7",
+    python_requires=">=3.7,<3.12",
     install_requires=[
         "aws-codeseeder~=0.9.0",
         "cookiecutter~=2.1.0",

@@ -6,7 +6,7 @@ from typing import cast, Tuple
 import pytest
 import seedfarmer.commands._deployment_commands as dc
 
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter, DataFile
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -109,14 +109,7 @@ def test_destroy_not_found(session_manager,mocker):
 #     #     teardown.
     ### COMMENT....I cannot get the nested threads to mock
 #     dc.tear_down_target_accounts(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest))
-    
-    
-@pytest.mark.commands
-@pytest.mark.commands_deployment
-def test_deploy_deployment_is_dry_run(session_manager,mocker):
-    dep = DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest)
-    dc._deploy_deployment_is_dry_run(groups_to_deploy=dep.groups, deployment_name="myapp") 
-    
+        
     
 @pytest.mark.commands
 @pytest.mark.commands_deployment
@@ -125,6 +118,34 @@ def test_clone_module_repo(mocker):
     return_dir =dc._clone_module_repo(git_path=git_path_test)
     # Rerun it so all methods are hit
     return_dir =dc._clone_module_repo(git_path=git_path_test)
+    
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_process_data_files(mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo",return_value=("git","path"))
+    mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files",return_value=[])
+    git_path_test = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
+    datafile_list =[]
+    datafile_list.append(DataFile(file_path=git_path_test))
+    datafile_list.append(DataFile(file_path=""))
+    
+    dc._process_data_files(data_files=datafile_list, module_name="test",group_name="test")
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_process_data_files_error(mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo",return_value=("git","path"))
+    mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files",return_value=["hey"])
+    git_path_test = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
+    datafile_list =[]
+    datafile_list.append(DataFile(file_path=git_path_test))
+    datafile_list.append(DataFile(file_path=""))
+    with pytest.raises(SystemExit) as missing_error:
+        dc._process_data_files(data_files=datafile_list, module_name="test",group_name="test")
+        
+    assert missing_error.value.code == 1
     
     
     
@@ -232,7 +253,7 @@ def test_deploy_deployment(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.hashlib.md5",return_value=mock_hashlib)
     
     
-    mocker.patch("seedfarmer.commands._deployment_commands._deploy_deployment_is_not_dry_run",return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands._deploy_validated_deployment",return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.need_to_build",
                  return_value=None)
     # mocker.patch("seedfarmer.commands._deployment_commands.module_info_index.get_module_info",

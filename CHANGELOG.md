@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- refactored deployment_commands
+- added python upper limit versioning (to `<3.12`)
 
 ### Fixes
 

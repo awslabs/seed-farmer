@@ -257,12 +257,23 @@ def _execute_destroy(
     return resp
 
 
-def _deploy_deployment_is_not_dry_run(
+def _deploy_validated_deployment(
     deployment_manifest: DeploymentManifest,
     deployment_manifest_wip: DeploymentManifest,
     groups_to_deploy: List[ModulesManifest],
+    dryrun: bool,
 ) -> None:
     if groups_to_deploy:
+        if dryrun:
+            mods_would_deploy = [
+                (_module.target_account, _module.target_region, deployment_manifest.name, _group.name, _module.name)
+                for _group in groups_to_deploy
+                for _module in _group.modules
+            ]
+            _print_modules(
+                f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}", mods_would_deploy
+            )
+            exit(0)
         deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
             f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
@@ -328,17 +339,6 @@ def _deploy_deployment_is_not_dry_run(
         _logger.info(" All modules in %s up to date", deployment_manifest_wip.name)
     # Write the deployment manifest once completed to preserve group order
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
-
-
-def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deployment_name: str) -> None:
-    mods_would_deploy = []
-    if groups_to_deploy:
-        for _group in groups_to_deploy:
-            for _module in _group.modules:
-                mods_would_deploy.append(
-                    [_module.target_account, _module.target_region, deployment_name, _group.name, _module.name]
-                )
-    _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
 
 
 def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
@@ -610,23 +610,17 @@ def deploy_deployment(
                     name=group.name, path=group.path, concurrency=group.concurrency, modules=modules_to_deploy
                 )
             )
-    if unchanged_modules:
-        _print_modules(
-            f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
-        )
-    if not dryrun:
-        _deploy_deployment_is_not_dry_run(
-            deployment_manifest=deployment_manifest,
-            deployment_manifest_wip=deployment_manifest_wip,
-            groups_to_deploy=groups_to_deploy,
-        )
-    else:
-        _deploy_deployment_is_dry_run(groups_to_deploy=groups_to_deploy, deployment_name=deployment_name)
-
+    _print_modules(
+        f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
+    ) if unchanged_modules else None
+    _deploy_validated_deployment(
+        deployment_manifest=deployment_manifest,
+        deployment_manifest_wip=deployment_manifest_wip,
+        groups_to_deploy=groups_to_deploy,
+        dryrun=dryrun,
+    )
     print_bolded(f"To see all deployed modules, run seedfarmer list modules -d {deployment_name}")
-
-    if show_manifest:
-        print_manifest_json(deployment_manifest)
+    print_manifest_json(deployment_manifest) if show_manifest else None
 
 
 def apply(

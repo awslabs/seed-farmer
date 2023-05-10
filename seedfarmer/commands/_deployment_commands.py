@@ -703,7 +703,7 @@ def apply(
             except Exception as e:
                 _logger.error(e)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
-                _logger.error("Verify that elemts are filled out and yaml compliant")
+                _logger.error("Verify that elements are filled out and yaml compliant")
                 exit(1)
     deployment_manifest.validate_and_set_module_defaults()
 

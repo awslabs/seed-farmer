@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added python upper limit versioning (to `<3.12`)
 
 ### Fixes
+- typo in messaging about errored manifest
 
 ## v2.6.5 (2023-05-03)
 

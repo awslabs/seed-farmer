@@ -546,6 +546,22 @@ def test_list_moduledata_non_existent_module():
     )
 
 
+@pytest.mark.list
+@pytest.mark.list_moduledata
+def test_list_all_moduledata(session_manager,mocker):
+    mocker.patch("seedfarmer.cli_groups._list_group.du.generate_deployed_manifest", return_value=(DeploymentManifest(**mock_manifests.deployment_manifest)))
+    mocker.patch("seedfarmer.cli_groups._list_group.mi.get_module_metadata",return_value=mock_manifests.sample_metadata)
+
+    _test_command(
+        sub_command=list,
+        options=[
+            "allmoduledata",
+            "-d","test",
+            "-p","myapp",
+            "--debug",
+            ],
+        exit_code=0,
+    )
 
 # # Test `list modules` #
 

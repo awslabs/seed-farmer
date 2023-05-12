@@ -46,10 +46,13 @@ def _load_project() -> str:
         raise click.ClickException("Failed to determine project identifier")
 
 
-def _error_messaging(deployment: str, group: str, module: str) -> None:
-    print(f"No module data found for {deployment}-{group}-{module}")
+def _error_messaging(deployment: str, group: Optional[str] = None, module: Optional[str] = None) -> None:
+    if group and module:
+        print(f"No module data found for {deployment}-{group}-{module}")
+        print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
+    else:
+        print(f"No module data found for {deployment}")
     print_bolded("To see all deployments, run seedfarmer list deployments")
-    print_bolded(f"To see all deployed modules in {deployment}, run seedfarmer list modules -d {deployment}")
 
 
 @click.group(name="list", help="List the relative data (module or deployment)")
@@ -342,6 +345,90 @@ def list_module_metadata(
                 sys.stdout.write("\n")
         else:
             _error_messaging(deployment, group, module)
+
+
+@list.command(name="allmoduledata", help="Fetch ALL module metadata in the deployment as a dict")
+@click.option(
+    "--deployment",
+    "-d",
+    type=str,
+    help="The Deployment Name",
+    required=True,
+)
+@click.option(
+    "--project",
+    "-p",
+    help="Project identifier",
+    required=False,
+    default=None,
+)
+@click.option(
+    "--profile",
+    default=None,
+    help="The AWS profile to use for boto3.Sessions",
+    required=False,
+)
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region of the toolchain",
+    required=False,
+)
+@click.option(
+    "--env-file",
+    default=".env",
+    help="A relative path to the .env file to load environment variables from",
+    required=False,
+)
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Enable detailed logging.",
+    show_default=True,
+)
+def list_all_module_metadata(
+    deployment: str,
+    project: Optional[str],
+    profile: Optional[str],
+    region: Optional[str],
+    env_file: str,
+    debug: bool,
+) -> None:
+    if debug:
+        enable_debug(format=DEBUG_LOGGING_FORMAT)
+    _logger.debug("We are getting all module data for  %s", deployment)
+
+    if project is None:
+        project = _load_project()
+    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+
+    if dep_manifest is None:
+        _error_messaging(deployment)
+        return
+    dep_manifest.validate_and_set_module_defaults()
+    try:
+        all_metadata_json = {
+            f"{group.name}-{module.name}": mi.get_module_metadata(
+                deployment=deployment,
+                group=group.name,
+                module=module.name,
+                session=(
+                    session.get_deployment_session(
+                        account_id=module.get_target_account_id(),  # type: ignore
+                        region_name=module.target_region,  # type: ignore
+                    )
+                ),
+            )
+            for group in dep_manifest.groups
+            for module in group.modules
+        }
+        sys.stdout.write(json.dumps(all_metadata_json))
+    except Exception:
+        _error_messaging(deployment)
+        return
 
 
 @list.command(name="modules", help="List the modules in a deployment")

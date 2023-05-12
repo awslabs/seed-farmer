@@ -25,7 +25,7 @@ import seedfarmer
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def setup_proxies() -> Optional[Dict[str, Optional[str]]]:
+def setup_proxies() -> Dict[str, Optional[str]]:
     proxies = {}
     proxies["http"] = os.getenv("HTTP_PROXY", None)
     proxies["https"] = os.getenv("HTTPS_PROXY", None)

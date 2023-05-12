@@ -59,3 +59,22 @@ Once we are finished with the deployment (ex. the ```local``` deployment), we ca
 seedfarmer destroy local
 ```
 
+## HTTP Proxy Support
+SeedFarmer does support the use of an HTTP-Proxy.  It is invoked via setting an environment variable in the context of where the CLI is being invoked.  SeedFarmer always leverages HTTPS for its boto3 invocations, so be sure to set the proper parameter.
+
+The parameter we recognize is `HTTPS_PROXY` .  To set it for your runtime, you can do the folllowing (prior to invoking the CLI):
+```code
+export HTTPS_PROXY=https://<server>:<port>
+```
+For example, my server DNS is `mygreatserver.com` and is listening on port `8899` 
+```code
+export HTTPS_PROXY=http://mygreatserver.com:8899
+```
+
+In the above example, you will notice that my proxy is NOT over HTTPS....but the `HTTPS_PROXY` variable is being set.  This is correct, as SeedFarmer is leverging HTTPS for is invocation, regardless of your proxy configuration (it is up to you to determine the proper endpoint).
+
+NOTE: if you run the SeedFarmer CLI with the `--debug` flag, you can see what the proxy is being configured for:
+
+```code
+[2023-05-11 12:54:48,392 | DEBUG | _service_utils.py: 32 | MainThread ] Proxies Configured: {'http': None, 'https': 'http://mygreatserver:8899'}
+```

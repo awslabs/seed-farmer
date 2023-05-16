@@ -80,11 +80,8 @@ def test_validate_group_parameters():
 @pytest.mark.mgmt_deployment_utils
 def test_validate_group_parameters_failure():
     manifest = ModulesManifest(**mock_manifests.modules_manifest_duplicate)
-    with pytest.raises(SystemExit) as dupe_error:
-        du.validate_group_parameters(manifest)
-        
-    assert dupe_error.value.code == 1
-    
+    with pytest.raises(ValueError):
+        du.validate_group_parameters(manifest)    
   
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils

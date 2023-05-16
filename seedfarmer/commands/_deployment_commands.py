@@ -124,7 +124,7 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
         for missing_file in missing_files:
             print(f"  {missing_file}")
         print_bolded(message="Exiting Deployment", color="red")
-        exit(1)
+        raise ValueError("Missing DataFiles - cannot process")
 
 
 def _execute_deploy(
@@ -273,7 +273,7 @@ def _deploy_validated_deployment(
             _print_modules(
                 f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}", mods_would_deploy
             )
-            exit(0)
+            return
         deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
             f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
@@ -704,7 +704,7 @@ def apply(
                 _logger.error(e)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
                 _logger.error("Verify that elements are filled out and yaml compliant")
-                exit(1)
+                raise ValueError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(deployment_manifest=deployment_manifest)
@@ -721,7 +721,7 @@ def apply(
             header_message="The following modules requested for destroy have dependencies that prevent destruction:",
             errored_list=violations,
         )
-        exit(1)
+        raise Exception("Modules cannot be destroyed due to dependencies")
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,

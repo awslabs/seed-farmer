@@ -72,9 +72,8 @@ def test_apply_violations(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.du.filter_deploy_destroy", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=[{"module1":["moduleA","moduleB"]}])
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
+    with pytest.raises(Exception):
         dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-hc.yaml")
-    assert pytest_wrapped_e.type == SystemExit
     
 
 @pytest.mark.commands
@@ -142,10 +141,8 @@ def test_process_data_files_error(mocker):
     datafile_list =[]
     datafile_list.append(DataFile(file_path=git_path_test))
     datafile_list.append(DataFile(file_path=""))
-    with pytest.raises(SystemExit) as missing_error:
+    with pytest.raises(ValueError):
         dc._process_data_files(data_files=datafile_list, module_name="test",group_name="test")
-        
-    assert missing_error.value.code == 1
     
     
     

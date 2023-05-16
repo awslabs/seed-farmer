@@ -173,7 +173,7 @@ def validate_group_parameters(group: ModulesManifest) -> None:
           No module can refer to its own group for parameter lookups!!
         """
         print_bolded(message=message, color="red")
-        exit(1)
+        raise ValueError(message)
 
 
 def validate_module_dependencies(

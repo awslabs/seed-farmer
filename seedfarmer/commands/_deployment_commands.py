@@ -38,7 +38,7 @@ from seedfarmer.mgmt.module_info import (
 )
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest, NetworkMapping
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
@@ -124,7 +124,7 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
         for missing_file in missing_files:
             print(f"  {missing_file}")
         print_bolded(message="Exiting Deployment", color="red")
-        exit(1)
+        raise ValueError("Missing DataFiles - cannot process")
 
 
 def _execute_deploy(
@@ -257,12 +257,23 @@ def _execute_destroy(
     return resp
 
 
-def _deploy_deployment_is_not_dry_run(
+def _deploy_validated_deployment(
     deployment_manifest: DeploymentManifest,
     deployment_manifest_wip: DeploymentManifest,
     groups_to_deploy: List[ModulesManifest],
+    dryrun: bool,
 ) -> None:
     if groups_to_deploy:
+        if dryrun:
+            mods_would_deploy = [
+                (_module.target_account, _module.target_region, deployment_manifest.name, _group.name, _module.name)
+                for _group in groups_to_deploy
+                for _module in _group.modules
+            ]
+            _print_modules(
+                f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}", mods_would_deploy
+            )
+            return
         deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
             f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
@@ -330,17 +341,6 @@ def _deploy_deployment_is_not_dry_run(
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
 
-def _deploy_deployment_is_dry_run(groups_to_deploy: List[ModulesManifest], deployment_name: str) -> None:
-    mods_would_deploy = []
-    if groups_to_deploy:
-        for _group in groups_to_deploy:
-            for _module in _group.modules:
-                mods_would_deploy.append(
-                    [_module.target_account, _module.target_region, deployment_name, _group.name, _module.name]
-                )
-    _print_modules(f"Modules scheduled to be deployed (created or updated): {deployment_name}", mods_would_deploy)
-
-
 def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
 
@@ -356,8 +356,13 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
         for target_account_region in deployment_manifest.target_accounts_regions:
 
             param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
-            if target_account_region["network"]:
-                network = target_account_region["network"]
+            if target_account_region["network"] is not None:
+                network = commands.load_network_values(
+                    cast(NetworkMapping, target_account_region["network"]),
+                    cast(Dict[str, Any], target_account_region["parameters_regional"]),
+                    target_account_region["account_id"],
+                    target_account_region["region"],
+                )
                 param_d["vpc_id"] = network.vpc_id  # type: ignore
                 param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
                 param_d["security_group_ids"] = network.security_group_ids  # type: ignore
@@ -610,23 +615,17 @@ def deploy_deployment(
                     name=group.name, path=group.path, concurrency=group.concurrency, modules=modules_to_deploy
                 )
             )
-    if unchanged_modules:
-        _print_modules(
-            f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
-        )
-    if not dryrun:
-        _deploy_deployment_is_not_dry_run(
-            deployment_manifest=deployment_manifest,
-            deployment_manifest_wip=deployment_manifest_wip,
-            groups_to_deploy=groups_to_deploy,
-        )
-    else:
-        _deploy_deployment_is_dry_run(groups_to_deploy=groups_to_deploy, deployment_name=deployment_name)
-
+    _print_modules(
+        f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
+    ) if unchanged_modules else None
+    _deploy_validated_deployment(
+        deployment_manifest=deployment_manifest,
+        deployment_manifest_wip=deployment_manifest_wip,
+        groups_to_deploy=groups_to_deploy,
+        dryrun=dryrun,
+    )
     print_bolded(f"To see all deployed modules, run seedfarmer list modules -d {deployment_name}")
-
-    if show_manifest:
-        print_manifest_json(deployment_manifest)
+    print_manifest_json(deployment_manifest) if show_manifest else None
 
 
 def apply(
@@ -709,8 +708,8 @@ def apply(
             except Exception as e:
                 _logger.error(e)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
-                _logger.error("Verify that elemts are filled out and yaml compliant")
-                exit(1)
+                _logger.error("Verify that elements are filled out and yaml compliant")
+                raise ValueError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(deployment_manifest=deployment_manifest)
@@ -727,7 +726,7 @@ def apply(
             header_message="The following modules requested for destroy have dependencies that prevent destruction:",
             errored_list=violations,
         )
-        exit(1)
+        raise Exception("Modules cannot be destroyed due to dependencies")
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,

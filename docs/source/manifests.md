@@ -91,10 +91,99 @@ targetAccountMappings:
       - Any other parameter in this list is NOT a NAMED PARAMETER (ex. `vpcId`,`privateSubnetIds`,`publicSubnetIds`, etc,) and is soley for the use of lookup in:
         - module manifests
         - the `network` object in the `regionMappings` (see examples above)
-    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isloated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREEE parameters are required!
+    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isloated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREE parameters are required!
       - **vpcId** - the VPC ID the Codebuild Project should be associated to 
       - **privateSubnetIds** - the private subnets the Codebuild Project should be associated to 
       - **securityGroupIds** - the Security Groups the Codebuild Project should be associated to -- a limit of 5 is allowed
+
+### Network Configuration for Regions
+In the above section, we defined VPC support for deployments in CodeBuild.  The values can be hardcoded as denoted but also support:
+- HardCoded Values
+- Regional Parameters (see below for definition)
+- AWS SSM Parameters (see below for definition) - NOTE: the SSM Parameter Name MUST start with the project name (the one in `seedfarmer.yaml`)
+- Environment Variables (see below for definition)
+  
+
+There are a couple of things to be aware of:
+1. The three values (vpcID, privateSubnetIds, securityGroupIds) should be stored as a string (if a vpcId) or stringified JSON lists (if privateSubnetIds or securityGroupIds).  These constructs are not flexible.  SeedFarmer predominantly leverages JSON or YAML and strings - these values are no different.
+2. Each value is defined independently - and is in no way linked to the other 2.  It is up to you (the end user) to make sure the Subnets / Security Groups are in the proper VPC.  SeedFarmer does NOT validate this prior, and the deployment will error out with an ugly stack trace.
+
+Lets look as some examples
+#### HardCoded Value Support for Network
+  ```yaml
+network: 
+  vpcId: vpc-XXXXXXXXX    
+  privateSubnetIds:
+    - subnet-XXXXXXXXX
+    - subnet-XXXXXXXXX
+  securityGroupsIds:
+    - sg-XXXXXXXXX
+  ```
+
+
+#### Regional Parameters Support for Network
+See the [above code snippets](deployment_manifest)
+```yaml
+network: 
+  vpcId:
+    valueFrom:
+      parameterValue: vpcId
+  privateSubnetIds:
+    valueFrom:
+      parameterValue: privateSubnetIds
+  securityGroupIds:
+    valueFrom:
+      parameterValue: securityGroupIds
+```
+
+
+#### AWS SSM Parameters Support for Network
+This cannot be stressed enough: **the SSM Parameter Name MUST start with the project name**. For example: if the name of your project is `idf` as defined in `seedfarmer.yaml`, then your SSM Parameter name MUST start with `/idf/`.  If you do not leverage this info, then your deployment will NOT have access to the SSM Parameter.
+
+This vale us account/region specific.  In other words, for every target account/region, you MUST populate this SSM Parameter if it is defined the the `deployment manifest`.  This is NOT a global value.
+
+Here is an example.  Lets assume my project name is `idf`
+```yaml
+network: 
+  vpcId: 
+    valueFrom:
+      parameterStore: /idf/testing/vpcid
+  privateSubnetIds:
+    valueFrom:
+      parameterStore: /idf/testing/privatesubnets
+  securityGroupIds:
+    valueFrom:
+      parameterStore: /idf/testing/securitygroups
+```
+The corresponding SSM Parameters would look like:
+```code
+/idf/testing/vpcid --> "vpc-0c4cb9e06c9413222"
+/idf/testing/privatesubnets --> ["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]
+/idf/testing/securitygroups --> ["sg-049033188c114a3d2"]
+```
+*** NOTE the lists above!!
+
+#### Environment Variable Support for Network
+Here is an example:
+```yaml
+network: 
+  vpcId: 
+    valueFrom:
+      envVariable: VPCID
+  privateSubnetIds:
+    valueFrom:
+      envVariable: PRIVATESUBNETS
+  securityGroupIds:
+    valueFrom:
+      envVariable: SECURITYGROUPS
+```
+The corresponding `.env` file would have the following defined (again, remember the lists!!):
+```code
+VPCID="vpc-0c4cb9e06c9413222"
+PRIVATESUBNETS=["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]
+SECURITYGROUPS=["sg-049033188c114a3d2"]
+```
+
 
 
 (module_manifest)=

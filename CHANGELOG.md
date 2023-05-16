@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v2.7.0 (2023-05-16)
+
+### New
+- adding HTTP-Proxy (this is a backward-compatible change)
+- adding `seedfarmer list allmoduledata` to fetch all the metadata in a deployment in a single call
+- adding Network configuration support from SSM and EnvVariables
+
+
+### Changes
+- refactored deployment_commands
+- added python upper limit versioning (to `<3.12`)
+
+### Fixes
+- typo in messaging about errored manifest
+
 ## v2.6.5 (2023-05-03)
 
 ### New

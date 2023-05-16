@@ -19,7 +19,7 @@ import yaml
 
 import pytest
 import seedfarmer.mgmt.deploy_utils as du
-from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
+from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest, DataFile
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 import mock_data.mock_manifests as mock_manifests
@@ -80,11 +80,8 @@ def test_validate_group_parameters():
 @pytest.mark.mgmt_deployment_utils
 def test_validate_group_parameters_failure():
     manifest = ModulesManifest(**mock_manifests.modules_manifest_duplicate)
-    with pytest.raises(SystemExit) as dupe_error:
-        du.validate_group_parameters(manifest)
-        
-    assert dupe_error.value.code == 1
-    
+    with pytest.raises(ValueError):
+        du.validate_group_parameters(manifest)    
   
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils
@@ -261,3 +258,10 @@ def test_validate_module_dependencies():
                                     destroy_manifest=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest)
         
     )
+    
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils_filter   
+def test_validate_datafiles():
+
+    files = DataFile(file_path="")
+    du.validate_data_files(data_files=[files])

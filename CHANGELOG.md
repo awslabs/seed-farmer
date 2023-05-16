@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- adding HTTP-Proxy (this is a backward-compatible change)
+- adding `seedfarmer list allmoduledata` to fetch all the metadata in a deployment in a single call
+- adding Network configuration support from SSM and EnvVariables
+
 
 ### Changes
 - refactored deployment_commands

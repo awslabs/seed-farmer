@@ -38,7 +38,7 @@ from seedfarmer.mgmt.module_info import (
 )
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest, NetworkMapping
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
@@ -356,8 +356,13 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
         for target_account_region in deployment_manifest.target_accounts_regions:
 
             param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
-            if target_account_region["network"]:
-                network = target_account_region["network"]
+            if target_account_region["network"] is not None:
+                network = commands.load_network_values(
+                    cast(NetworkMapping, target_account_region["network"]),
+                    cast(Dict[str, Any], target_account_region["parameters_regional"]),
+                    target_account_region["account_id"],
+                    target_account_region["region"],
+                )
                 param_d["vpc_id"] = network.vpc_id  # type: ignore
                 param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
                 param_d["security_group_ids"] = network.security_group_ids  # type: ignore

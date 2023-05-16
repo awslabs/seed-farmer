@@ -13,7 +13,8 @@
 #    limitations under the License.
 
 import logging
-from typing import Optional
+import os
+from typing import Dict, Optional
 
 import boto3
 import botocore.exceptions
@@ -24,12 +25,21 @@ import seedfarmer
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
+def setup_proxies() -> Dict[str, Optional[str]]:
+    proxies = {}
+    proxies["http"] = os.getenv("HTTP_PROXY", None)
+    proxies["https"] = os.getenv("HTTPS_PROXY", None)
+    _logger.debug("Proxies Configured: %s", proxies)
+    return proxies
+
+
 def get_botocore_config() -> botocore.config.Config:
     return botocore.config.Config(
         retries={"max_attempts": 5},
         connect_timeout=10,
         max_pool_connections=10,
         user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
+        proxies=setup_proxies(),
     )
 
 

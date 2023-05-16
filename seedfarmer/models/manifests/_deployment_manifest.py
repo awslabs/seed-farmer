@@ -40,14 +40,9 @@ class NetworkMapping(CamelModel):
     This class provides network metadata
     """
 
-    vpc_id: Union[str, ValueFromRef]
-    private_subnet_ids: Union[List[str], ValueFromRef]
-    security_group_ids: Union[List[str], ValueFromRef]
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        if not isinstance(self.security_group_ids, ValueFromRef) and len(self.security_group_ids) > 5:
-            raise ValueError("Cannot have more than 5 Security Groups in a Network")
+    vpc_id: Optional[Union[str, ValueFromRef]]
+    private_subnet_ids: Optional[Union[List[str], ValueFromRef]]
+    security_group_ids: Optional[Union[List[str], ValueFromRef]]
 
 
 class RegionMapping(CamelModel):
@@ -59,35 +54,8 @@ class RegionMapping(CamelModel):
     region: str
     default: bool = False
     parameters_regional: Dict[str, Any] = {}
-    network: Optional[NetworkMapping]
+    network: Optional[NetworkMapping] = None
     codebuild_image: Optional[str] = None
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        if self.network:
-            if isinstance(self.network.vpc_id, ValueFromRef):
-                self.network.vpc_id = cast(
-                    str,
-                    self.parameters_regional.get(str(self.network.vpc_id.value_from.parameter_value)),  # type: ignore
-                )
-            if isinstance(self.network.private_subnet_ids, ValueFromRef):
-                self.network.private_subnet_ids = cast(
-                    List[str],
-                    self.parameters_regional.get(
-                        str(self.network.private_subnet_ids.value_from.parameter_value)  # type: ignore
-                    ),
-                )
-            if isinstance(self.network.security_group_ids, ValueFromRef):
-                securityGroupIds = cast(
-                    List[str],
-                    self.parameters_regional.get(
-                        str(self.network.security_group_ids.value_from.parameter_value)  # type: ignore
-                    ),
-                )
-                if len(securityGroupIds) > 5:
-                    raise ValueError("Cannot have more than 5 Security Groups in a Network")
-                else:
-                    self.network.security_group_ids = securityGroupIds
 
 
 class TargetAccountMapping(CamelModel):
@@ -247,6 +215,7 @@ class DeploymentManifest(CamelModel):
                             "account_id": target_account.actual_account_id,
                             "region": region.region,
                             "network": region.network,  # type: ignore
+                            "parameters_regional": region.parameters_regional,  # type: ignore
                             "codebuild_image": cast(str, region.codebuild_image),
                         }
                     )

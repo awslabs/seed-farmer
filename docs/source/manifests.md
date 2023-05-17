@@ -105,8 +105,8 @@ In the above section, we defined VPC support for deployments in CodeBuild.  The 
   
 
 There are a couple of things to be aware of:
-1. The three values (vpcID, privateSubnetIds, securityGroupIds) should be stored as a string (if a vpcId) or stringified JSON lists (if privateSubnetIds or securityGroupIds).  These constructs are not flexible.  SeedFarmer predominantly leverages JSON or YAML and strings - these values are no different.
-2. Each value is defined independently - and is in no way linked to the other 2.  It is up to you (the end user) to make sure the Subnets / Security Groups are in the proper VPC.  SeedFarmer does NOT validate this prior, and the deployment will error out with an ugly stack trace.
+1. The three values (vpcID, privateSubnetIds, securityGroupIds) should be stored as a string (if a vpcId) or stringified JSON lists (if privateSubnetIds or securityGroupIds).  **SeedFarmer predominantly leverages JSON as strings stored in SSM - these values are no different**.
+2. Each value is defined independently - and is in no way linked to the other two.  It is up to you (the end user) to make sure the Subnets / Security Groups are in the proper VPC.  SeedFarmer does NOT validate this prior, and the deployment will error out with an ugly stack trace.
 
 Lets look as some examples
 #### HardCoded Value Support for Network

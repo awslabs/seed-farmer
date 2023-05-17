@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- allow for SSM parameter to be either string or json-compliant when a single value
 
 ## v2.7.0 (2023-05-16)
 

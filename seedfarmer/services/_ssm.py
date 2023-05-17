@@ -50,7 +50,11 @@ def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = N
 def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
     client = boto3_client(service_name="ssm", session=session)
     json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
-    return cast(Dict[str, Any], json.loads(json_str))
+    try:
+        return cast(Dict[str, Any], json.loads(json_str))
+    except json.decoder.JSONDecodeError:
+        _logger.warn("Parameter %s cannot be parsed, returning it as-is - %s ", name, json_str)
+        return cast(Dict[str, Any], json_str)
 
 
 def get_parameter_if_exists(name: str, session: Optional[Session] = None) -> Optional[Dict[str, Any]]:

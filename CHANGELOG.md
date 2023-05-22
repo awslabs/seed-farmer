@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+## v2.7.2 (2023-05-22)
+
+### New
+
+### Changes
 - implement custom error classes, remove all `exit()` commands
 - added debug component to print all codebuild urls, regardless of status
 

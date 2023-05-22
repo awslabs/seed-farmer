@@ -19,6 +19,7 @@ from moto import mock_sts
 
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
+import seedfarmer.errors
 
 
 @pytest.fixture(scope="function")
@@ -45,7 +46,7 @@ def sts_client(aws_credentials):
 
 @pytest.mark.session_manager
 def test_failed_creation(session_manager):
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError) as e:
         SessionManager().get_or_create()
     assert "A 'project_name' is required for first time initialization of the SessionManager" in str(e)
 

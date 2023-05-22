@@ -20,6 +20,7 @@ import pytest
 import yaml
 
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
+import seedfarmer.errors
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
@@ -72,7 +73,7 @@ def test_deployment_manifest_get_parameter_with_defaults():
     assert manifest.get_parameter_value("dockerCredentialsSecret") == "secret"
     assert manifest.get_parameter_value("noKey") is None
     assert manifest.get_parameter_value("noKey", default="noValue") == "noValue"
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.get_parameter_value("someKey", account_alias="primary", account_id="000000000000", region="us-west-2")
 
     assert manifest.get_target_account_mapping(account_alias="primary").alias == "primary"
@@ -85,9 +86,9 @@ def test_deployment_manifest_get_parameter_with_defaults():
     assert manifest.target_account_mappings[0].get_region_mapping(region="other") is None
     assert manifest.target_account_mappings[0].default_region_mapping.region == "us-west-2"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.get_target_account_mapping(account_alias="primary", account_id="000000000000")
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.get_target_account_mapping()
 
 
@@ -156,7 +157,7 @@ targetAccountMappings: []
 """
     )
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(seedfarmer.errors.InvalidManifestError) as e:
         deployment_manifest = DeploymentManifest(**generator_yaml)
     assert str(e.value) == "Only one of 'name' or 'name_generator' can be specified"
 
@@ -168,7 +169,7 @@ targetAccountMappings: []
 """
     )
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(seedfarmer.errors.InvalidManifestError) as e:
         deployment_manifest = DeploymentManifest(**generator_yaml)
     assert str(e.value) == "One of 'name' or 'name_generator' is required"
 
@@ -187,7 +188,7 @@ targetAccountMappings: []
 """
     )
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(seedfarmer.errors.InvalidManifestError) as e:
         deployment_manifest = DeploymentManifest(**generator_yaml)
     assert str(e.value) == "Loading value from Module Metadata is not supported on a NameGenerator"
 
@@ -204,7 +205,7 @@ targetAccountMappings: []
 """
     )
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(seedfarmer.errors.InvalidManifestError) as e:
         deployment_manifest = DeploymentManifest(**generator_yaml)
     assert str(e.value) == "Unable to resolve value from Environment Variable: PYTEST_NO_VAR"
 
@@ -255,7 +256,7 @@ targetRegion: us-west-2
 
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.validate_and_set_module_defaults()
 
     module_yaml = yaml.safe_load(
@@ -269,7 +270,7 @@ targetRegion: other
 
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.validate_and_set_module_defaults()
 
 
@@ -309,7 +310,7 @@ targetAccount: primary
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.validate_and_set_module_defaults()
 
     module_yaml = yaml.safe_load(
@@ -323,7 +324,7 @@ targetRegion: us-west-2
     module = ModuleManifest(**module_yaml)
     manifest.groups[0].modules = [module]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.validate_and_set_module_defaults()
 
 

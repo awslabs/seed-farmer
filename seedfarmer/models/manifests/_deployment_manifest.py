@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from pydantic import PrivateAttr
 
+import seedfarmer.errors
 from seedfarmer.models._base import CamelModel, ValueFromRef
 from seedfarmer.models.manifests._module_manifest import ModuleManifest
 
@@ -89,11 +90,13 @@ class TargetAccountMapping(CamelModel):
             return self.account_id
         elif isinstance(self.account_id, ValueFromRef):
             if self.account_id.value_from and self.account_id.value_from.module_metadata is not None:
-                raise ValueError("Loading value from Module Metadata is not supported in the Deployment Manifest")
+                raise seedfarmer.errors.InvalidManifestError(
+                    "Loading value from Module Metadata is not supported in the Deployment Manifest"
+                )
             elif self.account_id.value_from and self.account_id.value_from.env_variable:
                 account_id = os.getenv(self.account_id.value_from.env_variable, None)
                 if account_id is None:
-                    raise ValueError(
+                    raise seedfarmer.errors.InvalidManifestError(
                         (
                             "Unable to resolve AccountId from Environment Variable:"
                             f" {self.account_id.value_from.env_variable}"
@@ -101,9 +104,9 @@ class TargetAccountMapping(CamelModel):
                     )
                 return account_id
             else:
-                raise ValueError("Unsupported valueFrom type")
+                raise seedfarmer.errors.InvalidManifestError("Unsupported valueFrom type")
         else:
-            raise ValueError("Unsupported accountId type")
+            raise seedfarmer.errors.InvalidManifestError("Unsupported accountId type")
 
     @property
     def default_region_mapping(self) -> Optional[RegionMapping]:
@@ -124,18 +127,20 @@ class NameGenerator(CamelModel):
             return value
         elif isinstance(value, ValueFromRef):
             if value.value_from and value.value_from.module_metadata is not None:
-                raise ValueError("Loading value from Module Metadata is not supported on a NameGenerator")
+                raise seedfarmer.errors.InvalidManifestError(
+                    "Loading value from Module Metadata is not supported on a NameGenerator"
+                )
             elif value.value_from and value.value_from.env_variable:
                 env_value = os.getenv(value.value_from.env_variable, None)
                 if env_value is None:
-                    raise ValueError(
+                    raise seedfarmer.errors.InvalidManifestError(
                         ("Unable to resolve value from Environment Variable:" f" {value.value_from.env_variable}")
                     )
                 return env_value
             else:
-                raise ValueError("Unsupported valueFrom type")
+                raise seedfarmer.errors.InvalidManifestError("Unsupported valueFrom type")
         else:
-            raise ValueError("Unsupported value type")
+            raise seedfarmer.errors.InvalidManifestError("Unsupported value type")
 
     def generate_name(self) -> str:
         prefix = self._get_value(self.prefix)
@@ -168,10 +173,10 @@ class DeploymentManifest(CamelModel):
         super().__init__(**kwargs)
 
         if self.name is None and self.name_generator is None:
-            raise ValueError("One of 'name' or 'name_generator' is required")
+            raise seedfarmer.errors.InvalidManifestError("One of 'name' or 'name_generator' is required")
 
         if self.name is not None and self.name_generator is not None:
-            raise ValueError("Only one of 'name' or 'name_generator' can be specified")
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'name' or 'name_generator' can be specified")
 
         # Generate a name and then reset the name_generator to None so that any SerDe done later on does not
         # generate a new name
@@ -189,9 +194,9 @@ class DeploymentManifest(CamelModel):
         self, account_alias: Optional[str] = None, account_id: Optional[str] = None
     ) -> Optional[TargetAccountMapping]:
         if account_alias is None and account_id is None:
-            raise ValueError("One of 'account_alias' or 'account_id' is required")
+            raise seedfarmer.errors.InvalidManifestError("One of 'account_alias' or 'account_id' is required")
         elif account_alias is not None and account_id is not None:
-            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
         elif account_alias:
             return self._account_alias_index.get(account_alias, None)
         elif account_id:
@@ -231,7 +236,7 @@ class DeploymentManifest(CamelModel):
         default: Optional[str] = None,
     ) -> Optional[Any]:
         if account_alias is not None and account_id is not None:
-            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
 
         use_default_account = account_alias is None and account_id is None
         use_default_region = region is None
@@ -263,7 +268,7 @@ class DeploymentManifest(CamelModel):
         region: Optional[str] = None,
     ) -> Optional[str]:
         if account_alias is not None and account_id is not None:
-            raise ValueError("Only one of 'account_alias' and 'account_id' is allowed")
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
 
         use_default_account = account_alias is None and account_id is None
         use_default_region = region is None
@@ -297,7 +302,7 @@ class DeploymentManifest(CamelModel):
 
                 target_account = self.get_target_account_mapping(account_alias=module.target_account)
                 if target_account is None:
-                    raise ValueError(
+                    raise seedfarmer.errors.InvalidManifestError(
                         f"Invalid target_account ({module.target_account}) for "
                         f"Module {module.name} in Group {group.name}"
                     )
@@ -310,7 +315,7 @@ class DeploymentManifest(CamelModel):
                 )
 
                 if target_account.get_region_mapping(region=cast(str, module.target_region)) is None:
-                    raise ValueError(
+                    raise seedfarmer.errors.InvalidManifestError(
                         f"Invalid target_region ({module.target_region}) in target_account ({target_account.alias}) "
                         f"for Module {module.name} in Group {group.name}"
                     )

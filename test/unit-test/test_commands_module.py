@@ -5,6 +5,7 @@ import yaml, json
 from typing import cast, Tuple
 import pytest
 import seedfarmer.commands._module_commands as mc
+import seedfarmer.errors
 
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from  seedfarmer.models._deploy_spec import DeploySpec
@@ -236,7 +237,7 @@ def test_deploy_modules_error_deployspec(session_manager,mocker):
     spec.deploy=None
     module_manifest.deploy_spec = spec
 
-    with pytest.raises( ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         mc.deploy_module(deployment_name=dep.name,
                         group_name=group_name,
                         module_manifest=module_manifest,
@@ -280,7 +281,7 @@ def test_destroy_modules_error_deployspec(session_manager,mocker):
     group_name = dep.groups[1].name
     module_manifest = dep.groups[1].modules[0]
     
-    with pytest.raises( ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         mc.destroy_module(deployment_name=dep.name,
                         group_name=group_name,
                         module_path="module/path/path",

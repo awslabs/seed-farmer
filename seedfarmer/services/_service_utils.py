@@ -21,6 +21,7 @@ import botocore.exceptions
 from boto3 import Session
 
 import seedfarmer
+import seedfarmer.errors
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -96,7 +97,9 @@ def boto3_resource(
 def get_region(session: Optional[Session] = None, profile: Optional[str] = None) -> str:
     sess = session if session else create_new_session(profile=profile)
     if sess.region_name is None:
-        raise ValueError("It is not possible to infer AWS REGION from your environment.")
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "It is not possible to infer AWS REGION from your environment."
+        )
     return str(sess.region_name)
 
 

@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer import config
 from seedfarmer.services import _secrets_manager as secrets
 from seedfarmer.services import _ssm as ssm
@@ -370,7 +371,7 @@ def get_ssm_parameter_version(
     resp = ssm.describe_parameter(name=ssm_parameter_name, session=session)
     if resp is None:
         _logger.error("The SSM parameter %s could not be fetched", ssm_parameter_name)
-        raise Exception("The SSM parameter could not be fetched")
+        raise seedfarmer.errors.ModuleDeploymentError("The SSM parameter could not be fetched")
     else:
         return int(resp["Parameters"][0]["Version"]) if len(resp["Parameters"]) > 0 else None
 
@@ -822,5 +823,5 @@ def get_modulestack_path(module_path: str) -> Any:
 def get_deployspec_path(module_path: str) -> str:
     p = os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")
     if not os.path.exists(p):
-        raise Exception("No deployspec.yaml file found in module directory: %s", p)
+        raise seedfarmer.errors.InvalidPathError("No deployspec.yaml file found in module directory: %s", p)
     return os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")

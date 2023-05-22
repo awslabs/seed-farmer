@@ -5,6 +5,7 @@ import yaml, json
 from typing import cast, Tuple
 import pytest
 import seedfarmer.commands._deployment_commands as dc
+import seedfarmer.errors
 
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter, DataFile
 from seedfarmer.models._deploy_spec import DeploySpec
@@ -141,7 +142,7 @@ def test_process_data_files_error(mocker):
     datafile_list =[]
     datafile_list.append(DataFile(file_path=git_path_test))
     datafile_list.append(DataFile(file_path=""))
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidPathError):
         dc._process_data_files(data_files=datafile_list, module_name="test",group_name="test")
     
     
@@ -155,7 +156,7 @@ def test_execute_deploy_invalid_spec(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy",return_value=None)
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     group = dep.groups[0]
-    with pytest.raises( ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_deploy(group_name=group.name,
                         module_manifest=group.modules[0],
                         deployment_manifest = dep,
@@ -198,7 +199,7 @@ def test_execute_destroy_invalid_spec(session_manager,mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
                  return_value=("stack_name","role_name"))
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module",return_value=mod_resp)
-    with pytest.raises( ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_destroy(group_name=group.name,
                         module_manifest=module_manifest,
                         module_path="to/my/module",

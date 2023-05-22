@@ -23,6 +23,7 @@ import yaml
 from aws_codeseeder import LOGGER, codeseeder
 from aws_codeseeder.codeseeder import CodeSeederConfig
 
+import seedfarmer.errors
 from seedfarmer.__metadata__ import __description__, __license__, __title__
 from seedfarmer.models import ProjectSpec
 
@@ -70,7 +71,7 @@ class Config(object):
         while not os.path.exists(os.path.join(self._OPS_ROOT, self.CONFIG_FILE)):
             if count >= 4:
                 _logger.error("The seedfarmer.yaml was not found at the root of your project. Please set it and rerun.")
-                raise FileNotFoundError(
+                raise seedfarmer.errors.SeedFarmerException(
                     "The seedfarmer.yaml was not found at the root of your project. Please set it and rerun."
                 )
             else:

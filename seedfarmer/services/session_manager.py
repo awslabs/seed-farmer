@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_account_id
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -83,7 +84,9 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     ) -> ISessionManager:
         if not self.created:
             if project_name is None:
-                raise ValueError("A 'project_name' is required for first time initialization of the SessionManager")
+                raise seedfarmer.errors.InvalidConfigurationError(
+                    "A 'project_name' is required for first time initialization of the SessionManager"
+                )
             self.config["project_name"] = project_name
             self.config["region_name"] = region_name
             self.config["profile"] = profile
@@ -104,7 +107,9 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     @property
     def toolchain_session(self) -> Session:
         if not self.created:
-            raise RuntimeError("The SessionManager object was never properly created...)")
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "The SessionManager object was never properly created...)"
+            )
         self._check_for_toolchain()
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
 
@@ -112,7 +117,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
         if not self.created:
-            raise RuntimeError("The SessionManager object was never properly created...")
+            raise seedfarmer.errors.InvalidConfigurationError("The SessionManager object was never properly created...")
         if session_key not in self.sessions.keys():
             _logger.info(f"Creating Session for {session_key}")
             self._check_for_toolchain()

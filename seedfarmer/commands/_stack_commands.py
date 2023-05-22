@@ -21,6 +21,7 @@ from typing import Any, List, Optional, Tuple
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
 
+import seedfarmer.errors
 import seedfarmer.services._iam as iam
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_stack_names
@@ -70,7 +71,9 @@ def deploy_managed_policy_stack(
         project_managed_policy_template = config.PROJECT_POLICY_PATH
         _logger.info("Resolved the ProjectPolicyPath %s", project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
-            raise Exception(f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}")
+            raise seedfarmer.errors.InvalidPathError(
+                f"Unable to find the Project Managed Policy Template: {project_managed_policy_template}"
+            )
         _logger.info(
             "Deploying %s from the path %s", info.PROJECT_MANAGED_POLICY_CFN_NAME, project_managed_policy_template
         )
@@ -313,7 +316,9 @@ def deploy_module_stack(
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
 
     if not project_managed_policy_arn:
-        raise ValueError("Project Managed Stack is missing the export `ProjectPolicyARN`")
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Project Managed Stack is missing the export `ProjectPolicyARN`"
+        )
 
     policies = [seedkit_managed_policy_arn, project_managed_policy_arn]
     policies_attached = iam.attach_policy_to_role(module_role_name, policies, session=session)

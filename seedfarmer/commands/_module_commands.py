@@ -24,6 +24,7 @@ from aws_codeseeder import EnvVar, codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer import config
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
@@ -87,7 +88,7 @@ def deploy_module(
     codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     if module_manifest.deploy_spec is None or module_manifest.deploy_spec.deploy is None:
-        raise ValueError("Missing `deploy` in module's deployspec.yaml")
+        raise seedfarmer.errors.InvalidConfigurationError("Missing `deploy` in module's deployspec.yaml")
 
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
@@ -187,7 +188,9 @@ def destroy_module(
     codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
     if module_manifest.deploy_spec is None or module_manifest.deploy_spec.destroy is None:
-        raise ValueError(f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml")
+        raise seedfarmer.errors.InvalidConfigurationError(
+            f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml"
+        )
 
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(

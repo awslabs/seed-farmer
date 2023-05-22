@@ -24,6 +24,7 @@ import yaml
 from git import Repo  # type: ignore
 
 import seedfarmer.checksum as checksum
+import seedfarmer.errors
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import commands, config
@@ -43,9 +44,10 @@ from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
     print_dependency_error_list,
-    print_errored_modules,
+    print_errored_modules_build_info,
     print_manifest_inventory,
     print_manifest_json,
+    print_modules_build_info,
 )
 from seedfarmer.services.session_manager import SessionManager
 
@@ -124,7 +126,7 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
         for missing_file in missing_files:
             print(f"  {missing_file}")
         print_bolded(message="Exiting Deployment", color="red")
-        raise ValueError("Missing DataFiles - cannot process")
+        raise seedfarmer.errors.InvalidPathError("Missing DataFiles - cannot process")
 
 
 def _execute_deploy(
@@ -168,7 +170,7 @@ def _execute_deploy(
     )
 
     if module_manifest.deploy_spec is None:
-        raise ValueError(
+        raise seedfarmer.errors.InvalidManifestError(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
@@ -204,7 +206,7 @@ def _execute_destroy(
     codebuild_image: Optional[str] = None,
 ) -> Optional[ModuleDeploymentResponse]:
     if module_manifest.deploy_spec is None:
-        raise ValueError(
+        raise seedfarmer.errors.InvalidManifestError(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
@@ -328,11 +330,20 @@ def _deploy_validated_deployment(
                     ]
                     deploy_response = list(workers.map(_exec_deploy, params))
                     _logger.debug(deploy_response)
+                    (
+                        print_modules_build_info("Build Info Debug Data", deploy_response)  # type: ignore
+                        if _logger.isEnabledFor(logging.DEBUG)
+                        else None
+                    )
                     for dep_resp_object in deploy_response:
                         if dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to deploy...exiting deployment")
-                            print_errored_modules("These modules had errors deploying", deploy_response)  # type: ignore
-                            exit(1)
+                            print_errored_modules_build_info(
+                                "These modules had errors deploying", deploy_response  # type: ignore
+                            )
+                            raise seedfarmer.errors.ModuleDeploymentError(
+                                error_message="At least one module failed to deploy...exiting deployment"
+                            )
 
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
@@ -464,11 +475,18 @@ def destroy_deployment(
                             ]
                     destroy_response = list(workers.map(_exec_destroy, params))
                     _logger.debug(destroy_response)
+                    print_modules_build_info("Build Info Debug Data", destroy_response) if _logger.isEnabledFor(
+                        logging.DEBUG
+                    ) else None
                     for dep_resp_object in destroy_response:
                         if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to destroy...exiting deployment")
-                            print_errored_modules("The following modules had errors destroying ", destroy_response)
-                            exit(1)
+                            print_errored_modules_build_info(
+                                "The following modules had errors destroying ", destroy_response
+                            )
+                            raise seedfarmer.errors.ModuleDeploymentError(
+                                error_message="At least one module failed to destroy...exiting deployment"
+                            )
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:
@@ -525,7 +543,7 @@ def deploy_deployment(
         for module in group.modules:
             _logger.debug("Working on -- %s", module)
             if not module.path:
-                raise ValueError("Unable to parse module manifest, `path` not specified")
+                raise seedfarmer.errors.InvalidManifestError("Unable to parse module manifest, `path` not specified")
 
             _process_module_path(module=module) if module.path.startswith("git::") else None
 
@@ -556,7 +574,7 @@ def deploy_deployment(
             for param in module.parameters:
                 if param.value_from and param.value_from.parameter_store:
                     if ":" in param.value_from.parameter_store:
-                        raise Exception(
+                        raise seedfarmer.errors.InvalidConfigurationError(
                             f"CodeBuild does not support Versioned SSM Parameters -- see {group_name}-{module.name}"
                         )
                     param.version = mi.get_ssm_parameter_version(
@@ -669,10 +687,12 @@ def apply(
 
     Raises
     ------
-    Exception
-        If the relative `path' value is missing
-    Exception
-        If the relative `path' value is a list
+    InvalidConfigurationError
+        seedfarmer.errors.seedfarmer_errors.InvalidConfigurationError
+    InvalidPathError
+        seedfarmer.errors.seedfarmer_errors.InvalidPathError
+    ModuleDeploymentError
+        seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
@@ -697,10 +717,14 @@ def apply(
     for module_group in deployment_manifest.groups:
         if module_group.path and module_group.modules:
             _logger.debug("module_group: %s", module_group)
-            raise Exception("Only one of the `path` or `modules` attributes can be defined on a Group")
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "Only one of the `path` or `modules` attributes can be defined on a Group"
+            )
         if not module_group.path and not module_group.modules:
             _logger.debug("module_group: %s", module_group)
-            raise Exception("One of the `path` or `modules` attributes must be defined on a Group")
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "One of the `path` or `modules` attributes must be defined on a Group"
+            )
         if module_group.path:
             try:
                 with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
@@ -709,7 +733,7 @@ def apply(
                 _logger.error(e)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
                 _logger.error("Verify that elements are filled out and yaml compliant")
-                raise ValueError("Cannot parse manifest file path")
+                raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(deployment_manifest=deployment_manifest)
@@ -726,7 +750,7 @@ def apply(
             header_message="The following modules requested for destroy have dependencies that prevent destruction:",
             errored_list=violations,
         )
-        raise Exception("Modules cannot be destroyed due to dependencies")
+        raise seedfarmer.errors.InvalidConfigurationError("Modules cannot be destroyed due to dependencies")
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,
@@ -778,7 +802,14 @@ def destroy(
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
 
-
+    Raises
+    ------
+    InvalidConfigurationError
+        seedfarmer.errors.seedfarmer_errors.InvalidConfigurationError
+    InvalidPathError
+        seedfarmer.errors.seedfarmer_errors.InvalidPathError
+    ModuleDeploymentError
+        seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)

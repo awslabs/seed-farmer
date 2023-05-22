@@ -138,7 +138,32 @@ def print_bolded(message: str, color: str = "yellow") -> None:
     console.print(f"[bold {color}]{message}")
 
 
-def print_errored_modules(
+def print_modules_build_info(
+    description: str, modules_data: List[Optional[ModuleDeploymentResponse]], color: str = "white"
+) -> None:
+    """
+    Print the modules that have errored on deployment of a group
+
+    Parameters
+    ----------
+    description : str
+        The custom text
+    modules_data : List[Optional[ModuleDeploymentResponse]]
+        The object containing the metadata related to the failure
+    color : str, optional
+        The color of the description text, by default "white"
+    """
+    console.print(f"[bold {color}]{description}", crop=False)
+    for r_obj in modules_data:
+        console.print(
+            f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module} status: {r_obj.status}", crop=False  # type: ignore
+        )
+        console.print(
+            f"    {r_obj.codeseeder_metadata.build_url}", crop=False  # type: ignore
+        ) if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url else None  # type: ignore
+
+
+def print_errored_modules_build_info(
     description: str, modules_data: List[Optional[ModuleDeploymentResponse]], color: str = "red"
 ) -> None:
     """

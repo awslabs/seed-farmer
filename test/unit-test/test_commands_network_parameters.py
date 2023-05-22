@@ -4,6 +4,7 @@ import yaml, json
 from typing import cast, Dict, Any
 import pytest
 import seedfarmer.commands._network_parameter_commands as npc
+import seedfarmer.errors
 
 from seedfarmer.models.manifests import DeploymentManifest, NetworkMapping
 from seedfarmer.services._service_utils import boto3_client
@@ -357,7 +358,7 @@ def test_too_many_subgroups(session_manager,mocker):
     dep.validate_and_set_module_defaults()
 
     target_account_region = dep.target_accounts_regions[0]
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         npc.load_network_values(
                         cast(NetworkMapping, target_account_region["network"]),
                         cast(Dict[str, Any], target_account_region["parameters_regional"]),

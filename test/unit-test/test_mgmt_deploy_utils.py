@@ -15,10 +15,10 @@
 import logging
 import os
 import boto3
-import yaml
 
 import pytest
 import seedfarmer.mgmt.deploy_utils as du
+import seedfarmer.errors
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest, DataFile
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -80,7 +80,7 @@ def test_validate_group_parameters():
 @pytest.mark.mgmt_deployment_utils
 def test_validate_group_parameters_failure():
     manifest = ModulesManifest(**mock_manifests.modules_manifest_duplicate)
-    with pytest.raises(ValueError):
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         du.validate_group_parameters(manifest)    
   
 @pytest.mark.mgmt

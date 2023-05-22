@@ -18,6 +18,7 @@ from typing import Optional
 import click
 from boto3 import Session
 
+import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
@@ -120,7 +121,9 @@ def remove_module_data(
 
     session: Optional[Session] = None
     if (target_account_id is not None) != (target_region is not None):
-        raise ValueError("Must either specify both --target-account-id and --target-region, or neither")
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Must either specify both --target-account-id and --target-region, or neither"
+        )
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()

@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, cast
 
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer.services._service_utils import boto3_client
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = N
                 time.sleep(2 ** (4 - retries))
 
             if retries == 0:
-                raise Exception(err)
+                raise seedfarmer.errors.SeedFarmerException(err)
 
 
 def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any]:

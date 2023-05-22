@@ -17,6 +17,7 @@ import logging
 import os
 from typing import Any, Dict, List, cast
 
+import seedfarmer.errors
 import seedfarmer.services._ssm as ssm
 from seedfarmer.models import ValueFromRef
 from seedfarmer.models.manifests import NetworkMapping
@@ -83,7 +84,7 @@ def load_network_values(
             )
 
         if len(network.security_group_ids) > 5:  # type: ignore
-            raise ValueError("Cannot have more than 5 Security Groups in a Network")
+            raise seedfarmer.errors.InvalidConfigurationError("Cannot have more than 5 Security Groups in a Network")
 
     _logger.debug("Returning network for %s - %s : %s", account_id, region, network)
     return network

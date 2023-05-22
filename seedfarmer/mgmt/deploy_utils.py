@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, cast
 import yaml
 from boto3 import Session
 
+import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
@@ -173,7 +174,7 @@ def validate_group_parameters(group: ModulesManifest) -> None:
           No module can refer to its own group for parameter lookups!!
         """
         print_bolded(message=message, color="red")
-        raise ValueError(message)
+        raise seedfarmer.errors.InvalidConfigurationError(message)
 
 
 def validate_module_dependencies(

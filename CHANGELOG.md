@@ -7,8 +7,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
-
+- added `forceDependencyRedeploy` feature to codebase
 ### Changes
+- updated `requests~=2.31.0` in requirements-dev.* to align to dependabot
 
 ### Fixes
 

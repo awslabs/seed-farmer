@@ -85,12 +85,14 @@ def test_validate_group_parameters_failure():
   
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils
-def test_need_to_build(mocker,session_manager):
+def test_need_to_build_no(mocker,session_manager):
     manifest = DeploymentManifest(**mock_manifests.deployment_manifest)
     module_manifest= manifest.groups[1].modules[0]
     mocker.patch("seedfarmer.mgmt.deploy_utils.mi.does_md5_match", return_value=True)
     needed = du.need_to_build(deployment_name='test',
                               group_name='group',
+                              active_modules=[],
+                              module_upstream_dep={"",None},
                               module_manifest=module_manifest,deployment_params_cache=None)
     assert needed == False
  
@@ -102,6 +104,36 @@ def test_need_to_build_yes(mocker,session_manager):
     mocker.patch("seedfarmer.mgmt.deploy_utils.mi.does_md5_match", return_value=False)
     needed = du.need_to_build(deployment_name='test',
                               group_name='group',
+                              active_modules=[],
+                              module_upstream_dep={"",None},
+                              module_manifest=module_manifest,deployment_params_cache=None)
+    assert needed == True 
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils
+def test_need_to_build_with_force_deploy_yes(mocker,session_manager):
+    manifest = DeploymentManifest(**mock_manifests.deployment_manifest)
+    module_manifest= manifest.groups[1].modules[0]
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.does_md5_match", return_value=True)
+    needed = du.need_to_build(deployment_name='test',
+                              group_name='core',
+                              active_modules=["optionals-networking"],
+                              module_upstream_dep={"core-eks":["optionals-networking"]},
+                              force_redeploy_flag=True,
+                              module_manifest=module_manifest,deployment_params_cache=None)
+    assert needed == True 
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_deployment_utils
+def test_need_to_build_without_force_deploy_yes(mocker,session_manager):
+    manifest = DeploymentManifest(**mock_manifests.deployment_manifest)
+    module_manifest= manifest.groups[1].modules[0]
+    mocker.patch("seedfarmer.mgmt.deploy_utils.mi.does_md5_match", return_value=False)
+    needed = du.need_to_build(deployment_name='test',
+                              group_name='core',
+                              active_modules=["optionals-networking"],
+                              module_upstream_dep={"core-eks":["optionals-networking"]},
+                              force_redeploy_flag=False,
                               module_manifest=module_manifest,deployment_params_cache=None)
     assert needed == True 
  

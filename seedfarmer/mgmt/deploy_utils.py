@@ -415,10 +415,48 @@ def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
     return ordering
 
 
+def force_redeploy(
+    group_name: str, module_name: str, active_modules: List[str], module_upstream_dep: Dict[str, List[str]]
+) -> bool:
+    """
+    force_redeploy
+    This indicates whether a module needs to redeployed based on a list of other modules that have been scheduled
+    to be redeployed.
+
+    Parameters
+    ----------
+    group_name : str
+        The name of the group the module belongs to
+    module_name : str
+        The name of the modules
+    active_modules : List[str]
+        A list of modules already scheduled to be deployed.  The have the naming format of <group_name>-<module_name>
+    module_upstream_dep : Dict[str, List[str]]
+        A dict containing all the upstream dependencies of a module.  Each key in the dict is a module name
+        with the format <group_name>-<module_name> and the value is a list of modules, each with the format
+        of <group_name>-<module_name>
+    Returns
+    -------
+    bool
+        Indicator whether or not the module needs to be force-redeployed.
+    """
+    if module_upstream_dep.get(f"{group_name}-{module_name}"):
+        return (
+            True
+            if (len((set(active_modules)).intersection(set(module_upstream_dep[f"{group_name}-{module_name}"]))) > 0)
+            else False
+        )
+    else:
+        return False
+
+
 def need_to_build(
     deployment_name: str,
     group_name: str,
     module_manifest: ModuleManifest,
+    active_modules: List[str] = [],
+    module_upstream_dep: Dict[str, List[str]] = {},
+    force_redeploy_flag: bool = False,
     deployment_params_cache: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """
@@ -434,6 +472,15 @@ def need_to_build(
         A name of the corresponding group
     module_manifest : ModuleManifest
         The populated ModuleManifest Object
+    active_modules : List[str]
+        A list of modules already scheduled to be deployed.  The have the naming format of <group_name>-<module_name>
+    module_upstream_dep : Dict[str, List[str]]
+        A dict containing all the upstream dependencies of a module.  Each key in the dict is a module name
+        with the format <group_name>-<module_name> and the value is a list of modules, each with the format
+        of <group_name>-<module_name>
+    force_redeploy_flag: bool
+        A bool indicating whether the deployment is set to force-redeploy
+        Defaults to False
     deployment_params_cache: Dict[str, Any]
         A cache of deployment commands
 
@@ -444,6 +491,15 @@ def need_to_build(
         True - yes, built it
         False - no, do not build it
     """
+    if force_redeploy_flag and (
+        force_redeploy(
+            group_name=group_name,
+            module_name=module_manifest.name,
+            active_modules=active_modules,
+            module_upstream_dep=module_upstream_dep,
+        )
+    ):
+        return True
 
     session = (
         SessionManager()

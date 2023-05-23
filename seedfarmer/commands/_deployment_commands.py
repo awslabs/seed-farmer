@@ -501,6 +501,7 @@ def destroy_deployment(
 def deploy_deployment(
     deployment_manifest: DeploymentManifest,
     module_info_index: du.ModuleInfoIndex,
+    module_upstream_dep: Dict[str, List[str]],
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
@@ -516,6 +517,10 @@ def deploy_deployment(
         The DeploymentManifest objec of all modules to deploy
     module_info_index:ModuleInfoIndex
         An index of all Module Info stored in SSM across all target accounts and regions
+    module_upstream_dep: Dict[str, List[str]]
+        A dict containing all the upstream dependencies of a module.  Each key in the dict is a module name
+        with the format <group_name>-<module_name> and the value is a list of modules, each with the format
+        of <group_name>-<module_name>
     dryrun : bool, optional
         This flag indicates that the DeploymentManifest object should be consumed but DOES NOT
         enact any deployment changes.
@@ -533,10 +538,14 @@ def deploy_deployment(
         f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
     )
 
+    if deployment_manifest.force_dependency_redeploy:
+        _logger.warn("You have configured your deployment to FORCE all dependent modules to redeploy")
+        _logger.debug(f"Upstream Module Dependencies : {json.dumps(module_upstream_dep, indent=4)}")
+
     groups_to_deploy = []
     unchanged_modules = []
+    _group_mod_to_deploy: List[str] = []
     for group in deployment_manifest_wip.groups:
-        group_name = group.name
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         du.validate_group_parameters(group=group)
@@ -575,7 +584,7 @@ def deploy_deployment(
                 if param.value_from and param.value_from.parameter_store:
                     if ":" in param.value_from.parameter_store:
                         raise seedfarmer.errors.InvalidConfigurationError(
-                            f"CodeBuild does not support Versioned SSM Parameters -- see {group_name}-{module.name}"
+                            f"CodeBuild does not support Versioned SSM Parameters -- see {group.name}-{module.name}"
                         )
                     param.version = mi.get_ssm_parameter_version(
                         ssm_parameter_name=param.value_from.parameter_store,
@@ -611,10 +620,13 @@ def deploy_deployment(
 
             _build_module = du.need_to_build(
                 deployment_name=deployment_name,
-                group_name=group_name,
+                group_name=group.name,
                 module_manifest=module,
+                active_modules=_group_mod_to_deploy,
+                module_upstream_dep=module_upstream_dep,
+                force_redeploy_flag=cast(bool, deployment_manifest.force_dependency_redeploy),
                 deployment_params_cache=module_info_index.get_module_info(
-                    group=group_name,
+                    group=group.name,
                     account_id=cast(str, module.get_target_account_id()),
                     region=cast(str, module.target_region),
                     module_name=module.name,
@@ -622,10 +634,11 @@ def deploy_deployment(
             )
             if not _build_module:
                 unchanged_modules.append(
-                    [module.target_account, module.target_region, deployment_name, group_name, module.name]
+                    [module.target_account, module.target_region, deployment_name, group.name, module.name]
                 )
             else:
                 modules_to_deploy.append(module)
+                _group_mod_to_deploy.append(f"{group.name}-{module.name}")
 
         if modules_to_deploy:
             groups_to_deploy.append(
@@ -761,6 +774,7 @@ def apply(
     deploy_deployment(
         deployment_manifest=deployment_manifest,
         module_info_index=module_info_index,
+        module_upstream_dep=module_depends_on_dict,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )

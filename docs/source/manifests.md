@@ -10,6 +10,7 @@ The deployment manifest is the top level manifest and resides in the `modules` d
 ```yaml
 name: examples
 toolchainRegion: us-west-2
+forceDependencyRedeploy: False
 groups:
   - name: optionals
     path: manifests-multi/examples/optional-modules.yaml
@@ -68,6 +69,7 @@ targetAccountMappings:
 
 - **name** : this is the name of your deployment.  There can be only one deployment with this name in a project.
 - **toolchainRegion** :the designated region that the `toolchain` is created in
+- **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
   - **path**- the relative path to the [module manifest](module_manifest)
@@ -183,8 +185,30 @@ VPCID="vpc-0c4cb9e06c9413222"
 PRIVATESUBNETS=["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]
 SECURITYGROUPS=["sg-049033188c114a3d2"]
 ```
+(dependency-management)=
+### Dependency Management
+
+SeedFarmer has a shared-responsibilty model for dependency management of modules.  We have put in guardrails within SeedFarmer to inspect your deployment manifest prior to deployment ( ex. we prevent deletion of modules that have downstream modules dependent on it, prevent circular references of modules, etc.), but it is up to the end user to be aware of and manage the relationships between modules to assess impact of changes to modules via redeployment.  If a module is rendered into an inoperable state (ex. a rollback of CloudFormation prevents a ChangeSet from occurring), the user is responsible for resolving any blockers due to an inoperable change incurred by a failed module deployment.
 
 
+(force-redeploy)=
+#### Force Dependency Redeploy
+
+We recommend to destroy / deploy / redeploy modules explicitly via the manifests.
+
+But, we understand that sometimes when a module changes (is redeployed), the other downstream modules that are dependent on it may want to consume those changes. This flag will tell SeedFarmer to force a redeploy of all modules impacted by the redeploy of another module.  This is an indiscriminant feature in that it is not granular enough to detect WHAT is causing a redeploy, only that one needs to occur.
+
+What does this mean?  Well, lets take the following module deployment order: 
+```code
+ Module-A --> Module-B --> Module-C --> Module-D --> Module-E 
+```
+ In this scenario, all modules are in their own group and the order of groups is as indicated.  
+ `Module-D` is ONLY using metadata from `Module-C`, which is using metadata from `Module-A`.  In other words, `Module-D` has a dependency on  `Module-C` and `Module-C` has a dependency on `Module-A`.  **`Module-D` DOES NOT have a direct dependency on `Module-A`, but will be forced to redeploy because of the direct dependency on `Module-C`**  When the `forceDependencyRedeploy` flag is set, ANY change to `Module-A` will trigger a redeploy of `Module-A`, then in turn force a redeploy of `Module-C` and then force a redeployment of `Module-D`.   `Modules-B` and `Module-E` are unaffected.
+ 
+ **This is an important feature to understand: redeployment is not discriminant.**  SeedFarmer does not know how to assess what has changed in a module and its impact on downstream modules.  Nor does it have the ability to know if a module can incur a redeployment (as opposed to a destroy and deploy process).  That is up to you to determine with respect to the modules you are leveraging.  ANY change to the source code (deployspec, modulestack, comments in cdk code, etc.) will indicate to SeedFarmer that the module needs to be redeployed, even if the underlying logic / artifact has not changed.  
+
+ Also, it is important to understand that this feature could put your deployment in an unusable state if the shared-responsibility model is not followed.
+ For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `netowrking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
 
 (module_manifest)=
 ## Module Manifest

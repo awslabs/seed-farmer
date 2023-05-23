@@ -7,8 +7,8 @@ cd docs/
 make clean
 make html
 ```
-
+Assuming SeeedFarmer has been installed, 
 these python libraries need to be installed in the virtual env:
 ```bash
-pip install sphinx myst_parser sphinx-autoapi sphinx_rtd_theme docutils==0.15 seed-farmer
+pip install -r requirements-docs.txt
 ```

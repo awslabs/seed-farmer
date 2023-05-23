@@ -257,4 +257,8 @@ def test_deploy_deployment(session_manager,mocker):
     # mocker.patch("seedfarmer.commands._deployment_commands.module_info_index.get_module_info",
     #              return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.print_bolded",return_value=None)
-    dc.deploy_deployment(deployment_manifest=dep,module_info_index=module_info_index)
+    module_upstream_dep = {"Nothing":[]}
+    
+    dc.deploy_deployment(deployment_manifest=dep,
+                         module_info_index=module_info_index,
+                         module_upstream_dep=module_upstream_dep)

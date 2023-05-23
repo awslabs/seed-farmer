@@ -188,11 +188,13 @@ SECURITYGROUPS=["sg-049033188c114a3d2"]
 (dependency-management)=
 ### Dependency Management
 
-SeedFarmer has a shared-responsibilty model for dependency management of modules.  We have put in guardrails within SeedFarmer to prevent accedental deletion of modules that have other modules dependent on it, prevent circular references of modules, etc., but it is up to the end user to be aware of and manage the relationships between modules to assess impact of changes to modules via redeployment.  We recommend to force destroy / deploy / redeploy of modules explicitly via the manifests.
+SeedFarmer has a shared-responsibilty model for dependency management of modules.  We have put in guardrails within SeedFarmer to inspect your deployment manifest prior to deployment ( ex. we prevent deletion of modules that have downstream modules dependent on it, prevent circular references of modules, etc.), but it is up to the end user to be aware of and manage the relationships between modules to assess impact of changes to modules via redeployment.  If a module is rendered into an inoperable state (ex. a rollback of CloudFormation prevents a ChangeSet from occurring), the user is responsible for resolving any blockers due to an inoperable change incurred by a failed module deployment.
+
 
 (force-redeploy)=
 #### Force Dependency Redeploy
 
+We recommend to destroy / deploy / redeploy modules explicitly via the manifests.
 
 But, we understand that sometimes when a module changes (is redeployed), the other downstream modules that are dependent on it may want to consume those changes. This flag will tell SeedFarmer to force a redeploy of all modules impacted by the redeploy of another module.  This is an indiscriminant feature in that it is not granular enough to detect WHAT is causing a redeploy, only that one needs to occur.
 

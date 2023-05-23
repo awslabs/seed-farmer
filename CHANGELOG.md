@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v2.8.0 (2023-05-23)
+
+### New
 - added `forceDependencyRedeploy` feature to codebase
 ### Changes
 - updated `requests~=2.31.0` in requirements-dev.* to align to dependabot

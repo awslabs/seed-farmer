@@ -94,6 +94,12 @@ def bootstrap() -> None:
     help="AWS region to use",
     required=False,
 )
+@click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to append to toolchain role (alpha-numeric char max length of 6)",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_toolchain(
     project: Optional[str],
@@ -101,6 +107,7 @@ def bootstrap_toolchain(
     permissions_boundary: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     as_target: bool,
     synth: bool,
     debug: bool,
@@ -115,6 +122,7 @@ def bootstrap_toolchain(
         principal_arns=trusted_principal,
         permissions_boundary_arn=permissions_boundary,
         profile=profile,
+        qualifier=qualifier,
         region_name=region,
         synthesize=synth,
         as_target=as_target,
@@ -165,6 +173,12 @@ def bootstrap_toolchain(
     help="AWS region to use",
     required=False,
 )
+@click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to append to target role (alpha-numeric char max length of 6)",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_target(
     project: Optional[str],
@@ -172,6 +186,7 @@ def bootstrap_target(
     permissions_boundary: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     synth: bool,
     debug: bool,
 ) -> None:
@@ -185,6 +200,7 @@ def bootstrap_target(
         project_name=project,
         profile=profile,
         region_name=region,
+        qualifier=qualifier,
         permissions_boundary_arn=permissions_boundary,
         synthesize=synth,
     )

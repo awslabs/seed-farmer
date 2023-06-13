@@ -13,7 +13,7 @@ Resources:
         -   Action: sts:AssumeRole
             Effect: Allow
             Principal:
-                AWS: arn:aws:iam::{{ toolchain_account_id }}:role/seedfarmer-{{ project_name }}-toolchain-role
+                AWS: "{{ toolchain_role_arn }}"
       Path: /
       Policies:
         - PolicyName: InlineToolchain
@@ -148,5 +148,5 @@ Resources:
               Resource:
                 - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
                 - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
-      RoleName: seedfarmer-{{ project_name }}-deployment-role
+      RoleName: "{{ role_name }}"
     Type: AWS::IAM::Role

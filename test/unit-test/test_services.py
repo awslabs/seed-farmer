@@ -15,9 +15,10 @@ import boto3
 import botocore
 import pytest
 from moto import mock_codebuild, mock_iam, mock_secretsmanager, mock_ssm, mock_sts
+
+from seedfarmer.services import _service_utils
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
-from seedfarmer.services import _service_utils
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -44,9 +45,9 @@ def sts_client(aws_credentials):
         yield boto3_client(service_name="sts", session=None)
 
 
-@pytest.fixture(scope="function")       
+@pytest.fixture(scope="function")
 def session_manager(sts_client):
-    SessionManager._instances={}
+    SessionManager._instances = {}
     SessionManager().get_or_create(
         project_name="test",
         region_name="us-east-1",
@@ -54,10 +55,12 @@ def session_manager(sts_client):
         enable_reaper=False,
     )
 
+
 @pytest.fixture(scope="function")
 def secretsmanager_client(aws_credentials, session_manager):
     with mock_sts():
         yield boto3_client(service_name="secretsmanager", session=None)
+
 
 @pytest.mark.parametrize("session", [None, boto3.Session()])
 def test_utils_boto3_client(aws_credentials, session):

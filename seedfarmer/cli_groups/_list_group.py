@@ -103,6 +103,12 @@ def list() -> None:
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -121,6 +127,7 @@ def list_dependencies(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
 ) -> None:
@@ -132,7 +139,7 @@ def list_dependencies(
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
     if dep_manifest:
@@ -189,6 +196,12 @@ def list_dependencies(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -207,6 +220,7 @@ def list_deployspec(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
 ) -> None:
@@ -218,7 +232,9 @@ def list_deployspec(
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    session = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
+    )
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
     if dep_manifest is None:
@@ -281,6 +297,12 @@ def list_deployspec(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--export-local-env/--no-export-local-env",
     default=False,
     help="Print the moduledata as env parameters for local development support INSTEAD of json (default is FALSE)",
@@ -305,6 +327,7 @@ def list_module_metadata(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     export_local_env: bool,
     debug: bool,
@@ -317,7 +340,9 @@ def list_module_metadata(
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    session = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
+    )
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
     if dep_manifest is None:
@@ -375,6 +400,12 @@ def list_module_metadata(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -391,6 +422,7 @@ def list_all_module_metadata(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
 ) -> None:
@@ -402,7 +434,9 @@ def list_all_module_metadata(
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    session = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
+    )
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
     if dep_manifest is None:
@@ -459,6 +493,12 @@ def list_all_module_metadata(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -475,6 +515,7 @@ def list_modules(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
 ) -> None:
@@ -485,7 +526,7 @@ def list_modules(
     if project is None:
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
-    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
     if dep_manifest:
@@ -513,6 +554,12 @@ def list_modules(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
@@ -522,6 +569,7 @@ def list_deployments(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -532,7 +580,7 @@ def list_deployments(
 
     deps = mi.get_all_deployments(
         session=SessionManager()
-        .get_or_create(project_name=project, profile=profile, region_name=region)
+        .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
         .toolchain_session
     )
     print_deployment_inventory(description="Deployment Names", dep=deps)
@@ -586,6 +634,12 @@ def list_deployments(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--export-local-env/--no-export-local-env",
     default=False,
     help="Print the moduledata as env parameters for local development support INSTEAD of json (default is FALSE)",
@@ -611,6 +665,7 @@ def list_build_env_params(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     export_local_env: str,
     debug: bool,
@@ -625,7 +680,9 @@ def list_build_env_params(
         project = _load_project()
     load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-    session = SessionManager().get_or_create(project_name=project, profile=profile, region_name=region)
+    session = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
+    )
     dep_manifest = du.generate_deployed_manifest(
         deployment_name=deployment, skip_deploy_spec=True, ignore_deployed=True
     )

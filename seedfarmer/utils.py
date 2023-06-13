@@ -126,3 +126,25 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str) -> s
     except Exception as e:
         _logger.error(f"Error...{account_id} - {region} - {codebuild_id} - {e} ")
         return "N/A"
+
+
+def get_toolchain_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
+    name = f"seedfarmer-{project_name}-toolchain-role"
+    return f"{name}-{qualifier}" if qualifier else name
+
+
+def get_toolchain_role_arn(toolchain_account_id: str, project_name: str, qualifier: Optional[str] = None) -> str:
+    return f"arn:aws:iam::{toolchain_account_id}:role/{get_toolchain_role_name(project_name,qualifier)}"
+
+
+def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
+    name = f"seedfarmer-{project_name}-deployment-role"
+    return f"{name}-{qualifier}" if qualifier else name
+
+
+def get_deployment_role_arn(deployment_account_id: str, project_name: str, qualifier: Optional[str] = None) -> str:
+    return f"arn:aws:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name,qualifier)}"
+
+
+def valid_qualifier(qualifer: str) -> bool:
+    return True if ((len(qualifer) <= 6) and qualifer.isalnum()) else False

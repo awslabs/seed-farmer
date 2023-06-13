@@ -469,7 +469,8 @@ deployment_manifest = yaml.safe_load(
         }
     ]
 }
-    """)
+    """
+)
 
 modules_manifest_duplicate = yaml.safe_load(
     """
@@ -689,7 +690,8 @@ modules_manifest = yaml.safe_load(
     """
 )
 
-deployspec= yaml.safe_load("""
+deployspec = yaml.safe_load(
+    """
 publishGenericEnvVariables: true
 deploy:
   phases:
@@ -712,8 +714,11 @@ destroy:
       commands:
       # execute the CDK
       - echo 'Look Ma....destroying'
-                             """)
+                             """
+)
 
-sample_metadata = {"GlueDBName": "addl-cicd-core-metadata-storage-vsidata", 
-                   "RosbagBagFilePartitionKey": "bag_file_prefix", 
-                   "RosbagBagFileTable": "addl-cicd-core-metadata-storage-Rosbag-BagFile-Metadata"}
+sample_metadata = {
+    "GlueDBName": "addl-cicd-core-metadata-storage-vsidata",
+    "RosbagBagFilePartitionKey": "bag_file_prefix",
+    "RosbagBagFileTable": "addl-cicd-core-metadata-storage-Rosbag-BagFile-Metadata",
+}

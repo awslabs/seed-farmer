@@ -21,4 +21,5 @@ destroy:
     build:
       commands:
       - echo 'Look Ma....destroying'                                  
-    """)
+    """
+)

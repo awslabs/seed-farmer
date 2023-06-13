@@ -23,7 +23,7 @@ Options:
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
-  --qualifier TEXT                A qualifier to append to toolchain role
+  --qualifier TEXT                A qualifier to append to toolchain role (alpha-numeric char max length of 6)
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```
@@ -54,7 +54,7 @@ Options:
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
-  --qualifier TEXT                A qualifier to append to toolchain role
+  --qualifier TEXT                A qualifier to append to target role (alpha-numeric char max length of 6)
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```
@@ -65,7 +65,7 @@ The `permission-boundary` filed allows you to attach a policy to the role to act
 
 
 ## Qualifiers for Toolchain Role and Target Roles
-We have added suppprt for the use of a qualifier for the toolchain role and the target role(s).  This is to help segregate target deployments when using a single CICD account as the toolchain account across multiple deployment schemes (ex. DEV, INT, PROD).  Most cases do not need this support, but unique deployment scenarios may require it.
+We have added suppprt for the use of a qualifier for the toolchain role and the target role(s).  This is to help segregate target deployment roles in a CICD deployment (ex. using a single AWS Account as a toolchain account to manage multiple deployment accounts that need user isolation).  
 
 The qualifier post-pends a 6 char alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
 

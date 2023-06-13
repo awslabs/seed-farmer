@@ -97,7 +97,7 @@ def bootstrap() -> None:
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to append to toolchain role (alpha-numeric char max length of 6)",
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
@@ -176,7 +176,7 @@ def bootstrap_toolchain(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to append to target role (alpha-numeric char max length of 6)",
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)

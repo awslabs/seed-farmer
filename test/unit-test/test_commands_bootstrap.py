@@ -10,6 +10,7 @@ import seedfarmer.commands._bootstrap_commands as bc
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
+import seedfarmer.errors
 
 from moto import mock_sts
 
@@ -66,8 +67,7 @@ def test_deploy_template(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
     template = bc.get_toolchain_template(project_name="myapp",
                                          role_name="seedfarmer-test-toolchain-role",
-                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
-                                         )
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole'])
     
     bc.deploy_template(template=template,stack_name="UnitTest",session=None)
 
@@ -78,8 +78,7 @@ def test_apply_deploy_logic(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
     template = bc.get_toolchain_template(project_name="myapp",
                                          role_name="seedfarmer-test-toolchain-role",
-                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
-                                         )
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole'])
     
     bc.apply_deploy_logic(template=template,
                           role_name="toolchain-role",
@@ -93,8 +92,7 @@ def test_apply_deploy_logic_role_not_exists(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
     template = bc.get_toolchain_template(project_name="myapp",
                                          role_name="seedfarmer-test-toolchain-role",
-                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
-                                         )
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole'])
     
     bc.apply_deploy_logic(template=template,
                           role_name="toolchain-role",
@@ -108,23 +106,17 @@ def test_apply_deploy_logic_stack_not_exists(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
     template = bc.get_toolchain_template(project_name="myapp",
                                          role_name="seedfarmer-test-toolchain-role",
-                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
-                                         )
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole'])
     
     bc.apply_deploy_logic(template=template,
                           role_name="toolchain-role",
                           stack_name="toolchain-stack",
                           session=None)
-    
-    
-    
-    
-    
+        
 @pytest.mark.commands
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account(mocker, session):
-    #template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account",return_value="")
@@ -139,7 +131,6 @@ def test_bootstrap_toolchain_account(mocker, session):
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account_synth(mocker, session):
-    #template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
     bc.bootstrap_toolchain_account(project_name="testing",
@@ -148,14 +139,40 @@ def test_bootstrap_toolchain_account_synth(mocker, session):
                                    region_name="us-east-1",
                                    synthesize=True,
                                    as_target=False)
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_toolchain_account_synth_with_qualifier(mocker, session):
+                                         
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
+    bc.bootstrap_toolchain_account(project_name="testing",
+                                   principal_arns=['arn:aws:iam::123456789012:role/AdminRole'],
+                                   permissions_boundary_arn=None,
+                                   region_name="us-east-1",
+                                   qualifier="asdfgh",
+                                   synthesize=True,
+                                   as_target=False)
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_toolchain_account_synth_with_qualifier_fail(mocker, session):
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
     
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
+        bc.bootstrap_toolchain_account(project_name="testing",
+                                    principal_arns=['arn:aws:iam::123456789012:role/AdminRole'],
+                                    permissions_boundary_arn=None,
+                                    region_name="us-east-1",
+                                    qualifier="asdfghdd",
+                                    synthesize=True,
+                                    as_target=False)    
     
 @pytest.mark.commands
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
-def test_bootstrap_target_account(mocker, session):
-    #template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
-                                         
+def test_bootstrap_target_account(mocker, session):                                         
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
     bc.bootstrap_target_account(toolchain_account_id="123456789012",
                                 project_name="testing",
@@ -163,3 +180,31 @@ def test_bootstrap_target_account(mocker, session):
                                 region_name="us-east-1",
                                 synthesize=False,
                                 session=session)
+    
+    
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_target_account_with_qualifier(mocker, session):                                         
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
+    bc.bootstrap_target_account(toolchain_account_id="123456789012",
+                                project_name="testing",
+                                permissions_boundary_arn=None,
+                                region_name="us-east-1",
+                                qualifier="asdfgh",
+                                synthesize=False,
+                                session=session)
+    
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_target_account_with_qualifier_fail(mocker, session):                                         
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic",return_value="")
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
+        bc.bootstrap_target_account(toolchain_account_id="123456789012",
+                                    project_name="testing",
+                                    permissions_boundary_arn=None,
+                                    region_name="us-east-1",
+                                    qualifier="asdfghsds",
+                                    synthesize=False,
+                                    session=session)

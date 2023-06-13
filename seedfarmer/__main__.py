@@ -60,7 +60,7 @@ def version() -> None:
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to append to toolchain / target roles",
     required=False,
 )
 @click.option(
@@ -172,7 +172,7 @@ def apply(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to append to toolchain / target role",
     required=False,
 )
 @click.option(

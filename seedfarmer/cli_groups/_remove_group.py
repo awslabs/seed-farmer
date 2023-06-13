@@ -84,6 +84,12 @@ def remove() -> None:
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to append to toolchain role",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -107,6 +113,7 @@ def remove_module_data(
     module: str,
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     project: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
@@ -127,7 +134,7 @@ def remove_module_data(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 

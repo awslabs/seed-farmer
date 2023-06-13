@@ -58,6 +58,12 @@ def version() -> None:
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to append to toolchain role",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -102,6 +108,7 @@ def apply(
     spec: str,
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
     dry_run: bool,
@@ -124,6 +131,7 @@ def apply(
         deployment_manifest_path=spec,
         profile=profile,
         region_name=region,
+        qualifier=qualifier,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
@@ -162,6 +170,12 @@ def apply(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to append to toolchain role",
+    required=False,
+)
+@click.option(
     "--env-file",
     default=".env",
     help="A relative path to the .env file to load environment variables from",
@@ -193,6 +207,7 @@ def destroy(
     show_manifest: bool,
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     env_file: str,
     debug: bool,
     enable_session_timeout: bool,
@@ -217,6 +232,7 @@ def destroy(
         deployment_name=deployment,
         profile=profile,
         region_name=region,
+        qualifier=qualifier,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,

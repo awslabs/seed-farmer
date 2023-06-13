@@ -43,5 +43,5 @@ Resources:
               Effect: Allow
               Resource:
                 Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:*"
-      RoleName: seedfarmer-{{ project_name }}-toolchain-role
+      RoleName: "{{ role_name }}"
     Type: AWS::IAM::Role

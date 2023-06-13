@@ -14,7 +14,8 @@ Options:
   -p, --project TEXT              Project identifier
   -t, --trusted-principal TEXT    ARN of Principals trusted to assume the
                                   Toolchain Role
-  -b, --permissions-boundary TEXT  ARN of a Managed Policy to set as the
+  -b, --permissions-boundary TEXT
+                                  ARN of a Managed Policy to set as the
                                   Permission Boundary on the Toolchain Role
   --as-target / --not-as-target   Optionally also bootstrap the account as a
                                   Target account  [default: not-as-target]
@@ -22,6 +23,7 @@ Options:
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
+  --qualifier TEXT                A qualifier to append to toolchain role
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```
@@ -33,11 +35,10 @@ The `permission-boundary` filed allows you to attach a policy to the role to act
 Typically, you can have the `toolchain account` act as the `target account`.  The `as-target` field will bootstrap both in a single command. 
 
 
-
 ## Bootstrap Target Account
 
 ```bash
-sage: seedfarmer bootstrap target [OPTIONS]
+Usage: seedfarmer bootstrap target [OPTIONS]
 
   Bootstrap a Target account.
 
@@ -46,12 +47,14 @@ Options:
   -t, --toolchain-account TEXT    Account Id of the Toolchain account trusted
                                   to assume the Target account's Deployment
                                   Role  [required]
-  -b, --permissions-boundary TEXT  ARN of a Managed Policy to set as the
+  -b, --permissions-boundary TEXT
+                                  ARN of a Managed Policy to set as the
                                   Permission Boundary on the Toolchain Role
   --synth / --no-synth            Synthesize a CFN template only...do not
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
+  --qualifier TEXT                A qualifier to append to toolchain role
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```
@@ -59,6 +62,13 @@ Options:
 You must pass in the `toolchain-account` field so a trust-relationship can be set up between the `toolchain account` role and the `target account` role.
 
 The `permission-boundary` filed allows you to attach a policy to the role to act as a [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+
+
+## Qualifiers for Toolchain Role and Target Roles
+We have added suppprt for the use of a qualifier for the toolchain role and the target role(s).  This is to help segregate target deployments when using a single CICD account as the toolchain account across multiple deployment schemes (ex. DEV, INT, PROD).  Most cases do not need this support, but unique deployment scenarios may require it.
+
+The qualifier post-pends a 6 char alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
+
 
 ## Prepping the Account / Region
 `seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in ech account/region combination to be used of each target account.

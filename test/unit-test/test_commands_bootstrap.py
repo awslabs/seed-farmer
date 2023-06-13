@@ -64,7 +64,9 @@ def session_manager(sts_client):
 def test_deploy_template(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.role_deploy_status",return_value={"RoleName":"BLAHBLAH"})
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
-    template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
+    template = bc.get_toolchain_template(project_name="myapp",
+                                         role_name="seedfarmer-test-toolchain-role",
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          )
     
     bc.deploy_template(template=template,stack_name="UnitTest",session=None)
@@ -74,7 +76,9 @@ def test_deploy_template(session_manager, mocker):
 def test_apply_deploy_logic(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.role_deploy_status",return_value=({"RoleName":"BLAHBLAH"},["exists"]))
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
-    template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
+    template = bc.get_toolchain_template(project_name="myapp",
+                                         role_name="seedfarmer-test-toolchain-role",
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          )
     
     bc.apply_deploy_logic(template=template,
@@ -87,7 +91,9 @@ def test_apply_deploy_logic(session_manager, mocker):
 def test_apply_deploy_logic_role_not_exists(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.role_deploy_status",return_value=(None,["exists"]))
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
-    template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
+    template = bc.get_toolchain_template(project_name="myapp",
+                                         role_name="seedfarmer-test-toolchain-role",
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          )
     
     bc.apply_deploy_logic(template=template,
@@ -100,7 +106,9 @@ def test_apply_deploy_logic_role_not_exists(session_manager, mocker):
 def test_apply_deploy_logic_stack_not_exists(session_manager, mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.role_deploy_status",return_value=(None,None))
     mocker.patch("seedfarmer.commands._bootstrap_commands.cs_services.cfn.deploy_template",return_value=None)
-    template = bc.get_toolchain_template(project_name="myapp",principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
+    template = bc.get_toolchain_template(project_name="myapp",
+                                         role_name="seedfarmer-test-toolchain-role",
+                                         principal_arn=['arn:aws:iam::123456789012:role/AdminRole']
                                          )
     
     bc.apply_deploy_logic(template=template,

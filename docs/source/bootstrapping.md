@@ -65,7 +65,7 @@ The `permission-boundary` filed allows you to attach a policy to the role to act
 
 
 ## Qualifiers for Toolchain Role and Target Roles
-We have added suppprt for the use of a qualifier for the toolchain role and the target role(s).  This is to help segregate target deployment roles in a CICD deployment (ex. using a single AWS Account as a toolchain account to manage multiple deployment accounts that need user isolation).  
+We have added suppprt for the use of a qualifier for the toolchain role and the target account deployment role(s).  This is to help segregate target deployment when using a multi-account structure which has a central shared services (CICD account) as the toolchain account performing deployments across relevant environments (ex. DEV, INT, PROD). A `qualifier` can be used if you want to restrict the level of access/action a dev/tester/support team can perform on any target given environment.
 
 The qualifier post-pends a 6 char alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
 

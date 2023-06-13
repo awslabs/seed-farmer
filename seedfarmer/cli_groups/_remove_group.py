@@ -86,7 +86,7 @@ def remove() -> None:
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(

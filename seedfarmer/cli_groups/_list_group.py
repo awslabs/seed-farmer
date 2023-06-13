@@ -105,7 +105,7 @@ def list() -> None:
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -198,7 +198,7 @@ def list_dependencies(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -299,7 +299,7 @@ def list_deployspec(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -402,7 +402,7 @@ def list_module_metadata(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -495,7 +495,7 @@ def list_all_module_metadata(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -556,7 +556,7 @@ def list_modules(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -636,7 +636,7 @@ def list_deployments(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(

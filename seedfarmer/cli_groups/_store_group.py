@@ -95,7 +95,7 @@ def store() -> None:
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -199,7 +199,7 @@ def store_deployspec(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+   help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(
@@ -310,7 +310,7 @@ def store_module_metadata(
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role",
+    help="A qualifier to use with the seedfarmer roles",
     required=False,
 )
 @click.option(

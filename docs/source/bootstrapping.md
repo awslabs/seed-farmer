@@ -13,7 +13,8 @@ Usage: seedfarmer bootstrap toolchain [OPTIONS]
 Options:
   -p, --project TEXT              Project identifier
   -t, --trusted-principal TEXT    ARN of Principals trusted to assume the
-                                  Toolchain Role
+                                  Toolchain Role.  This can be used multiple
+                                  times to create a list.
   -b, --permissions-boundary TEXT
                                   ARN of a Managed Policy to set as the
                                   Permission Boundary on the Toolchain Role
@@ -23,7 +24,12 @@ Options:
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
-  --qualifier TEXT                A qualifier to append to toolchain role (alpha-numeric char max length of 6)
+  --qualifier TEXT                A qualifier to append to toolchain role
+                                  (alpha-numeric char max length of 6)
+  -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
+                                  Role (Deploymenmt Role) This can be use
+                                  multiple times, but EACH policy MUST be
+                                  valid in the Target Account
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```
@@ -54,7 +60,12 @@ Options:
                                   deploy  [default: no-synth]
   --profile TEXT                  The AWS profile to initiate a session
   --region TEXT                   AWS region to use
-  --qualifier TEXT                A qualifier to append to target role (alpha-numeric char max length of 6)
+  --qualifier TEXT                A qualifier to append to target role (alpha-
+                                  numeric char max length of 6)
+  -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
+                                  Role (Deploymenmt Role) This can be use
+                                  multiple times to create a list, but EACH
+                                  policy MUST be valid in the Target Account
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```

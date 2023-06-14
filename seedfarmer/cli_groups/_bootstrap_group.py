@@ -54,7 +54,8 @@ def bootstrap() -> None:
 @click.option(
     "--trusted-principal",
     "-t",
-    help="ARN of Principals trusted to assume the Toolchain Role",
+    help="""ARN of Principals trusted to assume the Toolchain Role.
+    This can be used multiple times to create a list.""",
     multiple=True,
     required=False,
     default=[],
@@ -100,11 +101,21 @@ def bootstrap() -> None:
     help="A qualifier to append to toolchain role (alpha-numeric char max length of 6)",
     required=False,
 )
+@click.option(
+    "--policy-arn",
+    "-pa",
+    help="""ARN of existing Policy to attach to Target Role (Deploymenmt Role)
+    This can be use multiple times, but EACH policy MUST be valid in the Target Account""",
+    multiple=True,
+    required=False,
+    default=[],
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_toolchain(
     project: Optional[str],
     trusted_principal: List[str],
     permissions_boundary: Optional[str],
+    policy_arn: Optional[List[str]],
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
@@ -117,10 +128,14 @@ def bootstrap_toolchain(
     if project is None:
         project = _load_project()
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
+    if len(policy_arn) > 0 and not as_target:  # type: ignore
+        raise click.ClickException("Cannot set PolicyARNS and not set the -as-target flag")
+
     bootstrap_toolchain_account(
         project_name=project,
         principal_arns=trusted_principal,
         permissions_boundary_arn=permissions_boundary,
+        policy_arns=policy_arn,
         profile=profile,
         qualifier=qualifier,
         region_name=region,
@@ -179,11 +194,21 @@ def bootstrap_toolchain(
     help="A qualifier to append to target role (alpha-numeric char max length of 6)",
     required=False,
 )
+@click.option(
+    "--policy-arn",
+    "-pa",
+    help="""ARN of existing Policy to attach to Target Role (Deploymenmt Role)
+    This can be use multiple times to create a list, but EACH policy MUST be valid in the Target Account""",
+    multiple=True,
+    required=False,
+    default=[],
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def bootstrap_target(
     project: Optional[str],
     toolchain_account: str,
     permissions_boundary: Optional[str],
+    policy_arn: Optional[List[str]],
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
@@ -202,5 +227,6 @@ def bootstrap_target(
         region_name=region,
         qualifier=qualifier,
         permissions_boundary_arn=permissions_boundary,
+        policy_arns=policy_arn,
         synthesize=synth,
     )

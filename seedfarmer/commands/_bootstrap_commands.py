@@ -53,13 +53,18 @@ def get_toolchain_template(
 
 
 def get_deployment_template(
-    toolchain_role_arn: str, project_name: str, role_name: str, permissions_boundary_arn: Optional[str] = None
+    toolchain_role_arn: str,
+    project_name: str,
+    role_name: str,
+    policy_arns: Optional[List[str]],
+    permissions_boundary_arn: Optional[str] = None,
 ) -> Dict[Any, Any]:
     with open((os.path.join(CLI_ROOT, "resources/deployment_role.template")), "r") as f:
         role = yaml.safe_load(f)
     if permissions_boundary_arn:
         role["Resources"]["DeploymentRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
-
+    if policy_arns:
+        role["Resources"]["DeploymentRole"]["Properties"]["ManagedPolicyArns"] = policy_arns
     template = Template(json.dumps(role))
     t = template.render(
         {"toolchain_role_arn": toolchain_role_arn, "project_name": project_name, "role_name": role_name}
@@ -76,6 +81,7 @@ def bootstrap_toolchain_account(
     project_name: str,
     principal_arns: List[str],
     permissions_boundary_arn: Optional[str] = None,
+    policy_arns: Optional[List[str]] = None,
     qualifier: Optional[str] = None,
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
@@ -105,6 +111,7 @@ def bootstrap_toolchain_account(
                 permissions_boundary_arn=permissions_boundary_arn,
                 profile=profile,
                 region_name=region_name,
+                policy_arns=policy_arns,
                 session=session,
             )
     else:
@@ -115,6 +122,7 @@ def bootstrap_toolchain_account(
                 project_name=project_name,
                 qualifier=cast(str, qualifier),
                 permissions_boundary_arn=permissions_boundary_arn,
+                policy_arns=policy_arns,
                 profile=profile,
                 region_name=region_name,
                 session=None,
@@ -131,6 +139,7 @@ def bootstrap_target_account(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     session: Optional[Session] = None,
+    policy_arns: Optional[List[str]] = None,
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
 
@@ -146,6 +155,7 @@ def bootstrap_target_account(
         toolchain_role_arn=toolchain_role_arn,
         project_name=project_name,
         role_name=role_stack_name,
+        policy_arns=policy_arns if policy_arns else None,
         permissions_boundary_arn=permissions_boundary_arn,
     )
     _logger.debug((json.dumps(template, indent=4)))

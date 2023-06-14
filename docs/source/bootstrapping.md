@@ -13,7 +13,7 @@ Usage: seedfarmer bootstrap toolchain [OPTIONS]
 Options:
   -p, --project TEXT              Project identifier
   -t, --trusted-principal TEXT    ARN of Principals trusted to assume the
-                                  Toolchain Role.  This can be used multiple
+                                  Toolchain Role. This can be used multiple
                                   times to create a list.
   -b, --permissions-boundary TEXT
                                   ARN of a Managed Policy to set as the
@@ -29,7 +29,10 @@ Options:
   -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
                                   Role (Deploymenmt Role) This can be use
                                   multiple times, but EACH policy MUST be
-                                  valid in the Target Account
+                                  valid in the Target Account. The `--as-
+                                  target` flag must be used if passing in
+                                  policy arns as they are applied to the
+                                  Deployment Role only.
   --debug / --no-debug            Enable detail logging  [default: no-debug]
   --help                          Show this message and exit.
 ```

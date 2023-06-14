@@ -105,7 +105,9 @@ def bootstrap() -> None:
     "--policy-arn",
     "-pa",
     help="""ARN of existing Policy to attach to Target Role (Deploymenmt Role)
-    This can be use multiple times, but EACH policy MUST be valid in the Target Account""",
+    This can be use multiple times, but EACH policy MUST be valid in the Target Account.
+    The `--as-target` flag must be used if passing in policy arns as they are applied to
+    the Deployment Role only.""",
     multiple=True,
     required=False,
     default=[],
@@ -129,7 +131,7 @@ def bootstrap_toolchain(
         project = _load_project()
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
     if len(policy_arn) > 0 and not as_target:  # type: ignore
-        raise click.ClickException("Cannot set PolicyARNS and not set the -as-target flag")
+        raise click.ClickException("Cannot set PolicyARNS when the `-as-target` flag is not set.")
 
     bootstrap_toolchain_account(
         project_name=project,

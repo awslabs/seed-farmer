@@ -8,6 +8,7 @@ import yaml
 from moto import mock_sts
 
 import seedfarmer.commands._parameter_commands as pc
+import seedfarmer.errors
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -114,6 +115,55 @@ deployment_manifest_json = {
     ],
 }
 
+deployment_manifest_fail_json = {
+    "name": "mlops",
+    "toolchain_region": "us-east-1",
+    "groups": [
+        {
+            "name": "core",
+            "path": "manifests/mlops/core-modules.yaml",
+            "modules": [
+                {
+                    "name": "efs",
+                    "path": "modules/core/efs",
+                    "parameters": [
+                        {"name": "removal-policy", "value": "DESTROY"},
+                        {
+                            "name": "vpc-id",
+                            "value_from": {
+                                "module_metadata": {"name": "networking", "group": "optionals", "key": "VpcId"},
+                            },
+                        },
+                        {"name": "test-secrets-manager", "value_from": {"secretsManager": "my-secret-vpc-id"}},
+                        {"name": "test-ssm-store", "value_from": {"parameterStore": "my-ssm-name"}},
+                        {"name": "test-regional-param", "value_from": {"parameterValue": "testRegionalParam"}},
+                    ],
+                    "target_account": "primary",
+                    "target_region": "us-east-1",
+                }
+            ],
+        },
+    ],
+    "target_account_mappings": [
+        {
+            "alias": "primary",
+            "account_id": "123456789012",
+            "default": True,
+            "parameters_global": {
+                "dockerCredentialsSecret": "aws-addf-docker-credentials",
+                "testRegionalParam": "afda",
+            },
+            "region_mappings": [
+                {
+                    "region": "us-east-1",
+                    "default": True,
+                    "parameters_regional": {"testRegionalParam": "somethingawesomehere"},
+                }
+            ],
+        }
+    ],
+}
+
 
 @pytest.mark.commands
 @pytest.mark.commands_parameters
@@ -150,10 +200,68 @@ def test_load_parameter_values(session_manager, mocker):
         target_region="us-east-1",
     )
     names = []
-    print(params)
     for module_parameter in params:
         names.append(module_parameter.name)
     assert ("removal-policy" in names) == True
     assert ("vpc-id" in names) == True
     assert ("test-secrets-manager" in names) == True
     assert ("test-ssm-store" in names) == True
+
+
+@pytest.mark.commands
+@pytest.mark.commands_parameters
+def test_load_parameter_values_missing_metadata(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._parameter_commands.get_module_metadata",
+        return_value={
+            "IsolatedSubnetIds": [],
+            "PrivateSubnetIds": ["subnet-0758c0b5ba97e0fc9", "subnet-0dc60fe4557261145"],
+            "PublicSubnetIds": ["subnet-089b632dada2c71e8", "subnet-0296fff0ba0fa48c0"],
+            "VpcId": "vpc-01e556d052f429282",
+        },
+    )
+    faulty_d = deployment_manifest_fail_json
+    faulty_d["groups"][0]["modules"][0]["parameters"][4] = {
+        "name": "vpc-id-bad",
+        "value_from": {
+            "module_metadata": {"name": "networking", "group": "optionals", "key": "VpcId-NONE"},
+        },
+    }
+    dep = DeploymentManifest(**faulty_d)
+    dep.validate_and_set_module_defaults()
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
+        pc.load_parameter_values(
+            deployment_name="mlops",
+            deployment_manifest=dep,
+            parameters=dep.groups[0].modules[0].parameters,
+            target_account="123456789012",
+            target_region="us-east-1",
+        )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_parameters
+def test_load_parameter_values_missing_param_value(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._parameter_commands.get_module_metadata",
+        return_value={
+            "IsolatedSubnetIds": [],
+            "PrivateSubnetIds": ["subnet-0758c0b5ba97e0fc9", "subnet-0dc60fe4557261145"],
+            "PublicSubnetIds": ["subnet-089b632dada2c71e8", "subnet-0296fff0ba0fa48c0"],
+            "VpcId": "vpc-01e556d052f429282",
+        },
+    )
+    faulty_d = deployment_manifest_fail_json
+    faulty_d["groups"][0]["modules"][0]["parameters"][4] = (
+        {"name": "test-regional-param", "value_from": {"parameterValue": "regParamMissing"}},
+    )
+    dep = DeploymentManifest(**faulty_d)
+    dep.validate_and_set_module_defaults()
+    with pytest.raises(seedfarmer.errors.InvalidManifestError):
+        pc.load_parameter_values(
+            deployment_name="mlops",
+            deployment_manifest=dep,
+            parameters=dep.groups[0].modules[0].parameters,
+            target_account="123456789012",
+            target_region="us-east-1",
+        )

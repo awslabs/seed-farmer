@@ -206,6 +206,7 @@ def test_load_parameter_values(session_manager, mocker):
     assert ("vpc-id" in names) == True
     assert ("test-secrets-manager" in names) == True
     assert ("test-ssm-store" in names) == True
+    assert ("test-regional-param" in names) == True
 
 
 @pytest.mark.commands

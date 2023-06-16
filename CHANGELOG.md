@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding qualifier support for bootstrap roles
 
 ### Changes
-
+- raise error if a metadata parameter or value_from parameter is not available
 ### Fixes
 
 ## v2.8.0 (2023-05-23)

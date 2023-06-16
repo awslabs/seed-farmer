@@ -17,9 +17,9 @@ import os
 import pytest
 from moto import mock_sts
 
+import seedfarmer.errors
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
-import seedfarmer.errors
 
 
 @pytest.fixture(scope="function")
@@ -67,4 +67,6 @@ def test_singleton(session_manager, sts_client):
 
 @pytest.mark.session_manager
 def test_deployment_session(session_manager, sts_client):
-    SessionManager().get_or_create(project_name="test").get_deployment_session(account_id="111111111111", region_name="us-east-1")
+    SessionManager().get_or_create(project_name="test").get_deployment_session(
+        account_id="111111111111", region_name="us-east-1"
+    )

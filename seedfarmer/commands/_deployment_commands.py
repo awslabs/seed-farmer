@@ -663,6 +663,7 @@ def apply(
     deployment_manifest_path: str,
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
+    qualifier: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
@@ -683,6 +684,9 @@ def apply(
         If using an AWS Profile for deployment use it here
     region_name : str
         The name of the AWS region the deployment is based in for the toolchain
+    qualifier : str, optional
+        Any qualifier on the name of toolchain role
+        Defaults to None
     dryrun : bool, optional
         This flag indicates that the deployment manifest should be consumed and a
         DeploymentManifest object be created (for both apply and destroy) but DOES NOT
@@ -717,6 +721,7 @@ def apply(
     session_manager = SessionManager().get_or_create(
         project_name=config.PROJECT,
         profile=profile,
+        qualifier=qualifier,
         toolchain_region=deployment_manifest.toolchain_region,
         region_name=region_name,
         enable_reaper=enable_session_timeout,
@@ -784,6 +789,7 @@ def destroy(
     deployment_name: str,
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
+    qualifier: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     retain_seedkit: bool = False,
@@ -802,6 +808,9 @@ def destroy(
         If using an AWS Profile for deployment use it here
     region_name : str
         The name of the AWS region the deployment is based in for the toolchain
+    qualifier : str, optional
+        Any qualifier on the name of toolchain role
+        Defaults to None
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
@@ -831,6 +840,7 @@ def destroy(
         project_name=project,
         profile=profile,
         region_name=region_name,
+        qualifier=qualifier,
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,
     )

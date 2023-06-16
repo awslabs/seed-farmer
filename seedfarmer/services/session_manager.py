@@ -3,12 +3,13 @@ import threading
 from abc import abstractmethod, abstractproperty
 from threading import Thread
 from time import sleep
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from boto3 import Session
 
 import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_account_id
+from seedfarmer.utils import get_deployment_role_arn, get_toolchain_role_arn, get_toolchain_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class ISessionManager(object):
         project_name: Optional[str] = None,
         region_name: Optional[str] = None,
         toolchain_region: Optional[str] = None,
+        qualifier: Optional[str] = None,
         profile: Optional[str] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -78,6 +80,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         region_name: Optional[str] = None,
         profile: Optional[str] = None,
         toolchain_region: Optional[str] = None,
+        qualifier: Optional[str] = None,
         reaper_interval: Optional[int] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -91,8 +94,9 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.config["region_name"] = region_name
             self.config["profile"] = profile
             self.config["toolchain_region"] = toolchain_region
+            self.config["qualifier"] = qualifier if qualifier else None
             self.config = {**self.config, **kwargs}
-            self.toolchain_role_name = f"seedfarmer-{project_name}-toolchain-role"
+            self.toolchain_role_name = get_toolchain_role_name(project_name, cast(str, qualifier))
 
             if reaper_interval is not None:
                 self.reaper_interval = reaper_interval
@@ -116,13 +120,17 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
+        qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
         if not self.created:
             raise seedfarmer.errors.InvalidConfigurationError("The SessionManager object was never properly created...")
         if session_key not in self.sessions.keys():
             _logger.info(f"Creating Session for {session_key}")
             self._check_for_toolchain()
             toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
-            deployment_role_arn = f"arn:aws:iam::{account_id}:role/seedfarmer-{project_name}-deployment-role"
+            deployment_role_arn = get_deployment_role_arn(
+                deployment_account_id=account_id, project_name=project_name, qualifier=cast(str, qualifier)
+            )
+            _logger.debug(f"Got deployment role role - {deployment_role_arn}")
             # the boto sessions are not thread safe, so create a new one for the toolchain role every time to be sure
             sts_toolchain_client = boto3_client(
                 service_name="sts",
@@ -156,13 +164,18 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     def _get_toolchain(self) -> Tuple[Session, Dict[Any, Any]]:
         region_name = self.config.get("region_name")
         profile_name = self.config.get("profile")
+        project_name = self.config.get("project_name")
+        qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
         toolchain_region = self.config.get("toolchain_region")
         _logger.debug("Getting toolchain role")
         user_session = create_new_session(region_name=region_name, profile=profile_name)
         user_client = boto3_client(service_name="sts", session=user_session)
-        toolchain_account_id = get_account_id(user_session)
-
-        toolchain_role_arn = f"arn:aws:iam::{toolchain_account_id}:role/{self.toolchain_role_name}"
+        toolchain_role_arn = get_toolchain_role_arn(
+            toolchain_account_id=get_account_id(user_session),
+            project_name=cast(str, project_name),
+            qualifier=cast(str, qualifier),
+        )
+        _logger.debug(f"Using toolchain role - {toolchain_role_arn}")
         toolchain_role = user_client.assume_role(
             RoleArn=toolchain_role_arn,
             RoleSessionName="toolchainrole",

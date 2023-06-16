@@ -19,8 +19,8 @@ from copy import deepcopy
 import pytest
 import yaml
 
-from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
 import seedfarmer.errors
+from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 

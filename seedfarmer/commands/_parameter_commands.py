@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 from aws_codeseeder import EnvVar, EnvVarType
 
+import seedfarmer.errors
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
@@ -65,7 +66,12 @@ def load_parameter_values(
                 module_metatdata = _module_metatdata(
                     deployment_name, parameter, parameter_values_cache, deployment_manifest
                 )
-                parameter_values.append(module_metatdata) if module_metatdata else None
+                if module_metatdata:
+                    parameter_values.append(module_metatdata)
+                else:
+                    raise seedfarmer.errors.InvalidManifestError(
+                        f"The module metadata parameter ({parameter.value_from.module_metadata}) is not available"
+                    )
             elif parameter.value_from.env_variable:
                 parameter_values.append(
                     ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
@@ -86,11 +92,15 @@ def load_parameter_values(
                 )
             elif parameter.value_from.parameter_value:
                 p_value = deployment_manifest.get_parameter_value(
-                    parameter=parameter.value_from.parameter_value, account_alias=target_account, region=target_region
+                    parameter=parameter.value_from.parameter_value, account_id=target_account, region=target_region
                 )
-                if p_value:
+                if p_value is not None:
                     p_value = str(p_value) if isinstance(p_value, str) else json.dumps(p_value)
                     parameter_values.append(ModuleParameter(name=parameter.name, value=p_value))
+                else:
+                    raise seedfarmer.errors.InvalidManifestError(
+                        f"The parameter value defined ({parameter.value_from.parameter_value}) is not available"
+                    )
 
     return parameter_values
 

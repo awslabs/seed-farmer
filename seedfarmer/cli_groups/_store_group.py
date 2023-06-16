@@ -93,6 +93,12 @@ def store() -> None:
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -117,6 +123,7 @@ def store_deployspec(
     path: str,
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     project: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
@@ -141,7 +148,7 @@ def store_deployspec(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
@@ -190,6 +197,12 @@ def store_deployspec(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -214,6 +227,7 @@ def store_module_metadata(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
     debug: bool,
@@ -234,7 +248,7 @@ def store_module_metadata(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
@@ -294,6 +308,12 @@ def store_module_metadata(
     required=False,
 )
 @click.option(
+    "--qualifier",
+    default=None,
+    help="A qualifier to use with the seedfarmer roles",
+    required=False,
+)
+@click.option(
     "--target-account-id",
     default=None,
     help="Account Id to remove module data from, if specifed --target-region is required",
@@ -321,6 +341,7 @@ def store_module_md5(
     target_region: Optional[str],
     profile: Optional[str],
     region: Optional[str],
+    qualifier: Optional[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -338,7 +359,7 @@ def store_module_md5(
     elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region)
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 

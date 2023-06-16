@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v2.9.0 (2023-06-16)
+
+### New
 - adding qualifier support for bootstrap roles
 - adding support to attach policies to target role when bootstrapping
 

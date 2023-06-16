@@ -189,6 +189,46 @@ def test_bootstrap_toolchain_only(mocker):
 
 
 @pytest.mark.bootstrap
+def test_bootstrap_toolchain_only_with_qualifier(mocker):
+    # Bootstrap an Account As Target
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
+    _test_command(
+        sub_command=bootstrap,
+        options=[
+            "toolchain",
+            "--trusted-principal",
+            "arn:aws:iam::123456789012:role/AdminRole",
+            "--qualifier",
+            "testit",
+            "--debug",
+        ],
+        exit_code=0,
+    )
+
+
+@pytest.mark.bootstrap
+def test_bootstrap_toolchain_only_with_policies_fail(mocker):
+    # Bootstrap an Account As Target
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
+    _test_command(
+        sub_command=bootstrap,
+        options=[
+            "toolchain",
+            "--trusted-principal",
+            "arn:aws:iam::123456789012:role/AdminRole",
+            "-pa",
+            "arn:aws:iam::aws:policy/AdministratorAccess",
+            "--debug",
+        ],
+        exit_code=1,
+    )
+
+
+@pytest.mark.bootstrap
 def test_bootstrap_target_account(mocker):
     # Bootstrap an Account As Target
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
@@ -196,6 +236,19 @@ def test_bootstrap_target_account(mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
         sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0
+    )
+
+
+@pytest.mark.bootstrap
+def test_bootstrap_target_account_with_qualifier(mocker):
+    # Bootstrap an Account As Target
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
+    _test_command(
+        sub_command=bootstrap,
+        options=["target", "--toolchain-account", "123456789012", "--qualifier", "testit", "--debug"],
+        exit_code=0,
     )
 
 

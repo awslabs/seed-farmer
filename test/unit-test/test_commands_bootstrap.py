@@ -192,6 +192,24 @@ def test_bootstrap_toolchain_account_synth_with_qualifier_fail(mocker, session):
 @pytest.mark.commands
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_toolchain_account_with_policies(mocker, session):
+
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
+    bc.bootstrap_toolchain_account(
+        project_name="testing",
+        principal_arns=["arn:aws:iam::123456789012:role/AdminRole"],
+        policy_arns=["arn:aws:iam::aws:policy/AdministratorAccess", "arn:aws:iam::aws:policy/ReadOnlyAccess"],
+        permissions_boundary_arn=None,
+        region_name="us-east-1",
+        synthesize=False,
+        as_target=False,
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_target_account(mocker, session):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     bc.bootstrap_target_account(
@@ -235,3 +253,19 @@ def test_bootstrap_target_account_with_qualifier_fail(mocker, session):
             synthesize=False,
             session=session,
         )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_target_account_with_policies(mocker, session):
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    bc.bootstrap_target_account(
+        toolchain_account_id="123456789012",
+        project_name="testing",
+        policy_arns=["arn:aws:iam::aws:policy/AdministratorAccess", "arn:aws:iam::aws:policy/ReadOnlyAccess"],
+        permissions_boundary_arn=None,
+        region_name="us-east-1",
+        synthesize=False,
+        session=session,
+    )

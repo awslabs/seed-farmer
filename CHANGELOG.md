@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 - adding qualifier support for bootstrap roles
+- adding support to attach policies to target role when bootstrapping
 
 ### Changes
 - raise error if a metadata parameter or value_from parameter is not available

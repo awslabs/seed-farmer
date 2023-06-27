@@ -22,7 +22,7 @@ from urllib.parse import parse_qs
 
 import git.exc
 import yaml
-from git import Repo
+from git import Repo  # type: ignore
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
@@ -105,7 +105,7 @@ def _clone_module_repo(git_path: str) -> Tuple[str, str]:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
         try:
             Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
-        except git.exc.GitCommandError as e:
+        except git.exc.GitCommandError as e:  # type: ignore
             _logger.warn(f"  {e}")
             _logger.warn("This local code is in a detached HEAD state and cannot pull, moving on")
 

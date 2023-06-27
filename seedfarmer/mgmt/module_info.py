@@ -813,6 +813,8 @@ def get_module_stack_names(
 
 
 def get_modulestack_path(module_path: str) -> Any:
+    module_path = module_path.split(".git//")[1].split("?")[0] if module_path.startswith("git::") else module_path
+    module_path = module_path[:-1] if module_path.endswith("/") else module_path
     p = os.path.join(config.OPS_ROOT, module_path, "modulestack.yaml")
     if not os.path.exists(p):
         _logger.debug("No modulestack.yaml found")

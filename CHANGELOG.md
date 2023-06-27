@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- handle exceptions when cloned repo based off tags is in a detached HEAD state
 
 ## v2.9.0 (2023-06-16)
 

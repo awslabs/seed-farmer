@@ -20,6 +20,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
+import git.exc
 import yaml
 from git import Repo  # type: ignore
 
@@ -102,7 +103,11 @@ def _clone_module_repo(git_path: str) -> Tuple[str, str]:
         Repo.clone_from(git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols)
     else:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
+        try:
+            Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
+        except git.exc.GitCommandError as e:
+            _logger.warn(f"  {e}")
+            _logger.warn("This local code is in a detached HEAD state and cannot pull, moving on")
 
     return (working_dir, module_directory)
 

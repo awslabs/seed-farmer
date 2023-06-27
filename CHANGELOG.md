@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+## v2.9.1 (2023-06-27)
+
+### New
+
+### Changes
+
+### Fixes
 - handle exceptions when cloned repo based off tags is in a detached HEAD state
 - proper parsing of modulestack.yaml path if sourced from git
 

@@ -20,7 +20,6 @@ import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
-import git.exc
 import yaml
 from git import Repo  # type: ignore
 
@@ -99,16 +98,19 @@ def _clone_module_repo(git_path: str) -> Tuple[str, str]:
     )
     os.makedirs(working_dir, exist_ok=True)
     if not os.listdir(working_dir):
-        _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-        Repo.clone_from(git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols)
+        if ref is not None:
+            _logger.debug("Creating local repo and setting remote: %s into %s: ref=%s ", git_path, working_dir, ref)
+            repo = Repo.init(working_dir)
+            repo.create_remote("origin", git_path)
+            repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
+        else:
+            _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
+            Repo.clone_from(
+                git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols
+            )
     else:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        try:
-            Repo(working_dir).remotes["origin"].pull(allow_unsafe_protocols=allow_unsafe_protocols)
-        except git.exc.GitCommandError as e:  # type: ignore
-            _logger.warn(f"  {e}")
-            _logger.warn("This local code is in a detached HEAD state and cannot pull, moving on")
-
+        Repo(working_dir).remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
     return (working_dir, module_directory)
 
 

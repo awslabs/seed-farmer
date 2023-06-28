@@ -12,6 +12,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v2.9.3 (2023-06-28)
+
+### New
+
+### Changes
+- adding support for gitpath sourced modules based on commit hash
+
+### Fixes
+
 ## v2.9.2 (2023-06-28)
 
 ### New

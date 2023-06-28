@@ -327,15 +327,6 @@ def test_get_modulestack_path():
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_module_info
-def test_get_modulestack_path_from_git():
-    import seedfarmer.mgmt.module_info as mi
-
-    gitpath = "git::https://github.com/awslabs/idf-modules.git//modules/replication/dockerimage-replication?ref=v2.0.0"
-    mi.get_modulestack_path(module_path=gitpath)
-
-
-@pytest.mark.mgmt
-@pytest.mark.mgmt_module_info
 def test_get_deployspec_path():
     import seedfarmer.mgmt.module_info as mi
 

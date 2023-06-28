@@ -120,7 +120,7 @@ def test_destroy_not_found(session_manager, mocker):
 @pytest.mark.commands_deployment
 def test_clone_module_repo_branch(mocker):
     git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk/?ref=release/1.1.0"
-    git_path_test_redo = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?ref=release/1.1.0"
+    git_path_test_redo = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.1.0"
 
     return_dir = dc._clone_module_repo(git_path=git_path_test)
     # Make sure the pull works on an existing repo
@@ -131,7 +131,7 @@ def test_clone_module_repo_branch(mocker):
 @pytest.mark.commands_deployment
 def test_clone_module_repo_tag(mocker):
     git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk/?ref=v1.1.0"
-    git_path_test_redo = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?depth=1"
+    git_path_test_redo = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?depth=1"
 
     return_dir = dc._clone_module_repo(git_path=git_path_test)
     # Make sure the pull works on an existing repo
@@ -152,8 +152,8 @@ def test_clone_module_repo_commit(mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_clone_module_repo_main(mocker):
-    git_path_test = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?depth=1"
-    git_path_test_redo = "git::https://github.com/awslabs/seedfarmer-modules.git//modules/network/basic-cdk?depth=1"
+    git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?depth=1"
+    git_path_test_redo = "git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk?depth=1"
 
     return_dir = dc._clone_module_repo(git_path=git_path_test)
     # Make sure the pull works on an existing repo
@@ -166,7 +166,7 @@ def test_process_data_files(mocker):
     mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo", return_value=("git", "path"))
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=[])
     git_path_test = (
-        "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
+        "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     )
     datafile_list = []
     datafile_list.append(DataFile(file_path=git_path_test))
@@ -181,7 +181,7 @@ def test_process_data_files_error(mocker):
     mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo", return_value=("git", "path"))
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=["hey"])
     git_path_test = (
-        "git::https://github.com/awslabs/seedfarmer-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
+        "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     )
     datafile_list = []
     datafile_list.append(DataFile(file_path=git_path_test))

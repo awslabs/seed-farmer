@@ -12,6 +12,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v2.9.2 (2023-06-28)
+
+### New
+
+### Changes
+- applying local path eval consistently, updating patch release 2.9.1 chnage for modulestack.yaml eval
+
+### Fixes
+
 ## v2.9.1 (2023-06-27)
 
 ### New

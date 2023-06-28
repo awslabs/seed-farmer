@@ -155,7 +155,7 @@ def _execute_deploy(
     target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
     module_stack_name, module_role_name = commands.deploy_module_stack(
-        get_modulestack_path(module_manifest.path),
+        get_modulestack_path(str(module_manifest.get_local_path())),
         cast(str, deployment_manifest.name),
         group_name,
         module_manifest.name,

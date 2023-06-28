@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- applying local path eval consistently, updating patch release 2.9.1 chnage for modulestack.yaml eval
 
 ### Fixes
 

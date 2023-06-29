@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 
+- changed the way to iterate through the files using `glob` lib
+
 ### Fixes
 
 ## v2.9.4 (2023-06-29)

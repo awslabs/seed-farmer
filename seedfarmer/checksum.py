@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 
+import glob
 import hashlib
 import os
 from pathlib import Path
@@ -116,24 +117,18 @@ def get_module_md5(
 
     all_files = []
 
-    def scandir(dirname: str) -> List[str]:
+    def scandir(dirname: str) -> None:
         files = [
-            f.path
-            for f in os.scandir(dirname)
-            if f.is_file()
+            f
+            for f in glob.iglob(dirname, recursive=True)
+            if os.path.isfile(f)
             and os.path.split(f)[1] not in cast(List[str], excluded_files)
-            and not _evaluate_file(f.path, ignore_maps)
+            and not _evaluate_file(f, ignore_maps)
         ]
         all_files.extend(files)
-        subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]
-        for dirname in list(subfolders):
-            # ignore all hidden directories and any dir already in .gitignore
-            subfolders.extend(scandir(dirname)) if not os.path.split(dirname)[1].startswith(".") and not _evaluate_file(
-                dirname, ignore_maps
-            ) else None
-        return subfolders
+        return None
 
-    _ = scandir(os.path.join(project_path, module_path))
+    scandir(os.path.join(project_path, module_path, "**/*"))
 
     # Add in the extra files
     if data_files is not None:

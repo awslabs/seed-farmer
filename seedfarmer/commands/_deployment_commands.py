@@ -20,6 +20,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
+import git
 import yaml
 from git import Repo  # type: ignore
 
@@ -101,7 +102,7 @@ def _clone_module_repo(git_path: str) -> Tuple[str, str]:
         if ref is not None:
             _logger.debug("Creating local repo and setting remote: %s into %s: ref=%s ", git_path, working_dir, ref)
             repo = Repo.init(working_dir)
-            repo.create_remote("origin", git_path)
+            git.Remote.create(repo, "origin", git_path, allow_unsafe_protocols)
             repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
         else:
             _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)

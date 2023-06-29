@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- updated how remote repos are created and pulled to support code-commit
 
 ## v2.9.3 (2023-06-28)
 

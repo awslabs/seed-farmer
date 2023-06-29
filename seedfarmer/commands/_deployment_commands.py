@@ -20,7 +20,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
-import git  # type: ignore
+import git
 import yaml
 from git import Repo  # type: ignore
 

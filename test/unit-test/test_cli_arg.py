@@ -23,7 +23,7 @@ from moto import mock_sts
 from seedfarmer import config
 from seedfarmer.__main__ import apply, bootstrap, destroy, init
 from seedfarmer.__main__ import list as list
-from seedfarmer.__main__ import projectpolicy, remove, store, version
+from seedfarmer.__main__ import metadata, projectpolicy, remove, store, version
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
 from seedfarmer.services._service_utils import boto3_client
@@ -1344,3 +1344,84 @@ def test_get_projectpolicy():
 def test_get_projectpolicy_debug():
 
     _test_command(sub_command=projectpolicy, options=["synth", "--debug"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_param_value(mocker):
+    mocker.patch(
+        "seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_parameter_value", return_value="test"
+    )
+    _test_command(sub_command=metadata, options=["paramvalue", "--suffix", "DEPLOMENT_NAME"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_param_value_missing(mocker):
+    mocker.patch(
+        "seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_parameter_value", return_value="test"
+    )
+    _test_command(sub_command=metadata, options=["paramvalue"], exit_code=2)
+
+
+@pytest.mark.metadata
+def test_metadata_depmod(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_dep_mod_name", return_value="idf")
+    _test_command(sub_command=metadata, options=["depmod"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(sub_command=metadata, options=["convert"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert_file(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(sub_command=metadata, options=["convert", "--json-file", "ckd-output.json"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert_file_jq(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(
+        sub_command=metadata, options=["convert", "--json-file", "ckd-output.json", "-jq", ".path"], exit_code=0
+    )
+
+
+@pytest.mark.metadata
+def test_metadata_add_all_params(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(
+        sub_command=metadata,
+        options=["add", "--key", "adfdf", "--value", "asdfdsf", "--jsonstring", "adsfsdfa"],
+        exit_code=1,
+    )
+
+
+@pytest.mark.metadata
+def test_metadata_add_jsonstring(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--jsonstring", "adsfsdfa"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--key", "adfdf", "--value", "asdfdsf"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv_missing_key(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--value", "asdfdsf"], exit_code=1)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv_missing_value(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--key", "adfdf"], exit_code=1)

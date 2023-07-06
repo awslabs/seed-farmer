@@ -55,7 +55,8 @@ setup(
         "requests>=2.28,<2.32",
         "python-dotenv~=0.21.0",
         "gitpython~=3.1.30",
-        "gitignore-parser~=0.1.2"
+        "gitignore-parser~=0.1.2",
+        "pyjq~=2.6.0"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

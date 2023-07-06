@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.cli_groups import bootstrap, init, list, projectpolicy, remove, store
+from seedfarmer.cli_groups import bootstrap, init, list, metadata, projectpolicy, remove, store
 from seedfarmer.output_utils import print_bolded
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -250,5 +250,6 @@ def main() -> int:
     cli.add_command(version)
     cli.add_command(bootstrap)
     cli.add_command(projectpolicy)
+    cli.add_command(metadata)
     cli()
     return 0

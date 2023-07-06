@@ -176,8 +176,60 @@ publishGenericEnvVariables: true
 ```
 
 
-
 In the above examples, a different CDKv2 version is being installed as an example, AWS CLI commands are issued, and the actual deployment script (AWS CDK) is executed with the output of the CDK being written to SSM as a JSON document so other modules can leverage it.
+
+(metadata_cli_helper)=
+### Deployspec CLI Helper Commands
+Special commands have been added to SeedFarmer CLI to support management and manipulation of metadata that modules can produce.  You can see the commands available by running 
+```code
+seedfarmer metadata --help
+Usage: seedfarmer metadata [OPTIONS] COMMAND [ARGS]...
+
+  Manage the metadata in a module deployment execution
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  add         Add Output K,V to the Metadata
+  convert     Convert the CDK Output of the module to SeedFarmer Metadata
+  depmod      Get the Full Name of the Module
+  paramvalue  Get the parameter value based on the suffix
+```
+
+NOTE: these commands can ONLY be run from the `deployspec.yaml`. <br>
+SeedFarmer records module metadata from each module deployment so they can be passed to dependent modules as inputs.  In the `deployspec.yaml`, you must write the data to a file **SEEDFARMER_MODULE_METADATA** (or to **\<PROJECT\>_MODULE_METADATA** if not a generic module). 
+
+The commands automatically resolve the proper output file locations.
+
+The commands are self-explanatory, but we will go over the highlights.
+- **add** - this command gives you the ability to add any K,V pair (or stringified JSON) to the outputs
+- **depmod** - short for Deployment Module, this command gives the fully resolved Deployment name of the module (\<Project\>-\<Deployment\>-\<Group\>-\<Module\> name format)
+- **paramvalue** - this will give the resolved env parameter value of the key. SeedFarmer lists all module-specific env parameters of the form \<Project\>-\<Suffix\>.  If the module is generic, this becomes SEEDFARMER-\<Suffix\>.  For example the SEEDFARMER_DEPLOYMENT_NAME is a valid env parameter, where the suffix is DEPLOYMENT_NAME
+- **convert** - this command is cdk-centric as most modules are using CDKv2, which outputs data to a file of your choosing.  This command will convert that output to a JSON-stringified output that is then recorded in SSM.  It supports
+  - jq for parsing
+  - referencing other json files in the bundle (the value referenced must be stringified JSON...else use the `add` command)
+
+
+In the following `deployspec.yaml` snippet, we demonstrate some uses of this command:
+```
+deploy:
+  phases:
+    build:
+      commands:
+      # execute the CDK
+      - cdk deploy --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
+      - seedfarmer metadata add -k TestKeyValue -v TestKeyValueValue || true
+      - seedfarmer metadata add -j '{"JsonTest":"ValHere"}' || true
+      - export DEPMOD=$(seedfarmer metadata depmod)
+      - echo ${DEPMOD}
+      - seedfarmer metadata convert
+      - seedfarmer metadata convert -f cdk-exports.json # Does the SAME thing as the line above
+      - seedfarmer metadata convert -jq .${DEPMOD}.metadata # Does the SAME thing as the line above
+      - seedfarmer metadata convert -f cdk-exports-test.json -jq .${DEPMOD}.metadata # Looks for a file named cdk-exports-test.json
+      - echo $(seedfarmer metadata paramvalue -s DEPLOYMENT_NAME)
+```
+
 
 (module_readme)=
 ## Module ReadMe

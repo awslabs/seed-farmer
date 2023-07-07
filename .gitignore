@@ -383,3 +383,6 @@ codeseeder.out
 seedfarmer.gitmodules
 archive/
 _build/
+
+# Pytest Setup
+/module/

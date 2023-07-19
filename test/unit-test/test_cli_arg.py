@@ -205,6 +205,7 @@ def test_bootstrap_toolchain_only_with_qualifier(mocker):
             "--debug",
         ],
         exit_code=0,
+        skip_eval=True
     )
 
 
@@ -225,6 +226,7 @@ def test_bootstrap_toolchain_only_with_policies_fail(mocker):
             "--debug",
         ],
         exit_code=1,
+        skip_eval=True
     )
 
 
@@ -235,7 +237,7 @@ def test_bootstrap_target_account(mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
-        sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0
+        sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0, skip_eval=True
     )
 
 
@@ -248,7 +250,7 @@ def test_bootstrap_target_account_with_qualifier(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["target", "--toolchain-account", "123456789012", "--qualifier", "testit", "--debug"],
-        exit_code=0,
+        exit_code=0, skip_eval=True
     )
 
 

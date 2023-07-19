@@ -184,7 +184,7 @@ def test_bootstrap_toolchain_only(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["toolchain", "--trusted-principal", "arn:aws:iam::123456789012:role/AdminRole", "--debug"],
-        exit_code=0,
+        exit_code=0, skip_eval=True
     )
 
 

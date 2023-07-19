@@ -17,9 +17,9 @@ from seedfarmer.services._service_utils import (
     boto3_resource,
     create_new_session,
     create_new_session_with_creds,
-    get_account_id,
     get_botocore_config,
     get_region,
+    get_sts_identity_info,
 )
 
 __all__ = [
@@ -30,4 +30,5 @@ __all__ = [
     "boto3_resource",
     "create_new_session",
     "create_new_session_with_creds",
+    "get_sts_identity_info",
 ]

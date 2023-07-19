@@ -44,7 +44,7 @@ Resources:
               - ssm:DeleteParameter
               - ssm:DeleteParameters
             Resource:
-              -  !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}*"
+              -  !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}*"
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -54,23 +54,23 @@ Resources:
               - logs:GetLogGroupFields
               - logs:GetQueryResults
             Resource:
-              - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
           - Effect: Allow
             Action:
               - ssm:GetParameter
             Resource:
-              -  !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap*"
+              -  !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap*"
           - Effect: Allow
             Action:
               - iam:UpdateAssumeRolePolicy
             Resource:
-              -  !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}*"
+              -  !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectName}*"
           - Effect: Allow
             Action:
               - "iam:PassRole"
               - "sts:AssumeRole"
             Resource:
-              - !Sub "arn:aws:iam::${AWS::AccountId}:role/cdk*"
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk*"
         Version: '2012-10-17'
 
 Outputs:

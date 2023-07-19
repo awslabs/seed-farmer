@@ -128,6 +128,10 @@ def test_bootstrap_toolchain_account(mocker, session):
 
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
     bc.bootstrap_toolchain_account(
         project_name="testing",
         principal_arns=["arn:aws:iam::123456789012:role/AdminRole"],
@@ -196,6 +200,11 @@ def test_bootstrap_toolchain_account_with_policies(mocker, session):
 
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
+
     bc.bootstrap_toolchain_account(
         project_name="testing",
         principal_arns=["arn:aws:iam::123456789012:role/AdminRole"],
@@ -212,6 +221,11 @@ def test_bootstrap_toolchain_account_with_policies(mocker, session):
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_target_account(mocker, session):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
+
     bc.bootstrap_target_account(
         toolchain_account_id="123456789012",
         project_name="testing",
@@ -227,6 +241,11 @@ def test_bootstrap_target_account(mocker, session):
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_target_account_with_qualifier(mocker, session):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
+
     bc.bootstrap_target_account(
         toolchain_account_id="123456789012",
         project_name="testing",
@@ -260,6 +279,11 @@ def test_bootstrap_target_account_with_qualifier_fail(mocker, session):
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_target_account_with_policies(mocker, session):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
+
     bc.bootstrap_target_account(
         toolchain_account_id="123456789012",
         project_name="testing",

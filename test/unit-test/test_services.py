@@ -77,13 +77,13 @@ def test_utils_get_region(sts_client, session):
     assert _service_utils.get_region(session) == "us-east-1"
 
 
-def test_utils_get_account_id(sts_client):
-    assert _service_utils.get_account_id() == "123456789012"
+def test_utils_get_account_id(sts_client, mocker):
 
-
-# def test_utils_get_account_id_failed(sts_client, session):
-#     with pytest.raises(botocore.exceptions.ClientError):
-#         assert _service_utils.get_account_id(boto3.Session) == "123456789012"
+    mocker.patch(
+        "seedfarmer.services._service_utils._call_sts", return_value={"Account": "123456789012", "Arn": "arn:aws:iam::"}
+    )
+    account_id, arn, partition = _service_utils.get_sts_identity_info(session=session)
+    assert account_id == "123456789012"
 
 
 @pytest.fixture(scope="function")

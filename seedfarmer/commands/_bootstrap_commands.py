@@ -103,7 +103,13 @@ def bootstrap_toolchain_account(
     if not synthesize:
         session = create_new_session(profile=profile, region_name=region_name)
         session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
-        apply_deploy_logic(template=template, role_name=role_stack_name, stack_name=role_stack_name, session=session)
+        apply_deploy_logic(
+            template=template,
+            role_name=role_stack_name,
+            stack_name=role_stack_name,
+            session=session,
+            account_id=session_account_id,
+        )
         if as_target:
             bootstrap_target_account(
                 toolchain_account_id=session_account_id,
@@ -147,10 +153,11 @@ def bootstrap_target_account(
     if qualifier and not valid_qualifier(qualifier):
         raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
 
+    if not session:
+        session = create_new_session(profile=profile, region_name=region_name)
     session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
 
     role_stack_name = get_deployment_role_name(project_name=project_name, qualifier=cast(str, qualifier))
-
     toolchain_role_arn = get_toolchain_role_arn(
         partition=partition,
         toolchain_account_id=toolchain_account_id,
@@ -167,18 +174,24 @@ def bootstrap_target_account(
     )
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
-        if not session:
-            session = create_new_session(profile=profile, region_name=region_name)
-
-        apply_deploy_logic(template=template, role_name=role_stack_name, stack_name=role_stack_name, session=session)
+        apply_deploy_logic(
+            template=template,
+            role_name=role_stack_name,
+            stack_name=role_stack_name,
+            session=session,
+            account_id=session_account_id,
+        )
     else:
         write_template(template=template)
     return template
 
 
-def apply_deploy_logic(template: Dict[Any, Any], role_name: str, stack_name: str, session: Session) -> None:
+def apply_deploy_logic(
+    template: Dict[Any, Any], role_name: str, stack_name: str, session: Session, account_id: Optional[str] = None
+) -> None:
     role_exists, stack_exists = role_deploy_status(role_name=role_name, stack_name=stack_name, session=session)
-    account_id, _, _ = get_sts_identity_info(session=session)
+    if not account_id:
+        account_id, role_arn, partition = get_sts_identity_info(session=session)
     if not role_exists:
         _logger.info("Deploying role in account %s, region %s", account_id, get_region(session=session))
         deploy_template(template=template, stack_name=stack_name, session=session)

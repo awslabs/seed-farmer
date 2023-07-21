@@ -7,6 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v2.10.0 (2023-07-21)
+
+### New
 - added support for other partitions (`aws-cn` and `aws-us-gov`)
 - added CLI commands to be used as boilerplate code in deployspec for managing metadata
   - ref: https://seed-farmer.readthedocs.io/en/latest/manifests.html#deployment-manifest

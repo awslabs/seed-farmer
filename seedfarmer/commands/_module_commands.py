@@ -41,6 +41,7 @@ def _param(key: str, use_project_prefix: Optional[bool] = True) -> str:
 
 def _env_vars(
     deployment_name: str,
+    deployment_partition: str,
     group_name: str,
     module_manifest_name: str,
     parameters: Optional[List[ModuleParameter]] = None,
@@ -71,11 +72,14 @@ def _env_vars(
         env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
     if permissions_boundary_arn:
         env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
+    # Add the partition to env for ease of fetching
+    env_vars["AWS_PARTITION"] = deployment_partition
     return env_vars
 
 
 def deploy_module(
     deployment_name: str,
+    deployment_partition: str,
     group_name: str,
     module_manifest: ModuleManifest,
     account_id: str,
@@ -93,6 +97,7 @@ def deploy_module(
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
         deployment_name=deployment_name,
+        deployment_partition=deployment_partition,
         group_name=group_name,
         module_manifest_name=module_manifest.name,
         parameters=parameters,
@@ -177,6 +182,7 @@ def deploy_module(
 
 def destroy_module(
     deployment_name: str,
+    deployment_partition: str,
     group_name: str,
     module_path: str,
     module_manifest: ModuleManifest,
@@ -195,6 +201,7 @@ def destroy_module(
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
         deployment_name=deployment_name,
+        deployment_partition=deployment_partition,
         group_name=group_name,
         module_manifest_name=module_manifest.name,
         parameters=parameters,
@@ -328,6 +335,7 @@ def _execute_module_commands(
         deploy_info = {
             "aws_region": os.environ.get("AWS_DEFAULT_REGION"),
             "aws_account_id": os.environ.get("AWS_ACCOUNT_ID"),
+            "aws_partition": os.environ.get("AWS_PARTITION"),
             "codebuild_build_id": os.environ.get("CODEBUILD_BUILD_ID"),
             "codebuild_log_path": os.environ.get("CODEBUILD_LOG_PATH"),
         }

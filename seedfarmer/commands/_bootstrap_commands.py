@@ -26,7 +26,7 @@ from jinja2 import Template
 
 import seedfarmer.errors
 from seedfarmer import CLI_ROOT
-from seedfarmer.services import create_new_session, get_account_id, get_region
+from seedfarmer.services import create_new_session, get_region, get_sts_identity_info
 from seedfarmer.services._iam import get_role
 from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, get_toolchain_role_name, valid_qualifier
 
@@ -102,10 +102,17 @@ def bootstrap_toolchain_account(
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
         session = create_new_session(profile=profile, region_name=region_name)
-        apply_deploy_logic(template=template, role_name=role_stack_name, stack_name=role_stack_name, session=session)
+        session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
+        apply_deploy_logic(
+            template=template,
+            role_name=role_stack_name,
+            stack_name=role_stack_name,
+            session=session,
+            account_id=session_account_id,
+        )
         if as_target:
             bootstrap_target_account(
-                toolchain_account_id=get_account_id(session),
+                toolchain_account_id=session_account_id,
                 project_name=project_name,
                 qualifier=cast(str, qualifier),
                 permissions_boundary_arn=permissions_boundary_arn,
@@ -146,9 +153,16 @@ def bootstrap_target_account(
     if qualifier and not valid_qualifier(qualifier):
         raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
 
+    if not session:
+        session = create_new_session(profile=profile, region_name=region_name)
+    session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
+
     role_stack_name = get_deployment_role_name(project_name=project_name, qualifier=cast(str, qualifier))
     toolchain_role_arn = get_toolchain_role_arn(
-        toolchain_account_id=toolchain_account_id, project_name=project_name, qualifier=cast(str, qualifier)
+        partition=partition,
+        toolchain_account_id=toolchain_account_id,
+        project_name=project_name,
+        qualifier=cast(str, qualifier),
     )
 
     template = get_deployment_template(
@@ -160,33 +174,36 @@ def bootstrap_target_account(
     )
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
-        if not session:
-            session = create_new_session(profile=profile, region_name=region_name)
-
-        apply_deploy_logic(template=template, role_name=role_stack_name, stack_name=role_stack_name, session=session)
+        apply_deploy_logic(
+            template=template,
+            role_name=role_stack_name,
+            stack_name=role_stack_name,
+            session=session,
+            account_id=session_account_id,
+        )
     else:
         write_template(template=template)
     return template
 
 
-def apply_deploy_logic(template: Dict[Any, Any], role_name: str, stack_name: str, session: Session) -> None:
+def apply_deploy_logic(
+    template: Dict[Any, Any], role_name: str, stack_name: str, session: Session, account_id: Optional[str] = None
+) -> None:
     role_exists, stack_exists = role_deploy_status(role_name=role_name, stack_name=stack_name, session=session)
+    if not account_id:
+        account_id, role_arn, partition = get_sts_identity_info(session=session)
     if not role_exists:
-        _logger.info(
-            "Deploying role in account %s, region %s", get_account_id(session=session), get_region(session=session)
-        )
+        _logger.info("Deploying role in account %s, region %s", account_id, get_region(session=session))
         deploy_template(template=template, stack_name=stack_name, session=session)
     else:
         if stack_exists[0]:
-            _logger.info(
-                "Updating role in account %s, region %s", get_account_id(session=session), get_region(session=session)
-            )
+            _logger.info("Updating role in account %s, region %s", account_id, get_region(session=session))
             deploy_template(template=template, stack_name=stack_name, session=session)
         else:
             _logger.info(
                 "The role %s exists in account %s as was not deployed in region %s, it will NOT be updated",
                 role_name,
-                get_account_id(session=session),
+                account_id,
                 get_region(session=session),
             )
 

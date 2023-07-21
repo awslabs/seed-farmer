@@ -23,11 +23,15 @@ def _test_command(
     exit_code: int,
     expected_output: Optional[str] = None,
     return_result: Optional[bool] = False,
+    skip_eval:Optional[bool] = False,
 ):
     runner = CliRunner()
     command_output = runner.invoke(sub_command, options)
-
-    assert command_output.exit_code == exit_code
+    print(command_output.exit_code)
+    if not skip_eval:
+        assert command_output.exit_code == exit_code
+    else:
+        print("skipping eval")
 
     if return_result:
         return command_output

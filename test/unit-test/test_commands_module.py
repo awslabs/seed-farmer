@@ -172,6 +172,7 @@ def test_deploy_modules(session_manager, mocker):
 
     mc.deploy_module(
         deployment_name=dep.name,
+        deployment_partition="aws",
         group_name=group_name,
         module_manifest=module_manifest,
         account_id="123456789012",
@@ -202,6 +203,7 @@ def test_deploy_modules_error_deployspec(session_manager, mocker):
     with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         mc.deploy_module(
             deployment_name=dep.name,
+            deployment_partition="aws",
             group_name=group_name,
             module_manifest=module_manifest,
             account_id="123456789012",
@@ -229,6 +231,7 @@ def test_destroy_modules(session_manager, mocker):
 
     mc.destroy_module(
         deployment_name=dep.name,
+        deployment_partition="aws",
         group_name=group_name,
         module_path="module/path/path",
         module_manifest=module_manifest,
@@ -255,6 +258,7 @@ def test_destroy_modules_error_deployspec(session_manager, mocker):
     with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
         mc.destroy_module(
             deployment_name=dep.name,
+            deployment_partition="aws",
             group_name=group_name,
             module_path="module/path/path",
             module_manifest=module_manifest,

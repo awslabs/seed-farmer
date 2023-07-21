@@ -32,15 +32,17 @@ class CodeSeederMetadata(CamelModel):
 
     aws_account_id: Optional[str]
     aws_region: Optional[str]
+    aws_partition: Optional[str]
     codebuild_build_id: Optional[str]
     codebuild_log_path: Optional[str]
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
         self._build_url = generate_codebuild_url(
-            self.aws_account_id,  # type: ignore
-            self.aws_region,  # type: ignore
-            self.codebuild_build_id,  # type: ignore
+            account_id=self.aws_account_id,  # type: ignore
+            region=self.aws_region,  # type: ignore
+            codebuild_id=self.codebuild_build_id,  # type: ignore
+            partition=self.aws_partition,
         )
 
     @property

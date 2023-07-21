@@ -26,7 +26,6 @@ import seedfarmer.services._iam as iam
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
-from seedfarmer.services._service_utils import get_account_id, get_region
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import upper_snake_case
 
@@ -189,6 +188,7 @@ def destroy_module_stack(
 def deploy_module_stack(
     module_stack_path: str,
     deployment_name: str,
+    deployment_partition: str,
     group_name: str,
     module_name: str,
     account_id: str,
@@ -325,7 +325,6 @@ def deploy_module_stack(
     if policies.sort() == policies_attached.sort():
         _logger.info("Delaying module %s deployment to allow IAM Roles and Policies to take effect", group_module_name)
         time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
-
     # Attaching Docker Credentials Secret Optionally
     policy_body = json.dumps(
         {
@@ -339,7 +338,7 @@ def deploy_module_stack(
                         "secretsmanager:ListSecretVersionIds",
                     ],
                     "Resource": (
-                        f"arn:aws:secretsmanager:{get_region(session=session)}:{get_account_id(session=session)}"
+                        f"arn::{deployment_partition}:secretsmanager:{region}:{account_id}"
                         f":secret:{docker_credentials_secret}*"
                     ),
                 },

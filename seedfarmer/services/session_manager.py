@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 from boto3 import Session
 
 import seedfarmer.errors
-from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_account_id
+from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_sts_identity_info
 from seedfarmer.utils import get_deployment_role_arn, get_toolchain_role_arn, get_toolchain_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -127,10 +127,6 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             _logger.info(f"Creating Session for {session_key}")
             self._check_for_toolchain()
             toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
-            deployment_role_arn = get_deployment_role_arn(
-                deployment_account_id=account_id, project_name=project_name, qualifier=cast(str, qualifier)
-            )
-            _logger.debug(f"Got deployment role role - {deployment_role_arn}")
             # the boto sessions are not thread safe, so create a new one for the toolchain role every time to be sure
             sts_toolchain_client = boto3_client(
                 service_name="sts",
@@ -138,6 +134,15 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=toolchain_role["Credentials"]["SessionToken"],
             )
+            partition = sts_toolchain_client.get_caller_identity().get("Arn").split(":")[1]
+            deployment_role_arn = get_deployment_role_arn(
+                partition=partition,
+                deployment_account_id=account_id,
+                project_name=project_name,
+                qualifier=cast(str, qualifier),
+            )
+            _logger.debug(f"Got deployment role role - {deployment_role_arn}")
+
             deployment_role = sts_toolchain_client.assume_role(
                 RoleArn=deployment_role_arn,
                 RoleSessionName="deployment_role",
@@ -169,13 +174,15 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         toolchain_region = self.config.get("toolchain_region")
         _logger.debug("Getting toolchain role")
         user_session = create_new_session(region_name=region_name, profile=profile_name)
-        user_client = boto3_client(service_name="sts", session=user_session)
+        user_account_id, _, partition = get_sts_identity_info(session=user_session)
         toolchain_role_arn = get_toolchain_role_arn(
-            toolchain_account_id=get_account_id(user_session),
+            partition=partition,
+            toolchain_account_id=user_account_id,
             project_name=cast(str, project_name),
             qualifier=cast(str, qualifier),
         )
         _logger.debug(f"Using toolchain role - {toolchain_role_arn}")
+        user_client = boto3_client(service_name="sts", session=user_session)
         toolchain_role = user_client.assume_role(
             RoleArn=toolchain_role_arn,
             RoleSessionName="toolchainrole",

@@ -14,7 +14,7 @@
 
 import logging
 import os
-from typing import Dict, Optional
+from typing import Any, Dict, Optional, Tuple, cast
 
 import boto3
 import botocore.exceptions
@@ -103,12 +103,13 @@ def get_region(session: Optional[Session] = None, profile: Optional[str] = None)
     return str(sess.region_name)
 
 
-def get_account_id(session: Optional[Session] = None, profile: Optional[str] = None) -> str:
+def _call_sts(session: Optional[Session] = None, profile: Optional[str] = None) -> Dict[str, Any]:
+
     try:
         if not session:
-            return str(boto3_client(service_name="sts", profile=profile).get_caller_identity().get("Account"))
+            return cast(Dict[str, Any], boto3_client(service_name="sts", profile=profile).get_caller_identity())
         else:
-            return str(boto3_client(service_name="sts", session=session).get_caller_identity().get("Account"))
+            return cast(Dict[str, Any], boto3_client(service_name="sts", session=session).get_caller_identity())
     except botocore.exceptions.NoCredentialsError as e:
         _logger.error(f"ERROR: {e}")
         from seedfarmer.output_utils import print_bolded
@@ -122,3 +123,10 @@ def get_account_id(session: Optional[Session] = None, profile: Optional[str] = N
 
         print_bolded("Please make sure you have a valid AWS Session", color="red")
         raise e
+
+
+def get_sts_identity_info(session: Optional[Session] = None, profile: Optional[str] = None) -> Tuple[str, str, str]:
+    sts_info = _call_sts(session=session, profile=profile)
+    return cast(
+        Tuple[str, str, str], (sts_info.get("Account"), sts_info.get("Arn"), str(sts_info.get("Arn")).split(":")[1])
+    )

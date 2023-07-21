@@ -169,6 +169,7 @@ class DeploymentManifest(CamelModel):
     _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _accounts_regions: Optional[List[Dict[str, str]]] = PrivateAttr(default=None)
     _module_index: Dict[Tuple[str, str], ModuleManifest] = PrivateAttr(default_factory=dict)
+    _partition: Optional[str] = PrivateAttr(default="aws")
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)

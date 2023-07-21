@@ -98,8 +98,15 @@ def test_destroy_clean(session_manager, mocker):
 @pytest.mark.commands_deployment
 def test_destroy_not_found(session_manager, mocker):
 
-    mocker.patch("seedfarmer.commands._deployment_commands.du.generate_deployed_manifest", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.du.generate_deployed_manifest",
+        return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
+    )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
 
     dc.destroy(deployment_name="myapp", dryrun=True, retain_seedkit=False)
 
@@ -165,9 +172,7 @@ def test_clone_module_repo_main(mocker):
 def test_process_data_files(mocker):
     mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo", return_value=("git", "path"))
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=[])
-    git_path_test = (
-        "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
-    )
+    git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     datafile_list = []
     datafile_list.append(DataFile(file_path=git_path_test))
     datafile_list.append(DataFile(file_path=""))
@@ -180,9 +185,7 @@ def test_process_data_files(mocker):
 def test_process_data_files_error(mocker):
     mocker.patch("seedfarmer.commands._deployment_commands._clone_module_repo", return_value=("git", "path"))
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=["hey"])
-    git_path_test = (
-        "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
-    )
+    git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     datafile_list = []
     datafile_list.append(DataFile(file_path=git_path_test))
     datafile_list.append(DataFile(file_path=""))

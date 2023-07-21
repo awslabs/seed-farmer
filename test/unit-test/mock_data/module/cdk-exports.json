@@ -1,0 +1,14 @@
+{
+    "myapp-generic-simpledeployment-simpletest": {
+      "metadata": "{\"ArtifactsBucketName\":\"idf-metadata-artifacts-bucket-074ff5b4-99b04ff45aafe06bb4703c\",\"LogsBucketName\":\"idf-metadata-logs-bucket-074ff5b4-99b04ff45aafe06bb4703cfeb28\",\"ReadOnlyPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-readonly-access\",\"FullAccessPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-full-access\"}"
+    },
+    "myapp-project-simpledeployment-simpletest": {
+      "metadata": "{\"ArtifactsBucketName\":\"idf-metadata-artifacts-bucket-074ff5b4-99b04ff45aafe06bb4703c\",\"LogsBucketName\":\"idf-metadata-logs-bucket-074ff5b4-99b04ff45aafe06bb4703cfeb28\",\"ReadOnlyPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-readonly-access\",\"FullAccessPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-full-access\"}"
+    },
+    "addf-workshop-demo-integration-rosbag-ddb-to-os": {
+      "metadata": "{\"ArtifactsBucketName\":\"idf-metadata-artifacts-bucket-074ff5b4-99b04ff45aafe06bb4703c\",\"LogsBucketName\":\"idf-metadata-logs-bucket-074ff5b4-99b04ff45aafe06bb4703cfeb28\",\"ReadOnlyPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-readonly-access\",\"FullAccessPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-full-access\"}"
+    },
+      "idf-metadata-bucket-buckets": {
+        "metadata": "{\"ArtifactsBucketName\":\"idf-metadata-artifacts-bucket-074ff5b4-99b04ff45aafe06bb4703c\",\"LogsBucketName\":\"idf-metadata-logs-bucket-074ff5b4-99b04ff45aafe06bb4703cfeb28\",\"ReadOnlyPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-readonly-access\",\"FullAccessPolicyArn\":\"arn:aws:iam::123456789012:policy/idf-metadata-bucket-buckets-us-east-1-123456789012-full-access\"}"
+      }
+  }

@@ -50,6 +50,7 @@ from seedfarmer.output_utils import (
     print_manifest_json,
     print_modules_build_info,
 )
+from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -158,13 +159,14 @@ def _execute_deploy(
     target_region = cast(str, module_manifest.target_region)
     # Deploys the IAM role per module
     module_stack_name, module_role_name = commands.deploy_module_stack(
-        get_modulestack_path(str(module_manifest.get_local_path())),
-        cast(str, deployment_manifest.name),
-        group_name,
-        module_manifest.name,
-        target_account_id,
-        target_region,
-        parameters,
+        module_stack_path=get_modulestack_path(str(module_manifest.get_local_path())),
+        deployment_name=cast(str, deployment_manifest.name),
+        deployment_partition=cast(str, deployment_manifest._partition),
+        group_name=group_name,
+        module_name=module_manifest.name,
+        account_id=target_account_id,
+        region=target_region,
+        parameters=parameters,
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
     )
@@ -192,6 +194,7 @@ def _execute_deploy(
 
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
+        deployment_partition=cast(str, deployment_manifest._partition),
         group_name=group_name,
         module_manifest=module_manifest,
         account_id=target_account_id,
@@ -237,6 +240,7 @@ def _execute_destroy(
 
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
+        deployment_partition=cast(str, deployment_manifest._partition),
         group_name=group_name,
         module_path=module_path,
         module_manifest=module_manifest,
@@ -303,10 +307,10 @@ def _deploy_validated_deployment(
                         return _execute_deploy(**args)
 
                     def _render_permissions_boundary_arn(
-                        account_id: Optional[str], permissions_boundary_name: Optional[str]
+                        account_id: Optional[str], partition: Optional[str], permissions_boundary_name: Optional[str]
                     ) -> Optional[str]:
                         return (
-                            f"arn:aws:iam::{account_id}:policy/{permissions_boundary_name}"
+                            f"arn:{partition}:iam::{account_id}:policy/{permissions_boundary_name}"
                             if permissions_boundary_name is not None
                             else None
                         )
@@ -323,6 +327,7 @@ def _deploy_validated_deployment(
                             ),
                             "permissions_boundary_arn": _render_permissions_boundary_arn(
                                 account_id=_module.get_target_account_id(),
+                                partition=deployment_manifest_wip._partition,
                                 permissions_boundary_name=deployment_manifest_wip.get_parameter_value(
                                     "permissionsBoundaryName",
                                     account_alias=_module.target_account,
@@ -735,6 +740,8 @@ def apply(
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,
     )
+    _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
+    deployment_manifest._partition = partition
     if not dryrun:
         write_deployment_manifest(
             cast(str, deployment_manifest.name), deployment_manifest.dict(), session=session_manager.toolchain_session
@@ -844,7 +851,7 @@ def destroy(
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
-    SessionManager().get_or_create(
+    session_manager = SessionManager().get_or_create(
         project_name=project,
         profile=profile,
         region_name=region_name,
@@ -853,6 +860,8 @@ def destroy(
         reaper_interval=session_timeout_interval,
     )
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
+    _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
+    destroy_manifest._partition = partition  # type: ignore
     if destroy_manifest:
         destroy_manifest.validate_and_set_module_defaults()
         destroy_deployment(

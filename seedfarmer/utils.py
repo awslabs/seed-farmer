@@ -20,7 +20,7 @@ import humps
 import yaml
 from boto3 import Session
 
-from seedfarmer.services._service_utils import get_account_id, get_region
+from seedfarmer.services._service_utils import get_region, get_sts_identity_info
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ def generate_session_hash(session: Optional[Session] = None) -> str:
     str
         The resulting hash as a string
     """
-    account = get_account_id(session=session)
+    account, _, _ = get_sts_identity_info(session=session)
     region = get_region(session=session)
     concatenated_string = f"{account}-{region}"
     hash_value = generate_hash(string=concatenated_string, length=8)
@@ -86,7 +86,7 @@ def generate_session_hash(session: Optional[Session] = None) -> str:
     return hash_value
 
 
-def generate_codebuild_url(account_id: str, region: str, codebuild_id: str) -> str:
+def generate_codebuild_url(account_id: str, region: str, codebuild_id: str, partition: Optional[str] = "aws") -> str:
     """
     Generate a standard URL for codebuild build information
 
@@ -105,15 +105,21 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str) -> s
         The standard URL with protocol and query parameters
         ex: https://us-east-1.console.aws.amazon.com/codesuite/codebuild/123456789012/projects/
             codebuild-id/build/codebuild-id:3413241234/?region-us-east-1
+        if in a differeing partion (ex.aws-cn) the url looks like:
+            https://cn-north-1.console.amazonaws.cn/codesuite/codebuild/123456789012/projects/
+            codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1
     """
     try:
         b_id_enc = codebuild_id.replace(":", "%3A")
         cb_p = codebuild_id.split(":")[0]
+        domain_completion = ".console.aws.amazon.com/codesuite/codebuild/"
+        if partition == "aws-cn":
+            domain_completion = ".console.amazonaws.cn/codesuite/codebuild/"
         return "".join(
             (
                 "https://",
                 f"{region}",
-                ".console.aws.amazon.com/codesuite/codebuild/",
+                f"{domain_completion}",
                 f"{account_id}",
                 "/projects/",
                 f"{cb_p}",
@@ -133,8 +139,10 @@ def get_toolchain_role_name(project_name: str, qualifier: Optional[str] = None) 
     return f"{name}-{qualifier}" if qualifier else name
 
 
-def get_toolchain_role_arn(toolchain_account_id: str, project_name: str, qualifier: Optional[str] = None) -> str:
-    return f"arn:aws:iam::{toolchain_account_id}:role/{get_toolchain_role_name(project_name,qualifier)}"
+def get_toolchain_role_arn(
+    partition: str, toolchain_account_id: str, project_name: str, qualifier: Optional[str] = None
+) -> str:
+    return f"arn:{partition}:iam::{toolchain_account_id}:role/{get_toolchain_role_name(project_name,qualifier)}"
 
 
 def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
@@ -142,8 +150,10 @@ def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None)
     return f"{name}-{qualifier}" if qualifier else name
 
 
-def get_deployment_role_arn(deployment_account_id: str, project_name: str, qualifier: Optional[str] = None) -> str:
-    return f"arn:aws:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name,qualifier)}"
+def get_deployment_role_arn(
+    partition: str, deployment_account_id: str, project_name: str, qualifier: Optional[str] = None
+) -> str:
+    return f"arn:{partition}:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name,qualifier)}"
 
 
 def valid_qualifier(qualifer: str) -> bool:

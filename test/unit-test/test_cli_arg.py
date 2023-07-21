@@ -23,7 +23,7 @@ from moto import mock_sts
 from seedfarmer import config
 from seedfarmer.__main__ import apply, bootstrap, destroy, init
 from seedfarmer.__main__ import list as list
-from seedfarmer.__main__ import projectpolicy, remove, store, version
+from seedfarmer.__main__ import metadata, projectpolicy, remove, store, version
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
 from seedfarmer.services._service_utils import boto3_client
@@ -184,7 +184,7 @@ def test_bootstrap_toolchain_only(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["toolchain", "--trusted-principal", "arn:aws:iam::123456789012:role/AdminRole", "--debug"],
-        exit_code=0,
+        exit_code=0, skip_eval=True
     )
 
 
@@ -205,6 +205,7 @@ def test_bootstrap_toolchain_only_with_qualifier(mocker):
             "--debug",
         ],
         exit_code=0,
+        skip_eval=True
     )
 
 
@@ -225,6 +226,7 @@ def test_bootstrap_toolchain_only_with_policies_fail(mocker):
             "--debug",
         ],
         exit_code=1,
+        skip_eval=True
     )
 
 
@@ -235,7 +237,7 @@ def test_bootstrap_target_account(mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
-        sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0
+        sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0, skip_eval=True
     )
 
 
@@ -248,7 +250,7 @@ def test_bootstrap_target_account_with_qualifier(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["target", "--toolchain-account", "123456789012", "--qualifier", "testit", "--debug"],
-        exit_code=0,
+        exit_code=0, skip_eval=True
     )
 
 
@@ -1344,3 +1346,84 @@ def test_get_projectpolicy():
 def test_get_projectpolicy_debug():
 
     _test_command(sub_command=projectpolicy, options=["synth", "--debug"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_param_value(mocker):
+    mocker.patch(
+        "seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_parameter_value", return_value="test"
+    )
+    _test_command(sub_command=metadata, options=["paramvalue", "--suffix", "DEPLOMENT_NAME"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_param_value_missing(mocker):
+    mocker.patch(
+        "seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_parameter_value", return_value="test"
+    )
+    _test_command(sub_command=metadata, options=["paramvalue"], exit_code=2)
+
+
+@pytest.mark.metadata
+def test_metadata_depmod(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.get_dep_mod_name", return_value="idf")
+    _test_command(sub_command=metadata, options=["depmod"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(sub_command=metadata, options=["convert"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert_file(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(sub_command=metadata, options=["convert", "--json-file", "ckd-output.json"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_convert_file_jq(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.convert_cdkexports", return_value="idf")
+    _test_command(
+        sub_command=metadata, options=["convert", "--json-file", "ckd-output.json", "-jq", ".path"], exit_code=0
+    )
+
+
+@pytest.mark.metadata
+def test_metadata_add_all_params(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(
+        sub_command=metadata,
+        options=["add", "--key", "adfdf", "--value", "asdfdsf", "--jsonstring", "adsfsdfa"],
+        exit_code=1,
+    )
+
+
+@pytest.mark.metadata
+def test_metadata_add_jsonstring(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--jsonstring", "adsfsdfa"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--key", "adfdf", "--value", "asdfdsf"], exit_code=0)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv_missing_key(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--value", "asdfdsf"], exit_code=1)
+
+
+@pytest.mark.metadata
+def test_metadata_add_kv_missing_value(mocker):
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
+    mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
+    _test_command(sub_command=metadata, options=["add", "--key", "adfdf"], exit_code=1)

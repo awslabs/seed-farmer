@@ -25,7 +25,7 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-              - arn:aws:iam::*:role/seedfarmer-{{ project_name }}*
+                Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-{{ project_name }}*"
               Sid: ToolChainSTS
             - Action:
               - ssm:Put*
@@ -36,12 +36,12 @@ Resources:
               - ssm:Get*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
               Sid: ToolChainSSM
             - Action:
               - ssm:Describe*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:*"
       RoleName: "{{ role_name }}"
     Type: AWS::IAM::Role

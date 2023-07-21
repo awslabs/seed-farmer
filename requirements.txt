@@ -6,7 +6,7 @@
 #
 arrow==1.2.3
     # via jinja2-time
-aws-codeseeder==0.9.0
+aws-codeseeder==0.10.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
@@ -74,6 +74,8 @@ pygments==2.15.1
     # via rich
 pyhumps==3.5.3
     # via seed-farmer (setup.py)
+pyjq==2.6.0
+    # via seed-farmer (setup.py)
 python-dateutil==2.8.2
     # via
     #   arrow
@@ -82,11 +84,12 @@ python-dotenv==0.21.1
     # via seed-farmer (setup.py)
 python-slugify==8.0.1
     # via cookiecutter
-pyyaml==6.0
+pyyaml==6.0.1
     # via
     #   aws-codeseeder
     #   cfn-flip
     #   cookiecutter
+    #   seed-farmer (setup.py)
 requests==2.31.0
     # via
     #   cookiecutter

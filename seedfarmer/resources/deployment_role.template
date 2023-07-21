@@ -33,7 +33,7 @@ Resources:
               - kms:Create*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:kms:*:${AWS::AccountId}:alias/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:kms:*:${AWS::AccountId}:alias/codeseeder-{{ project_name }}-*"
               Sid: DeploymentKMSAlias
             - Action:
               - kms:ListKeys
@@ -64,10 +64,10 @@ Resources:
               - iam:List*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
@@ -77,7 +77,7 @@ Resources:
               - codebuild:StartBuild
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:codebuild:*:${AWS::AccountId}:project/codeseeder-{{ project_name }}*"
+                Fn::Sub: "arn:${AWS::Partition}:codebuild:*:${AWS::AccountId}:project/codeseeder-{{ project_name }}*"
               Sid: DeploymentCodeBuild
             - Action:
               - iam:ListPolicies
@@ -93,8 +93,8 @@ Resources:
               - cloudformation:*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-*"
-                - Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}/*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}/*"
             - Action:
               - s3:Delete*
               - s3:Put*
@@ -104,8 +104,8 @@ Resources:
               - s3:List*
               Effect: Allow
               Resource:
-              - arn:aws:s3:::codeseeder-{{ project_name }}*
-              - arn:aws:s3:::codeseeder-{{ project_name }}*/*
+              - Fn::Sub: "arn:${AWS::Partition}:s3:::codeseeder-{{ project_name }}*"
+              - Fn::Sub: "arn:${AWS::Partition}:s3:::codeseeder-{{ project_name }}*/*"
               Sid: DeploymentS3
             - Action:
               - sts:AssumeRole
@@ -113,7 +113,7 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-              - arn:aws:iam::*:role/{{ project_name }}-*
+              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/{{ project_name }}-*"
               Sid: DeploymentSTS
             - Action:
               - ssm:Put*
@@ -124,7 +124,7 @@ Resources:
               - ssm:Get*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
             - Effect: Allow
               Action:
               - logs:CreateLogStream
@@ -135,18 +135,18 @@ Resources:
               - logs:GetQueryResults
               - logs:DescribeLogStreams
               Resource:
-                Fn::Sub: "arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-{{ project_name }}*"
+                Fn::Sub: "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-{{ project_name }}*"
             - Action:
               - cloudformation:Create*
               - cloudformation:Execute*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
+                Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
             - Action:
               - codeartifact:*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
-                - Fn::Sub: "arn:aws:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
+                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
       RoleName: "{{ role_name }}"
     Type: AWS::IAM::Role

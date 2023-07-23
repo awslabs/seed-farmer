@@ -8,7 +8,7 @@ For information related to the architecture of Seed-Farmer or the deployment sch
 - [Seed-Farmer multi-account architecture](https://seed-farmer.readthedocs.io/en/latest/architecture.html)
 - [Seed-Farmer processing steps](https://seed-farmer.readthedocs.io/en/latest/architecture.html#method-of-processing)
 
-Seed-Farmer uses modular code deployments ([see modules](https://seed-farmer.readthedocs.io/en/latest/usage.html#module-development)) leveraging [manifests](https://seed-farmer.readthedocs.io/en/latest/manifests.html) and [deployspecs](https://seed-farmer.readthedocs.io/en/latest/deployspec.html), keeping track of changes and applying changes as need / detected.
+Seed-Farmer uses modular code deployments ([see modules](https://seed-farmer.readthedocs.io/en/latest/module_development.html)) leveraging [manifests](https://seed-farmer.readthedocs.io/en/latest/manifests.html) and [deployspecs](https://seed-farmer.readthedocs.io/en/latest/module_development.html#deployspec), keeping track of changes and applying changes as need / detected.
 
 
 ## Getting Started
@@ -21,4 +21,4 @@ source .venv/bin/activate
 pip install seed-farmer
 ```
 
-A [project](https://seed-farmer.readthedocs.io/en/latest/project_structure.html) is now necessary to begin create modules.  
+A [project](https://seed-farmer.readthedocs.io/en/latest/project_development.html) is now necessary to begin create modules.  

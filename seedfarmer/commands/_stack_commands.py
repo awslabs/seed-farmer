@@ -338,7 +338,7 @@ def deploy_module_stack(
                         "secretsmanager:ListSecretVersionIds",
                     ],
                     "Resource": (
-                        f"arn::{deployment_partition}:secretsmanager:{region}:{account_id}"
+                        f"arn:{deployment_partition}:secretsmanager:{region}:{account_id}"
                         f":secret:{docker_credentials_secret}*"
                     ),
                 },

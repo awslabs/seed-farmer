@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- correct the arn generation of inline policy for docker secrets policy
 
 ## v2.10.0 (2023-07-21)
 

@@ -16,9 +16,8 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, Tuple, cast
 
-import pyjq
 import yaml
 
 from seedfarmer import config
@@ -84,12 +83,12 @@ def _mod_dep_key(mms: ModuleMetadataSupport) -> str:
     )
 
 
-def _read_json_file(mms: ModuleMetadataSupport, path: str) -> Dict[str, Any]:
+def _read_json_file(mms: ModuleMetadataSupport, path: str) -> Tuple[str, Dict[str, Any]]:
     p = os.path.join(mms.get_ops_root_path(), "module", path)
     _logger.info("Reading extra file path located at %s", p)
     with open(p, "r") as datafile:
         j = datafile.read()
-    return dict(json.loads(j))
+    return p, dict(json.loads(j))
 
 
 def _write_metadata_file(mms: ModuleMetadataSupport, data: Dict[str, Any]) -> None:
@@ -125,15 +124,18 @@ def convert_cdkexports(
     jq_path: Optional[str] = None,
 ) -> None:
     mms = ModuleMetadataSupport()
-    cdk_output = _read_json_file(mms, json_file)
+    cdk_output_path, cdk_output = _read_json_file(mms, json_file)
     if not jq_path:
         out_key = _mod_dep_key(mms)
         _logger.info("Pulling %s from the %s file", out_key, json_file)
         data = cdk_output[out_key]["metadata"]
     else:
         clean_jq_path = _clean_jq(jq_path)
+        jq_command = f"cat {cdk_output_path} | jq '{clean_jq_path}'"
         _logger.info("Pulling with jq path '%s' from %s file", clean_jq_path, json_file)
-        data = pyjq.one(clean_jq_path, cdk_output)
+        _logger.debug(f"The entire jq command: {jq_command}")
+        os.system(f"{jq_command} > tmp-metadata")
+        data = json.loads(open("tmp-metadata", "r").read())
 
     existing_metadata = _read_metadata_file(mms)
 

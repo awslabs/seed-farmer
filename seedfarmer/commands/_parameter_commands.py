@@ -73,9 +73,14 @@ def load_parameter_values(
                         f"The module metadata parameter ({parameter.value_from.module_metadata}) is not available"
                     )
             elif parameter.value_from.env_variable:
-                parameter_values.append(
-                    ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
-                )
+                if parameter.value_from.env_variable in os.environ:
+                    parameter_values.append(
+                        ModuleParameter(name=parameter.name, value=os.getenv(parameter.value_from.env_variable, ""))
+                    )
+                else:
+                    raise seedfarmer.errors.InvalidManifestError(
+                        f"The environment variable ({parameter.value_from.env_variable}) is not available"
+                    )
             elif parameter.value_from.parameter_store:
                 parameter_values.append(
                     ModuleParameter(

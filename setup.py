@@ -56,7 +56,6 @@ setup(
         "python-dotenv~=0.21.0",
         "gitpython~=3.1.30",
         "gitignore-parser~=0.1.2",
-        "pyjq~=2.6.0",
         "pyyaml~=6.0.1"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},

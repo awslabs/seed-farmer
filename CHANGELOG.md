@@ -12,6 +12,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v2.10.2 (2023-07-28)
+
+### New
+
+### Changes
+- removing pyjq library dependency (installation issues with library)
+
+### Fixes
+- raising error if an env variable specified by parameter is not found
+
 ## v2.10.1 (2023-07-25)
 
 ### New

@@ -113,5 +113,6 @@ urllib3==1.26.15
     # via
     #   botocore
     #   requests
+    #   seed-farmer (setup.py)
 verboselogs==1.7
     # via property-manager

@@ -74,7 +74,7 @@ targetAccountMappings:
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
   - **path**- the relative path to the [module manifest](module_manifest)
-  - **concurrency** - limit the number of concurrent codebuld jobs that run 
+  - **concurrency** - limit the number of concurrent codebuild jobs that run 
     - this is defaulted to the number of modules in the group
 - **targetAccountMappings** - section defining target accounts and configurations, this is a list
   - **alias** - the logical name for an account, referenced by [`module manifests`](module_manifest)

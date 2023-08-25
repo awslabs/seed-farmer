@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - forcing `certifi~=2023.7.22` in all references due to e-Tugra security notification [HERE](https://groups.google.com/a/mozilla.org/g/dev-security-policy/c/C-HrP1SEq1A?pli=1)
+- adding `concurrency` definition to the docs
 
 ### Fixes
 

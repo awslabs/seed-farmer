@@ -57,7 +57,8 @@ setup(
         "gitpython~=3.1.30",
         "gitignore-parser~=0.1.2",
         "pyyaml~=6.0.1",
-        "urllib3==1.26.15"
+        "urllib3==1.26.15",
+        "certifi~=2023.7.22"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

@@ -31,3 +31,22 @@ Below is a flow of `seedfarmer` deployment of a single module in a single accoun
 8. AWS CodeBuild via **AWS CodeSeeder** updates AWS Systems Manager with completed module metadata
 9. **seedfarmer** updates deployment metadata in AWS Systems Manager
 
+
+
+## AWS CodeSeeder
+`AWS Codeseeder` is an OpenSource tool that is used to help `SeedFarmer` securely deploy modules in AWS Codebuild and is a requirement.  `SeedFarmer` will check to see if a `seedkit` is deployed in EVERY account/region mapping that is defined in the [deployment manifest](manifests) - and deploy it if not found.  It does NOT check for changes / drift to the `seedkit` as specified via `AWS Codeseeder` - so it is incumbent to make sure that your `seedkit` is up to the proper version.
+
+### Updating the AWS CodeSeeder Seedkit
+The `seedkit` has a known naming convention of `aws-codeseeder-<project name>` as a CloudFormation stack name.  For example, the name of the seedkit stack a project named `addf` would be:
+```code
+aws-codeseeder-addf
+```
+
+An end user who would need to update the `seedkit` would delete the CFN template in that account/region mapping and redeploy it (choose either)
+   - via `SeedFarmer` default deployment routine
+     - just run the seedfarmer deploy
+   - via `AWS CodeSeeder` CLI commands
+     - this can occur outside of seedfarmer
+     - Please see [AWS CodeSeeder - deploying](https://aws-codeseeder.readthedocs.io/en/latest/usage.html#deploying) for more info on the CLI command.
+
+**NOTE** Deleting the `seedkit` stack deletes the AWS Codebuild project and the entire history.  An existing `SeedFarmer` deployment (the modules deployed) will be unaffected and continue to run as before, but you will lose the build job history.  

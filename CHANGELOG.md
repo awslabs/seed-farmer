@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding `concurrency` definition to the docs
 - updating `urllib==1.26.5` in docs/requirements-docs.in
 - adding in seedkit redeploy information in the `Architecture` section of the docs
-
+- allow non-json compliant ssm parameters to be parsed when using module-specifics paths (`/<project>/<dep>/<mod>/databaseinfo`)
 ### Fixes
 
 ## v2.10.2 (2023-07-28)

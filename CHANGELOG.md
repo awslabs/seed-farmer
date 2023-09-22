@@ -12,6 +12,18 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v2.10.3 (2023-09-22)
+
+### New
+
+### Changes
+- forcing `certifi~=2023.7.22` in all references due to e-Tugra security notification [HERE](https://groups.google.com/a/mozilla.org/g/dev-security-policy/c/C-HrP1SEq1A?pli=1)
+- adding `concurrency` definition to the docs
+- updating `urllib==1.26.5` in docs/requirements-docs.in
+- adding in seedkit redeploy information in the `Architecture` section of the docs
+- allow non-json compliant ssm parameters to be parsed when using module-specifics paths (`/<project>/<dep>/<mod>/databaseinfo`)
+### Fixes
+
 ## v2.10.2 (2023-07-28)
 
 ### New

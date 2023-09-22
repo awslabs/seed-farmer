@@ -31,7 +31,7 @@ build==0.10.0
     #   check-manifest
     #   pip-tools
     #   pyroma
-certifi==2022.12.7
+certifi==2023.7.22
     # via
     #   -r requirements-dev.in
     #   requests
@@ -49,10 +49,10 @@ colorama==0.4.4
     # via awscli
 coverage[toml]==7.2.7
     # via pytest-cov
-cryptography==41.0.2
+cryptography==41.0.4
     # via
     #   moto
-    #   sshpubkeys
+    #   secretstorage
 docutils==0.16
     # via
     #   awscli
@@ -61,10 +61,6 @@ docutils==0.16
     #   readme-renderer
     #   sphinx
     #   sphinx-rtd-theme
-ecdsa==0.18.0
-    # via sshpubkeys
-exceptiongroup==1.1.2
-    # via pytest
 flake8==4.0.1
     # via -r requirements-dev.in
 idna==3.4
@@ -81,6 +77,10 @@ isort==5.10.1
     # via -r requirements-dev.in
 jaraco-classes==3.3.0
     # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via
     #   moto
@@ -113,7 +113,7 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via jaraco-classes
-moto[codebuild,ec2,iam,s3,secretsmanager,ssm,sts]==4.0.13
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==4.0.13
     # via -r requirements-dev.in
 mypy==0.991
     # via -r requirements-dev.in
@@ -209,10 +209,11 @@ s3transfer==0.6.1
     # via
     #   awscli
     #   boto3
+secretstorage==3.3.3
+    # via keyring
 six==1.16.0
     # via
     #   bleach
-    #   ecdsa
     #   python-dateutil
 snowballstemmer==2.2.0
     # via sphinx
@@ -238,18 +239,6 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sshpubkeys==3.3.1
-    # via moto
-tomli==2.0.1
-    # via
-    #   black
-    #   build
-    #   check-manifest
-    #   coverage
-    #   mypy
-    #   pip-tools
-    #   pyproject-hooks
-    #   pytest
 trove-classifiers==2023.7.6
     # via pyroma
 twine==4.0.2
@@ -262,8 +251,6 @@ types-setuptools==57.4.18
     # via -r requirements-dev.in
 typing-extensions==4.7.1
     # via
-    #   astroid
-    #   black
     #   mypy
     #   myst-parser
 unidecode==1.3.6

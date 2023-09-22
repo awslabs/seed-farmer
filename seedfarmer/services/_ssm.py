@@ -141,7 +141,11 @@ def get_all_parameter_data_by_path(prefix: str, session: Optional[Session] = Non
     ret: Dict[str, Dict[str, Any]] = {}
     for page in response_iterator:
         for par in page.get("Parameters"):
-            ret[par["Name"]] = json.loads(par["Value"])
+            try:
+                ret[par["Name"]] = json.loads(par["Value"])
+            except json.decoder.JSONDecodeError:
+                _logger.warn("Parameter %s cannot be parsed, returning it as-is", par["Name"])
+                ret[par["Name"]] = par["Value"]
     return ret
 
 

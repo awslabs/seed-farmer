@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- corecting urllib hard dependency version
 
 ## v2.10.3 (2023-09-22)
 

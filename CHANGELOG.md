@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- updating `urllib~=1.26.17` for http-cookie vulnerability
 
 ### Fixes
 - corecting urllib hard dependency version

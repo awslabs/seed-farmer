@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - corecting urllib hard dependency version
+- global and regional param resolution should usse account_alias instead of account_id
 
 ## v2.10.3 (2023-09-22)
 

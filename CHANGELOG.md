@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - updating `urllib~=1.26.17` for http-cookie vulnerability
+- update `aws-codeseeder~=0.10.1`
 
 ### Fixes
 - corecting urllib hard dependency version

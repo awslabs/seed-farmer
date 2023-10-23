@@ -6,7 +6,7 @@
 #
 arrow==1.2.3
     # via jinja2-time
-aws-codeseeder==0.10.0
+aws-codeseeder==0.10.1
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
@@ -18,6 +18,7 @@ botocore==1.29.125
     #   s3transfer
 certifi==2023.7.22
     # via
+    #   aws-codeseeder
     #   requests
     #   seed-farmer (setup.py)
 cfn-flip==1.3.0

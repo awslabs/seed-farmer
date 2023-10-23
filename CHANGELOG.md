@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+
+## v2.10.4 (2023-10-23)
+
+### New
+
+### Changes
 - updating `urllib~=1.26.17` for http-cookie vulnerability
 - update `aws-codeseeder~=0.10.1`
 

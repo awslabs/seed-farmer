@@ -54,6 +54,14 @@ def init_project(template_url: str) -> None:
 )
 @click.option("--module-name", "-m", type=str, help="The module name", required=True)
 @click.option(
+    "--module-type",
+    "-mt",
+    type=str,
+    help="The type of module coce deployed...only 'cdkv2' is accepted if used here",
+    required=False,
+    default=None,
+)
+@click.option(
     "--template-url",
     "-t",
     default="https://github.com/awslabs/seed-farmer.git",
@@ -63,7 +71,7 @@ def init_project(template_url: str) -> None:
     required=False,
 )
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
-def init_module(group_name: str, module_name: str, template_url: str, debug: bool) -> None:
+def init_module(group_name: str, module_name: str, module_type: str, template_url: str, debug: bool) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Initializing module %s", module_name)
@@ -71,5 +79,6 @@ def init_module(group_name: str, module_name: str, template_url: str, debug: boo
     minit.create_module_dir(
         group_name=group_name,
         module_name=module_name,
+        module_type=module_type,
         template_url=template_url,
     )

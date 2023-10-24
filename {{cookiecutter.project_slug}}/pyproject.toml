@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ["py36", "py37", "py38"]
+target-version = ["py37", "py38", "py39"]
 exclude = '''
 /(
     \.eggs
@@ -25,6 +25,11 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 120
-src_paths = ["{{ cookiecutter.project_name }}"]
-py_version = 36
+py_version = 38
 skip_gitignore = false
+
+[tool.pytest.ini_options]
+addopts = "-v --cov=. --cov-report term --cov-config=coverage.ini"
+pythonpath = [
+  "."
+]

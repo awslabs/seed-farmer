@@ -47,12 +47,33 @@ def test_module_init():
     import seedfarmer.mgmt.module_init as mi
 
     mi.create_module_dir(
-        module_name="mytestmodule", group_name="mygroup", template_url="https://github.com/awslabs/seed-farmer.git"
+        module_name="mytestmodule", group_name="mygroup", module_type=None, template_url="https://github.com/awslabs/seed-farmer.git"
     )
 
     with pytest.raises(Exception) as e:
         mi.create_module_dir(
-            module_name="mytestmodule", group_name="mygroup", template_url="https://github.com/awslabs/seed-farmer.git"
+            module_name="mytestmodule", group_name="mygroup", module_type=None, template_url="https://github.com/awslabs/seed-farmer.git"
+        )
+
+    assert "module mytestmodule already exists" in str(e)
+
+    shutil.rmtree(setup_mod_dir)
+    
+@pytest.mark.mgmt
+def test_module_init_cdkv2():
+    setup_mod_dir = os.path.join(pathlib.Path(os.getcwd()), "modules")
+
+    if os.path.isdir(setup_mod_dir):
+        shutil.rmtree(setup_mod_dir)
+    import seedfarmer.mgmt.module_init as mi
+
+    mi.create_module_dir(
+        module_name="mytestmodule", group_name="mygroup", module_type="cdkv2", template_url="https://github.com/awslabs/seed-farmer.git"
+    )
+
+    with pytest.raises(Exception) as e:
+        mi.create_module_dir(
+            module_name="mytestmodule", group_name="mygroup", module_type="cdkv2", template_url="https://github.com/awslabs/seed-farmer.git"
         )
 
     assert "module mytestmodule already exists" in str(e)

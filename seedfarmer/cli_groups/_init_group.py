@@ -57,7 +57,7 @@ def init_project(template_url: str) -> None:
     "--module-type",
     "-mt",
     type=str,
-    help="The type of module coce deployed...only 'cdkv2' is accepted if used here",
+    help="The type of module code deployed...only 'cdkv2' is accepted if used here",
     required=False,
     default=None,
 )

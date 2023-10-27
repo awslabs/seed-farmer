@@ -99,10 +99,17 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
+    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
+    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+    has_roles_attached = False
     if project_managed_policy_stack_exists:
+        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
+        policy = iam.get_policy_info(policy_arn=project_managed_policy_arn, session=session)
+        has_roles_attached = True if policy and policy["Policy"]["AttachmentCount"] > 0 else False
+
+    if project_managed_policy_stack_exists and not has_roles_attached:
         _logger.info(
             "Destroying Stack %s in Account/Region: %s/%s", info.PROJECT_MANAGED_POLICY_CFN_NAME, account_id, region
         )
@@ -117,6 +124,13 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
             _logger.info(
                 f"Failed to delete project stack {info.PROJECT_MANAGED_POLICY_CFN_NAME}, ignoring and moving on"
             )
+    else:
+        _logger.info(
+            "Stack %s in Account/Region: %s/%s is either not deployed or has roles attached",
+            info.PROJECT_MANAGED_POLICY_CFN_NAME,
+            account_id,
+            region,
+        )
 
 
 def destroy_module_stack(

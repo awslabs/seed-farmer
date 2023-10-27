@@ -121,14 +121,3 @@ def detach_inline_policy_from_role(role_name: str, policy_name: str, session: Op
         iam_resource.RolePolicy(role_name, policy_name).delete()
     except Exception as e:
         raise e
-
-
-def get_policy_info(policy_arn: str, session: Optional[Session] = None) -> Dict[Any, Any]:
-    iam_client = boto3_client("iam", session=session)
-    try:
-        return iam_client.get_policy(PolicyArn=policy_arn)
-    except iam_client.exceptions.NoSuchEntityException as ne:
-        _logger.info("Policy does not exist: %s ", policy_arn)
-        return {}
-    except Exception as e:
-        raise e

@@ -129,6 +129,6 @@ def get_policy_info(policy_arn: str, session: Optional[Session] = None) -> Dict[
         return cast(Dict[str, Any], (iam_client.get_policy(PolicyArn=policy_arn)))
     except iam_client.exceptions.NoSuchEntityException as ne:
         _logger.info("Policy does not exist: %s ", policy_arn)
-        raise e
+        raise ne
     except Exception as e:
         raise e

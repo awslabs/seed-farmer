@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding support for module-type spec on init of new module `seedfarmer init module -mt cdkv2`
 
 ### Fixes
+- skip destroy of managed-project-policy if it has roles attached
 
 
 ## v2.10.4 (2023-10-23)

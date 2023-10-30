@@ -59,6 +59,21 @@ targetAccountMappings:
 """
 )
 
+manage_policy_json={
+    "Policy": {
+        "PolicyName": "addf-managed-policy-ProjectPolicy-7PSXY0GVW23I",
+        "PolicyId": "ANPAY667V3NQ3CYB253RG",
+        "Arn": "arn:aws:iam::123456789012:policy/addf-managed-policy-ProjectPolicy-7PSXY0GVW23I",
+        "Path": "/",
+        "DefaultVersionId": "v1",
+        "AttachmentCount": 0,
+        "PermissionsBoundaryUsageCount": 0,
+        "IsAttachable": True,
+        "Description": "Managed Policy granting access to build a project",
+        "Tags": []
+    }
+}
+
 
 @pytest.mark.commands
 @pytest.mark.commands_stack
@@ -93,6 +108,7 @@ def test_destroy_managed_policy_stack_not_exists(session_manager, mocker):
 def test_destroy_managed_policy_stack(session_manager, mocker):
     mocker.patch("seedfarmer.commands._stack_commands.services.cfn.does_stack_exist", return_value=[True, {}])
     mocker.patch("seedfarmer.commands._stack_commands.services.cfn.destroy_stack", return_value=None)
+    mocker.patch("seedfarmer.commands._stack_commands.iam.get_policy_info", return_value=manage_policy_json)
     sc.destroy_managed_policy_stack(account_id="123456789012", region="us-east-1")
 
 

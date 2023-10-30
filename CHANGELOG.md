@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+## v2.10.5 (2023-10-20)
+
+### New
+
+### Changes
 - adding support for module-type spec on init of new module `seedfarmer init module -mt cdkv2`
 
 ### Fixes

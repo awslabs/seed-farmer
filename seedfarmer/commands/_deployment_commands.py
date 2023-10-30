@@ -860,9 +860,9 @@ def destroy(
         reaper_interval=session_timeout_interval,
     )
     destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
-    _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
-    destroy_manifest._partition = partition  # type: ignore
     if destroy_manifest:
+        _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
+        destroy_manifest._partition = partition
         destroy_manifest.validate_and_set_module_defaults()
         destroy_deployment(
             destroy_manifest,
@@ -870,6 +870,5 @@ def destroy(
             dryrun=dryrun,
             show_manifest=show_manifest,
         )
-
     else:
         _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

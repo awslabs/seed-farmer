@@ -24,17 +24,22 @@ from seedfarmer import config
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def create_module_dir(module_name: str, group_name: Optional[str], template_url: Optional[str]) -> None:
+def create_module_dir(
+    module_name: str, group_name: Optional[str], module_type: Optional[str], template_url: Optional[str]
+) -> None:
     """Initializes a directory for a new module.
 
     Creates a new directory that contains files that will aid in setting up a development environment
 
     Parameters
     ----------
-    group_name : str
+    group_name : Optional[str],
         Nmae of the group where the module will reside. If group is a nested dir, use `/` as a delimiter
     module_name : str
         Name of the module. The initialization will include project files pulled from the template_url
+    module_type: Optional[str]
+        They type of code the module deploys with, adding more boilerplate code
+        -- only cdkv2 is supported here
     template_url : Optional[List[str]]
         A URL, for example a Github repo, that is or contains templating for the initialization
     """
@@ -53,7 +58,8 @@ def create_module_dir(module_name: str, group_name: Optional[str], template_url:
     if os.path.exists(module_path):
         raise seedfarmer.errors.InvalidPathError(f"The module {module_name} already exists under {output_dir}.")
 
-    checkout_branch = "init-module" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
+    if template_url == "https://github.com/awslabs/seed-farmer.git":
+        checkout_branch = "init-module-cdkv2" if module_type == "cdkv2" else "init-module"
 
     _logger.info("New module will be created in the following dir: %s", output_dir)
     cookiecutter(

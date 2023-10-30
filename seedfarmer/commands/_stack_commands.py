@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -321,21 +321,29 @@ def deploy_module_stack(
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
-    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
-        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
-    )
 
-    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
-    if project_managed_policy_stack_exists:
-        if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):
-            _logger.info("The managed policy stack is not complete, waiting 60 seconds")
-            time.sleep(60)
-            project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
-                stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
-            )
+    def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
+        return cast(
+            Tuple[bool, Dict[str, str]],
+            services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session),
+        )
 
-            _logger.debug("project_managed_policy_output after delay is : %s", stack_outputs)
-        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
+    retries = 3
+    project_managed_policy_arn = None
+    while retries > 0:
+        project_managed_policy_stack_exists, stack_outputs = _check_stack_status()
+        if project_managed_policy_stack_exists:
+            if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):
+                _logger.info("The managed policy stack is not complete, waiting 30 seconds")
+                time.sleep(30)
+                retries -= 1
+            else:
+                _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+                project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN", None)
+                retries = -1
+        else:
+            _logger.debug("project_managed_policy_output does not exist")
+            retries = -1
 
     if not project_managed_policy_arn:
         raise seedfarmer.errors.InvalidConfigurationError(

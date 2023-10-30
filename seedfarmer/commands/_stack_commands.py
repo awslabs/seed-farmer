@@ -327,6 +327,14 @@ def deploy_module_stack(
 
     _logger.debug("project_managed_policy_output is : %s", stack_outputs)
     if project_managed_policy_stack_exists:
+        if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):
+            _logger.info("The managed policy stack is not complete, waiting 60 seconds")
+            time.sleep(60)
+            project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
+                stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
+            )
+
+            _logger.debug("project_managed_policy_output after delay is : %s", stack_outputs)
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
 
     if not project_managed_policy_arn:

@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
@@ -99,10 +99,17 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
+    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
+    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+    has_roles_attached = False
     if project_managed_policy_stack_exists:
+        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
+        policy = iam.get_policy_info(policy_arn=project_managed_policy_arn, session=session)
+        has_roles_attached = True if policy and policy["Policy"]["AttachmentCount"] > 0 else False
+
+    if project_managed_policy_stack_exists and not has_roles_attached:
         _logger.info(
             "Destroying Stack %s in Account/Region: %s/%s", info.PROJECT_MANAGED_POLICY_CFN_NAME, account_id, region
         )
@@ -117,6 +124,13 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
             _logger.info(
                 f"Failed to delete project stack {info.PROJECT_MANAGED_POLICY_CFN_NAME}, ignoring and moving on"
             )
+    else:
+        _logger.info(
+            "Stack %s in Account/Region: %s/%s is either not deployed or has roles attached",
+            info.PROJECT_MANAGED_POLICY_CFN_NAME,
+            account_id,
+            region,
+        )
 
 
 def destroy_module_stack(
@@ -307,13 +321,29 @@ def deploy_module_stack(
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
-    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
-        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
-    )
 
-    _logger.debug("project_managed_policy_output is : %s", stack_outputs)
-    if project_managed_policy_stack_exists:
-        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
+    def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
+        return cast(
+            Tuple[bool, Dict[str, str]],
+            services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session),
+        )
+
+    retries = 3
+    project_managed_policy_arn = None
+    while retries > 0:
+        project_managed_policy_stack_exists, stack_outputs = _check_stack_status()
+        if project_managed_policy_stack_exists:
+            if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):
+                _logger.info("The managed policy stack is not complete, waiting 30 seconds")
+                time.sleep(30)
+                retries -= 1
+            else:
+                _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+                project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN", None)
+                retries = -1
+        else:
+            _logger.debug("project_managed_policy_output does not exist")
+            retries = -1
 
     if not project_managed_policy_arn:
         raise seedfarmer.errors.InvalidConfigurationError(

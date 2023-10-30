@@ -12,7 +12,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding support for module-type spec on init of new module `seedfarmer init module -mt cdkv2`
 
 ### Fixes
-
+- skip destroy of managed-project-policy if it has roles attached
+- if managed-project-policy is in an `*_IN_PROCESS` state, wait 60 seconds and check again
+  - bumps `aws-codeseeder~=0.10.2`
 
 ## v2.10.4 (2023-10-23)
 

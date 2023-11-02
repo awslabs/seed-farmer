@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- BREAKING CHANGE*** - the checksum calculation used to trigger module redeploy has changed
+- Existing deployed modules may incur a redeployment when going from a previous version
+  - resolve global/regional parameters when calculating checksum for individual module redeploy
+  - resolve env parameters when calculating checksum for individual module redeploy
 
 ### Changes
 

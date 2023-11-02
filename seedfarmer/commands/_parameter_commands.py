@@ -20,9 +20,10 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 from aws_codeseeder import EnvVar, EnvVarType
 
 import seedfarmer.errors
+import seedfarmer.mgmt.module_info as mi
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
-from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import upper_snake_case
 
@@ -108,6 +109,65 @@ def load_parameter_values(
                     )
 
     return parameter_values
+
+
+def resolve_params_for_checksum(
+    deployment_manifest: DeploymentManifest, module: ModuleManifest, group_name: str
+) -> None:
+    for param in module.parameters:
+        if param.value_from and param.value_from.parameter_store:
+            if ":" in param.value_from.parameter_store:
+                raise seedfarmer.errors.InvalidConfigurationError(
+                    f"CodeBuild does not support Versioned SSM Parameters -- see {group_name}-{module.name}"
+                )
+            param.version = mi.get_ssm_parameter_version(
+                ssm_parameter_name=param.value_from.parameter_store,
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(
+                    account_id=cast(str, module.get_target_account_id()),
+                    region_name=cast(str, module.target_region),
+                ),
+            )
+
+        elif param.value_from and param.value_from.secrets_manager:
+            param_name = param.value_from.secrets_manager
+            version_ref = None
+            if ":" in param_name:
+                parsed = param_name.split(":")
+                param_name = parsed[0]
+                version_ref = parsed[2] if len(parsed) == 3 else None
+
+            param.version = mi.get_secrets_version(
+                secret_name=param_name,
+                version_ref=version_ref,
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(
+                    account_id=cast(str, module.get_target_account_id()),
+                    region_name=cast(str, module.target_region),
+                ),
+            )
+        elif param.value_from and param.value_from.parameter_value:
+            p_value = deployment_manifest.get_parameter_value(
+                parameter=param.value_from.parameter_value,
+                account_alias=module.target_account,
+                region=module.target_region,
+            )
+            if p_value is not None:
+                param.resolved_value = str(p_value) if isinstance(p_value, str) else json.dumps(p_value)
+            else:
+                raise seedfarmer.errors.InvalidManifestError(
+                    f"The parameter value defined ({param.value_from.parameter_value}) is not available"
+                )
+
+        elif param.value_from and param.value_from.env_variable:
+            if param.value_from.env_variable in os.environ:
+                param.resolved_value = os.getenv(param.value_from.env_variable)
+            else:
+                raise seedfarmer.errors.InvalidManifestError(
+                    f"The environment variable ({param.value_from.env_variable}) is not available"
+                )
 
 
 def _get_param_value_cache(

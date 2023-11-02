@@ -27,9 +27,8 @@ from git import Repo  # type: ignore
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
 import seedfarmer.mgmt.deploy_utils as du
-import seedfarmer.mgmt.module_info as mi
 from seedfarmer import commands, config
-from seedfarmer.commands._parameter_commands import load_parameter_values
+from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -592,41 +591,9 @@ def deploy_deployment(
                 data_files=module.data_files,
                 excluded_files=md5_excluded_module_files,
             )
-
-            for param in module.parameters:
-                if param.value_from and param.value_from.parameter_store:
-                    if ":" in param.value_from.parameter_store:
-                        raise seedfarmer.errors.InvalidConfigurationError(
-                            f"CodeBuild does not support Versioned SSM Parameters -- see {group.name}-{module.name}"
-                        )
-                    param.version = mi.get_ssm_parameter_version(
-                        ssm_parameter_name=param.value_from.parameter_store,
-                        session=SessionManager()
-                        .get_or_create()
-                        .get_deployment_session(
-                            account_id=cast(str, module.get_target_account_id()),
-                            region_name=cast(str, module.target_region),
-                        ),
-                    )
-
-                elif param.value_from and param.value_from.secrets_manager:
-                    param_name = param.value_from.secrets_manager
-                    version_ref = None
-                    if ":" in param_name:
-                        parsed = param_name.split(":")
-                        param_name = parsed[0]
-                        version_ref = parsed[2] if len(parsed) == 3 else None
-
-                    param.version = mi.get_secrets_version(
-                        secret_name=param_name,
-                        version_ref=version_ref,
-                        session=SessionManager()
-                        .get_or_create()
-                        .get_deployment_session(
-                            account_id=cast(str, module.get_target_account_id()),
-                            region_name=cast(str, module.target_region),
-                        ),
-                    )
+            resolve_params_for_checksum(
+                deployment_manifest=deployment_manifest_wip, module=module, group_name=group.name
+            )
 
             module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()

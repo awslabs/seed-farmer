@@ -284,6 +284,7 @@ def test_execute_destroy(session_manager, mocker):
     )
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module", return_value=mod_resp)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.force_manage_policy_attach", return_value=None)
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
     dc._execute_destroy(
         group_name=group.name,

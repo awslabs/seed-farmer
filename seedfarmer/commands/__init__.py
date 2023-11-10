@@ -25,6 +25,7 @@ from seedfarmer.commands._stack_commands import (
     destroy_managed_policy_stack,
     destroy_module_stack,
     destroy_seedkit,
+    force_manage_policy_attach,
     get_module_stack_info,
 )
 
@@ -46,4 +47,5 @@ __all__ = [
     "bootstrap_target_account",
     "get_default_project_policy",
     "load_network_values",
+    "force_manage_policy_attach",
 ]

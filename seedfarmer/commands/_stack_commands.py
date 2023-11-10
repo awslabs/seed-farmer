@@ -18,6 +18,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+import boto3
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
 
@@ -43,6 +44,37 @@ class StackInfo(object):
 
 
 info = StackInfo()
+
+
+def _get_project_managed_policy_arn(session: boto3.Session) -> str:
+    def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
+        return cast(
+            Tuple[bool, Dict[str, str]],
+            services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session),
+        )
+
+    retries = 3
+    while retries > 0:
+        project_managed_policy_stack_exists, stack_outputs = _check_stack_status()
+        if project_managed_policy_stack_exists:
+            if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):  # type: ignore
+                _logger.info("The managed policy stack is not complete, waiting 30 seconds")
+                time.sleep(30)
+                retries -= 1
+            else:
+                _logger.debug("project_managed_policy_output is : %s", stack_outputs)
+                project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN", None)
+                retries = -1
+        else:
+            _logger.debug("project_managed_policy_output does not exist")
+            retries = -1
+
+    if not project_managed_policy_arn:
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Project Managed Stack is missing the export `ProjectPolicyARN`"
+        )
+    else:
+        return project_managed_policy_arn
 
 
 def deploy_managed_policy_stack(
@@ -321,34 +353,7 @@ def deploy_module_stack(
         seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
 
     # Extract Project Managed policy name
-
-    def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
-        return cast(
-            Tuple[bool, Dict[str, str]],
-            services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session),
-        )
-
-    retries = 3
-    project_managed_policy_arn = None
-    while retries > 0:
-        project_managed_policy_stack_exists, stack_outputs = _check_stack_status()
-        if project_managed_policy_stack_exists:
-            if stack_outputs.get("StackStatus") and "_IN_PROGRESS" in stack_outputs.get("StackStatus"):
-                _logger.info("The managed policy stack is not complete, waiting 30 seconds")
-                time.sleep(30)
-                retries -= 1
-            else:
-                _logger.debug("project_managed_policy_output is : %s", stack_outputs)
-                project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN", None)
-                retries = -1
-        else:
-            _logger.debug("project_managed_policy_output does not exist")
-            retries = -1
-
-    if not project_managed_policy_arn:
-        raise seedfarmer.errors.InvalidConfigurationError(
-            "Project Managed Stack is missing the export `ProjectPolicyARN`"
-        )
+    project_managed_policy_arn = _get_project_managed_policy_arn(session=session)
 
     policies = [seedkit_managed_policy_arn, project_managed_policy_arn]
     policies_attached = iam.attach_policy_to_role(module_role_name, policies, session=session)
@@ -479,3 +484,24 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
     commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
+
+
+def force_manage_policy_attach(
+    deployment_name: str,
+    group_name: str,
+    module_name: str,
+    account_id: str,
+    region: str,
+    module_role_name: Optional[str] = None,
+) -> None:
+
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    if not module_role_name:
+        module_stack_name, module_role_name = get_module_stack_names(
+            deployment_name, group_name, module_name, session=session
+        )
+
+    project_managed_policy_arn = _get_project_managed_policy_arn(session=session)
+
+    policies = [project_managed_policy_arn]
+    iam.attach_policy_to_role(module_role_name, policies, session=session)

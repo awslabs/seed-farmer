@@ -237,6 +237,15 @@ def _execute_destroy(
         region=target_region,
     )
 
+    commands.force_manage_policy_attach(
+        deployment_name=cast(str, deployment_manifest.name),
+        group_name=group_name,
+        module_name=module_manifest.name,
+        account_id=target_account_id,
+        region=target_region,
+        module_role_name=module_role_name,
+    )
+
     resp = commands.destroy_module(
         deployment_name=cast(str, deployment_manifest.name),
         deployment_partition=cast(str, deployment_manifest._partition),

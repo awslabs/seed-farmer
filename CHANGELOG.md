@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- force attach the managed policy to the module role during `destroy`
 
 ### Fixes
 

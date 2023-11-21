@@ -152,6 +152,7 @@ def deploy_module(
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + md5_put + metadata_put,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
+            codebuild_environment_type=module_manifest.deploy_spec.environment_type,
             codebuild_role_name=module_role_name,
             codebuild_image=module_manifest.codebuild_image
             if module_manifest.codebuild_image is not None
@@ -244,6 +245,7 @@ def destroy_module(
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
+            codebuild_environment_type=module_manifest.deploy_spec.environment_type,
             codebuild_role_name=module_role_name,
             codebuild_image=module_manifest.codebuild_image
             if module_manifest.codebuild_image is not None
@@ -284,6 +286,7 @@ def _execute_module_commands(
     extra_post_build_commands: Optional[List[str]] = None,
     extra_env_vars: Optional[Dict[str, Any]] = None,
     codebuild_compute_type: Optional[str] = None,
+    codebuild_environment_type: Optional[str] = None,
     codebuild_role_name: Optional[str] = None,
     codebuild_image: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
@@ -313,6 +316,7 @@ def _execute_module_commands(
         codebuild_image=codebuild_image,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
         codebuild_compute_type=codebuild_compute_type,
+        codebuild_environment_type=codebuild_environment_type,
         extra_files=extra_file_bundle,
         boto3_session=session_getter,
     )
@@ -331,6 +335,7 @@ def _execute_module_commands(
         extra_post_build_commands: Optional[List[str]] = None,
         extra_env_vars: Optional[Dict[str, Any]] = None,
         codebuild_compute_type: Optional[str] = None,
+        codebuild_environment_type: Optional[str] = None,
     ) -> str:
         deploy_info = {
             "aws_region": os.environ.get("AWS_DEFAULT_REGION"),

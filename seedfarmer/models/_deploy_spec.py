@@ -30,6 +30,15 @@ class BuildType(Enum):
     BUILD_LAMBDA_10GB = "BUILD_LAMBDA_10GB"
 
 
+class EnvironmentType(Enum):
+    ARM_CONTAINER = "ARM_CONTAINER"
+    LINUX_CONTAINER = "LINUX_CONTAINER"
+    LINUX_GPU_CONTAINER = "LINUX_GPU_CONTAINER"
+    WINDOWS_SERVER_2019_CONTAINER = "WINDOWS_SERVER_2019_CONTAINER"
+    ARM_LAMBDA_CONTAINER = "ARM_LAMBDA_CONTAINER"
+    LINUX_LAMBDA_CONTAINER = "LINUX_LAMBDA_CONTAINER"
+
+
 class BuildPhase(CamelModel):
     """
     BuildPhase
@@ -74,12 +83,24 @@ class DeploySpec(CamelModel):
     deploy: Optional[ExecutionType] = None
     destroy: Optional[ExecutionType] = None
     build_type: Optional[str] = None
+    environment_type: Optional[str] = None
     publish_generic_env_variables: Optional[bool] = False
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
+        import logging
+
+        _logger: logging.Logger = logging.getLogger(__name__)
+        _logger.debug("LUCAS DEBUG")
+        _logger.debug(data.keys())
+        _logger.debug(data["environment_type"])
         if data.get("build_type"):
             chk = str(data["build_type"]).upper()
             self.build_type = chk if chk in BuildType.__members__.keys() else BuildType.BUILD_GENERAL1_SMALL.value
         else:
             self.build_type = BuildType.BUILD_GENERAL1_SMALL.value
+        if data.get("environment_type"):
+            chk = str(data["environment_type"]).upper()
+            _logger.debug(f"LUCAS DEBUG: {chk}")
+            _logger.debug(f"LUCAS DEBUG: {EnvironmentType.__members__.keys()}")
+            self.environment_type = chk if chk in EnvironmentType.__members__.keys() else None

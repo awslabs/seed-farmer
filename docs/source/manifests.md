@@ -183,10 +183,10 @@ network:
       envVariable: SECURITYGROUPS
 ```
 The corresponding `.env` file would have the following defined (again, remember the lists!!):
-```code
+```bash
 VPCID="vpc-0c4cb9e06c9413222"
-PRIVATESUBNETS=["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]
-SECURITYGROUPS=["sg-049033188c114a3d2"]
+PRIVATESUBNETS='["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]'
+SECURITYGROUPS='["sg-049033188c114a3d2"]'
 ```
 (dependency-management)=
 ### Dependency Management
@@ -211,7 +211,7 @@ What does this mean?  Well, lets take the following module deployment order:
  **This is an important feature to understand: redeployment is not discriminant.**  SeedFarmer does not know how to assess what has changed in a module and its impact on downstream modules.  Nor does it have the ability to know if a module can incur a redeployment (as opposed to a destroy and deploy process).  That is up to you to determine with respect to the modules you are leveraging.  ANY change to the source code (deployspec, modulestack, comments in cdk code, etc.) will indicate to SeedFarmer that the module needs to be redeployed, even if the underlying logic / artifact has not changed.  
 
  Also, it is important to understand that this feature could put your deployment in an unusable state if the shared-responsibility model is not followed.
- For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `netowrking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
+ For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `networking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
 
 (module_manifest)=
 ## Module Manifest
@@ -420,7 +420,7 @@ parameters:
     valueFrom:
       parameterValue: mygreatkey
 ```
-`seed-farrmer` will first look in the Regional Parameters for a matching key, and return a string object (all json convert to a string) represening the value.  If not found, `seed-farrmer` will look in the Global Parameters for the same key and return that string-ified value.
+`seed-farmer` will first look in the Regional Parameters for a matching key, and return a string object (all json convert to a string) represening the value.  If not found, `seed-farrmer` will look in the Global Parameters for the same key and return that string-ified value.
 
 NOTE: the `network` section of the [deployment manifest](deployment_manifest) leverages Regional Parameters only!
 

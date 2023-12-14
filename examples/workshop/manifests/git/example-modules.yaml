@@ -1,0 +1,5 @@
+name: buckets
+path: git::https://github.com/awslabs/idf-modules/tree/release/1.2.0/modules/storage/buckets
+parameters:
+  - name: encryption-type
+    value: S3

@@ -1,0 +1,19 @@
+name: workshop
+toolchainRegion:
+  valueFrom:
+    envVariable: REGION
+groups:
+  - name: example
+    path: manifests/git/example-modules.yaml
+targetAccountMappings:
+  - alias: primary
+    accountId:
+      valueFrom:
+        envVariable: PRIMARY_ACCOUNT
+    default: true
+    regionMappings:
+      - region:
+        valueFrom:
+          envVariable: REGION
+        default: true
+

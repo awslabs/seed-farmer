@@ -1,7 +1,5 @@
 name: workshop
-toolchainRegion:
-  valueFrom:
-    envVariable: REGION
+toolchainRegion: us-east-1
 groups:
   - name: example
     path: manifests/git/example-modules.yaml
@@ -12,8 +10,6 @@ targetAccountMappings:
         envVariable: PRIMARY_ACCOUNT
     default: true
     regionMappings:
-      - region:
-        valueFrom:
-          envVariable: REGION
+      - region: us-east-1
         default: true
 

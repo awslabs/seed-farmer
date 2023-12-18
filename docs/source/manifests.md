@@ -244,9 +244,10 @@ dataFiles:
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
 ```
-- **name** - the name of the group
+- **name** - the name of the module
+  - this name must be unique in the group of the deployment
 - **path** - this element supports two sources of code:
-  - the relative path to the module code in the project
+  - the relative path to the module code in the project if deploying code from the local filesystem
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings

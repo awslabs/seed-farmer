@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- update `manifests/examples/` to point to an updated release branch
 
 ## v3.0.1 (2023-11-10)
 

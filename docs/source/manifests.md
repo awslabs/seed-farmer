@@ -9,6 +9,11 @@ The deployment manifest is the top level manifest and resides in the `modules` d
 
 ```yaml
 name: examples
+nameGenerator:
+  prefix: myprefix
+  suffix:
+    valueFrom:
+        envVariable: SUFFIX_ENV_VARIABLE
 toolchainRegion: us-west-2
 forceDependencyRedeploy: False
 groups:
@@ -69,6 +74,12 @@ targetAccountMappings:
 ```
 
 - **name** : this is the name of your deployment.  There can be only one deployment with this name in a project.
+  - THIS CANNOT BE USED WITH `nameGenerator`
+- **nameGenerator** : this supports dynamically generating a deployment name by concatenation of the following fields:
+  - **prefix** - the prefix string of the name
+  - **suffix** - the suffix string of the name
+  - Both of these fields support the use of [Environment Variables](envVariable) (see example above)
+  - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.

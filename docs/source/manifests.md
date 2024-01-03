@@ -9,6 +9,11 @@ The deployment manifest is the top level manifest and resides in the `modules` d
 
 ```yaml
 name: examples
+nameGenerator:
+  prefix: myprefix
+  suffix:
+    valueFrom:
+        envVariable: SUFFIX_ENV_VARIABLE
 toolchainRegion: us-west-2
 forceDependencyRedeploy: False
 groups:
@@ -69,6 +74,12 @@ targetAccountMappings:
 ```
 
 - **name** : this is the name of your deployment.  There can be only one deployment with this name in a project.
+  - THIS CANNOT BE USED WITH `nameGenerator`
+- **nameGenerator** : this supports dynamically generating a deployment name by concatenation of the following fields:
+  - **prefix** - the prefix string of the name
+  - **suffix** - the suffix string of the name
+  - Both of these fields support the use of [Environment Variables](envVariable) (see example above)
+  - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
@@ -244,9 +255,10 @@ dataFiles:
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
 ```
-- **name** - the name of the group
+- **name** - the name of the module
+  - this name must be unique in the group of the deployment
 - **path** - this element supports two sources of code:
-  - the relative path to the module code in the project
+  - the relative path to the module code in the project if deploying code from the local filesystem
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings

@@ -11,6 +11,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- update `manifests/examples/` to point to an updated release branch
+- Docs - manifest name description (seed-farmer/docs/source/manifests.md) needed correction
+- Docs - added definition of `nameGenerator` for deployment manifest (seed-farmer/docs/source/manifests.md)
 
 ## v3.0.1 (2023-11-10)
 

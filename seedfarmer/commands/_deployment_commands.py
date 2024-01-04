@@ -22,7 +22,7 @@ from urllib.parse import parse_qs
 
 import git
 import yaml
-from git import Repo
+from git import Repo  # type: ignore
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors

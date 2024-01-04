@@ -41,9 +41,9 @@ class NetworkMapping(CamelModel):
     This class provides network metadata
     """
 
-    vpc_id: Optional[Union[str, ValueFromRef]]
-    private_subnet_ids: Optional[Union[List[str], ValueFromRef]]
-    security_group_ids: Optional[Union[List[str], ValueFromRef]]
+    vpc_id: Optional[Union[str, ValueFromRef]] = None
+    private_subnet_ids: Optional[Union[List[str], ValueFromRef]] = None
+    security_group_ids: Optional[Union[List[str], ValueFromRef]] = None
 
 
 class RegionMapping(CamelModel):
@@ -66,7 +66,7 @@ class TargetAccountMapping(CamelModel):
     """
 
     alias: str
-    account_id: Union[str, ValueFromRef]
+    account_id: Union[int, str, ValueFromRef]
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
@@ -86,8 +86,8 @@ class TargetAccountMapping(CamelModel):
 
     @property
     def actual_account_id(self) -> str:
-        if isinstance(self.account_id, str):
-            return self.account_id
+        if isinstance(self.account_id, str) or isinstance(self.account_id, int):
+            return str(self.account_id)
         elif isinstance(self.account_id, ValueFromRef):
             if self.account_id.value_from and self.account_id.value_from.module_metadata is not None:
                 raise seedfarmer.errors.InvalidManifestError(
@@ -161,7 +161,7 @@ class DeploymentManifest(CamelModel):
     name_generator: Optional[NameGenerator] = None
     toolchain_region: str
     groups: List[ModulesManifest] = []
-    description: Optional[str]
+    description: Optional[str] = None
     target_account_mappings: List[TargetAccountMapping] = []
     force_dependency_redeploy: Optional[bool] = False
     _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)

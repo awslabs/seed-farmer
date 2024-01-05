@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- updating pydantic support from 1.X.X to 2.5.3
 
 ### Fixes
 - update `manifests/examples/` to point to an updated release branch

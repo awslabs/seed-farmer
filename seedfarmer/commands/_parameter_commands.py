@@ -57,7 +57,7 @@ def load_parameter_values(
     parameter_values_cache: Dict[Tuple[str, str, str], Any] = {}
     for parameter in parameters:
         if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("parameter: %s", parameter.dict())
+            _logger.debug("parameter: %s", parameter.model_dump())
 
         if parameter.value is not None:
             _logger.debug("static parameter value: %s", parameter.value)

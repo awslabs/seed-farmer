@@ -6,6 +6,7 @@ import boto3
 import pytest
 import yaml
 from moto import mock_sts
+import pydantic_core
 
 import seedfarmer.commands._parameter_commands as pc
 import seedfarmer.errors
@@ -256,9 +257,9 @@ def test_load_parameter_values_missing_param_value(session_manager, mocker):
     faulty_d["groups"][0]["modules"][0]["parameters"][4] = (
         {"name": "test-regional-param", "value_from": {"parameterValue": "regParamMissing"}},
     )
-    dep = DeploymentManifest(**faulty_d)
-    dep.validate_and_set_module_defaults()
-    with pytest.raises(seedfarmer.errors.InvalidManifestError):
+    with pytest.raises(pydantic_core._pydantic_core.ValidationError):
+        dep = DeploymentManifest(**faulty_d)
+        dep.validate_and_set_module_defaults()
         pc.load_parameter_values(
             deployment_name="mlops",
             deployment_manifest=dep,

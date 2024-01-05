@@ -551,7 +551,7 @@ def deploy_deployment(
 
         By default False
     """
-    deployment_manifest_wip = deployment_manifest.copy()
+    deployment_manifest_wip = deployment_manifest.model_copy()
     deployment_name = cast(str, deployment_manifest_wip.name)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
@@ -604,7 +604,9 @@ def deploy_deployment(
                 deployment_manifest=deployment_manifest_wip, module=module, group_name=group.name
             )
 
-            module.manifest_md5 = hashlib.md5(json.dumps(module.dict(), sort_keys=True).encode("utf-8")).hexdigest()
+            module.manifest_md5 = hashlib.md5(
+                json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
+            ).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
             _build_module = du.need_to_build(
@@ -704,7 +706,7 @@ def apply(
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path) as manifest_file:
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
-    _logger.debug(deployment_manifest.dict())
+    _logger.debug(deployment_manifest.model_dump())
 
     # Initialize the SessionManager for the entire project
     session_manager = SessionManager().get_or_create(
@@ -720,7 +722,9 @@ def apply(
     deployment_manifest._partition = partition
     if not dryrun:
         write_deployment_manifest(
-            cast(str, deployment_manifest.name), deployment_manifest.dict(), session=session_manager.toolchain_session
+            cast(str, deployment_manifest.name),
+            deployment_manifest.model_dump(),
+            session=session_manager.toolchain_session,
         )
 
     for module_group in deployment_manifest.groups:

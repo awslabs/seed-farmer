@@ -288,20 +288,20 @@ def prepare_ssm_for_deploy(
 
     # Remove the deployspec before writing...remove bloat as we write deployspec separately
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    module_manifest_wip = module_manifest.copy()
+    module_manifest_wip = module_manifest.model_copy()
     module_manifest_wip.deploy_spec = None
     mi.write_module_manifest(
         deployment=deployment_name,
         group=group_name,
         module=module_manifest.name,
-        data=module_manifest_wip.dict(),
+        data=module_manifest_wip.model_dump(),
         session=session,
     )
     mi.write_deployspec(
         deployment=deployment_name,
         group=group_name,
         module=module_manifest.name,
-        data=module_manifest.deploy_spec.dict(),
+        data=module_manifest.deploy_spec.model_dump(),
         session=session,
     ) if module_manifest.deploy_spec else None
     mi.write_module_md5(
@@ -343,7 +343,9 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
     for group in deployment_manifest.groups:
         delattr(group, "modules")
     session = SessionManager().get_or_create().toolchain_session
-    mi.write_deployed_deployment_manifest(deployment=deployment_name, data=deployment_manifest.dict(), session=session)
+    mi.write_deployed_deployment_manifest(
+        deployment=deployment_name, data=deployment_manifest.model_dump(), session=session
+    )
 
 
 def generate_deployed_manifest(
@@ -556,7 +558,7 @@ def write_group_manifest(deployment_name: str, group_manifest: ModulesManifest) 
         The ModulesManifest object of the groups to persist
     """
     g = group_manifest.name if group_manifest.name else ""
-    mi.write_group_manifest(deployment=deployment_name, group=g, data=group_manifest.dict())
+    mi.write_group_manifest(deployment=deployment_name, group=g, data=group_manifest.model_dump())
 
 
 def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index: ModuleInfoIndex) -> DeploymentManifest:
@@ -580,7 +582,7 @@ def filter_deploy_destroy(apply_manifest: DeploymentManifest, module_info_index:
     """
     deployment_name = cast(str, apply_manifest.name)
 
-    destroy_manifest = apply_manifest.copy()
+    destroy_manifest = apply_manifest.model_copy()
     delattr(destroy_manifest, "groups")
     destroy_group_list = _populate_groups_to_remove(deployment_name, apply_manifest.groups, module_info_index)
     destroy_manifest.groups = destroy_group_list
@@ -673,4 +675,4 @@ def update_deployspec(
     d_path = mi.get_deployspec_path(module_path=module_path)
     with open(d_path) as deploymentspec:
         new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
-    mi.write_deployspec(deployment, group, module, new_spec.dict(), session=session)
+    mi.write_deployspec(deployment, group, module, new_spec.model_dump(), session=session)

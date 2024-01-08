@@ -374,15 +374,14 @@ def _deploy_validated_deployment(
 
 
 def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
-    # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
-
     _logger.info("Priming Accounts")
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
-        def _prime_accounts(args: Dict[str, Any]) -> None:
+        def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
-            commands.deploy_seedkit(**args)
+            seedkit_stack_outputs = commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
+            return [args["account_id"], args["region"], seedkit_stack_outputs]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -401,7 +400,11 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
 
             params.append(param_d)
 
-        _ = list(workers.map(_prime_accounts, params))
+        output_seedkit = list(workers.map(_prime_accounts, params))
+        # add these to the region mappings for reference
+        for out_s in output_seedkit:
+            deployment_manifest.populate_seedkit_metadata(account_id=out_s[0], region=out_s[1], seedkit_dict=out_s[2])
+        _logger.debug(deployment_manifest.model_dump())
 
 
 def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:

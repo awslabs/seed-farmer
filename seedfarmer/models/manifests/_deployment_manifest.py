@@ -57,6 +57,7 @@ class RegionMapping(CamelModel):
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping] = None
     codebuild_image: Optional[str] = None
+    seedkit_metadata: Optional[Dict[str, Any]] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -284,11 +285,19 @@ class DeploymentManifest(CamelModel):
                 # Search the region_mappings for the region, if the codebuild_image is in region
                 for region_mapping in target_account.region_mappings:
                     if region == region_mapping.region or (use_default_region and region_mapping.default):
-                        return (
+                        image = (
                             region_mapping.codebuild_image
                             if region_mapping.codebuild_image is not None
                             else target_account.codebuild_image
                         )
+                        if (
+                            image is None
+                            and region_mapping.seedkit_metadata
+                            and region_mapping.seedkit_metadata.get("CodeBuildProjectBuildImage")
+                        ):
+                            image = region_mapping.seedkit_metadata["CodeBuildProjectBuildImage"]
+
+                        return image
         else:
             return None
 
@@ -324,3 +333,10 @@ class DeploymentManifest(CamelModel):
 
     def get_module(self, group: str, module: str) -> Optional[ModuleManifest]:
         return self._module_index.get((group, module), None)
+
+    def populate_seedkit_metadata(self, account_id: str, region: str, seedkit_dict: Dict[str, Any]) -> None:
+        for target_account in self.target_account_mappings:
+            for region_mapping in target_account.region_mappings:
+                if target_account.actual_account_id == account_id and region_mapping.region == region:
+                    region_mapping.seedkit_metadata = seedkit_dict
+                    break

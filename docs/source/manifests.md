@@ -91,14 +91,14 @@ targetAccountMappings:
   - **alias** - the logical name for an account, referenced by [`module manifests`](module_manifest)
   - **account** - the account id tied to the alias.  This parameter also supports [Environment Variables](envVariable)
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
-  - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+  - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
   - **regionMappings** - section to define region-specific configurations for the defined account, this is a list
     - **region** - the region name
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
-    - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+    - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
@@ -262,7 +262,7 @@ dataFiles:
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
-- **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+- **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
 - **dataFiles** - additional files to add to the bundle that are outside of the module code
   - this is LIST and EVERY element in the list must have the keyword **filePath**
@@ -288,13 +288,30 @@ When using this feature, any change to these file(s) (modifying, add to manifest
 ***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everthing so wet??)***
 
 
-(custombuildimage)=
-## Custom Codebuild Image
-`seed-farmer` is preconfigued to use the optimal build image and we recommend using it as-is (no need to leverage the `codebuildImage` manifest named paramter).  But, we get it....no one wants to be boxed in.</br>
-<b>USER BEWARE</b> - this is a feature meant for advanced users...use at own risk!
+(buildimageoverride)=
+## Codebuild Image Override
+An AWS Codebuild complaint image is provided for use with `seed-farmer` and we recommend using it as-is (no need to leverage the `codebuildImage` manifest named paramter).  But, we get it....no one wants to be boxed in.</br>
 
-### The Build Image
-An AWS Codebuild complaint image is provided for use with `seed-farmer` and the CLI is configured by default to use this image.  Advanced users have the option of building their own image and configuring their deployment to use it.  If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).
+<b>USER BEWARE</b> - this is a feature meant for advanced users...use at own risk!
+  
+Users can override the default build image via one of the following:
+- an AWS Curated Build Image
+- a custom-built image 
+
+#### AWS Curated Build Images
+There are multiple [build images and available runtimes](https://docs.aws.amazon.com/codebuild/latest/userguide/available-runtimes.html) that are supported by AWS Codebuild.  For `seed-farmer`, we currently support the following AWS Curated Images with the default runtimes installed:
+
+| AWS Curated Build Image | Confgured Runtimes|
+| ----------- | ----------- |    
+|aws/codebuild/standard:6.0|nodejs:16|
+||python:3.10|
+||java:corretto17|
+|aws/codebuild/standard:7.0|nodejs:18|
+||python:3.11|
+||java:corretto21|
+
+#### Custom Build Images
+If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).  It is up to the module developer to verify all proper libraries are installed and available.
 
 ### Logic for Rules -- Application
 There are three (3) places to configure a custom build image:

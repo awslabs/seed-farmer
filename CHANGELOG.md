@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - updating pydantic support from 1.X.X to 2.5.3
+- adding seedfarmer verions check support with `seedfarmer.yaml`
 
 ### Fixes
 - update `manifests/examples/` to point to an updated release branch

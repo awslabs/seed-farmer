@@ -27,13 +27,15 @@ It is important to have the ```seedfarmer.yaml``` at the root of your project.  
 project: <your project name>
 description: <your project description>
 projectPolicyPath: <relativepath/policyname.yaml>
+seedfarmer_version: <minimum required seedfermer version>
 ```
 - **project** (REQUIRED) - this is the name of the project that all deployments will reference 
 - **description** (OPTIONAL) - this is the description of the project
 - **projectPolicyPath** (OPTIONAL) - this allows advanced users change the project policy that has the basic minimim permissions seedfarmer needs
   - it consists of a path relative to the project root and MUST be a valid relative path
   - to synth the existing project policy, run `seedfarmer projectpolicy synth` 
-
+- **seedfarmer_version** (OPTIONAL) - this specifies what is the minimum allowable version of `seed-farmer` the project supports
+  - if this value is set AND the runtime version of seedfarmer is greater, `seed-farmer` will exit immediately
 
 
 (project_initalization)=

@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
-- adding AWS currated codebuild iamge override with opinionated runtimes
+- adding AWS curated codebuild iamge override with opinionated runtimes
 
 ### Changes
 - updating pydantic support from 1.X.X to 2.5.3

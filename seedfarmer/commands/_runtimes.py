@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Dict, Optional
 
 
-class CurratedBuildImages:
+class CuratedBuildImages:
     class ImageEnums(Enum):
         UBUNTU_STANDARD_6 = "aws/codebuild/standard:6.0"
         UBUNTU_STANDARD_7 = "aws/codebuild/standard:7.0"
@@ -27,10 +27,10 @@ class CurratedBuildImages:
 
 
 def get_runtimes(codebuild_image: Optional[str]) -> Optional[Dict[str, str]]:
-    image_vals = [cbi.value for cbi in CurratedBuildImages.ImageEnums]
+    image_vals = [cbi.value for cbi in CuratedBuildImages.ImageEnums]
     if codebuild_image in image_vals:
-        cir_d = {cir.name: cir.value for cir in CurratedBuildImages.ImageRuntimes}
-        k = CurratedBuildImages.ImageEnums(codebuild_image).name
+        cir_d = {cir.name: cir.value for cir in CuratedBuildImages.ImageRuntimes}
+        k = CuratedBuildImages.ImageEnums(codebuild_image).name
         return cir_d[k]
     else:
         return None

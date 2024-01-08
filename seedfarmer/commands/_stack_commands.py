@@ -435,7 +435,7 @@ def deploy_seedkit(
     vpc_id: Optional[str] = None,
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
-) -> None:
+) -> Dict[str, Any]:
     """
     deploy_seedkit
         Accessor method to CodeSeeder to deploy the SeedKit if not deployed
@@ -468,6 +468,9 @@ def deploy_seedkit(
         subnet_ids=private_subnet_ids,
         security_group_ids=security_group_ids,
     )
+    # Go get the outputs and return them
+    _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+    return dict(stack_outputs)
 
 
 def destroy_seedkit(account_id: str, region: str) -> None:

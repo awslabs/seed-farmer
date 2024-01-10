@@ -22,6 +22,7 @@ import pkg_resources
 import yaml
 from aws_codeseeder import LOGGER, codeseeder
 from aws_codeseeder.codeseeder import CodeSeederConfig
+from packaging.version import parse
 
 import seedfarmer.errors
 from seedfarmer.__metadata__ import __description__, __license__, __title__
@@ -90,6 +91,13 @@ class Config(object):
                 if self._project_spec.project_policy_path
                 else os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH)
             )
+            if self._project_spec.seedfarmer_version:
+                if parse(__version__) < parse(str(self._project_spec.seedfarmer_version)):
+                    msg = (
+                        f"The seedfarmer.yaml specified a minimum version: "
+                        f"{self._project_spec.seedfarmer_version} but you are using {__version__}"
+                    )
+                    raise seedfarmer.errors.SeedFarmerException(msg)
 
         @codeseeder.configure(self._project_spec.project.lower(), deploy_if_not_exists=True)
         def configure(configuration: CodeSeederConfig) -> None:
@@ -104,7 +112,6 @@ class Config(object):
                 'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
             ]
             configuration.python_modules = [f"seed-farmer=={__version__}"]
-            configuration.runtime_versions = {"nodejs": "16", "python": "3.10"}
 
     @property
     def PROJECT(self) -> str:

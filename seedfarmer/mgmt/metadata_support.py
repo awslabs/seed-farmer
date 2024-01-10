@@ -41,7 +41,7 @@ class ModuleMetadataSupport:
                 deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
             self.use_project_prefix = not deploy_spec.publish_generic_env_variables
         except Exception:
-            _logger.warn("Cannot read the deployspec, using project name as prefix (a non-generic module)")
+            _logger.warning("Cannot read the deployspec, using project name as prefix (a non-generic module)")
             self.use_project_prefix = True
 
     def get_ops_root_path(self) -> str:
@@ -157,5 +157,5 @@ def get_parameter_value(parameter_suffix: str) -> Optional[str]:
         _logger.info("Getting the Env Parameter tied to %s", key)
         return os.getenv(key)
     except Exception:
-        _logger.warn("Error looking for %s, returning None", key)
+        _logger.warning("Error looking for %s, returning None", key)
         return None

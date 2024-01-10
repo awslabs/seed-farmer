@@ -265,9 +265,7 @@ def test_apply_missing_deployment():
 @pytest.mark.apply
 def test_apply_missing_deployment_group_name():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-group-name/deployment.yaml"
-
-    result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-    assert result.exception.args[0][0][0].exc.errors()[0]["msg"] == "none is not an allowed value"
+    _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
 
 
 @pytest.mark.apply

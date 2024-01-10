@@ -30,11 +30,11 @@ class CodeSeederMetadata(CamelModel):
 
     _build_url: str = PrivateAttr()
 
-    aws_account_id: Optional[str]
-    aws_region: Optional[str]
-    aws_partition: Optional[str]
-    codebuild_build_id: Optional[str]
-    codebuild_log_path: Optional[str]
+    aws_account_id: Optional[str] = None
+    aws_region: Optional[str] = None
+    aws_partition: Optional[str] = None
+    codebuild_build_id: Optional[str] = None
+    codebuild_log_path: Optional[str] = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
@@ -53,11 +53,11 @@ class CodeSeederMetadata(CamelModel):
 class ModuleDeploymentResponse(CamelModel):
 
     deployment: str
-    group: Optional[str]
+    group: Optional[str] = None
     module: str
     status: str
-    codeseeder_metadata: Optional[CodeSeederMetadata]
-    codeseeder_output: Optional[Dict[Any, Any]]
+    codeseeder_metadata: Optional[CodeSeederMetadata] = None
+    codeseeder_output: Optional[Dict[Any, Any]] = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

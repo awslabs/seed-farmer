@@ -7,6 +7,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+
+## v3.1.0 (2024-01-22)
+
+### New
 - adding AWS curated codebuild iamge override with opinionated runtimes
 
 ### Changes

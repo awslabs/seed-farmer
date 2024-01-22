@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+  - updating readthedocs configs as site has changed their requirements
 
 ### Fixes
 

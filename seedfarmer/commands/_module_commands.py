@@ -26,6 +26,7 @@ from boto3 import Session
 
 import seedfarmer.errors
 from seedfarmer import config
+from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
@@ -136,6 +137,9 @@ def deploy_module(
         }
 
     _phases = module_manifest.deploy_spec.deploy.phases
+    active_codebuild_image = (
+        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else codebuild_image
+    )
     try:
         resp_dict_str, dict_metadata = _execute_module_commands(
             deployment_name=deployment_name,
@@ -153,9 +157,8 @@ def deploy_module(
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=module_role_name,
-            codebuild_image=module_manifest.codebuild_image
-            if module_manifest.codebuild_image is not None
-            else codebuild_image,
+            codebuild_image=active_codebuild_image,
+            runtime_versions=get_runtimes(active_codebuild_image),
         )
         _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
@@ -228,6 +231,9 @@ def destroy_module(
             for data_file in module_manifest.data_files
         }
 
+    active_codebuild_image = (
+        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else codebuild_image
+    )
     try:
         resp_dict_str, _ = _execute_module_commands(
             deployment_name=deployment_name,
@@ -245,9 +251,8 @@ def destroy_module(
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=module_role_name,
-            codebuild_image=module_manifest.codebuild_image
-            if module_manifest.codebuild_image is not None
-            else codebuild_image,
+            codebuild_image=active_codebuild_image,
+            runtime_versions=get_runtimes(active_codebuild_image),
         )
         resp = ModuleDeploymentResponse(
             deployment=deployment_name,
@@ -286,6 +291,7 @@ def _execute_module_commands(
     codebuild_compute_type: Optional[str] = None,
     codebuild_role_name: Optional[str] = None,
     codebuild_image: Optional[str] = None,
+    runtime_versions: Optional[Dict[str, str]] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session_getter: Optional[Callable[[], Session]] = None
 
@@ -315,6 +321,7 @@ def _execute_module_commands(
         codebuild_compute_type=codebuild_compute_type,
         extra_files=extra_file_bundle,
         boto3_session=session_getter,
+        runtime_versions=runtime_versions,
     )
     def _execute_module_commands(
         deployment_name: str,
@@ -331,6 +338,7 @@ def _execute_module_commands(
         extra_post_build_commands: Optional[List[str]] = None,
         extra_env_vars: Optional[Dict[str, Any]] = None,
         codebuild_compute_type: Optional[str] = None,
+        runtime_versions: Optional[Dict[str, str]] = None,
     ) -> str:
         deploy_info = {
             "aws_region": os.environ.get("AWS_DEFAULT_REGION"),

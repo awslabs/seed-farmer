@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from typing import Optional
+from typing import Optional, Union
 
 from seedfarmer.models._base import CamelModel
 
@@ -27,3 +27,4 @@ class ProjectSpec(CamelModel):
     project: str
     description: Optional[str] = None
     project_policy_path: Optional[str] = None
+    seedfarmer_version: Optional[Union[int, str]] = None

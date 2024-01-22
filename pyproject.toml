@@ -74,6 +74,7 @@ markers = [
     "commands_parameters: marks all `commands_parameters` tests",
     "commands_modules: marks all `commands_modules` tests",
     "commands_deployment: marks all `commands_deployment` tests",
+    "commands_bootstrap: marks all `commands_bootstrap` tests",
 ]
 log_cli_level = "INFO"
 addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=80"

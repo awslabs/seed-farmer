@@ -12,6 +12,22 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+
+## v3.1.0 (2024-01-22)
+
+### New
+- adding AWS curated codebuild iamge override with opinionated runtimes
+
+### Changes
+- updating pydantic support from 1.X.X to 2.5.3
+- adding seedfarmer verions check support with `seedfarmer.yaml`
+- updating `aws-codeseeder` dependency top 0.11.0
+
+### Fixes
+- update `manifests/examples/` to point to an updated release branch
+- Docs - manifest name description (seed-farmer/docs/source/manifests.md) needed correction
+- Docs - added definition of `nameGenerator` for deployment manifest (seed-farmer/docs/source/manifests.md)
+
 ## v3.0.1 (2023-11-10)
 
 ### New

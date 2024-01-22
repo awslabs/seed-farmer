@@ -41,9 +41,9 @@ class NetworkMapping(CamelModel):
     This class provides network metadata
     """
 
-    vpc_id: Optional[Union[str, ValueFromRef]]
-    private_subnet_ids: Optional[Union[List[str], ValueFromRef]]
-    security_group_ids: Optional[Union[List[str], ValueFromRef]]
+    vpc_id: Optional[Union[str, ValueFromRef]] = None
+    private_subnet_ids: Optional[Union[List[str], ValueFromRef]] = None
+    security_group_ids: Optional[Union[List[str], ValueFromRef]] = None
 
 
 class RegionMapping(CamelModel):
@@ -57,6 +57,7 @@ class RegionMapping(CamelModel):
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping] = None
     codebuild_image: Optional[str] = None
+    seedkit_metadata: Optional[Dict[str, Any]] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -66,7 +67,7 @@ class TargetAccountMapping(CamelModel):
     """
 
     alias: str
-    account_id: Union[str, ValueFromRef]
+    account_id: Union[int, str, ValueFromRef]
     default: bool = False
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
@@ -86,8 +87,8 @@ class TargetAccountMapping(CamelModel):
 
     @property
     def actual_account_id(self) -> str:
-        if isinstance(self.account_id, str):
-            return self.account_id
+        if isinstance(self.account_id, str) or isinstance(self.account_id, int):
+            return str(self.account_id)
         elif isinstance(self.account_id, ValueFromRef):
             if self.account_id.value_from and self.account_id.value_from.module_metadata is not None:
                 raise seedfarmer.errors.InvalidManifestError(
@@ -161,7 +162,7 @@ class DeploymentManifest(CamelModel):
     name_generator: Optional[NameGenerator] = None
     toolchain_region: str
     groups: List[ModulesManifest] = []
-    description: Optional[str]
+    description: Optional[str] = None
     target_account_mappings: List[TargetAccountMapping] = []
     force_dependency_redeploy: Optional[bool] = False
     _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)
@@ -284,11 +285,19 @@ class DeploymentManifest(CamelModel):
                 # Search the region_mappings for the region, if the codebuild_image is in region
                 for region_mapping in target_account.region_mappings:
                     if region == region_mapping.region or (use_default_region and region_mapping.default):
-                        return (
+                        image = (
                             region_mapping.codebuild_image
                             if region_mapping.codebuild_image is not None
                             else target_account.codebuild_image
                         )
+                        if (
+                            image is None
+                            and region_mapping.seedkit_metadata
+                            and region_mapping.seedkit_metadata.get("CodeBuildProjectBuildImage")
+                        ):
+                            image = region_mapping.seedkit_metadata["CodeBuildProjectBuildImage"]
+
+                        return image
         else:
             return None
 
@@ -324,3 +333,10 @@ class DeploymentManifest(CamelModel):
 
     def get_module(self, group: str, module: str) -> Optional[ModuleManifest]:
         return self._module_index.get((group, module), None)
+
+    def populate_seedkit_metadata(self, account_id: str, region: str, seedkit_dict: Dict[str, Any]) -> None:
+        for target_account in self.target_account_mappings:
+            for region_mapping in target_account.region_mappings:
+                if target_account.actual_account_id == account_id and region_mapping.region == region:
+                    region_mapping.seedkit_metadata = seedkit_dict
+                    break

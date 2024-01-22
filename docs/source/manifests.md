@@ -9,6 +9,11 @@ The deployment manifest is the top level manifest and resides in the `modules` d
 
 ```yaml
 name: examples
+nameGenerator:
+  prefix: myprefix
+  suffix:
+    valueFrom:
+        envVariable: SUFFIX_ENV_VARIABLE
 toolchainRegion: us-west-2
 forceDependencyRedeploy: False
 groups:
@@ -69,6 +74,12 @@ targetAccountMappings:
 ```
 
 - **name** : this is the name of your deployment.  There can be only one deployment with this name in a project.
+  - THIS CANNOT BE USED WITH `nameGenerator`
+- **nameGenerator** : this supports dynamically generating a deployment name by concatenation of the following fields:
+  - **prefix** - the prefix string of the name
+  - **suffix** - the suffix string of the name
+  - Both of these fields support the use of [Environment Variables](envVariable) (see example above)
+  - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
@@ -80,14 +91,14 @@ targetAccountMappings:
   - **alias** - the logical name for an account, referenced by [`module manifests`](module_manifest)
   - **account** - the account id tied to the alias.  This parameter also supports [Environment Variables](envVariable)
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
-  - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+  - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
   - **regionMappings** - section to define region-specific configurations for the defined account, this is a list
     - **region** - the region name
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
-    - **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+    - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
@@ -183,10 +194,10 @@ network:
       envVariable: SECURITYGROUPS
 ```
 The corresponding `.env` file would have the following defined (again, remember the lists!!):
-```code
+```bash
 VPCID="vpc-0c4cb9e06c9413222"
-PRIVATESUBNETS=["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]
-SECURITYGROUPS=["sg-049033188c114a3d2"]
+PRIVATESUBNETS='["subnet-0c36d3d5808f67a02","subnet-00fa1e71cddcf57d3"]'
+SECURITYGROUPS='["sg-049033188c114a3d2"]'
 ```
 (dependency-management)=
 ### Dependency Management
@@ -211,7 +222,7 @@ What does this mean?  Well, lets take the following module deployment order:
  **This is an important feature to understand: redeployment is not discriminant.**  SeedFarmer does not know how to assess what has changed in a module and its impact on downstream modules.  Nor does it have the ability to know if a module can incur a redeployment (as opposed to a destroy and deploy process).  That is up to you to determine with respect to the modules you are leveraging.  ANY change to the source code (deployspec, modulestack, comments in cdk code, etc.) will indicate to SeedFarmer that the module needs to be redeployed, even if the underlying logic / artifact has not changed.  
 
  Also, it is important to understand that this feature could put your deployment in an unusable state if the shared-responsibility model is not followed.
- For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `netowrking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
+ For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `networking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
 
 (module_manifest)=
 ## Module Manifest
@@ -244,13 +255,14 @@ dataFiles:
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
 ```
-- **name** - the name of the group
+- **name** - the name of the module
+  - this name must be unique in the group of the deployment
 - **path** - this element supports two sources of code:
-  - the relative path to the module code in the project
+  - the relative path to the module code in the project if deploying code from the local filesystem
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
-- **codebuildImage** - a custom build image to use (see [Custom Build Image](custombuildimage))
+- **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
 - **dataFiles** - additional files to add to the bundle that are outside of the module code
   - this is LIST and EVERY element in the list must have the keyword **filePath**
@@ -276,13 +288,30 @@ When using this feature, any change to these file(s) (modifying, add to manifest
 ***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everthing so wet??)***
 
 
-(custombuildimage)=
-## Custom Codebuild Image
-`seed-farmer` is preconfigued to use the optimal build image and we recommend using it as-is (no need to leverage the `codebuildImage` manifest named paramter).  But, we get it....no one wants to be boxed in.</br>
-<b>USER BEWARE</b> - this is a feature meant for advanced users...use at own risk!
+(buildimageoverride)=
+## Codebuild Image Override
+An AWS Codebuild complaint image is provided for use with `seed-farmer` and we recommend using it as-is (no need to leverage the `codebuildImage` manifest named paramter).  But, we get it....no one wants to be boxed in.</br>
 
-### The Build Image
-An AWS Codebuild complaint image is provided for use with `seed-farmer` and the CLI is configured by default to use this image.  Advanced users have the option of building their own image and configuring their deployment to use it.  If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).
+<b>USER BEWARE</b> - this is a feature meant for advanced users...use at own risk!
+  
+Users can override the default build image via one of the following:
+- an AWS Curated Build Image
+- a custom-built image 
+
+#### AWS Curated Build Images
+There are multiple [build images and available runtimes](https://docs.aws.amazon.com/codebuild/latest/userguide/available-runtimes.html) that are supported by AWS Codebuild.  For `seed-farmer`, we currently support the following AWS Curated Images with the default runtimes installed:
+
+| AWS Curated Build Image | Confgured Runtimes|
+| ----------- | ----------- |    
+|aws/codebuild/standard:6.0|nodejs:16|
+||python:3.10|
+||java:corretto17|
+|aws/codebuild/standard:7.0|nodejs:18|
+||python:3.11|
+||java:corretto21|
+
+#### Custom Build Images
+If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).  It is up to the module developer to verify all proper libraries are installed and available.
 
 ### Logic for Rules -- Application
 There are three (3) places to configure a custom build image:
@@ -420,7 +449,7 @@ parameters:
     valueFrom:
       parameterValue: mygreatkey
 ```
-`seed-farrmer` will first look in the Regional Parameters for a matching key, and return a string object (all json convert to a string) represening the value.  If not found, `seed-farrmer` will look in the Global Parameters for the same key and return that string-ified value.
+`seed-farmer` will first look in the Regional Parameters for a matching key, and return a string object (all json convert to a string) represening the value.  If not found, `seed-farrmer` will look in the Global Parameters for the same key and return that string-ified value.
 
 NOTE: the `network` section of the [deployment manifest](deployment_manifest) leverages Regional Parameters only!
 

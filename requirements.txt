@@ -8,7 +8,7 @@ annotated-types==0.6.0
     # via pydantic
 arrow==1.2.3
     # via jinja2-time
-aws-codeseeder==0.10.2
+aws-codeseeder==0.11.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter

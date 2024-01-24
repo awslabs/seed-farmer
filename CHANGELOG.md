@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v3.1.2 (2024-01-24)
+
+### New
+
+### Changes
+
+### Fixes
 - packaging library missing from setup
 
 ## v3.1.1 (2024-01-22)

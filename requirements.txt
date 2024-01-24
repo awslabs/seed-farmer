@@ -71,6 +71,8 @@ markupsafe==2.1.2
     # via jinja2
 mypy-extensions==1.0.0
     # via aws-codeseeder
+packaging==23.2
+    # via seed-farmer (setup.py)
 property-manager==3.0
     # via executor
 pydantic==2.5.3

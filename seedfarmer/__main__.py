@@ -104,6 +104,13 @@ def version() -> None:
     show_default=True,
     type=int,
 )
+@click.option(
+    "--update-seedkit/--no-update-seedkit",
+    default=False,
+    help="Force SeedFarmer to update the SeedKit if found",
+    show_default=True,
+    type=bool,
+)
 def apply(
     spec: str,
     profile: Optional[str],
@@ -115,6 +122,7 @@ def apply(
     show_manifest: bool,
     enable_session_timeout: bool,
     session_timeout_interval: int,
+    update_seedkit: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
@@ -136,6 +144,7 @@ def apply(
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
+        update_seedkit=update_seedkit,
     )
 
 

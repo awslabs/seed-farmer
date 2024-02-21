@@ -77,7 +77,15 @@ markers = [
     "commands_bootstrap: marks all `commands_bootstrap` tests",
 ]
 log_cli_level = "INFO"
-addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=80"
+addopts = "-v --cov=. --cov-report=term --cov-report=html"
 pythonpath = [
   "."
 ]
+
+[tool.pytest.coverage.run]
+omit = [
+  "test/*"
+]
+
+[tool.coverage.report]
+fail_under = 80.0

@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ["py36", "py37", "py38"]
+target-version = ["py37", "py38", "py39"]
 exclude = '''
 /(
     \.eggs
@@ -29,6 +29,13 @@ line_length = 120
 src_paths = ["seedfarmer"]
 py_version = 36
 skip_gitignore = false
+
+[tool.mypy]
+python_version = "3.7"
+strict = true
+ignore_missing_imports = true
+disallow_untyped_decorators = false
+exclude = "codeseeder.out/|examples/|modules/|test/|seedfarmer.gitmodules/"
 
 [tool.pytest.ini_options]
 markers = [

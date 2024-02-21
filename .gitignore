@@ -386,5 +386,3 @@ _build/
 
 # Pytest Setup
 /module/
-seedfarmer.yaml
-tmp-metadata

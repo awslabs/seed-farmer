@@ -161,6 +161,47 @@ def test_apply_deployment(mocker):
     command_output = _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
 
 
+@pytest.mark.first
+@pytest.mark.apply_working_module
+def test_apply_deployment__env_variables_no_env_file(mocker, caplog):
+    # Deploys a functioning module
+    mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
+
+    _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == ["Loading environment variables from .env"]
+
+
+@pytest.mark.first
+@pytest.mark.apply_working_module
+def test_apply_deployment__env_variables_single_env_file(mocker, caplog):
+    # Deploys a functioning module
+    mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
+
+    env_file = ".env.test"
+    _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file", env_file], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == [f"Loading environment variables from {env_file}"]
+
+
+@pytest.mark.first
+@pytest.mark.apply_working_module
+def test_apply_deployment__env_variables_multiple_env_files(mocker, caplog):
+    # Deploys a functioning module
+    mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
+
+    env_files = [".env.test", ".env.test2"]
+    _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == [f"Loading environment variables from {env_file}" for env_file in env_files]
+
+
 @pytest.mark.destroy
 def test_destroy_deployment_dry_run(mocker):
     # Destroy a functioning module
@@ -173,6 +214,40 @@ def test_destroy_deployment(mocker):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
     command_output = _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
+
+
+@pytest.mark.destroy
+def test_destroy__deployment_env_variables_no_env_file(mocker, caplog):
+    # Destroy a functioning module
+    mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+    _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == ["Loading environment variables from .env"]
+
+
+@pytest.mark.destroy
+def test_destroy__deployment_env_variables_single_env_file(mocker, caplog):
+    # Destroy a functioning module
+    mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+
+    env_file = ".env.test"
+    _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file", env_file], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == [f"Loading environment variables from {env_file}"]
+
+
+@pytest.mark.destroy
+def test_destroy__deployment_env_variables_multiple_env_files(mocker, caplog):
+    # Destroy a functioning module
+    mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+
+    env_files = [".env.test", ".env.test2"]
+    _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
+
+    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
+    assert env_messages == [f"Loading environment variables from {env_file}" for env_file in env_files]
 
 
 @pytest.mark.bootstrap

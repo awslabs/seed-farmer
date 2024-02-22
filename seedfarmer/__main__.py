@@ -14,17 +14,15 @@
 
 
 import logging
-import os
 from typing import List, Optional
 
 import click
-from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.utils import load_dotenv_files
 from seedfarmer.cli_groups import bootstrap, init, list, metadata, projectpolicy, remove, store
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

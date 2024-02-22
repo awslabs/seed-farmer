@@ -22,7 +22,6 @@ import yaml
 from boto3 import Session
 from dotenv import dotenv_values, load_dotenv
 
-
 from seedfarmer.services._service_utils import get_region, get_sts_identity_info
 
 _logger: logging.Logger = logging.getLogger(__name__)

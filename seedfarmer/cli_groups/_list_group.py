@@ -14,18 +14,15 @@
 
 import json
 import logging
-import os
 import sys
 from typing import List, Optional
 
 import click
-from dotenv import load_dotenv
 
 import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.utils import load_dotenv_files
 from seedfarmer.output_utils import (
     print_bolded,
     print_dependency_list,
@@ -34,6 +31,7 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
 )
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

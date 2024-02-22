@@ -11,7 +11,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - support list of env files using `--env-file`
 
 ### Changes
-
+- added `--update-seedkit` support to `apply` 
+  - SeedFarmer will no longer try to update the seedkit on every request
+  - Users can override this with the `--update-seedkit` flag in case AWS CodeSeeder has updated the SeedKit
 ### Fixes
 
 

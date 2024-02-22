@@ -373,7 +373,7 @@ def _deploy_validated_deployment(
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
 
-def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
+def prime_target_accounts(deployment_manifest: DeploymentManifest, update_seedkit: bool = False) -> None:
     _logger.info("Priming Accounts")
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
@@ -386,7 +386,11 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
 
-            param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            param_d = {
+                "account_id": target_account_region["account_id"],
+                "region": target_account_region["region"],
+                "update_seedkit": update_seedkit,
+            }
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
                     cast(NetworkMapping, target_account_region["network"]),
@@ -394,9 +398,9 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
                     target_account_region["account_id"],
                     target_account_region["region"],
                 )
-                param_d["vpc_id"] = network.vpc_id  # type: ignore
-                param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
-                param_d["security_group_ids"] = network.security_group_ids  # type: ignore
+                param_d["vpc_id"] = network.vpc_id
+                param_d["private_subnet_ids"] = network.private_subnet_ids
+                param_d["security_group_ids"] = network.security_group_ids
 
             params.append(param_d)
 
@@ -662,6 +666,7 @@ def apply(
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
+    update_seedkit: bool = False,
 ) -> None:
     """
     apply
@@ -752,7 +757,7 @@ def apply(
                 raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
-    prime_target_accounts(deployment_manifest=deployment_manifest)
+    prime_target_accounts(deployment_manifest=deployment_manifest, update_seedkit=update_seedkit)
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)

@@ -51,7 +51,7 @@ coverage[toml]==7.2.7
     # via
     #   coverage
     #   pytest-cov
-cryptography==42.0.2
+cryptography==42.0.4
     # via
     #   moto
     #   secretstorage

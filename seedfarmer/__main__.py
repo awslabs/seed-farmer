@@ -14,16 +14,15 @@
 
 
 import logging
-import os
-from typing import Optional
+from typing import List, Optional
 
 import click
-from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, init, list, metadata, projectpolicy, remove, store
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -65,8 +64,10 @@ def version() -> None:
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -116,7 +117,7 @@ def apply(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
     dry_run: bool,
     show_manifest: bool,
@@ -129,7 +130,7 @@ def apply(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     _logger.info("Apply request with manifest %s", spec)
     if dry_run:
@@ -186,8 +187,10 @@ def apply(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -217,7 +220,7 @@ def destroy(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
     enable_session_timeout: bool,
     session_timeout_interval: int,
@@ -227,7 +230,7 @@ def destroy(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     # MUST use seedfarmer.yaml so we can initialize codeseeder configs
     project = config.PROJECT

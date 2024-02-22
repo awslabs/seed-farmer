@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 
+- support list of env files using `--env-file`
+
 ### Changes
 - adding `AwsCodeSeederDeployed` and `SeedFarmerDeployed` to all module metadata output for reference (versions used to deploy successfully)
 - adding `AWS_CODESEEDER_VERSION` and `SEEDFARMER_VERSION` to all module environment parameters for reference (versions currently in use)

@@ -215,7 +215,8 @@ def test_apply_deployment__env_variables_single_env_file(mocker, env_file):
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment__env_variables_multiple_env_files(mocker, env_file, env_file2):
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_apply_deployment__env_variables_multiple_env_files(mocker, reverse_order, env_file, env_file2):
     # Deploys a functioning module
     mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
     mocker.patch.dict(os.environ, {}, clear=True)
@@ -223,10 +224,13 @@ def test_apply_deployment__env_variables_multiple_env_files(mocker, env_file, en
     deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
 
     env_files = [env_file, env_file2]
+    if reverse_order:
+        env_files = env_files[::-1]
+
     _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
 
     assert os.environ == {
-        "PRIMARY_ACCOUNT": "000000000000",
+        "PRIMARY_ACCOUNT": "123456789012" if reverse_order else "000000000000",
         "SECONDARY_ACCOUNT": "123456789012",
         "VPCID": "vpc-123456",
     }
@@ -269,16 +273,20 @@ def test_destroy__deployment_env_variables_single_env_file(mocker, env_file):
 
 
 @pytest.mark.destroy
-def test_destroy__deployment_env_variables_multiple_env_files(mocker, env_file, env_file2):
+@pytest.mark.parametrize("reverse_order", [False, True])
+def test_destroy__deployment_env_variables_multiple_env_files(mocker, reverse_order, env_file, env_file2):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
     mocker.patch.dict(os.environ, {}, clear=True)
 
     env_files = [env_file, env_file2]
+    if reverse_order:
+        env_files = env_files[::-1]
+
     _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
 
     assert os.environ == {
-        "PRIMARY_ACCOUNT": "000000000000",
+        "PRIMARY_ACCOUNT": "123456789012" if reverse_order else "000000000000",
         "SECONDARY_ACCOUNT": "123456789012",
         "VPCID": "vpc-123456",
     }

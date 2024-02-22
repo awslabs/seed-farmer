@@ -75,6 +75,16 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
         return {}
 
 
+def _read_metadata_env_param(mms: ModuleMetadataSupport) -> Dict[str, Any]:
+    p = mms.metadata_file_name()
+    if p in os.environ:
+        env_data = os.getenv(p)
+        return cast(Dict[str, Any], json.loads(str(env_data)))
+    else:
+        _logger.info("Cannot find existing metadata env param at %s, moving on", p)
+        return {}
+
+
 def _mod_dep_key(mms: ModuleMetadataSupport) -> str:
     return (
         f"{os.getenv(mms.project_param_name())}-"
@@ -107,15 +117,26 @@ def _clean_jq(jq: str) -> str:
 
 def add_json_output(json_string: str) -> None:
     mms = ModuleMetadataSupport()
-    existing_metadata = _read_metadata_file(mms=mms)
     json_new = json.loads(json_string)
-    _write_metadata_file(mms=mms, data={**json_new, **existing_metadata})
+    file_dict = _read_metadata_file(mms=mms)
+    json_new = {**json_new, **file_dict} if file_dict else json_new
+    _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
+    env_dict = _read_metadata_env_param(mms=mms)
+    json_new = {**json_new, **env_dict} if env_dict else json_new
+    _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
+    _write_metadata_file(mms=mms, data=json_new)
 
 
 def add_kv_output(key: str, value: str) -> None:
     mms = ModuleMetadataSupport()
-    data = _read_metadata_file(mms=mms)
+    data = {}
     data[key] = value
+    file_dict = _read_metadata_file(mms=mms)
+    data = {**data, **file_dict} if file_dict else data
+    _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
+    env_dict = _read_metadata_env_param(mms=mms)
+    data = {**data, **env_dict} if env_dict else data
+    _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
     _write_metadata_file(mms=mms, data=data)
 
 

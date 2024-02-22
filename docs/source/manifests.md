@@ -364,6 +364,8 @@ In this example, the `glue-db-suffix` parameter will be exposed to the CodeBuild
 ### Environment Variables
 `SeedFarmer` supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement.  When a file named `.env` is placed at the projecr root (where `seedfarmer.yaml` resides), any value in a manifest with a key of `envVariable` will be matched and replaced with the corresponding environment variable.  You can pass in overriding `.env` files by using the `--env-file` on CLI command invocation.
 
+`SeedFarmer` also supports passing multiple `.env`, by using `--env-file` multiple times. For example: `seedfarmer apply --env-file .env.shared --env-file .env.secret`. If the same value is present in multiple `.env` files, subsequent files will override the value from the previous one. In the aforementioned example, values from `.env.secret` will override values from `.env.shared`.
+
 ```yaml
 name: opensearch
 path: modules/core/opensearch/

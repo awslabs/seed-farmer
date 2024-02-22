@@ -205,7 +205,6 @@ def validate_module_dependencies(
     """
 
     def _get_module_list(manifest: DeploymentManifest) -> List[str]:
-
         module_list = []
         for group in manifest.groups:
             for module in group.modules:

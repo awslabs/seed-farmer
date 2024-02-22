@@ -498,7 +498,6 @@ def force_manage_policy_attach(
     region: str,
     module_role_name: Optional[str] = None,
 ) -> None:
-
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     if not module_role_name:
         module_stack_name, module_role_name = get_module_stack_names(

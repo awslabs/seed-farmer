@@ -18,7 +18,7 @@ import os
 from typing import List, Optional
 
 import click
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug

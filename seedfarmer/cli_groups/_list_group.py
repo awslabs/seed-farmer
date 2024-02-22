@@ -352,7 +352,6 @@ def list_module_metadata(
     for env_file in env_files:
         load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
 
-
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -450,7 +449,6 @@ def list_all_module_metadata(
 
     for env_file in env_files:
         load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
-
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -706,7 +704,6 @@ def list_build_env_params(
 
     for env_file in env_files:
         load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
-
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier

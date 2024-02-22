@@ -15,15 +15,16 @@ jobs:
   seedfarmer-cli:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.9,3.10.13]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     defaults:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Requirements
@@ -33,7 +34,7 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -e .
       - name: Mypy Check
-        run: mypy --ignore-missing-imports ./seedfarmer
+        run: mypy ./seedfarmer
       - name: Flake8 Check
         run: flake8 ./seedfarmer
       - name: Black Check

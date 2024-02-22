@@ -145,7 +145,6 @@ def _execute_deploy(
     permissions_boundary_arn: Optional[str] = None,
     codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
-
     parameters = load_parameter_values(
         deployment_name=cast(str, deployment_manifest.name),
         parameters=module_manifest.parameters,
@@ -385,7 +384,6 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest, update_seedki
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
-
             param_d = {
                 "account_id": target_account_region["account_id"],
                 "region": target_account_region["region"],

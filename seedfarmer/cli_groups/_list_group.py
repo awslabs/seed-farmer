@@ -25,6 +25,7 @@ import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
+from seedfarmer.utils import load_dotenv_files
 from seedfarmer.output_utils import (
     print_bolded,
     print_dependency_list,
@@ -140,8 +141,7 @@ def list_dependencies(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -237,8 +237,7 @@ def list_deployspec(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -349,8 +348,7 @@ def list_module_metadata(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -447,8 +445,7 @@ def list_all_module_metadata(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -544,8 +541,7 @@ def list_modules(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
 
@@ -702,8 +698,7 @@ def list_build_env_params(
     if project is None:
         project = _load_project()
 
-    for env_file in env_files:
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier

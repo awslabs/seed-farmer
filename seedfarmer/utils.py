@@ -14,11 +14,14 @@
 
 import hashlib
 import logging
-from typing import Optional
+import os
+from typing import List, Optional
 
 import humps
 import yaml
 from boto3 import Session
+from dotenv import dotenv_values, load_dotenv
+
 
 from seedfarmer.services._service_utils import get_region, get_sts_identity_info
 
@@ -158,3 +161,26 @@ def get_deployment_role_arn(
 
 def valid_qualifier(qualifer: str) -> bool:
     return True if ((len(qualifer) <= 6) and qualifer.isalnum()) else False
+
+
+def load_dotenv_files(root_path: str, env_files: List[str]) -> None:
+    """
+    Load the environment variables from the .env files
+
+    Parameters
+    ----------
+    root_path : str
+        The path to the root of the project
+    env_files : List[str]
+        The list of the .env files to load
+    """
+    loaded_values = {}
+
+    for env_file in env_files:
+        _logger.info("Loading environment variables from %s", env_file)
+        dotenv_path = os.path.join(root_path, env_file)
+
+        load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
+        loaded_values.update(dotenv_values(dotenv_path, verbose=True))
+
+    _logger.debug("Loaded environment variables: %s", loaded_values)

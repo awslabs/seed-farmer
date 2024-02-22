@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
+from seedfarmer.utils import load_dotenv_files
 from seedfarmer.cli_groups import bootstrap, init, list, metadata, projectpolicy, remove, store
 from seedfarmer.output_utils import print_bolded
 
@@ -131,9 +132,7 @@ def apply(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    for env_file in env_files:
-        _logger.info("Loading environment variables from %s", env_file)
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     _logger.info("Apply request with manifest %s", spec)
     if dry_run:
@@ -233,9 +232,7 @@ def destroy(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    for env_file in env_files:
-        _logger.info("Loading environment variables from %s", env_file)
-        load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     # MUST use seedfarmer.yaml so we can initialize codeseeder configs
     project = config.PROJECT

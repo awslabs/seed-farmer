@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 
+- support list of env files using `--env-file`
+
 ### Changes
 
 ### Fixes

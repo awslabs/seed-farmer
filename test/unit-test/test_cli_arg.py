@@ -49,6 +49,32 @@ def aws_credentials():
 
 
 @pytest.fixture(scope="function")
+def env_file():
+    path = os.path.join(_OPS_ROOT, ".env")
+
+    with open(path, "w") as f:
+        f.write("PRIMARY_ACCOUNT=123456789012\n")
+        f.write("VPCID=vpc-123456\n")
+
+    yield path
+
+    os.remove(path)
+
+
+@pytest.fixture(scope="function")
+def env_file2():
+    path = os.path.join(_OPS_ROOT, ".env.test2")
+
+    with open(path, "w") as f:
+        f.write("PRIMARY_ACCOUNT=000000000000\n")
+        f.write("SECONDARY_ACCOUNT=123456789012\n")
+
+    yield path
+
+    os.remove(path)
+
+
+@pytest.fixture(scope="function")
 def sts_client(aws_credentials):
     with mock_sts():
         yield boto3_client(service_name="sts", session=None)
@@ -163,43 +189,47 @@ def test_apply_deployment(mocker):
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment__env_variables_no_env_file(mocker, caplog):
+def test_apply_deployment__env_variables_no_env_file(mocker, env_file):
     # Deploys a functioning module
     mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
-    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
+    mocker.patch.dict(os.environ, {}, clear=True)
 
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
     _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == ["Loading environment variables from .env"]
+    assert os.environ == {"PRIMARY_ACCOUNT": "123456789012", "VPCID": "vpc-123456"}
 
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment__env_variables_single_env_file(mocker, caplog):
+def test_apply_deployment__env_variables_single_env_file(mocker, env_file):
     # Deploys a functioning module
     mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
-    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
+    mocker.patch.dict(os.environ, {}, clear=True)
 
-    env_file = ".env.test"
+    deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
     _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file", env_file], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == [f"Loading environment variables from {env_file}"]
+    assert os.environ == {"PRIMARY_ACCOUNT": "123456789012", "VPCID": "vpc-123456"}
 
 
 @pytest.mark.first
 @pytest.mark.apply_working_module
-def test_apply_deployment__env_variables_multiple_env_files(mocker, caplog):
+def test_apply_deployment__env_variables_multiple_env_files(mocker, env_file, env_file2):
     # Deploys a functioning module
     mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
+    mocker.patch.dict(os.environ, {}, clear=True)
+
     deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
 
-    env_files = [".env.test", ".env.test2"]
+    env_files = [env_file, env_file2]
     _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == [f"Loading environment variables from {env_file}" for env_file in env_files]
+    assert os.environ == {
+        "PRIMARY_ACCOUNT": "000000000000",
+        "SECONDARY_ACCOUNT": "123456789012",
+        "VPCID": "vpc-123456",
+    }
 
 
 @pytest.mark.destroy
@@ -217,37 +247,41 @@ def test_destroy_deployment(mocker):
 
 
 @pytest.mark.destroy
-def test_destroy__deployment_env_variables_no_env_file(mocker, caplog):
+def test_destroy__deployment_env_variables_no_env_file(mocker, env_file):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+    mocker.patch.dict(os.environ, {}, clear=True)
+
     _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == ["Loading environment variables from .env"]
+    assert os.environ == {"PRIMARY_ACCOUNT": "123456789012", "VPCID": "vpc-123456"}
 
 
 @pytest.mark.destroy
-def test_destroy__deployment_env_variables_single_env_file(mocker, caplog):
+def test_destroy__deployment_env_variables_single_env_file(mocker, env_file):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+    mocker.patch.dict(os.environ, {}, clear=True)
 
-    env_file = ".env.test"
     _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file", env_file], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == [f"Loading environment variables from {env_file}"]
+    assert os.environ == {"PRIMARY_ACCOUNT": "123456789012", "VPCID": "vpc-123456"}
 
 
 @pytest.mark.destroy
-def test_destroy__deployment_env_variables_multiple_env_files(mocker, caplog):
+def test_destroy__deployment_env_variables_multiple_env_files(mocker, env_file, env_file2):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
+    mocker.patch.dict(os.environ, {}, clear=True)
 
-    env_files = [".env.test", ".env.test2"]
+    env_files = [env_file, env_file2]
     _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
 
-    env_messages = [msg for msg in caplog.messages if msg.startswith("Loading environment variables from ")]
-    assert env_messages == [f"Loading environment variables from {env_file}" for env_file in env_files]
+    assert os.environ == {
+        "PRIMARY_ACCOUNT": "000000000000",
+        "SECONDARY_ACCOUNT": "123456789012",
+        "VPCID": "vpc-123456",
+    }
 
 
 @pytest.mark.bootstrap

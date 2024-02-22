@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 - adding `AwsCodeSeederDeployed` and `SeedFarmerDeployed` to all module metadata output for reference (versions used to deploy successfully)
 - adding `AWS_CODESEEDER_VERSION` and `SEEDFARMER_VERSION` to all module environment parameters for reference (versions currently in use)
+- added `--update-seedkit` support to `apply` 
+  - SeedFarmer will no longer try to update the seedkit on every request
+  - Users can override this with the `--update-seedkit` flag in case AWS CodeSeeder has updated the SeedKit
+
 ### Fixes
 
 

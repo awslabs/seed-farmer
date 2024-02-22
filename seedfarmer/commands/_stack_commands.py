@@ -435,6 +435,7 @@ def deploy_seedkit(
     vpc_id: Optional[str] = None,
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
+    update_seedkit: Optional[bool] = False,
 ) -> Dict[str, Any]:
     """
     deploy_seedkit
@@ -456,20 +457,20 @@ def deploy_seedkit(
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
-    if stack_exists:
-        _logger.debug("Updating SeedKit for Account/Region: %s/%s", account_id, region)
+    if stack_exists and not update_seedkit:
+        _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:
-        _logger.debug("Initializing SeedKit for Account/Region: %s/%s", account_id, region)
-    commands.deploy_seedkit(
-        seedkit_name=config.PROJECT,
-        deploy_codeartifact=deploy_codeartifact,
-        session=session,
-        vpc_id=vpc_id,
-        subnet_ids=private_subnet_ids,
-        security_group_ids=security_group_ids,
-    )
-    # Go get the outputs and return them
-    _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+        _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
+        commands.deploy_seedkit(
+            seedkit_name=config.PROJECT,
+            deploy_codeartifact=deploy_codeartifact,
+            session=session,
+            vpc_id=vpc_id,
+            subnet_ids=private_subnet_ids,
+            security_group_ids=security_group_ids,
+        )
+        # Go get the outputs and return them
+        _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     return dict(stack_outputs)
 
 

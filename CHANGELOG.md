@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
   - Users can override this with the `--update-seedkit` flag in case AWS CodeSeeder has updated the SeedKit
 
 ### Fixes
+- adding in workaround for manifests whose char length is greater than SSM limit of 8192 k
 
 
 ## v3.1.2 (2024-01-24)

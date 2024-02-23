@@ -12,8 +12,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import json
 import logging
 import os
+import sys
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -23,7 +25,7 @@ import seedfarmer.errors
 from seedfarmer import config
 from seedfarmer.services import _secrets_manager as secrets
 from seedfarmer.services import _ssm as ssm
-from seedfarmer.utils import generate_hash, generate_session_hash
+from seedfarmer.utils import generate_hash, generate_session_hash, remove_nulls
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -538,7 +540,15 @@ def write_module_manifest(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    ssm.put_parameter(name=_manifest_key(deployment, group, module), obj=data, session=session)
+
+    # Temp fix until a larger persistence store is vetted
+    process_data = data
+    current_size = sys.getsizeof(json.dumps(data))
+    if current_size > 8191:
+        _logger.info("The manifest for %s-%s is %s, too large for SSM, reducing", group, module, current_size)
+        process_data = remove_nulls(data)
+        _logger.info("The size is now %s", sys.getsizeof(json.dumps(process_data)))
+    ssm.put_parameter(name=_manifest_key(deployment, group, module), obj=process_data, session=session)
 
 
 def write_deployspec(

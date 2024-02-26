@@ -246,7 +246,8 @@ def test_write_module_manifest(aws_credentials, session, mocker):
     import seedfarmer.mgmt.module_info as mi
 
     mocker.patch("seedfarmer.mgmt.module_info.ssm.put_parameter", return_value=True)
-    mi.write_module_manifest(deployment="myapp", group="test", module="mymodule", data={"Hey", "Yo"}, session=session)
+    payload = {"Hey", "Yo"}
+    mi.write_module_manifest(deployment="myapp", group="test", module="mymodule", data=dict.fromkeys(payload, 0), session=session)
 
 
 @pytest.mark.mgmt

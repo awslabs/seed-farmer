@@ -15,7 +15,7 @@
 import hashlib
 import logging
 import os
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import humps
 import yaml
@@ -183,3 +183,12 @@ def load_dotenv_files(root_path: str, env_files: List[str]) -> None:
         loaded_values.update(dotenv_values(dotenv_path, verbose=True))
 
     _logger.debug("Loaded environment variables: %s", loaded_values)
+
+
+def remove_nulls(payload: Dict[str, Any]) -> Dict[str, Any]:
+    if isinstance(payload, dict):
+        return {k: remove_nulls(v) for k, v in payload.items() if v is not None}
+    elif isinstance(payload, list):
+        return [remove_nulls(v) for v in payload]
+    else:
+        return payload

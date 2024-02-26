@@ -476,6 +476,7 @@ def destroy_deployment(
 
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
                         return _execute_destroy(**args)
+
                     params = []
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None

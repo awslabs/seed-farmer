@@ -3,7 +3,6 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
-
 ## Unreleased
 
 ### New
@@ -11,6 +10,24 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v3.2.0 (2024-02-26)
+
+### New
+- support list of env files using `--env-file`
+
+### Changes
+- adding `AwsCodeSeederDeployed` and `SeedFarmerDeployed` to all module metadata output for reference (versions used to deploy successfully)
+- adding `AWS_CODESEEDER_VERSION` and `SEEDFARMER_VERSION` to all module environment parameters for reference (versions currently in use)
+- added `--update-seedkit` support to `apply` 
+  - SeedFarmer will no longer try to update the seedkit on every request
+  - Users can override this with the `--update-seedkit` flag in case AWS CodeSeeder has updated the SeedKit
+- added `--update-project_policy` support to `apply` 
+  - SeedFarmer will apply a changeset to the project policy when this flag is set
+
+### Fixes
+- adding in workaround for manifests whose char length is greater than SSM limit of 8192 k
 
 
 ## v3.1.2 (2024-01-24)

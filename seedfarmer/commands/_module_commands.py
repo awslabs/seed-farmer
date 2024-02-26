@@ -19,11 +19,13 @@ import os
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
+import aws_codeseeder
 import botocore.exceptions
 from aws_codeseeder import EnvVar, codeseeder
 from aws_codeseeder.errors import CodeSeederRuntimeError
 from boto3 import Session
 
+import seedfarmer
 import seedfarmer.errors
 from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
@@ -75,6 +77,8 @@ def _env_vars(
         env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
     # Add the partition to env for ease of fetching
     env_vars["AWS_PARTITION"] = deployment_partition
+    env_vars["AWS_CODESEEDER_VERSION"] = aws_codeseeder.__version__
+    env_vars["SEEDFARMER_VERSION"] = seedfarmer.__version__
     return env_vars
 
 
@@ -119,11 +123,13 @@ def deploy_module(
         )
     ]
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
+    sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v { aws_codeseeder.__version__} || true"]
+    cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
     metadata_put = [
         f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
         (
             f"echo ${metadata_env_variable} | seedfarmer store moduledata "
-            f"-d {deployment_name} -g {group_name} -m {module_manifest.name}"
+            f"-d {deployment_name} -g {group_name} -m {module_manifest.name} "
         ),
     ]
 
@@ -153,7 +159,12 @@ def deploy_module(
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
             extra_build_commands=["cd module/"] + _phases.build.commands,
-            extra_post_build_commands=["cd module/"] + _phases.post_build.commands + md5_put + metadata_put,
+            extra_post_build_commands=["cd module/"]
+            + _phases.post_build.commands
+            + md5_put
+            + sf_version__add
+            + cs_version_add
+            + metadata_put,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=module_role_name,

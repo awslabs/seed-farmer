@@ -78,7 +78,11 @@ def _get_project_managed_policy_arn(session: boto3.Session) -> str:
 
 
 def deploy_managed_policy_stack(
-    deployment_manifest: DeploymentManifest, account_id: str, region: str, **kwargs: Any
+    deployment_manifest: DeploymentManifest,
+    account_id: str,
+    region: str,
+    update_project_policy: Optional[bool] = False,
+    **kwargs: Any,
 ) -> None:
     """
     deploy_managed_policy_stack
@@ -98,7 +102,7 @@ def deploy_managed_policy_stack(
     project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
-    if not project_managed_policy_stack_exists:
+    if not project_managed_policy_stack_exists or update_project_policy:
         project_managed_policy_template = config.PROJECT_POLICY_PATH
         _logger.info("Resolved the ProjectPolicyPath %s", project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
@@ -435,6 +439,8 @@ def deploy_seedkit(
     vpc_id: Optional[str] = None,
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
+    update_seedkit: Optional[bool] = False,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """
     deploy_seedkit
@@ -456,20 +462,20 @@ def deploy_seedkit(
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
-    if stack_exists:
-        _logger.debug("Updating SeedKit for Account/Region: %s/%s", account_id, region)
+    if stack_exists and not update_seedkit:
+        _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:
-        _logger.debug("Initializing SeedKit for Account/Region: %s/%s", account_id, region)
-    commands.deploy_seedkit(
-        seedkit_name=config.PROJECT,
-        deploy_codeartifact=deploy_codeartifact,
-        session=session,
-        vpc_id=vpc_id,
-        subnet_ids=private_subnet_ids,
-        security_group_ids=security_group_ids,
-    )
-    # Go get the outputs and return them
-    _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+        _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
+        commands.deploy_seedkit(
+            seedkit_name=config.PROJECT,
+            deploy_codeartifact=deploy_codeartifact,
+            session=session,
+            vpc_id=vpc_id,
+            subnet_ids=private_subnet_ids,
+            security_group_ids=security_group_ids,
+        )
+        # Go get the outputs and return them
+        _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     return dict(stack_outputs)
 
 
@@ -497,7 +503,6 @@ def force_manage_policy_attach(
     region: str,
     module_role_name: Optional[str] = None,
 ) -> None:
-
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     if not module_role_name:
         module_stack_name, module_role_name = get_module_stack_names(

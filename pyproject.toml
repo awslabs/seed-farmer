@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ["py36", "py37", "py38"]
+target-version = ["py37", "py38", "py39", "py310", "py311"]
 exclude = '''
 /(
     \.eggs
@@ -27,8 +27,15 @@ use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 120
 src_paths = ["seedfarmer"]
-py_version = 36
+py_version = 37
 skip_gitignore = false
+
+[tool.mypy]
+python_version = "3.7"
+strict = true
+ignore_missing_imports = true
+disallow_untyped_decorators = false
+exclude = "codeseeder.out/|examples/|modules/|test/|seedfarmer.gitmodules/"
 
 [tool.pytest.ini_options]
 markers = [
@@ -77,7 +84,15 @@ markers = [
     "commands_bootstrap: marks all `commands_bootstrap` tests",
 ]
 log_cli_level = "INFO"
-addopts = "-v --cov=. --cov-report=term --cov-report=html --cov-config=coverage.ini --cov-fail-under=80"
+addopts = "-v --cov=. --cov-report=term --cov-report=html"
 pythonpath = [
   "."
 ]
+
+[tool.pytest.coverage.run]
+omit = [
+  "test/*"
+]
+
+[tool.coverage.report]
+fail_under = 80.0

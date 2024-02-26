@@ -14,12 +14,10 @@
 
 import json
 import logging
-import os
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import click
-from dotenv import load_dotenv
 
 import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
@@ -33,6 +31,7 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
 )
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -110,8 +109,10 @@ def list() -> None:
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -128,7 +129,7 @@ def list_dependencies(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -137,7 +138,8 @@ def list_dependencies(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -203,8 +205,10 @@ def list_dependencies(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -221,7 +225,7 @@ def list_deployspec(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -230,7 +234,8 @@ def list_deployspec(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -310,8 +315,10 @@ def list_deployspec(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -328,7 +335,7 @@ def list_module_metadata(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     export_local_env: bool,
     debug: bool,
 ) -> None:
@@ -338,7 +345,8 @@ def list_module_metadata(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -407,8 +415,10 @@ def list_module_metadata(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -423,7 +433,7 @@ def list_all_module_metadata(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -432,7 +442,8 @@ def list_all_module_metadata(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
@@ -500,8 +511,10 @@ def list_all_module_metadata(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -516,7 +529,7 @@ def list_modules(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
 ) -> None:
     if debug:
@@ -525,7 +538,9 @@ def list_modules(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
+
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -647,8 +662,10 @@ def list_deployments(
 )
 @click.option(
     "--env-file",
-    default=".env",
+    "env_files",
+    default=[".env"],
     help="A relative path to the .env file to load environment variables from",
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -666,7 +683,7 @@ def list_build_env_params(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     export_local_env: str,
     debug: bool,
 ) -> None:
@@ -678,7 +695,8 @@ def list_build_env_params(
 
     if project is None:
         project = _load_project()
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+
+    load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier

@@ -499,20 +499,20 @@ def destroy_deployment(
                                 }
                                 for _module in _group.modules
                             ]
-                    destroy_response = list(workers.map(_exec_destroy, params))
-                    _logger.debug(destroy_response)
-                    print_modules_build_info("Build Info Debug Data", destroy_response) if _logger.isEnabledFor(
-                        logging.DEBUG
-                    ) else None
-                    for dep_resp_object in destroy_response:
-                        if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
-                            _logger.error("At least one module failed to destroy...exiting deployment")
-                            print_errored_modules_build_info(
-                                "The following modules had errors destroying ", destroy_response
-                            )
-                            raise seedfarmer.errors.ModuleDeploymentError(
-                                error_message="At least one module failed to destroy...exiting deployment"
-                            )
+                            destroy_response = list(workers.map(_exec_destroy, params))
+                            _logger.debug(destroy_response)
+                            print_modules_build_info("Build Info Debug Data", destroy_response) if _logger.isEnabledFor(
+                                logging.DEBUG
+                            ) else None
+                            for dep_resp_object in destroy_response:
+                                if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
+                                    _logger.error("At least one module failed to destroy...exiting deployment")
+                                    print_errored_modules_build_info(
+                                        "The following modules had errors destroying ", destroy_response
+                                    )
+                                    raise seedfarmer.errors.ModuleDeploymentError(
+                                        error_message="At least one module failed to destroy...exiting deployment"
+                                    )
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:

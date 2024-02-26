@@ -23,7 +23,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - added `--update-seedkit` support to `apply` 
   - SeedFarmer will no longer try to update the seedkit on every request
   - Users can override this with the `--update-seedkit` flag in case AWS CodeSeeder has updated the SeedKit
-- added `--update-project_policy` support to `apply` 
+- added `--update-project-policy` support to `apply` 
   - SeedFarmer will apply a changeset to the project policy when this flag is set
 
 ### Fixes

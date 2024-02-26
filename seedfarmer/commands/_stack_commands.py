@@ -78,7 +78,11 @@ def _get_project_managed_policy_arn(session: boto3.Session) -> str:
 
 
 def deploy_managed_policy_stack(
-    deployment_manifest: DeploymentManifest, account_id: str, region: str, **kwargs: Any
+    deployment_manifest: DeploymentManifest,
+    account_id: str,
+    region: str,
+    update_project_policy: Optional[bool] = False,
+    **kwargs: Any,
 ) -> None:
     """
     deploy_managed_policy_stack
@@ -98,7 +102,7 @@ def deploy_managed_policy_stack(
     project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
-    if not project_managed_policy_stack_exists:
+    if not project_managed_policy_stack_exists or update_project_policy:
         project_managed_policy_template = config.PROJECT_POLICY_PATH
         _logger.info("Resolved the ProjectPolicyPath %s", project_managed_policy_template)
         if not os.path.exists(project_managed_policy_template):
@@ -436,6 +440,7 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
+    **kwargs: Any,
 ) -> Dict[str, Any]:
     """
     deploy_seedkit

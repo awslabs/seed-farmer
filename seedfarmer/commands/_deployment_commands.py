@@ -372,7 +372,9 @@ def _deploy_validated_deployment(
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
 
-def prime_target_accounts(deployment_manifest: DeploymentManifest, update_seedkit: bool = False) -> None:
+def prime_target_accounts(
+    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
+) -> None:
     _logger.info("Priming Accounts")
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
@@ -388,6 +390,7 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest, update_seedki
                 "account_id": target_account_region["account_id"],
                 "region": target_account_region["region"],
                 "update_seedkit": update_seedkit,
+                "update_project_policy": update_project_policy,
             }
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
@@ -474,6 +477,7 @@ def destroy_deployment(
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
                         return _execute_destroy(**args)
 
+                    params = []
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
 
@@ -665,6 +669,7 @@ def apply(
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
+    update_project_policy: bool = False,
 ) -> None:
     """
     apply
@@ -698,6 +703,10 @@ def apply(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
+    update_seedkit: bool
+        Force update run of seedkit, defaults to False
+    update_project_policy: bool
+        Force update run of managed project policy, defaults to False
 
     Raises
     ------
@@ -755,7 +764,11 @@ def apply(
                 raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
-    prime_target_accounts(deployment_manifest=deployment_manifest, update_seedkit=update_seedkit)
+    prime_target_accounts(
+        deployment_manifest=deployment_manifest,
+        update_seedkit=update_seedkit,
+        update_project_policy=update_project_policy,
+    )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)

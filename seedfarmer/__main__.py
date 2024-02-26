@@ -112,6 +112,13 @@ def version() -> None:
     show_default=True,
     type=bool,
 )
+@click.option(
+    "--update-project-policy/--no-update-project-policy",
+    default=False,
+    help="Force SeedFarmer to update the deployed Project Policy",
+    show_default=True,
+    type=bool,
+)
 def apply(
     spec: str,
     profile: Optional[str],
@@ -124,6 +131,7 @@ def apply(
     enable_session_timeout: bool,
     session_timeout_interval: int,
     update_seedkit: bool,
+    update_project_policy: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
@@ -146,6 +154,7 @@ def apply(
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
         update_seedkit=update_seedkit,
+        update_project_policy=update_project_policy,
     )
 
 

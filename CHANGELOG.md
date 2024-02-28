@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-
+- ordering of metadata when using helper commands was backwards in `metadata_support.py`
 
 ## v3.2.0 (2024-02-26)
 

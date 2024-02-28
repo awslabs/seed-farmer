@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+
+## v3.2.2 (2024-02-27)
+
+### New
+
+### Changes
 - handle errors in metadata support when cannot read from file of codebuild
 
 ### Fixes

@@ -122,7 +122,7 @@ def add_json_output(json_string: str) -> None:
     json_new = {**file_dict, **json_new} if file_dict else json_new
     _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
     env_dict = _read_metadata_env_param(mms=mms)
-    json_new = {**env_dict,**json_new} if env_dict else json_new
+    json_new = {**env_dict, **json_new} if env_dict else json_new
     _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
     _write_metadata_file(mms=mms, data=json_new)
 
@@ -132,10 +132,10 @@ def add_kv_output(key: str, value: str) -> None:
     data = {}
     data[key] = value
     file_dict = _read_metadata_file(mms=mms)
-    data = {**file_dict,**data} if file_dict else data
+    data = {**file_dict, **data} if file_dict else data
     _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
     env_dict = _read_metadata_env_param(mms=mms)
-    data = {**env_dict,**data} if env_dict else data
+    data = {**env_dict, **data} if env_dict else data
     _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
     _write_metadata_file(mms=mms, data=data)
 
@@ -161,7 +161,7 @@ def convert_cdkexports(
     existing_metadata = _read_metadata_file(mms)
 
     try:
-        _write_metadata_file(mms=mms, data={**existing_metadata,**json.loads(data)})
+        _write_metadata_file(mms=mms, data={**existing_metadata, **json.loads(data)})
     except json.decoder.JSONDecodeError:
         _logger.info("The CDK Export is not a string that can be converted to a JSON, ignoring this additional data")
         _logger.info("Offending metadata -- %s", data)

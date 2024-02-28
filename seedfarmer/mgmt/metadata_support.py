@@ -67,9 +67,13 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
     p = mms.metadata_fullpath()
     if Path(p).is_file():
         _logger.info("Reading metadata file at %s", p)
-        with open(Path(mms.metadata_fullpath()), "r") as metadatafile:
-            j = metadatafile.read()
-        return cast(Dict[str, Any], json.loads(j))
+        try:
+            with open(Path(mms.metadata_fullpath()), "r") as metadatafile:
+                j = metadatafile.read()
+            return cast(Dict[str, Any], json.loads(j))
+        except json.decoder.JSONDecodeError:
+            _logger.info("Cannot parse the file json")
+            return {}
     else:
         _logger.info("Cannot find existing metadata file at %s, moving on", p)
         return {}
@@ -78,8 +82,12 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
 def _read_metadata_env_param(mms: ModuleMetadataSupport) -> Dict[str, Any]:
     p = mms.metadata_file_name()
     if p in os.environ:
-        env_data = os.getenv(p)
-        return cast(Dict[str, Any], json.loads(str(env_data)))
+        try:
+            env_data = os.getenv(p)
+            return cast(Dict[str, Any], json.loads(str(env_data)))
+        except Exception:
+            _logger.info("Cannot parse the file env metadata")
+            return {}
     else:
         _logger.info("Cannot find existing metadata env param at %s, moving on", p)
         return {}

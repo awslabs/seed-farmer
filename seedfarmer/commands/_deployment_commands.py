@@ -17,6 +17,7 @@ import hashlib
 import json
 import logging
 import os
+import threading
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
@@ -308,9 +309,12 @@ def _deploy_validated_deployment(
         for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
 
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_deploy(**args)
 
                     def _render_permissions_boundary_arn(
@@ -376,9 +380,15 @@ def prime_target_accounts(
     deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
 ) -> None:
     _logger.info("Priming Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Prime-Accounts"
+    ) as workers:
 
         def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
@@ -415,9 +425,14 @@ def prime_target_accounts(
 def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Teardown-Accounts"
+    ) as workers:
 
         def _teardown_accounts(args: Dict[str, Any]) -> None:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
             if not retain_seedkit:
@@ -472,9 +487,14 @@ def destroy_deployment(
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=threads, thread_name_prefix="Destroy"
+                ) as workers:
 
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_destroy(**args)
 
                     params = []

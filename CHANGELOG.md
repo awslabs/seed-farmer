@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- renaming the threads spawned for deploy / destroy to indicate the module being worked on
 
 ### Fixes
 

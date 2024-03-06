@@ -21,8 +21,8 @@ import seedfarmer
 # -- Project information -----------------------------------------------------
 
 project = "Seed-Farmer"
-copyright = "2022, AWS Professional Seervices"
-author = "AWS Professional Seervices"
+copyright = "2022, AWS Professional Services"
+author = "AWS Professional Services"
 
 # The full version, including alpha/beta/rc tags
 release = seedfarmer.__version__

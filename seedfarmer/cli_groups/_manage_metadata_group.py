@@ -43,7 +43,7 @@ def metadata() -> None:
 @metadata.command(
     name="convert",
     help="""
-                  Convert the CDK Output of the module to SeedFarmer Metadata.  
+                  Convert the CDK Output of the module to SeedFarmer Metadata.
                   This command is meant to be run in the deployspec only!!!
                   """,
 )
@@ -72,7 +72,7 @@ def convert_cdkexports(
 
 @metadata.command(
     name="add",
-    help="""Add Output K,V to the Metadata. 
+    help="""Add Output K,V to the Metadata.
                   This command is meant to be run in the deployspec only!!!
                   """,
 )
@@ -126,7 +126,7 @@ def depmod() -> None:
 
 @metadata.command(
     name="paramvalue",
-    help="""Get the parameter value based on the suffix. 
+    help="""Get the parameter value based on the suffix.
         This command is meant to be run in the deployspec only!!!""",
 )
 @click.option(

@@ -70,7 +70,7 @@ def store() -> None:
 @click.option(
     "--path",
     type=str,
-    help="""The relative module path (ex. modules/optionals/networking) -- 
+    help="""The relative module path (ex. modules/optionals/networking) --
           *** DO NOT PASS IN filename `deployspec.yaml`""",
     required=True,
 )
@@ -158,7 +158,7 @@ def store_deployspec(
 
 @store.command(
     name="moduledata",
-    help="""CAT or pipe in a json or yaml object. 
+    help="""CAT or pipe in a json or yaml object.
             This command is meant to be run by seedfarmer ONLY!!! """,
 )
 @click.option(

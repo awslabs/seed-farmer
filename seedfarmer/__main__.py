@@ -40,7 +40,7 @@ def version() -> None:
 
 @click.command(help="Apply manifests to a SeedFarmer managed deployment")
 @click.argument(
-    "manifest-path",
+    "spec",
     type=str,
     required=True,
 )

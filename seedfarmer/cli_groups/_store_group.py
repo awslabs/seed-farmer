@@ -70,7 +70,8 @@ def store() -> None:
 @click.option(
     "--path",
     type=str,
-    help="The relative module path (ex. modules/optionals/networking) -- *** DO NOT PASS IN filename `deployspec.yaml`",
+    help="""The relative module path (ex. modules/optionals/networking) -- 
+          *** DO NOT PASS IN filename `deployspec.yaml`""",
     required=True,
 )
 @click.option(
@@ -101,13 +102,13 @@ def store() -> None:
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id to remove module data from, if specifed --target-region is required",
+    help="Account Id of the target accout to store deployspec, if specifed --target-region is required",
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region to remove module data from, if specifed --target-account-id is required",
+    help="Region of the target accout to store deployspec, if specifed --target-account-id is required",
     show_default=True,
 )
 @click.option(
@@ -155,7 +156,11 @@ def store_deployspec(
     du.update_deployspec(deployment, group, module, path, session=session)
 
 
-@store.command(name="moduledata", help="CAT or pipe in a json or yaml object")
+@store.command(
+    name="moduledata",
+    help="""CAT or pipe in a json or yaml object. 
+            This command is meant to be run by seedfarmer ONLY!!! """,
+)
 @click.option(
     "--deployment",
     "-d",
@@ -205,13 +210,13 @@ def store_deployspec(
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id to remove module data from, if specifed --target-region is required",
+    help="Account Id of the target accout to store module metadata, if specifed --target-region is required",
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region to remove module data from, if specifed --target-account-id is required",
+    help="Region of the target accout to store module metadata, if specifed --target-account-id is required",
     show_default=True,
 )
 @click.option(
@@ -259,7 +264,11 @@ def store_module_metadata(
         _logger.info("No Data avaiable...skipping")
 
 
-@store.command(name="md5", help="CAT or pipe in a string")
+@store.command(
+    name="md5",
+    help="""CAT or pipe in a string.
+            This command is meant to be run by seedfarmer ONLY!!!""",
+)
 @click.option(
     "--deployment",
     "-d",
@@ -316,13 +325,13 @@ def store_module_metadata(
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id to remove module data from, if specifed --target-region is required",
+    help="Account Id of the target accout to store md5, if specifed --target-region is required",
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region to remove module data from, if specifed --target-account-id is required",
+    help="Region of the target accout to store md5, if specifed --target-account-id is required",
     show_default=True,
 )
 @click.option(

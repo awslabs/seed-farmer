@@ -40,7 +40,13 @@ def metadata() -> None:
     pass
 
 
-@metadata.command(name="convert", help="Convert the CDK Output of the module to SeedFarmer Metadata")
+@metadata.command(
+    name="convert",
+    help="""
+                  Convert the CDK Output of the module to SeedFarmer Metadata.  
+                  This command is meant to be run in the deployspec only!!!
+                  """,
+)
 @click.option(
     "--jq-path",
     "-jq",
@@ -64,7 +70,12 @@ def convert_cdkexports(
     metadata_support.convert_cdkexports(jq_path=jq_path, json_file=json_file)
 
 
-@metadata.command(name="add", help="Add Output K,V to the Metadata")
+@metadata.command(
+    name="add",
+    help="""Add Output K,V to the Metadata. 
+                  This command is meant to be run in the deployspec only!!!
+                  """,
+)
 @click.option(
     "--key",
     "-k",
@@ -104,12 +115,20 @@ def add(key: str, value: str, jsonstring: str) -> None:
             raise seedfarmer.errors.InvalidConfigurationError("Must specify a key and value together")
 
 
-@metadata.command(name="depmod", help="Get the Full Name of the Module")
+@metadata.command(
+    name="depmod",
+    help="""Get the Full Name of the Module.
+        This command is meant to be run in the deployspec only!!!""",
+)
 def depmod() -> None:
     sys.stdout.write(metadata_support.get_dep_mod_name())
 
 
-@metadata.command(name="paramvalue", help="Get the parameter value based on the suffix")
+@metadata.command(
+    name="paramvalue",
+    help="""Get the parameter value based on the suffix. 
+        This command is meant to be run in the deployspec only!!!""",
+)
 @click.option(
     "--suffix",
     "-s",

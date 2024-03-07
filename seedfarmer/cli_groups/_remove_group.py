@@ -42,7 +42,12 @@ def remove() -> None:
     pass
 
 
-@remove.command(name="moduledata", help="Remove all SSM parameters tied to the module")
+@remove.command(
+    name="moduledata",
+    help="""Remove all SSM parameters tied to the module. 
+        This command is meant to be run by seedfarmer ONLY!!!
+        """,
+)
 @click.option(
     "--deployment",
     "-d",

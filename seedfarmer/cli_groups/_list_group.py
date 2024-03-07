@@ -111,7 +111,10 @@ def list() -> None:
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -207,7 +210,10 @@ def list_dependencies(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -317,7 +323,10 @@ def list_deployspec(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -417,7 +426,10 @@ def list_module_metadata(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -513,7 +525,10 @@ def list_all_module_metadata(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -664,7 +679,10 @@ def list_deployments(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )

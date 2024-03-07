@@ -40,7 +40,7 @@ def version() -> None:
 
 @click.command(help="Apply manifests to a SeedFarmer managed deployment")
 @click.argument(
-    "spec",
+    "manifest-path",
     type=str,
     required=True,
 )
@@ -66,7 +66,10 @@ def version() -> None:
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -198,7 +201,10 @@ def apply(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )

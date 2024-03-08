@@ -46,6 +46,8 @@ def remove() -> None:
     name="moduledata",
     help="""Remove all SSM parameters tied to the module.
         This command is meant to be run by seedfarmer ONLY!!!
+        It is run within the context of the build job.
+        Do not use this unless you are sure of the ramifications!
         """,
 )
 @click.option(
@@ -79,13 +81,13 @@ def remove() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="""The AWS profile used to create a session.""",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="""The AWS region used to create a session.""",
     required=False,
 )
 @click.option(

@@ -39,13 +39,20 @@ def _load_project() -> str:
         raise click.ClickException("Failed to determine project identifier")
 
 
-@click.group(name="store", help="Top Level command to support storing module metadata")
+@click.group(name="store", help="Top Level command to support storing module information")
 def store() -> None:
-    "Store module data"
+    "Store module information"
     pass
 
 
-@store.command(name="deployspec", help="Store/Update a deployspec of a currently deployed module")
+@store.command(
+    name="deployspec",
+    help="""Store/Update a deployspec of a currently deployed module.
+             Use this if you cannot destroy a deployed module because of a defect
+             in the the destroy portion of the deployspec.  USE WITH CAUTION as the
+             existing deployspec gets overwritten and is NOT recoverable.
+               """,
+)
 @click.option(
     "--deployment",
     "-d",
@@ -70,8 +77,8 @@ def store() -> None:
 @click.option(
     "--path",
     type=str,
-    help="""The relative module path (ex. modules/optionals/networking) --
-          *** DO NOT PASS IN filename `deployspec.yaml`""",
+    help="""The relative module path (ex. modules/optionals/networking) -
+     DO NOT PASS IN filename `deployspec.yaml`""",
     required=True,
 )
 @click.option(
@@ -84,31 +91,38 @@ def store() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for assuming toolchain role",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+     Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id of the target accout to store deployspec, if specifed --target-region is required",
+    help="""Account Id of the target accout to store deployspec, if specifed --target-region is required
+     You SHOULD NOT use this parameter as this command will leverage the SeedFarmer session manager!
+     It is meant for development purposes.
+    """,
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region of the target accout to store deployspec, if specifed --target-account-id is required",
+    help="""Region of the target accout to store deployspec, if specifed --target-account-id is required
+     You SHOULD NOT use this parameter as this command will leverage the SeedFarmer session manager!
+     It is meant for development purposes.
+    """,
     show_default=True,
 )
 @click.option(
@@ -159,7 +173,10 @@ def store_deployspec(
 @store.command(
     name="moduledata",
     help="""CAT or pipe in a json or yaml object.
-            This command is meant to be run by seedfarmer ONLY!!! """,
+      This command is meant to be run by seedfarmer ONLY!!!
+      It is run within the context of the build job.
+      Do not use this unless you are sure of the ramifications!
+    """,
 )
 @click.option(
     "--deployment",
@@ -192,19 +209,20 @@ def store_deployspec(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for asssuming toolchain role",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+     Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
@@ -307,19 +325,20 @@ def store_module_metadata(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for asssuming toolchain role",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+     Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(

@@ -1150,7 +1150,7 @@ def test_store_help():
         sub_command=store,
         options=["--help"],
         exit_code=0,
-        expected_output="Top Level command to support storing module metadata",
+        expected_output="Top Level command to support storing module information",
     )
 
 

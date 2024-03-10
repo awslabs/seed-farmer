@@ -47,26 +47,30 @@ def version() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region to use for boto3.Sessions",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain / target roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -87,7 +91,7 @@ def version() -> None:
 @click.option(
     "--show-manifest/--no-show-manifest",
     default=False,
-    help="Write out the generated deployment manifest",
+    help="Write out the generated deployment manifest to console",
     show_default=True,
     type=bool,
 )
@@ -108,14 +112,14 @@ def version() -> None:
 @click.option(
     "--update-seedkit/--no-update-seedkit",
     default=False,
-    help="Force SeedFarmer to update the SeedKit if found",
+    help="Force SeedFarmer to update the SeedKit when invoked",
     show_default=True,
     type=bool,
 )
 @click.option(
     "--update-project-policy/--no-update-project-policy",
     default=False,
-    help="Force SeedFarmer to update the deployed Project Policy",
+    help="Force SeedFarmer to update the deployed Project Policy when invoked",
     show_default=True,
     type=bool,
 )
@@ -179,26 +183,30 @@ def apply(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region to use for toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain / target role",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )

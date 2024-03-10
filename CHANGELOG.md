@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - renaming the threads spawned for deploy / destroy to indicate the module being worked on
+- adding detailed docs for CLI parameters
 
 ### Fixes
 

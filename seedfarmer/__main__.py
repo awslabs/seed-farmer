@@ -230,6 +230,16 @@ def apply(
     show_default=True,
     type=int,
 )
+@click.option(
+    "--remove-seedkit/--no-remove-seedkit",
+    default=False,
+    help="""Delete the seedkit after destroy of deployment.
+     NOTE: this will forcibly remove the seedkit for ALL deployments of this project.
+     Use with CAUTION.  If you are unsure, do not use this flag.
+    """,
+    show_default=True,
+    type=bool,
+)
 def destroy(
     deployment: str,
     dry_run: bool,
@@ -241,6 +251,7 @@ def destroy(
     debug: bool,
     enable_session_timeout: bool,
     session_timeout_interval: int,
+    remove_seedkit: bool,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
@@ -266,6 +277,7 @@ def destroy(
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
+        remove_seedkit=remove_seedkit,
     )
 
 

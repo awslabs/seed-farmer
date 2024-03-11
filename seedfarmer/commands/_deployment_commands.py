@@ -422,7 +422,7 @@ def prime_target_accounts(
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
     with concurrent.futures.ThreadPoolExecutor(
@@ -435,7 +435,8 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_se
             ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
-            if not retain_seedkit:
+            if remove_seedkit:
+                _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
 
         params = [
@@ -450,6 +451,7 @@ def destroy_deployment(
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
+    remove_seedkit: bool = False,
 ) -> None:
     """
     destroy_deployment
@@ -470,6 +472,12 @@ def destroy_deployment(
         By default False
     show_manifest : bool, optional
         This flag indicates to print out the DeploymentManifest object as s dictionary.
+
+        By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
 
         By default False
     """
@@ -543,7 +551,7 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, retain_seedkit=True)
+            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -826,7 +834,7 @@ def destroy(
     qualifier: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
-    retain_seedkit: bool = False,
+    remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
 ) -> None:
@@ -848,6 +856,11 @@ def destroy(
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
+        By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
 
         By default False
     show_manifest : bool, optional
@@ -858,7 +871,6 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
-
     Raises
     ------
     InvalidConfigurationError
@@ -888,6 +900,7 @@ def destroy(
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,
+            remove_seedkit=remove_seedkit,
         )
     else:
         _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

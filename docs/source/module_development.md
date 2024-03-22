@@ -21,7 +21,7 @@ The [CLI](cli_commands.md) provides an `init` method to create your skeleton mod
 > seedfarmer init module -g mygroup -m mymodule
 > cd modules/mygroup/mymodule
 ```
-The strucuture for your module is in place.  Edit the `deploysepc.yaml` as needed.  We provde a `modulestack.template` file that can be edited for additional permissions, and that file needs to be renamed to `modulestack.yaml` in order to be used.  
+The strucuture for your module is in place.  Edit the `deploysepc.yaml` as needed.  We provide a `modulestack.template` file that can be edited for additional permissions, and that file needs to be renamed to `modulestack.yaml` in order to be used.  
 
 For a deep-dive on the module creation command, see [HERE](indepth_module_creation).
 
@@ -67,7 +67,7 @@ build_type: BUILD_GENERAL1_LARGE
 publishGenericEnvVariables: true
 ```
 
-The deployspec is broken into 2 major areas of focus: `deploy `and `destroy`.  Each of these areas have 4 distinct phases in which commands can be executed (ex. installing supporting libraries, setting environment variables, etc.)  It is in these sections that AWS CodeSeeder makes calls to deploy/destroy on the modules' behalf.  The example below will highlight.
+The deployspec is broken into 2 major areas of focus: `deploy` and `destroy`.  Each of these areas have 4 distinct phases in which commands can be executed (ex. installing supporting libraries, setting environment variables, etc.)  It is in these sections that AWS CodeSeeder makes calls to deploy/destroy on the modules' behalf.  The example below will highlight.
 
 ### Deployspec Parameters of Interest
 There are two parameters at the root level of importance:
@@ -298,9 +298,9 @@ The modulestack (`modulestack.yaml`) is an optional AWS Cloudformation file that
 
 By default, the CLI uses AWS CDKv2, which assumes a role that has the permissions to deploy via CloudFormation and is the recommended practice.  You have the ability to use the `modulestack.yaml` to give additial permissions to `AWS CodeSeeder` on your behalf.  
 
-Typical cases when you would use a  `modulestack.yaml`:
+Typical cases when you would use a `modulestack.yaml`:
 - any time you are invoking AWS CLI in the deployspec (not in the scope of the CDK) - for example: copying files to S3
-- you perfer to use the AWSCLI v1 - in which a least-privilege policy is necessary for ALL AWS Services.
+- you prefer to use the AWSCLI v1 - in which a least-privilege policy is necessary for ALL AWS Services.
 
 
 ### Initial Template
@@ -342,7 +342,7 @@ As mentioned above, we strongly recommend a least-priviledge policy to promote s
 
 Below is an example of how to make use of this functionality.
 
-Lets say we want to deploy the Cloud9 module. This module, on top of deploying a Cloud9 instance, also executes a few boto3 calls after the CDK deploys the Cloud9 environment. This example will focus on the boto3 call that modifies the volume of the instance. So we need to give permission to execute that boto3 call and we also want to restrict which instance to modify
+Let's say we want to deploy the Cloud9 module. This module, on top of deploying a Cloud9 instance, also executes a few boto3 calls after the CDK deploys the Cloud9 environment. This example will focus on the boto3 call that modifies the volume of the instance. So we need to give permission to execute that boto3 call and we also want to restrict which instance to modify
 
 Suppose this is our manifest. We want our modulestack.yaml to limit modification to our instance named `cloud9-ml-project-dev`
 ```

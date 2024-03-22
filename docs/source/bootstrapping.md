@@ -1,11 +1,11 @@
 # Bootstrapping Accounts
 
-You must have only one `toolhchain account` bootstrapped and at least one `target account` bootstrapped.  The account that is the `toolhchain account` can be bootstrapped as a `target account`.
+You must have only one `toolchain account` bootstrapped and at least one `target account` bootstrapped.  The account that is the `toolchain account` can be bootstrapped as a `target account`.
 
 
 ## Bootstrap Toolchain Account
 The `seedfarmer bootstrap toolchain` CLI command will take care of setting up the account.  
-```bash
+```text
 Usage: seedfarmer bootstrap toolchain [OPTIONS]
 
   Bootstrap a Toolchain account.
@@ -46,7 +46,7 @@ Typically, you can have the `toolchain account` act as the `target account`.  Th
 
 ## Bootstrap Target Account
 
-```bash
+```text
 Usage: seedfarmer bootstrap target [OPTIONS]
 
   Bootstrap a Target account.
@@ -75,14 +75,14 @@ Options:
 
 You must pass in the `toolchain-account` field so a trust-relationship can be set up between the `toolchain account` role and the `target account` role.
 
-The `permission-boundary` filed allows you to attach a policy to the role to act as a [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+The `permission-boundary` field allows you to attach a policy to the role to act as a [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 
 
 ## Qualifiers for Toolchain Role and Target Roles
-We have added suppprt for the use of a qualifier for the toolchain role and the target account deployment role(s).  This is to help segregate target deployment when using a multi-account structure which has a central shared services (CICD account) as the toolchain account performing deployments across relevant environments (ex. DEV, INT, PROD). A `qualifier` can be used if you want to restrict the level of access/action a dev/tester/support team can perform on any target given environment.
+We have added support for the use of a qualifier for the toolchain role and the target account deployment role(s).  This is to help segregate target deployment when using a multi-account structure which has a central shared services (CICD account) as the toolchain account performing deployments across relevant environments (ex. DEV, INT, PROD). A `qualifier` can be used if you want to restrict the level of access/action a dev/tester/support team can perform on any target given environment.
 
-The qualifier post-pends a 6 char alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
+The qualifier post-pends a 6 chars alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
 
 
 ## Prepping the Account / Region
-`seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in ech account/region combination to be used of each target account.
+`seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in each account/region combination to be used of each target account.

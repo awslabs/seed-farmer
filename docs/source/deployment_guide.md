@@ -29,7 +29,7 @@ cdk bootstrap aws://<account>/<region>
 
 ## Create a New Project or Clone Existing
 You have the option of either:
-1. Creating a new project (see [Project Development](project_development.md)
+1. Creating a new project (see [Project Development](project_development.md))
 2. Cloning an existing `seedfarmer` compliant Git Repo
 
 If cloning, skip to [Deploying Modules](deploying_modules)
@@ -48,7 +48,7 @@ Please see [Module Development](module_development)
 (deploying_modules)=
 ## Deploy Modules
 
-Manifests should be lcoated at <<project>>/manifests/*.  Change to the project rood directory
+Manifests should be located at <<project>>/manifests/*.  Change to the project root directory
 ```bash
 cd <<project_root>>
 ```

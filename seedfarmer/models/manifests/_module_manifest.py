@@ -19,6 +19,7 @@ from pydantic import PrivateAttr, model_validator
 from seedfarmer.models._base import CamelModel, ValueFromRef
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.utils import upper_snake_case
+from seedfarmer.errors import InvalidManifestError
 
 
 class ModuleParameter(ValueFromRef):
@@ -43,9 +44,9 @@ class ModuleParameter(ValueFromRef):
         value_from = self.value_from
 
         if value is None and value_from is None:
-            raise ValueError(f"value or value_from must be provided for parameter {self.name}")
+            raise InvalidManifestError(f"value or value_from must be provided for parameter {self.name}")
         if value is not None and value_from is not None:
-            raise ValueError(f"value and value_from cannot be provided for parameter {self.name}")
+            raise InvalidManifestError(f"value and value_from cannot be provided for parameter {self.name}")
 
         return self
 

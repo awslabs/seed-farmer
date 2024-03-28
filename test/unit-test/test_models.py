@@ -16,13 +16,13 @@ import logging
 import os
 from copy import deepcopy
 
-from pydantic_core import ValidationError
 import pytest
 import yaml
 
 import seedfarmer.errors
 from seedfarmer.models.deploy_responses import CodeSeederMetadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
+from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #
@@ -409,7 +409,7 @@ parameters:
 """
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(InvalidManifestError):
         module = ModuleManifest(**module_yaml)
         manifest.groups[0].modules = [module]
         manifest.validate_and_set_module_defaults()
@@ -436,7 +436,7 @@ parameters:
 """
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(InvalidManifestError):
         module = ModuleManifest(**module_yaml)
         manifest.groups[0].modules = [module]
         manifest.validate_and_set_module_defaults()

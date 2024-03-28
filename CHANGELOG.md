@@ -55,6 +55,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 - adding in workaround for manifests whose char length is greater than SSM limit of 8192 k
 
+- Add schema validation step checking that either `value` or `value_from` is present for each parameter
+
 
 ## v3.1.2 (2024-01-24)
 

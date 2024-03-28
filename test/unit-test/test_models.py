@@ -16,11 +16,12 @@ import logging
 import os
 from copy import deepcopy
 
+from pydantic_core import ValidationError
 import pytest
 import yaml
 
 import seedfarmer.errors
-from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse
+from seedfarmer.models.deploy_responses import CodeSeederMetadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
@@ -327,6 +328,118 @@ targetRegion: us-west-2
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.validate_and_set_module_defaults()
 
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_parameters():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value: value1
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    manifest.validate_and_set_module_defaults()
+
+    assert module.target_account == "primary"
+    assert module.target_region == "us-west-2"
+    assert module.parameters[0].name == "param1"
+    assert module.parameters[0].value == "value1"
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_value_from_parameters():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    valueFrom:
+      moduleMetadata:
+        group: test-group
+        name: test-module-1
+        key: param-key
+"""
+    )
+
+    module = ModuleManifest(**module_yaml)
+    manifest.groups[0].modules = [module]
+    manifest.validate_and_set_module_defaults()
+
+    assert module.target_account == "primary"
+    assert module.target_region == "us-west-2"
+    assert module.parameters[0].name == "param1"
+    assert module.parameters[0].value_from
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_incorrect_value_error():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value: value1
+    value_from:
+      moduleMetadata:
+        group: test-group
+        name: test-module-1
+        key: param-key
+"""
+    )
+
+    with pytest.raises(ValidationError):
+        module = ModuleManifest(**module_yaml)
+        manifest.groups[0].modules = [module]
+        manifest.validate_and_set_module_defaults()
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_both_value_and_value_from_error():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    # missing value_from
+    moduleMetadata:
+      group: test-group
+      name: test-module-1
+      key: param-key
+"""
+    )
+
+    with pytest.raises(ValidationError):
+        module = ModuleManifest(**module_yaml)
+        manifest.groups[0].modules = [module]
+        manifest.validate_and_set_module_defaults()
 
 @pytest.mark.models
 @pytest.mark.models_deployspec

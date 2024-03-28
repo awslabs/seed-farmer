@@ -36,10 +36,10 @@ class ModuleParameter(ValueFromRef):
     @property
     def upper_snake_case(self) -> str:
         return self._upper_snake_case
-    
+
     @model_validator(mode="after")
     def check_value_or_value_from(self) -> "ModuleParameter":
-        value  = self.value
+        value = self.value
         value_from = self.value_from
 
         if not value and not value_from:
@@ -48,7 +48,6 @@ class ModuleParameter(ValueFromRef):
             raise ValueError(f"value and value_from cannot be provided for parameter {self.name}")
 
         return self
-
 
 
 class DataFile(CamelModel):

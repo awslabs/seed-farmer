@@ -27,6 +27,7 @@ from git import Repo
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
+import seedfarmer.messages as messages
 import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
@@ -903,4 +904,14 @@ def destroy(
             remove_seedkit=remove_seedkit,
         )
     else:
-        _logger.info("Deployment %s was not found, ignoring... ", deployment_name)
+        account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
+        region = session_manager.toolchain_session.region_name
+        _logger.info(
+            """Deployment %s was not found in project %s in account %s and region %s
+                     """,
+            deployment_name,
+            project,
+            account_id,
+            region,
+        )
+        print_bolded(message=messages.no_deployment_found(deployment_name=deployment_name), color="yellow")

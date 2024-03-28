@@ -5,6 +5,7 @@ from threading import Thread
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+import botocore.exceptions
 from boto3 import Session
 
 import seedfarmer.errors
@@ -141,12 +142,27 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 project_name=project_name,
                 qualifier=cast(str, qualifier),
             )
-            _logger.debug(f"Got deployment role role - {deployment_role_arn}")
-
-            deployment_role = sts_toolchain_client.assume_role(
-                RoleArn=deployment_role_arn,
-                RoleSessionName="deployment_role",
+            _logger.debug(
+                f"""The assumed toolchain role {toolchain_role['AssumedRoleUser']['Arn']} will
+                 try and assume the deployment role: {deployment_role_arn}"""
             )
+            try:
+                deployment_role = sts_toolchain_client.assume_role(
+                    RoleArn=deployment_role_arn,
+                    RoleSessionName="deployment_role",
+                )
+            except botocore.exceptions.ClientError as ce:
+                raise seedfarmer.errors.InvalidSessionError(
+                    f"""
+                {ce}
+                The toolchain role cannot assume a deployment role for this account / region mapping.
+                Make sure that the toolchain role is in the trust policy of the deployment role...
+                   (HINT: if not, your seedfarmer bootstrap is incorrect. Use the SeedFarmer CLI to bootstrap.)
+                Make sure that the account id is correct in your targetAccountMappings of the deployment manifest.
+                   (HINT: look at the arn of the deployment role...the account id is REALLY important to be correct.
+                   This is gotten from the deployment manifest under the targetAccountMappings section.)
+                """
+                )
             deployment_session = create_new_session_with_creds(
                 aws_access_key_id=deployment_role["Credentials"]["AccessKeyId"],
                 aws_secret_access_key=deployment_role["Credentials"]["SecretAccessKey"],
@@ -172,7 +188,17 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         project_name = self.config.get("project_name")
         qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
         toolchain_region = self.config.get("toolchain_region")
-        _logger.debug("Getting toolchain role")
+        _logger.debug(
+            f"""Creating a local session with the following info passed in:
+                      region_name = {region_name}
+                      profile_name = {profile_name}
+                      project_name = {project_name}
+                      qualifier = {qualifier}
+
+                      NOTE: if not set here, the active environment parameters are used to create a new AWS session
+                            much like how the AWS CLI operates.
+                      """
+        )
         user_session = create_new_session(region_name=region_name, profile=profile_name)
         user_account_id, _, partition = get_sts_identity_info(session=user_session)
         toolchain_role_arn = get_toolchain_role_arn(
@@ -181,12 +207,27 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             project_name=cast(str, project_name),
             qualifier=cast(str, qualifier),
         )
-        _logger.debug(f"Using toolchain role - {toolchain_role_arn}")
-        user_client = boto3_client(service_name="sts", session=user_session)
-        toolchain_role = user_client.assume_role(
-            RoleArn=toolchain_role_arn,
-            RoleSessionName="toolchainrole",
+        _logger.debug(
+            f"""The active user session will assume the toolchain role
+                      arn = {toolchain_role_arn}
+                      toolchain_region = {toolchain_region}
+                      """
         )
+        user_client = boto3_client(service_name="sts", session=user_session)
+        try:
+            toolchain_role = user_client.assume_role(
+                RoleArn=toolchain_role_arn,
+                RoleSessionName="toolchainrole",
+            )
+        except botocore.exceptions.ClientError as ce:
+            raise seedfarmer.errors.InvalidSessionError(
+                f"""
+            {ce}
+            The session used to call SeedFarmer is not permitted to assume the toolchain role.
+            Verify the user tied to your active session is in the trust policy of the toolchain role
+            or use a session that DOES have that user.
+            """
+            )
         toolchain_session = create_new_session_with_creds(
             aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
             aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],

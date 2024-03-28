@@ -16,6 +16,11 @@ class InvalidConfigurationError(RuntimeError):
         super().__init__(*args)
 
 
+class InvalidSessionError(RuntimeError):
+    def __init__(self, *args: str, error_message: Optional[str] = None):
+        super().__init__(*args)
+
+
 class ModuleDeploymentError(RuntimeError):
     def __init__(self, *args: str, error_message: Optional[str] = None):
         super().__init__(*args)

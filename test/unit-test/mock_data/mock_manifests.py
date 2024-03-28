@@ -670,7 +670,7 @@ modules_manifest = yaml.safe_load(
                 {
                     "value_from": null,
                     "name": "vpc-id",
-                    "value": null
+                    "value": "vpc-12345"
                 },
                 {
                     "value_from": null,

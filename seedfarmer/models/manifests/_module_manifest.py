@@ -14,8 +14,9 @@
 
 from typing import Any, List, Optional
 
-from pydantic import PrivateAttr
+from pydantic import PrivateAttr, model_validator
 
+from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models._base import CamelModel, ValueFromRef
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.utils import upper_snake_case
@@ -36,6 +37,18 @@ class ModuleParameter(ValueFromRef):
     @property
     def upper_snake_case(self) -> str:
         return self._upper_snake_case
+
+    @model_validator(mode="after")
+    def check_value_or_value_from(self) -> "ModuleParameter":
+        value = self.value
+        value_from = self.value_from
+
+        if value is None and value_from is None:
+            raise InvalidManifestError(f"value or value_from must be provided for parameter {self.name}")
+        if value is not None and value_from is not None:
+            raise InvalidManifestError(f"value and value_from cannot be provided for parameter {self.name}")
+
+        return self
 
 
 class DataFile(CamelModel):

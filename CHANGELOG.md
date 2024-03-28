@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - renaming the threads spawned for deploy / destroy to indicate the module being worked on
 - adding detailed docs for CLI parameters
 - complete support to delete the seedkit on `seedfarmer destroy` command
+- adding verbose messaging to session manager and hints to reconcile session issues
 
 ### Fixes
 
@@ -53,6 +54,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - adding in workaround for manifests whose char length is greater than SSM limit of 8192 k
+
+- Add schema validation step checking that either `value` or `value_from` is present for each parameter
 
 
 ## v3.1.2 (2024-01-24)

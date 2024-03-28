@@ -17,6 +17,7 @@ from seedfarmer.errors.seedfarmer_errors import (
     InvalidConfigurationError,
     InvalidManifestError,
     InvalidPathError,
+    InvalidSessionError,
     ModuleDeploymentError,
     SeedFarmerException,
 )
@@ -27,4 +28,5 @@ __all__ = [
     "InvalidManifestError",
     "InvalidConfigurationError",
     "SeedFarmerException",
+    "InvalidSessionError",
 ]

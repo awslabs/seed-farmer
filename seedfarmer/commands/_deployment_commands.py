@@ -17,6 +17,7 @@ import hashlib
 import json
 import logging
 import os
+import threading
 from typing import Any, Dict, List, Optional, Tuple, cast
 from urllib.parse import parse_qs
 
@@ -145,7 +146,6 @@ def _execute_deploy(
     permissions_boundary_arn: Optional[str] = None,
     codebuild_image: Optional[str] = None,
 ) -> ModuleDeploymentResponse:
-
     parameters = load_parameter_values(
         deployment_name=cast(str, deployment_manifest.name),
         parameters=module_manifest.parameters,
@@ -309,9 +309,12 @@ def _deploy_validated_deployment(
         for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
 
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_deploy(**args)
 
                     def _render_permissions_boundary_arn(
@@ -373,11 +376,19 @@ def _deploy_validated_deployment(
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
 
-def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
+def prime_target_accounts(
+    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
+) -> None:
     _logger.info("Priming Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Prime-Accounts"
+    ) as workers:
 
         def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
@@ -385,8 +396,12 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
-
-            param_d = {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            param_d = {
+                "account_id": target_account_region["account_id"],
+                "region": target_account_region["region"],
+                "update_seedkit": update_seedkit,
+                "update_project_policy": update_project_policy,
+            }
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
                     cast(NetworkMapping, target_account_region["network"]),
@@ -394,9 +409,9 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
                     target_account_region["account_id"],
                     target_account_region["region"],
                 )
-                param_d["vpc_id"] = network.vpc_id  # type: ignore
-                param_d["private_subnet_ids"] = network.private_subnet_ids  # type: ignore
-                param_d["security_group_ids"] = network.security_group_ids  # type: ignore
+                param_d["vpc_id"] = network.vpc_id
+                param_d["private_subnet_ids"] = network.private_subnet_ids
+                param_d["security_group_ids"] = network.security_group_ids
 
             params.append(param_d)
 
@@ -407,15 +422,21 @@ def prime_target_accounts(deployment_manifest: DeploymentManifest) -> None:
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Teardown-Accounts"
+    ) as workers:
 
         def _teardown_accounts(args: Dict[str, Any]) -> None:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
-            if not retain_seedkit:
+            if remove_seedkit:
+                _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
 
         params = [
@@ -430,6 +451,7 @@ def destroy_deployment(
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
+    remove_seedkit: bool = False,
 ) -> None:
     """
     destroy_deployment
@@ -452,6 +474,12 @@ def destroy_deployment(
         This flag indicates to print out the DeploymentManifest object as s dictionary.
 
         By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
+
+        By default False
     """
     if not destroy_manifest.groups:
         print_bolded("Nothing to destroy", "white")
@@ -467,11 +495,17 @@ def destroy_deployment(
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=threads, thread_name_prefix="Destroy"
+                ) as workers:
 
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_destroy(**args)
 
+                    params = []
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
 
@@ -517,7 +551,7 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, retain_seedkit=True)
+            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -662,6 +696,8 @@ def apply(
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
+    update_seedkit: bool = False,
+    update_project_policy: bool = False,
 ) -> None:
     """
     apply
@@ -695,6 +731,10 @@ def apply(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
+    update_seedkit: bool
+        Force update run of seedkit, defaults to False
+    update_project_policy: bool
+        Force update run of managed project policy, defaults to False
 
     Raises
     ------
@@ -752,7 +792,11 @@ def apply(
                 raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
     deployment_manifest.validate_and_set_module_defaults()
 
-    prime_target_accounts(deployment_manifest=deployment_manifest)
+    prime_target_accounts(
+        deployment_manifest=deployment_manifest,
+        update_seedkit=update_seedkit,
+        update_project_policy=update_project_policy,
+    )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)
@@ -790,7 +834,7 @@ def destroy(
     qualifier: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
-    retain_seedkit: bool = False,
+    remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
 ) -> None:
@@ -812,6 +856,11 @@ def destroy(
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
+        By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
 
         By default False
     show_manifest : bool, optional
@@ -822,7 +871,6 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
-
     Raises
     ------
     InvalidConfigurationError
@@ -852,6 +900,7 @@ def destroy(
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,
+            remove_seedkit=remove_seedkit,
         )
     else:
         _logger.info("Deployment %s was not found, ignoring... ", deployment_name)

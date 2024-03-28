@@ -67,11 +67,29 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
     p = mms.metadata_fullpath()
     if Path(p).is_file():
         _logger.info("Reading metadata file at %s", p)
-        with open(Path(mms.metadata_fullpath()), "r") as metadatafile:
-            j = metadatafile.read()
-        return cast(Dict[str, Any], json.loads(j))
+        try:
+            with open(Path(mms.metadata_fullpath()), "r") as metadatafile:
+                j = metadatafile.read()
+            return cast(Dict[str, Any], json.loads(j))
+        except json.decoder.JSONDecodeError:
+            _logger.info("Cannot parse the file json")
+            return {}
     else:
         _logger.info("Cannot find existing metadata file at %s, moving on", p)
+        return {}
+
+
+def _read_metadata_env_param(mms: ModuleMetadataSupport) -> Dict[str, Any]:
+    p = mms.metadata_file_name()
+    if p in os.environ:
+        try:
+            env_data = os.getenv(p)
+            return cast(Dict[str, Any], json.loads(str(env_data)))
+        except Exception:
+            _logger.info("Cannot parse the file env metadata")
+            return {}
+    else:
+        _logger.info("Cannot find existing metadata env param at %s, moving on", p)
         return {}
 
 
@@ -107,15 +125,26 @@ def _clean_jq(jq: str) -> str:
 
 def add_json_output(json_string: str) -> None:
     mms = ModuleMetadataSupport()
-    existing_metadata = _read_metadata_file(mms=mms)
     json_new = json.loads(json_string)
-    _write_metadata_file(mms=mms, data={**json_new, **existing_metadata})
+    file_dict = _read_metadata_file(mms=mms)
+    json_new = {**file_dict, **json_new} if file_dict else json_new
+    _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
+    env_dict = _read_metadata_env_param(mms=mms)
+    json_new = {**env_dict, **json_new} if env_dict else json_new
+    _logger.debug(f"Current Dict {json.dumps(json_new, indent=4)}")
+    _write_metadata_file(mms=mms, data=json_new)
 
 
 def add_kv_output(key: str, value: str) -> None:
     mms = ModuleMetadataSupport()
-    data = _read_metadata_file(mms=mms)
+    data = {}
     data[key] = value
+    file_dict = _read_metadata_file(mms=mms)
+    data = {**file_dict, **data} if file_dict else data
+    _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
+    env_dict = _read_metadata_env_param(mms=mms)
+    data = {**env_dict, **data} if env_dict else data
+    _logger.debug(f"Current Dict {json.dumps(data, indent=4)}")
     _write_metadata_file(mms=mms, data=data)
 
 
@@ -140,7 +169,7 @@ def convert_cdkexports(
     existing_metadata = _read_metadata_file(mms)
 
     try:
-        _write_metadata_file(mms=mms, data={**json.loads(data), **existing_metadata})
+        _write_metadata_file(mms=mms, data={**existing_metadata, **json.loads(data)})
     except json.decoder.JSONDecodeError:
         _logger.info("The CDK Export is not a string that can be converted to a JSON, ignoring this additional data")
         _logger.info("Offending metadata -- %s", data)

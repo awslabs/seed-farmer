@@ -91,7 +91,7 @@ def test_destroy_clean(session_manager, mocker):
     )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
 
-    dc.destroy(deployment_name="myapp", dryrun=True, retain_seedkit=False)
+    dc.destroy(deployment_name="myapp", dryrun=True, remove_seedkit=False)
 
 
 @pytest.mark.commands
@@ -108,7 +108,7 @@ def test_destroy_not_found(session_manager, mocker):
         return_value=("1234566789012", "arn:aws", "aws"),
     )
 
-    dc.destroy(deployment_name="myapp", dryrun=True, retain_seedkit=False)
+    dc.destroy(deployment_name="myapp", dryrun=True, remove_seedkit=False)
 
 
 # @pytest.mark.commands

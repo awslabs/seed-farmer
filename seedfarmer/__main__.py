@@ -14,16 +14,15 @@
 
 
 import logging
-import os
-from typing import Optional
+from typing import List, Optional
 
 import click
-from dotenv import load_dotenv
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, init, list, metadata, projectpolicy, remove, store
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -48,25 +47,31 @@ def version() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region to use for boto3.Sessions",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain / target roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
-    default=".env",
-    help="A relative path to the .env file to load environment variables from",
+    "env_files",
+    default=[".env"],
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -86,7 +91,7 @@ def version() -> None:
 @click.option(
     "--show-manifest/--no-show-manifest",
     default=False,
-    help="Write out the generated deployment manifest",
+    help="Write out the generated deployment manifest to console",
     show_default=True,
     type=bool,
 )
@@ -104,24 +109,40 @@ def version() -> None:
     show_default=True,
     type=int,
 )
+@click.option(
+    "--update-seedkit/--no-update-seedkit",
+    default=False,
+    help="Force SeedFarmer to update the SeedKit when invoked",
+    show_default=True,
+    type=bool,
+)
+@click.option(
+    "--update-project-policy/--no-update-project-policy",
+    default=False,
+    help="Force SeedFarmer to update the deployed Project Policy when invoked",
+    show_default=True,
+    type=bool,
+)
 def apply(
     spec: str,
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
     dry_run: bool,
     show_manifest: bool,
     enable_session_timeout: bool,
     session_timeout_interval: int,
+    update_seedkit: bool,
+    update_project_policy: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     _logger.info("Apply request with manifest %s", spec)
     if dry_run:
@@ -136,6 +157,8 @@ def apply(
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
+        update_seedkit=update_seedkit,
+        update_project_policy=update_project_policy,
     )
 
 
@@ -160,25 +183,31 @@ def apply(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region to use for toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain / target role",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
-    default=".env",
-    help="A relative path to the .env file to load environment variables from",
+    "env_files",
+    default=[".env"],
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
+    multiple=True,
     required=False,
 )
 @click.option(
@@ -201,6 +230,16 @@ def apply(
     show_default=True,
     type=int,
 )
+@click.option(
+    "--remove-seedkit/--no-remove-seedkit",
+    default=False,
+    help="""Delete the seedkit after destroy of deployment.
+     NOTE: this will forcibly remove the seedkit for ALL deployments of this project.
+     Use with CAUTION.  If you are unsure, do not use this flag.
+    """,
+    show_default=True,
+    type=bool,
+)
 def destroy(
     deployment: str,
     dry_run: bool,
@@ -208,17 +247,18 @@ def destroy(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    env_file: str,
+    env_files: List[str],
     debug: bool,
     enable_session_timeout: bool,
     session_timeout_interval: int,
+    remove_seedkit: bool,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     # Load environment variables from .env file if it exists
-    load_dotenv(dotenv_path=os.path.join(config.OPS_ROOT, env_file), verbose=True, override=True)
+    load_dotenv_files(config.OPS_ROOT, env_files)
 
     # MUST use seedfarmer.yaml so we can initialize codeseeder configs
     project = config.PROJECT
@@ -237,6 +277,7 @@ def destroy(
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
+        remove_seedkit=remove_seedkit,
     )
 
 

@@ -27,7 +27,6 @@ class StatusType(Enum):
 
 
 class CodeSeederMetadata(CamelModel):
-
     _build_url: str = PrivateAttr()
 
     aws_account_id: Optional[str] = None
@@ -51,7 +50,6 @@ class CodeSeederMetadata(CamelModel):
 
 
 class ModuleDeploymentResponse(CamelModel):
-
     deployment: str
     group: Optional[str] = None
     module: str

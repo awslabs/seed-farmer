@@ -104,7 +104,6 @@ def get_region(session: Optional[Session] = None, profile: Optional[str] = None)
 
 
 def _call_sts(session: Optional[Session] = None, profile: Optional[str] = None) -> Dict[str, Any]:
-
     try:
         if not session:
             return cast(Dict[str, Any], boto3_client(service_name="sts", profile=profile).get_caller_identity())

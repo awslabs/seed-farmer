@@ -16,11 +16,14 @@ certifi==2023.7.22
     #   requests
 charset-normalizer==3.1.0
     # via requests
+click==8.1.7
+    # via sphinx-click
 docutils==0.18.1
     # via
     #   -r requirements-docs.in
     #   myst-parser
     #   sphinx
+    #   sphinx-click
     #   sphinx-rtd-theme
 idna==3.4
     # via requests
@@ -64,9 +67,12 @@ sphinx==6.2.1
     # via
     #   myst-parser
     #   sphinx-autoapi
+    #   sphinx-click
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
 sphinx-autoapi==2.1.0
+    # via -r requirements-docs.in
+sphinx-click==5.1.0
     # via -r requirements-docs.in
 sphinx-rtd-theme==1.2.1
     # via -r requirements-docs.in

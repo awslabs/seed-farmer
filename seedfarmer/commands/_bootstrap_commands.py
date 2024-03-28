@@ -88,7 +88,6 @@ def bootstrap_toolchain_account(
     synthesize: bool = False,
     as_target: bool = False,
 ) -> Optional[Dict[Any, Any]]:
-
     if qualifier and not valid_qualifier(qualifier):
         raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
 
@@ -149,7 +148,6 @@ def bootstrap_target_account(
     policy_arns: Optional[List[str]] = None,
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
-
     if qualifier and not valid_qualifier(qualifier):
         raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
 

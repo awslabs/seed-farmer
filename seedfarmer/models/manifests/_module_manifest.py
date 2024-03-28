@@ -16,10 +16,10 @@ from typing import Any, List, Optional
 
 from pydantic import PrivateAttr, model_validator
 
+from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models._base import CamelModel, ValueFromRef
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.utils import upper_snake_case
-from seedfarmer.errors import InvalidManifestError
 
 
 class ModuleParameter(ValueFromRef):

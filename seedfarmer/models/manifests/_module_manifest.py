@@ -42,9 +42,9 @@ class ModuleParameter(ValueFromRef):
         value = self.value
         value_from = self.value_from
 
-        if not value and not value_from:
+        if value is None and value_from is None:
             raise ValueError(f"value or value_from must be provided for parameter {self.name}")
-        if value and value_from:
+        if value is not None and value_from is not None:
             raise ValueError(f"value and value_from cannot be provided for parameter {self.name}")
 
         return self

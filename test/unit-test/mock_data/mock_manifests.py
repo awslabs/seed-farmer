@@ -37,7 +37,6 @@ deployment_manifest = yaml.safe_load(
                     "deployspec_md5": null,
                     "parameters": [
                         {
-                            "value_from": null,
                             "name": "encryption-type",
                             "value": "SSE"
                         }
@@ -73,8 +72,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "vpc-id",
-                            "value": null
+                            "name": "vpc-id"
                         },
                         {
                             "value_from": {
@@ -88,16 +86,13 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "private-subnet-ids",
-                            "value": null
+                            "name": "private-subnet-ids"
                         },
                         {
-                            "value_from": null,
                             "name": "eks-admin-role-name",
                             "value": "Admin"
                         },
                         {
-                            "value_from": null,
                             "name": "eks-compute",
                             "value": {
                                 "eks_nodegroup_config": [
@@ -117,7 +112,6 @@ deployment_manifest = yaml.safe_load(
                             }
                         },
                         {
-                            "value_from": null,
                             "name": "eks-addons",
                             "value": {
                                 "deploy_aws_lb_controller": true,
@@ -161,11 +155,9 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "vpc-id",
-                            "value": null
+                            "name": "vpc-id"
                         },
                         {
-                            "value_from": null,
                             "name": "removal-policy",
                             "value": "DESTROY"
                         }
@@ -201,8 +193,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "EksClusterMasterRoleArn",
-                            "value": null
+                            "name": "EksClusterMasterRoleArn"
                         },
                         {
                             "value_from": {
@@ -216,26 +207,21 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "EksClusterName",
-                            "value": null
+                            "name": "EksClusterName"
                         },
                         {
-                            "value_from": null,
                             "name": "InstallationOption",
                             "value": "kustomize"
                         },
                         {
-                            "value_from": null,
                             "name": "DeploymentOption",
                             "value": "vanilla"
                         },
                         {
-                            "value_from": null,
                             "name": "KubeflowReleaseVersion",
                             "value": "v1.6.1"
                         },
                         {
-                            "value_from": null,
                             "name": "AwsKubeflowBuild",
                             "value": "1.0.0"
                         }
@@ -264,8 +250,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "eks-cluster-admin-role-arn",
-                            "value": null
+                            "name": "eks-cluster-admin-role-arn"
                         },
                         {
                             "value_from": {
@@ -279,8 +264,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "eks-cluster-name",
-                            "value": null
+                            "name": "eks-cluster-name"
                         },
                         {
                             "value_from": {
@@ -294,8 +278,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "eks-oidc-arn",
-                            "value": null
+                            "name": "eks-oidc-arn"
                         },
                         {
                             "value_from": {
@@ -309,8 +292,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "eks-cluster-security-group-id",
-                            "value": null
+                            "name": "eks-cluster-security-group-id"
                         },
                         {
                             "value_from": {
@@ -324,8 +306,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "efs-file-system-id",
-                            "value": null
+                            "name": "efs-file-system-id"
                         },
                         {
                             "value_from": {
@@ -339,8 +320,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "efs-security-group-id",
-                            "value": null
+                            "name": "efs-security-group-id"
                         },
                         {
                             "value_from": {
@@ -354,8 +334,7 @@ deployment_manifest = yaml.safe_load(
                                 "secrets_manager": null,
                                 "parameter_value": null
                             },
-                            "name": "vpc-id",
-                            "value": null
+                            "name": "vpc-id"
                         }
                     ],
                     "deploy_spec": null,
@@ -497,8 +476,7 @@ modules_manifest_duplicate = yaml.safe_load(
                         "secrets_manager": null,
                         "parameter_value": null
                     },
-                    "name": "vpc-id",
-                    "value": null
+                    "name": "vpc-id"
                 },
                 {
                     "value_from": {
@@ -565,8 +543,7 @@ modules_manifest_duplicate = yaml.safe_load(
                         "secrets_manager": null,
                         "parameter_value": null
                     },
-                    "name": "vpc-id",
-                    "value": null
+                    "name": "vpc-id"
                 },
                 {
                     "value_from": null,
@@ -611,8 +588,7 @@ modules_manifest = yaml.safe_load(
                         "secrets_manager": null,
                         "parameter_value": null
                     },
-                    "name": "vpc-id",
-                    "value": null
+                    "name": "vpc-id"
                 },
                 {
                     "value_from": {
@@ -668,9 +644,8 @@ modules_manifest = yaml.safe_load(
             "deployspec_md5": null,
             "parameters": [
                 {
-                    "value_from": null,
                     "name": "vpc-id",
-                    "value": null
+                    "value": "vpc-01234"
                 },
                 {
                     "value_from": null,

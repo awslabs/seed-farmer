@@ -411,8 +411,9 @@ def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
         # No successful deployments, just use what was last requested
         dep_manifest_dict = mi.get_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     ordering = {}
-    for idx, val in enumerate(dep_manifest_dict["groups"]):  # type: ignore
-        ordering[val["name"]] = idx
+    if dep_manifest_dict and dep_manifest_dict.get("groups"):
+        for idx, val in enumerate(dep_manifest_dict["groups"]):
+            ordering[val["name"]] = idx
     return ordering
 
 

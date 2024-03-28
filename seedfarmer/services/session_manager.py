@@ -160,7 +160,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                    (HINT: if not, your seedfarmer bootstrap is incorrect. Use the SeedFarmer CLI to bootstrap.)
                 Make sure that the account id is correct in your targetAccountMappings of the deployment manifest.
                    (HINT: look at the arn of the deployment role...the account id is REALLY important to be correct.
-                   This is gotten from the deployment manifest under the targetAccountMappings ssection.)
+                   This is gotten from the deployment manifest under the targetAccountMappings section.)
                 """
                 )
             deployment_session = create_new_session_with_creds(

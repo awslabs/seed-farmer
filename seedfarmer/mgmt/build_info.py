@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from boto3 import Session
 
+from seedfarmer.models.manifests._deployment_manifest import DeploymentManifest
 from seedfarmer.services import _codebuild as codebuild
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -37,3 +38,7 @@ def get_build_env_params(build_ids: List[str], session: Optional[Session] = None
     )
     list_of_envs = [{entry_dict["name"]: entry_dict["value"]} for entry_dict in env_params] if env_params else None
     return dict(ChainMap(*list_of_envs)) if list_of_envs else None
+
+
+def get_manifest_schema() -> Dict[str, Any]:
+    return DeploymentManifest.model_json_schema()

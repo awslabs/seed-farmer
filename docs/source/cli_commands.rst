@@ -69,7 +69,9 @@ Summary of Commands
 .. click:: seedfarmer.cli_groups._list_group:list_build_env_params 
     :prog: seedfarmer list buildparams 
     :nested: full  
-
+.. click:: seedfarmer.cli_groups._list_group:list_manifest_schema
+    :prog: seedfarmer list schema 
+    :nested: full  
 ..
   bootstrap commands
   

@@ -766,3 +766,13 @@ def list_build_env_params(
                 sys.stdout.write("\n")
         else:
             _error_messaging(deployment, group, module)
+
+
+@list.command(
+    name="schema",
+    help="""Generate the schema that SeedFarmer uses for manifest objects.
+             This will return a formatted string of the schema that can
+             be piped to a file. """,
+)
+def list_manifest_schema() -> None:
+    print(json.dumps(bi.get_manifest_schema(), indent=2))

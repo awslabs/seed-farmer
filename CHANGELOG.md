@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding detailed docs for CLI parameters
 - complete support to delete the seedkit on `seedfarmer destroy` command
 - adding verbose messaging to session manager and hints to reconcile session issues
+- adding info for destroy and list deployments when no deployments found
 
 ### Fixes
 

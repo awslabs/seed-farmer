@@ -19,6 +19,7 @@ from typing import List, Optional
 
 import click
 
+import seedfarmer.messages as messages
 import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
@@ -30,6 +31,7 @@ from seedfarmer.output_utils import (
     print_json,
     print_manifest_inventory,
 )
+from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import load_dotenv_files
 
@@ -614,12 +616,17 @@ def list_deployments(
         project = _load_project()
     _logger.debug("Listing all deployments for Project %s", project)
 
-    deps = mi.get_all_deployments(
-        session=SessionManager()
-        .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-        .toolchain_session
+    session_manager = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
-    print_deployment_inventory(description="Deployment Names", dep=deps)
+    deps = mi.get_all_deployments(session=session_manager.toolchain_session)
+    if not deps or len(deps) == 0:
+        account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
+        region = session_manager.toolchain_session.region_name
+        _logger.info("No Deployments found for project %s in account %s and region %s", project, account_id, region)
+        print_bolded(message=messages.no_deployment_found(), color="yellow")
+    else:
+        print_deployment_inventory(description="Deployment Names", dep=deps)
 
 
 @list.command(

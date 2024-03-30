@@ -18,17 +18,15 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict, List, Optional, Tuple, cast
-from urllib.parse import parse_qs
+from typing import Any, Dict, List, Optional, cast
 
-import git
 import yaml
-from git import Repo
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
 import seedfarmer.messages as messages
 import seedfarmer.mgmt.deploy_utils as du
+import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.mgmt.module_info import (
@@ -57,77 +55,19 @@ from seedfarmer.services.session_manager import SessionManager
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _clone_module_repo(git_path: str) -> Tuple[str, str]:
-    """Clone a git repo and return directory it is cloned into
-
-    Rather than reinventing the wheel, we implement the Generic Git Repository functionality introduced by
-    Terraform. Full documentation on the Git URL definition can be found at:
-    https://www.terraform.io/language/modules/sources#generic-git-repository
-
-    Parameters
-    ----------
-    git_path : str
-        The Git URL specified in the Module Manifest. Full example:
-        https://example.com/network.git//modules/vpc?ref=v1.2.0&depth=1
-
-    Returns
-    -------
-    str
-        The local directory within the codeseeder.out/ where the repository was cloned
-    """
-    # gitpython library has started blocking non https and ssh protocols by default
-    # codecommit is not _actually_ unsafe
-    allow_unsafe_protocols = git_path.startswith("git::codecommit")
-
-    git_path = git_path.replace("git::", "")
-    ref: Optional[str] = None
-    depth: Optional[int] = None
-    module_directory = ""
-
-    if "?" in git_path:
-        git_path, query = git_path.split("?")
-        query_params = parse_qs(query)
-        ref = query_params.get("ref", [None])[0]  # type: ignore
-        if "depth" in query_params and query_params["depth"][0].isnumeric():
-            depth = int(query_params["depth"][0])
-
-    if ".git//" in git_path:
-        git_path, module_directory = git_path.split(".git//")
-
-    repo_directory = git_path.replace("https://", "").replace("git@", "").replace("/", "_").replace(":", "_")
-
-    working_dir = os.path.join(
-        config.OPS_ROOT, "seedfarmer.gitmodules", f"{repo_directory}_{ref.replace('/', '_')}" if ref else repo_directory
-    )
-    os.makedirs(working_dir, exist_ok=True)
-    if not os.listdir(working_dir):
-        if ref is not None:
-            _logger.debug("Creating local repo and setting remote: %s into %s: ref=%s ", git_path, working_dir, ref)
-            repo = Repo.init(working_dir)
-            git.Remote.create(repo, "origin", git_path, allow_unsafe_protocols)
-            repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
-        else:
-            _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-            Repo.clone_from(
-                git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols
-            )
-    else:
-        _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        Repo(working_dir).remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
-    return (working_dir, module_directory)
-
-
 def _process_module_path(module: ModuleManifest) -> None:
-    working_dir, module_directory = _clone_module_repo(module.path)
+    working_dir, module_directory, commit_hash = sf_git.clone_module_repo(module.path)
     module.set_local_path(os.path.join(working_dir, module_directory))
+    module.commit_hash = commit_hash if commit_hash else None
 
 
 def _process_data_files(data_files: List[DataFile], module_name: str, group_name: str) -> None:
     for data_file in data_files:
         if data_file.file_path.startswith("git::"):
-            working_dir, module_directory = _clone_module_repo(data_file.file_path)
+            working_dir, module_directory, commit_hash = sf_git.clone_module_repo(data_file.file_path)
             data_file.set_local_file_path(os.path.join(working_dir, module_directory))
             data_file.set_bundle_path(module_directory)
+            data_file.commit_hash = commit_hash if commit_hash else None
         else:
             data_file.set_local_file_path(os.path.join(config.OPS_ROOT, data_file.file_path))
     missing_files = du.validate_data_files(data_files)

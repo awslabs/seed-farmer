@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 - support to generate schema for manifests from CLI (`seedfarmer list schema`)
+- added commithash persistence support for modules sourced from git
+  - recorded in module manifest (`commit_hash`)
+  - recorded in module metadata as `SeedFarmerModuleCommitHash` and can be fetched
 
 ### Changes
 - renaming the threads spawned for deploy / destroy to indicate the module being worked on
@@ -14,6 +17,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - complete support to delete the seedkit on `seedfarmer destroy` command
 - adding verbose messaging to session manager and hints to reconcile session issues
 - adding info for destroy and list deployments when no deployments found
+- refactored git support logic to separate python file
 
 ### Fixes
 - Add schema validation step checking that either `value` or `value_from` is present for each parameter

@@ -124,13 +124,17 @@ def _execute_deploy(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
-    du.prepare_ssm_for_deploy(
-        deployment_name=deployment_manifest.name,
-        group_name=group_name,
-        module_manifest=module_manifest,
-        account_id=target_account_id,
-        region=target_region,
-    ) if deployment_manifest.name else None
+    (
+        du.prepare_ssm_for_deploy(
+            deployment_name=deployment_manifest.name,
+            group_name=group_name,
+            module_manifest=module_manifest,
+            account_id=target_account_id,
+            region=target_region,
+        )
+        if deployment_manifest.name
+        else None
+    )
 
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
@@ -450,9 +454,13 @@ def destroy_deployment(
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
 
-                        _process_data_files(
-                            data_files=_module.data_files, module_name=_module.name, group_name=_group.name
-                        ) if _module.data_files is not None else None
+                        (
+                            _process_data_files(
+                                data_files=_module.data_files, module_name=_module.name, group_name=_group.name
+                            )
+                            if _module.data_files is not None
+                            else None
+                        )
 
                         if _module and _module.deploy_spec:
                             params = [
@@ -474,9 +482,11 @@ def destroy_deployment(
                             ]
                     destroy_response = list(workers.map(_exec_destroy, params))
                     _logger.debug(destroy_response)
-                    print_modules_build_info("Build Info Debug Data", destroy_response) if _logger.isEnabledFor(
-                        logging.DEBUG
-                    ) else None
+                    (
+                        print_modules_build_info("Build Info Debug Data", destroy_response)
+                        if _logger.isEnabledFor(logging.DEBUG)
+                        else None
+                    )
                     for dep_resp_object in destroy_response:
                         if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to destroy...exiting deployment")
@@ -555,9 +565,11 @@ def deploy_deployment(
 
             _process_module_path(module=module) if module.path.startswith("git::") else None
 
-            _process_data_files(
-                data_files=module.data_files, module_name=module.name, group_name=group.name
-            ) if module.data_files is not None else None
+            (
+                _process_data_files(data_files=module.data_files, module_name=module.name, group_name=group.name)
+                if module.data_files is not None
+                else None
+            )
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
@@ -615,9 +627,13 @@ def deploy_deployment(
                     name=group.name, path=group.path, concurrency=group.concurrency, modules=modules_to_deploy
                 )
             )
-    _print_modules(
-        f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
-    ) if unchanged_modules else None
+    (
+        _print_modules(
+            f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
+        )
+        if unchanged_modules
+        else None
+    )
     _deploy_validated_deployment(
         deployment_manifest=deployment_manifest,
         deployment_manifest_wip=deployment_manifest_wip,

@@ -18,8 +18,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding verbose messaging to session manager and hints to reconcile session issues
 - adding info for destroy and list deployments when no deployments found
 - refactored git support logic to separate python file
+- added verbose messaging related to git issues
 - updated `black~=24.3.0` in requirements-dev as per dependabot
 - updated `werkzeug~=2.3.8` in requirements-dev as per dependabot
+
 
 ### Fixes
 - Add schema validation step checking that either `value` or `value_from` is present for each parameter

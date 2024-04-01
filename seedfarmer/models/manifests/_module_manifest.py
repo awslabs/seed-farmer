@@ -15,6 +15,7 @@
 from typing import Any, List, Optional
 
 from pydantic import PrivateAttr, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models._base import CamelModel, ValueFromRef
@@ -53,6 +54,7 @@ class ModuleParameter(ValueFromRef):
 
 class DataFile(CamelModel):
     file_path: str
+    commit_hash: SkipJsonSchema[Optional[str]] = None
     _local_file_path: Optional[str] = PrivateAttr(default=None)
     _bundle_path: Optional[str] = PrivateAttr(default=None)
 
@@ -93,6 +95,7 @@ class ModuleManifest(CamelModel):
     target_region: Optional[str] = None
     codebuild_image: Optional[str] = None
     data_files: Optional[List[DataFile]] = None
+    commit_hash: SkipJsonSchema[Optional[str]] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
     _local_path: Optional[str] = PrivateAttr(default=None)
 

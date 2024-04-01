@@ -8,7 +8,7 @@ checklist = """  Be sure to check:
 
 
 def no_deployment_found(deployment_name: Optional[str] = None) -> str:
-    msg = "We found no deployments with yout active session."
+    msg = "We found no deployments with your active session."
     if deployment_name:
         msg = f"We found no deployments named {deployment_name} with your active session."
 

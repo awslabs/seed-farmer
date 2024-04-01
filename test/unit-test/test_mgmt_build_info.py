@@ -15,17 +15,11 @@
 import logging
 import os
 
-import boto3
 import mock_data.mock_build_info as mock_build_info
-import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
-import mock_data.mock_manifests as mock_manifests
-import mock_data.mock_module_info_huge as mock_module_info_huge
 import pytest
 from moto import mock_sts
 
-import seedfarmer.errors
 import seedfarmer.mgmt.build_info as bi
-from seedfarmer.models.manifests import DeploymentManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 

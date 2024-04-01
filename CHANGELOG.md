@@ -23,6 +23,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - updated `werkzeug~=2.3.8` in requirements-dev as per dependabot
 - removed explicit support for python 3.7
   - this was only due to support for black in requirements-dev, but was also removed from setup.py
+- loosened restrictions on `typing-requirements` library 
 
 
 ### Fixes

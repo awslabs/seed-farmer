@@ -50,7 +50,7 @@ setup(
         "pyhumps~=3.5.0",
         "pydantic~=2.5.3",
         "executor~=23.2",
-        "typing-extensions~=4.6.1",
+        "typing-extensions>=4.6.3",
         "rich~=12.4.0",
         "requests>=2.28,<2.32",
         "python-dotenv~=0.21.0",

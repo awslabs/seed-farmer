@@ -152,14 +152,22 @@ def list_dependencies(
 
     if dep_manifest:
         module_depends_on_dict, module_dependencies_dict = du.generate_dependency_maps(manifest=dep_manifest)
-        print_dependency_list(
-            header_message=f"Modules that {module} in {group} of {deployment} DEPENDS ON : ",
-            modules=module_depends_on_dict[f"{group}-{module}"],
-        ) if module_depends_on_dict.get(f"{group}-{module}") else None
-        print_dependency_list(
-            header_message=f"Modules that ARE DEPENDENT ON {module} in {group} of {deployment} : ",
-            modules=module_dependencies_dict[f"{group}-{module}"],
-        ) if module_dependencies_dict.get(f"{group}-{module}") else None
+        (
+            print_dependency_list(
+                header_message=f"Modules that {module} in {group} of {deployment} DEPENDS ON : ",
+                modules=module_depends_on_dict[f"{group}-{module}"],
+            )
+            if module_depends_on_dict.get(f"{group}-{module}")
+            else None
+        )
+        (
+            print_dependency_list(
+                header_message=f"Modules that ARE DEPENDENT ON {module} in {group} of {deployment} : ",
+                modules=module_dependencies_dict[f"{group}-{module}"],
+            )
+            if module_dependencies_dict.get(f"{group}-{module}")
+            else None
+        )
 
 
 @list.command(name="deployspec", help="List the stored deployspec of a module")

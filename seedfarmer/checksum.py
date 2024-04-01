@@ -128,9 +128,11 @@ def get_module_md5(
         subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]
         for dirname in list(subfolders):
             # ignore all hidden directories and any dir already in .gitignore
-            subfolders.extend(scandir(dirname)) if not os.path.split(dirname)[1].startswith(".") and not _evaluate_file(
-                dirname, ignore_maps
-            ) else None
+            (
+                subfolders.extend(scandir(dirname))
+                if not os.path.split(dirname)[1].startswith(".") and not _evaluate_file(dirname, ignore_maps)
+                else None
+            )
         return subfolders
 
     _ = scandir(os.path.join(project_path, module_path))

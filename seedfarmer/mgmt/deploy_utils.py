@@ -296,29 +296,41 @@ def prepare_ssm_for_deploy(
         data=module_manifest_wip.model_dump(),
         session=session,
     )
-    mi.write_deployspec(
-        deployment=deployment_name,
-        group=group_name,
-        module=module_manifest.name,
-        data=module_manifest.deploy_spec.model_dump(),
-        session=session,
-    ) if module_manifest.deploy_spec else None
-    mi.write_module_md5(
-        deployment=deployment_name,
-        group=group_name,
-        module=module_manifest.name,
-        hash=module_manifest.deployspec_md5,
-        type=mi.ModuleConst.DEPLOYSPEC,
-        session=session,
-    ) if module_manifest.deployspec_md5 else None
-    mi.write_module_md5(
-        deployment=deployment_name,
-        group=group_name,
-        module=module_manifest.name,
-        hash=module_manifest.manifest_md5,
-        type=mi.ModuleConst.MANIFEST,
-        session=session,
-    ) if module_manifest.manifest_md5 else None
+    (
+        mi.write_deployspec(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest.name,
+            data=module_manifest.deploy_spec.model_dump(),
+            session=session,
+        )
+        if module_manifest.deploy_spec
+        else None
+    )
+    (
+        mi.write_module_md5(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest.name,
+            hash=module_manifest.deployspec_md5,
+            type=mi.ModuleConst.DEPLOYSPEC,
+            session=session,
+        )
+        if module_manifest.deployspec_md5
+        else None
+    )
+    (
+        mi.write_module_md5(
+            deployment=deployment_name,
+            group=group_name,
+            module=module_manifest.name,
+            hash=module_manifest.manifest_md5,
+            type=mi.ModuleConst.MANIFEST,
+            session=session,
+        )
+        if module_manifest.manifest_md5
+        else None
+    )
     mi.remove_module_md5(
         deployment=deployment_name,
         group=group_name,

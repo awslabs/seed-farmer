@@ -19,6 +19,11 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding info for destroy and list deployments when no deployments found
 - refactored git support logic to separate python file
 - added verbose messaging related to git issues
+- updated `black~=24.3.0` in requirements-dev as per dependabot
+- updated `werkzeug~=2.3.8` in requirements-dev as per dependabot
+- removed explicit support for python 3.7
+  - this was only due to support for black in requirements-dev, but was also removed from setup.py
+
 
 ### Fixes
 - Add schema validation step checking that either `value` or `value_from` is present for each parameter

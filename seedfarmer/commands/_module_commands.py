@@ -56,9 +56,9 @@ def _env_vars(
 ) -> Dict[str, str]:
     env_vars = (
         {
-            f"{_param('PARAMETER', use_project_prefix)}_{p.upper_snake_case}": p.value
-            if isinstance(p.value, str) or isinstance(p.value, EnvVar)
-            else json.dumps(p.value)
+            f"{_param('PARAMETER', use_project_prefix)}_{p.upper_snake_case}": (
+                p.value if isinstance(p.value, str) or isinstance(p.value, EnvVar) else json.dumps(p.value)
+            )
             for p in parameters
         }
         if parameters

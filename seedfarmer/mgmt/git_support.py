@@ -6,7 +6,9 @@ from urllib.parse import parse_qs
 import git
 from git import Repo
 
+import seedfarmer.messages as messages
 from seedfarmer import config
+from seedfarmer.errors import InvalidConfigurationError
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -70,16 +72,25 @@ def clone_module_repo(git_path: str) -> Tuple[str, str, Optional[str]]:
         if ref is not None:
             _logger.debug("Creating local repo and setting remote: %s into %s: ref=%s ", git_path, working_dir, ref)
             repo = Repo.init(working_dir)
-            git.Remote.create(repo, "origin", git_path, allow_unsafe_protocols)
-            repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
+            try:
+                git.Remote.create(repo, "origin", git_path, allow_unsafe_protocols)
+                repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
+            except git.GitError as ge:
+                raise InvalidConfigurationError(f"\n Cannot Clone Repo: {ge} {messages.git_error_support()}")
         else:
             _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-            repo = Repo.clone_from(
-                git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols
-            )
+            try:
+                repo = Repo.clone_from(
+                    git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols
+                )
+            except git.GitError as ge:
+                raise InvalidConfigurationError(f"\n Cannot Clone Repo: {ge} {messages.git_error_support()}")
     else:
         _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
         repo = Repo(working_dir)
-        repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
+        try:
+            repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
+        except git.GitError as ge:
+            raise InvalidConfigurationError(f"\n Cannot Clone Repo: {ge} {messages.git_error_support()}")
     commit_hash = get_commit_hash(repo)
     return (working_dir, module_directory, commit_hash)

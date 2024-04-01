@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v3.3.0 (2024-04-01)
+
+### New
 - support to generate schema for manifests from CLI (`seedfarmer list schema`)
 - added commithash persistence support for modules sourced from git
   - recorded in module manifest (`commit_hash`)

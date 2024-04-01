@@ -79,26 +79,27 @@ def bootstrap() -> None:
     "--synth/--no-synth",
     type=bool,
     default=False,
-    help="Synthesize a CFN template only...do not deploy",
+    help="Synthesize a CFN bootstrap template only...do not deploy",
     required=False,
     show_default=True,
 )
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to initiate a session",
+    help="The AWS profile to use to initiate a session",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="AWS region to use",
+    help="AWS region to use to initiate a session",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to toolchain role (alpha-numeric char max length of 6)",
+    help="""A qualifier to append to toolchain role (alpha-numeric char max length of 6).
+    If used, it MUST be used on every seedfarmer command.""",
     required=False,
 )
 @click.option(
@@ -181,19 +182,20 @@ def bootstrap_toolchain(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to initiate a session",
+    help="The AWS profile to use to initiate a session",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="AWS region to use",
+    help="AWS region to use to initiate a session",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to append to target role (alpha-numeric char max length of 6)",
+    help="""A qualifier to append to target role (alpha-numeric char max length of 6).
+    If used on the toolchain account, it should be used here!""",
     required=False,
 )
 @click.option(

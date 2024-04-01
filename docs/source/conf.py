@@ -21,8 +21,8 @@ import seedfarmer
 # -- Project information -----------------------------------------------------
 
 project = "Seed-Farmer"
-copyright = "2022, AWS Professional Seervices"
-author = "AWS Professional Seervices"
+copyright = "2022, AWS Professional Services"
+author = "AWS Professional Services"
 
 # The full version, including alpha/beta/rc tags
 release = seedfarmer.__version__
@@ -33,7 +33,7 @@ version = seedfarmer.__version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autosectionlabel", "sphinx.ext.napoleon", "myst_parser", "autoapi.extension"]
+extensions = ["sphinx.ext.autosectionlabel", "sphinx.ext.napoleon", "myst_parser", "autoapi.extension","sphinx_click.ext"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

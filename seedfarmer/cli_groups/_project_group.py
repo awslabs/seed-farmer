@@ -23,7 +23,11 @@ from seedfarmer.commands import get_default_project_policy
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-@click.group(name="projectpolicy", help="Fetch info about the project policy")
+@click.group(
+    name="projectpolicy",
+    help="""Fetch info about the project policy.
+      This will output the default provided project polocy that can be customized.""",
+)
 def projectpolicy() -> None:
     """Get info about the Project Policy"""
     pass

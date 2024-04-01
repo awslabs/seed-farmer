@@ -56,9 +56,9 @@ def _env_vars(
 ) -> Dict[str, str]:
     env_vars = (
         {
-            f"{_param('PARAMETER', use_project_prefix)}_{p.upper_snake_case}": p.value
-            if isinstance(p.value, str) or isinstance(p.value, EnvVar)
-            else json.dumps(p.value)
+            f"{_param('PARAMETER', use_project_prefix)}_{p.upper_snake_case}": (
+                p.value if isinstance(p.value, str) or isinstance(p.value, EnvVar) else json.dumps(p.value)
+            )
             for p in parameters
         }
         if parameters
@@ -125,6 +125,11 @@ def deploy_module(
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
     sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v { aws_codeseeder.__version__} || true"]
     cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
+    githash_add = (
+        [f"seedfarmer metadata add -k SeedFarmerModuleCommitHash -v {module_manifest.commit_hash} || true"]
+        if module_manifest.commit_hash
+        else []
+    )
     metadata_put = [
         f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
         (
@@ -164,6 +169,7 @@ def deploy_module(
             + md5_put
             + sf_version__add
             + cs_version_add
+            + githash_add
             + metadata_put,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,

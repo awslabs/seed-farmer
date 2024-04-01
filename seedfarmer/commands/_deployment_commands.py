@@ -17,16 +17,16 @@ import hashlib
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple, cast
-from urllib.parse import parse_qs
+import threading
+from typing import Any, Dict, List, Optional, cast
 
-import git
 import yaml
-from git import Repo
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
+import seedfarmer.messages as messages
 import seedfarmer.mgmt.deploy_utils as du
+import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.mgmt.module_info import (
@@ -55,77 +55,19 @@ from seedfarmer.services.session_manager import SessionManager
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _clone_module_repo(git_path: str) -> Tuple[str, str]:
-    """Clone a git repo and return directory it is cloned into
-
-    Rather than reinventing the wheel, we implement the Generic Git Repository functionality introduced by
-    Terraform. Full documentation on the Git URL definition can be found at:
-    https://www.terraform.io/language/modules/sources#generic-git-repository
-
-    Parameters
-    ----------
-    git_path : str
-        The Git URL specified in the Module Manifest. Full example:
-        https://example.com/network.git//modules/vpc?ref=v1.2.0&depth=1
-
-    Returns
-    -------
-    str
-        The local directory within the codeseeder.out/ where the repository was cloned
-    """
-    # gitpython library has started blocking non https and ssh protocols by default
-    # codecommit is not _actually_ unsafe
-    allow_unsafe_protocols = git_path.startswith("git::codecommit")
-
-    git_path = git_path.replace("git::", "")
-    ref: Optional[str] = None
-    depth: Optional[int] = None
-    module_directory = ""
-
-    if "?" in git_path:
-        git_path, query = git_path.split("?")
-        query_params = parse_qs(query)
-        ref = query_params.get("ref", [None])[0]  # type: ignore
-        if "depth" in query_params and query_params["depth"][0].isnumeric():
-            depth = int(query_params["depth"][0])
-
-    if ".git//" in git_path:
-        git_path, module_directory = git_path.split(".git//")
-
-    repo_directory = git_path.replace("https://", "").replace("git@", "").replace("/", "_").replace(":", "_")
-
-    working_dir = os.path.join(
-        config.OPS_ROOT, "seedfarmer.gitmodules", f"{repo_directory}_{ref.replace('/', '_')}" if ref else repo_directory
-    )
-    os.makedirs(working_dir, exist_ok=True)
-    if not os.listdir(working_dir):
-        if ref is not None:
-            _logger.debug("Creating local repo and setting remote: %s into %s: ref=%s ", git_path, working_dir, ref)
-            repo = Repo.init(working_dir)
-            git.Remote.create(repo, "origin", git_path, allow_unsafe_protocols)
-            repo.remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
-        else:
-            _logger.debug("Cloning %s into %s: ref=%s depth=%s", git_path, working_dir, ref, depth)
-            Repo.clone_from(
-                git_path, working_dir, branch=ref, depth=depth, allow_unsafe_protocols=allow_unsafe_protocols
-            )
-    else:
-        _logger.debug("Pulling existing repo %s at %s: ref=%s", git_path, working_dir, ref)
-        Repo(working_dir).remotes["origin"].pull(ref, allow_unsafe_protocols=allow_unsafe_protocols)
-    return (working_dir, module_directory)
-
-
 def _process_module_path(module: ModuleManifest) -> None:
-    working_dir, module_directory = _clone_module_repo(module.path)
+    working_dir, module_directory, commit_hash = sf_git.clone_module_repo(module.path)
     module.set_local_path(os.path.join(working_dir, module_directory))
+    module.commit_hash = commit_hash if commit_hash else None
 
 
 def _process_data_files(data_files: List[DataFile], module_name: str, group_name: str) -> None:
     for data_file in data_files:
         if data_file.file_path.startswith("git::"):
-            working_dir, module_directory = _clone_module_repo(data_file.file_path)
+            working_dir, module_directory, commit_hash = sf_git.clone_module_repo(data_file.file_path)
             data_file.set_local_file_path(os.path.join(working_dir, module_directory))
             data_file.set_bundle_path(module_directory)
+            data_file.commit_hash = commit_hash if commit_hash else None
         else:
             data_file.set_local_file_path(os.path.join(config.OPS_ROOT, data_file.file_path))
     missing_files = du.validate_data_files(data_files)
@@ -182,13 +124,17 @@ def _execute_deploy(
             f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
         )
 
-    du.prepare_ssm_for_deploy(
-        deployment_name=deployment_manifest.name,
-        group_name=group_name,
-        module_manifest=module_manifest,
-        account_id=target_account_id,
-        region=target_region,
-    ) if deployment_manifest.name else None
+    (
+        du.prepare_ssm_for_deploy(
+            deployment_name=deployment_manifest.name,
+            group_name=group_name,
+            module_manifest=module_manifest,
+            account_id=target_account_id,
+            region=target_region,
+        )
+        if deployment_manifest.name
+        else None
+    )
 
     return commands.deploy_module(
         deployment_name=cast(str, deployment_manifest.name),
@@ -308,9 +254,12 @@ def _deploy_validated_deployment(
         for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
 
                     def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_deploy(**args)
 
                     def _render_permissions_boundary_arn(
@@ -376,9 +325,15 @@ def prime_target_accounts(
     deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
 ) -> None:
     _logger.info("Priming Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Prime-Accounts"
+    ) as workers:
 
         def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
@@ -412,15 +367,21 @@ def prime_target_accounts(
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(deployment_manifest: DeploymentManifest, retain_seedkit: bool = False) -> None:
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Teardown-Accounts"
+    ) as workers:
 
         def _teardown_accounts(args: Dict[str, Any]) -> None:
+            threading.current_thread().name = (
+                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+            ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
-            if not retain_seedkit:
+            if remove_seedkit:
+                _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
 
         params = [
@@ -435,6 +396,7 @@ def destroy_deployment(
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
+    remove_seedkit: bool = False,
 ) -> None:
     """
     destroy_deployment
@@ -457,6 +419,12 @@ def destroy_deployment(
         This flag indicates to print out the DeploymentManifest object as s dictionary.
 
         By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
+
+        By default False
     """
     if not destroy_manifest.groups:
         print_bolded("Nothing to destroy", "white")
@@ -472,18 +440,27 @@ def destroy_deployment(
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as workers:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=threads, thread_name_prefix="Destroy"
+                ) as workers:
 
                     def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
+                        threading.current_thread().name = (
+                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                        ).replace("_", "-")
                         return _execute_destroy(**args)
 
                     params = []
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
 
-                        _process_data_files(
-                            data_files=_module.data_files, module_name=_module.name, group_name=_group.name
-                        ) if _module.data_files is not None else None
+                        (
+                            _process_data_files(
+                                data_files=_module.data_files, module_name=_module.name, group_name=_group.name
+                            )
+                            if _module.data_files is not None
+                            else None
+                        )
 
                         if _module and _module.deploy_spec:
                             params = [
@@ -505,9 +482,11 @@ def destroy_deployment(
                             ]
                     destroy_response = list(workers.map(_exec_destroy, params))
                     _logger.debug(destroy_response)
-                    print_modules_build_info("Build Info Debug Data", destroy_response) if _logger.isEnabledFor(
-                        logging.DEBUG
-                    ) else None
+                    (
+                        print_modules_build_info("Build Info Debug Data", destroy_response)
+                        if _logger.isEnabledFor(logging.DEBUG)
+                        else None
+                    )
                     for dep_resp_object in destroy_response:
                         if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to destroy...exiting deployment")
@@ -523,7 +502,7 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, retain_seedkit=True)
+            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -586,9 +565,11 @@ def deploy_deployment(
 
             _process_module_path(module=module) if module.path.startswith("git::") else None
 
-            _process_data_files(
-                data_files=module.data_files, module_name=module.name, group_name=group.name
-            ) if module.data_files is not None else None
+            (
+                _process_data_files(data_files=module.data_files, module_name=module.name, group_name=group.name)
+                if module.data_files is not None
+                else None
+            )
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
@@ -646,9 +627,13 @@ def deploy_deployment(
                     name=group.name, path=group.path, concurrency=group.concurrency, modules=modules_to_deploy
                 )
             )
-    _print_modules(
-        f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
-    ) if unchanged_modules else None
+    (
+        _print_modules(
+            f"Modules deployed that are up to date (will not be changed): {deployment_name} ", unchanged_modules
+        )
+        if unchanged_modules
+        else None
+    )
     _deploy_validated_deployment(
         deployment_manifest=deployment_manifest,
         deployment_manifest_wip=deployment_manifest_wip,
@@ -806,7 +791,7 @@ def destroy(
     qualifier: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
-    retain_seedkit: bool = False,
+    remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
 ) -> None:
@@ -828,6 +813,11 @@ def destroy(
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
+        By default False
+    remove_seedkit: bool, optional
+        This flag indicates that the project seedkit should be removed.
+        This will remove it (if set to True) regardless if other deployments in the
+        project use it!!  Use with caution!!
 
         By default False
     show_manifest : bool, optional
@@ -838,7 +828,6 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
-
     Raises
     ------
     InvalidConfigurationError
@@ -868,6 +857,17 @@ def destroy(
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,
+            remove_seedkit=remove_seedkit,
         )
     else:
-        _logger.info("Deployment %s was not found, ignoring... ", deployment_name)
+        account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
+        region = session_manager.toolchain_session.region_name
+        _logger.info(
+            """Deployment %s was not found in project %s in account %s and region %s
+                     """,
+            deployment_name,
+            project,
+            account_id,
+            region,
+        )
+        print_bolded(message=messages.no_deployment_found(deployment_name=deployment_name), color="yellow")

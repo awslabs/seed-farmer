@@ -14,8 +14,10 @@
 
 from typing import Any, List, Optional
 
-from pydantic import PrivateAttr
+from pydantic import PrivateAttr, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
+from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models._base import CamelModel, ValueFromRef
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.utils import upper_snake_case
@@ -37,9 +39,22 @@ class ModuleParameter(ValueFromRef):
     def upper_snake_case(self) -> str:
         return self._upper_snake_case
 
+    @model_validator(mode="after")
+    def check_value_or_value_from(self) -> "ModuleParameter":
+        value = self.value
+        value_from = self.value_from
+
+        if value is None and value_from is None:
+            raise InvalidManifestError(f"value or value_from must be provided for parameter {self.name}")
+        if value is not None and value_from is not None:
+            raise InvalidManifestError(f"value and value_from cannot be provided for parameter {self.name}")
+
+        return self
+
 
 class DataFile(CamelModel):
     file_path: str
+    commit_hash: SkipJsonSchema[Optional[str]] = None
     _local_file_path: Optional[str] = PrivateAttr(default=None)
     _bundle_path: Optional[str] = PrivateAttr(default=None)
 
@@ -80,6 +95,7 @@ class ModuleManifest(CamelModel):
     target_region: Optional[str] = None
     codebuild_image: Optional[str] = None
     data_files: Optional[List[DataFile]] = None
+    commit_hash: SkipJsonSchema[Optional[str]] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
     _local_path: Optional[str] = PrivateAttr(default=None)
 

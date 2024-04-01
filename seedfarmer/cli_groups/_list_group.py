@@ -19,6 +19,7 @@ from typing import List, Optional
 
 import click
 
+import seedfarmer.messages as messages
 import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
@@ -30,6 +31,7 @@ from seedfarmer.output_utils import (
     print_json,
     print_manifest_inventory,
 )
+from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import load_dotenv_files
 
@@ -92,26 +94,30 @@ def list() -> None:
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -146,14 +152,22 @@ def list_dependencies(
 
     if dep_manifest:
         module_depends_on_dict, module_dependencies_dict = du.generate_dependency_maps(manifest=dep_manifest)
-        print_dependency_list(
-            header_message=f"Modules that {module} in {group} of {deployment} DEPENDS ON : ",
-            modules=module_depends_on_dict[f"{group}-{module}"],
-        ) if module_depends_on_dict.get(f"{group}-{module}") else None
-        print_dependency_list(
-            header_message=f"Modules that ARE DEPENDENT ON {module} in {group} of {deployment} : ",
-            modules=module_dependencies_dict[f"{group}-{module}"],
-        ) if module_dependencies_dict.get(f"{group}-{module}") else None
+        (
+            print_dependency_list(
+                header_message=f"Modules that {module} in {group} of {deployment} DEPENDS ON : ",
+                modules=module_depends_on_dict[f"{group}-{module}"],
+            )
+            if module_depends_on_dict.get(f"{group}-{module}")
+            else None
+        )
+        (
+            print_dependency_list(
+                header_message=f"Modules that ARE DEPENDENT ON {module} in {group} of {deployment} : ",
+                modules=module_dependencies_dict[f"{group}-{module}"],
+            )
+            if module_dependencies_dict.get(f"{group}-{module}")
+            else None
+        )
 
 
 @list.command(name="deployspec", help="List the stored deployspec of a module")
@@ -188,26 +202,30 @@ def list_dependencies(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -292,19 +310,20 @@ def list_deployspec(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
@@ -317,7 +336,10 @@ def list_deployspec(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -398,26 +420,30 @@ def list_module_metadata(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -494,26 +520,30 @@ def list_all_module_metadata(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -559,19 +589,20 @@ def list_modules(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
@@ -593,15 +624,24 @@ def list_deployments(
         project = _load_project()
     _logger.debug("Listing all deployments for Project %s", project)
 
-    deps = mi.get_all_deployments(
-        session=SessionManager()
-        .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-        .toolchain_session
+    session_manager = SessionManager().get_or_create(
+        project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
-    print_deployment_inventory(description="Deployment Names", dep=deps)
+    deps = mi.get_all_deployments(session=session_manager.toolchain_session)
+    if not deps or len(deps) == 0:
+        account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
+        region = session_manager.toolchain_session.region_name
+        _logger.info("No Deployments found for project %s in account %s and region %s", project, account_id, region)
+        print_bolded(message=messages.no_deployment_found(), color="yellow")
+    else:
+        print_deployment_inventory(description="Deployment Names", dep=deps)
 
 
-@list.command(name="buildparams", help="Fetch the environment params of an executed build")
+@list.command(
+    name="buildparams",
+    help="""Fetch the environment params of an executed build.
+               This is to help with local development efforts.""",
+)
 @click.option(
     "--deployment",
     "-d",
@@ -639,19 +679,20 @@ def list_deployments(
 @click.option(
     "--profile",
     default=None,
-    help="The AWS profile to use for boto3.Sessions",
+    help="The AWS profile used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--region",
     default=None,
-    help="The AWS region of the toolchain",
+    help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
 @click.option(
     "--qualifier",
     default=None,
-    help="A qualifier to use with the seedfarmer roles",
+    help="""A qualifier to use with the seedfarmer roles.
+    Use only if bootstrapped with this qualifier""",
     required=False,
 )
 @click.option(
@@ -664,7 +705,10 @@ def list_deployments(
     "--env-file",
     "env_files",
     default=[".env"],
-    help="A relative path to the .env file to load environment variables from",
+    help="""A relative path to the .env file to load environment variables from.
+    Multple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
     multiple=True,
     required=False,
 )
@@ -730,3 +774,13 @@ def list_build_env_params(
                 sys.stdout.write("\n")
         else:
             _error_messaging(deployment, group, module)
+
+
+@list.command(
+    name="schema",
+    help="""Generate the schema that SeedFarmer uses for manifest objects.
+             This will return a formatted string of the schema that can
+             be piped to a file. """,
+)
+def list_manifest_schema() -> None:
+    print(json.dumps(bi.get_manifest_schema(), indent=2))

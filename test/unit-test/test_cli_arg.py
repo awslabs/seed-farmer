@@ -605,10 +605,14 @@ def test_list_deployments_extra_args():
 @pytest.mark.list_deployments
 def test_list_deployments(session_manager, mocker):
     mocker.patch("seedfarmer.cli_groups._list_group.mi.get_all_deployments", return_value=None)
+    mocker.patch(
+        "seedfarmer.cli_groups._list_group.get_sts_identity_info",
+        return_value=("1234566789012", "arn:aws", "aws"),
+    )
     _test_command(
         sub_command=list,
         options=["deployments", "-p", "myapp", "--debug"],
-        exit_code=1,
+        exit_code=0,
     )
 
 
@@ -1150,7 +1154,7 @@ def test_store_help():
         sub_command=store,
         options=["--help"],
         exit_code=0,
-        expected_output="Top Level command to support storing module metadata",
+        expected_output="Top Level command to support storing module information",
     )
 
 

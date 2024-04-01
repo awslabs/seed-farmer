@@ -158,9 +158,11 @@ def print_modules_build_info(
         console.print(
             f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module} status: {r_obj.status}", crop=False  # type: ignore
         )
-        console.print(
-            f"    {r_obj.codeseeder_metadata.build_url}", crop=False  # type: ignore
-        ) if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url else None  # type: ignore
+        (
+            console.print(f"    {r_obj.codeseeder_metadata.build_url}", crop=False)  # type: ignore
+            if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url  # type: ignore
+            else None
+        )
 
 
 def print_errored_modules_build_info(
@@ -182,9 +184,11 @@ def print_errored_modules_build_info(
     for r_obj in modules_data:
         if r_obj and r_obj.status in ["ERROR", "error", "Error"]:
             console.print(f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module}", crop=False)
-            console.print(
-                f"    {r_obj.codeseeder_metadata.build_url}", crop=False
-            ) if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url else None
+            (
+                console.print(f"    {r_obj.codeseeder_metadata.build_url}", crop=False)
+                if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url
+                else None
+            )
 
 
 def print_dependency_error_list(header_message: str, errored_list: List[Dict[str, List[str]]]) -> None:

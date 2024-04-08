@@ -10,6 +10,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v3.3.1 (2024-04-08)
+
+### New
+
+### Changes
+
+### Fixes
 - metadata sourced from file to the os env cannot be parsed if not compliant json, adding code to check for this
 
 ## v3.3.0 (2024-04-01)

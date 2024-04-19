@@ -40,6 +40,7 @@ from seedfarmer.mgmt.module_info import (
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest, NetworkMapping
+from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.output_utils import (
     _print_modules,
     print_bolded,
@@ -80,89 +81,66 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
 
 
 def _execute_deploy(
-    group_name: str,
-    module_manifest: ModuleManifest,
-    deployment_manifest: DeploymentManifest,
-    docker_credentials_secret: Optional[str] = None,
-    permissions_boundary_arn: Optional[str] = None,
-    codebuild_image: Optional[str] = None,
+    mdo: ModuleDeployObject,
 ) -> ModuleDeploymentResponse:
-    parameters = load_parameter_values(
-        deployment_name=cast(str, deployment_manifest.name),
+    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    account_id = str(module_manifest.get_target_account_id())
+    region = str(module_manifest.target_region)
+
+    mdo.parameters = load_parameter_values(
+        deployment_name=cast(str, mdo.deployment_manifest.name),
         parameters=module_manifest.parameters,
-        deployment_manifest=deployment_manifest,
-        target_account=module_manifest.target_account,
-        target_region=module_manifest.target_region,
+        deployment_manifest=mdo.deployment_manifest,
+        target_account=account_id,
+        target_region=region,
     )
 
-    target_account_id = cast(str, module_manifest.get_target_account_id())
-    target_region = cast(str, module_manifest.target_region)
-    # Deploys the IAM role per module
     module_stack_name, module_role_name = commands.deploy_module_stack(
         module_stack_path=get_modulestack_path(str(module_manifest.get_local_path())),
-        deployment_name=cast(str, deployment_manifest.name),
-        deployment_partition=cast(str, deployment_manifest._partition),
-        group_name=group_name,
-        module_name=module_manifest.name,
-        account_id=target_account_id,
-        region=target_region,
-        parameters=parameters,
-        docker_credentials_secret=docker_credentials_secret,
-        permissions_boundary_arn=permissions_boundary_arn,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
+        deployment_partition=cast(str, mdo.deployment_manifest._partition),
+        group_name=mdo.group_name,
+        module_name=mdo.module_name,
+        account_id=account_id,
+        region=region,
+        parameters=mdo.parameters,
+        docker_credentials_secret=mdo.docker_credentials_secret,
+        permissions_boundary_arn=mdo.permissions_boundary_arn,
     )
+    mdo.module_role_name = module_role_name
 
     #   Get the current module's SSM if it was alreadly loaded...
-    session = (
-        SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
-    )
-    module_metadata = json.dumps(
-        get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    mdo.module_metadata = json.dumps(
+        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
     )
 
     if module_manifest.deploy_spec is None:
         raise seedfarmer.errors.InvalidManifestError(
-            f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
+            f"""Invalid value for ModuleManifest.deploy_spec in group {mdo.group_name}
+              and module : {mdo.module_name}"""
         )
 
     (
         du.prepare_ssm_for_deploy(
-            deployment_name=deployment_manifest.name,
-            group_name=group_name,
+            deployment_name=mdo.deployment_manifest.name,
+            group_name=mdo.group_name,
             module_manifest=module_manifest,
-            account_id=target_account_id,
-            region=target_region,
+            account_id=account_id,
+            region=region,
         )
-        if deployment_manifest.name
+        if mdo.deployment_manifest.name
         else None
     )
 
-    return commands.deploy_module(
-        deployment_name=cast(str, deployment_manifest.name),
-        deployment_partition=cast(str, deployment_manifest._partition),
-        group_name=group_name,
-        module_manifest=module_manifest,
-        account_id=target_account_id,
-        region=target_region,
-        parameters=parameters,
-        module_metadata=module_metadata,
-        docker_credentials_secret=docker_credentials_secret,
-        permissions_boundary_arn=permissions_boundary_arn,
-        module_role_name=module_role_name,
-        codebuild_image=codebuild_image,
-    )
+    return commands.deploy_module(mdo)
 
 
-def _execute_destroy(
-    group_name: str,
-    module_manifest: ModuleManifest,
-    module_path: str,
-    deployment_manifest: DeploymentManifest,
-    docker_credentials_secret: Optional[str] = None,
-    codebuild_image: Optional[str] = None,
-) -> Optional[ModuleDeploymentResponse]:
+def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
+    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
     if module_manifest.deploy_spec is None:
         raise seedfarmer.errors.InvalidManifestError(
-            f"Invalid value for ModuleManifest.deploy_spec in group {group_name} and module : {module_manifest.name}"
+            f"Invalid value for ModuleManifest.deploy_spec in group {mdo.group_name} and module : {mdo.module_name}"
         )
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
@@ -170,55 +148,43 @@ def _execute_destroy(
     session = (
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
-    module_metadata = json.dumps(
-        get_module_metadata(cast(str, deployment_manifest.name), group_name, module_manifest.name, session=session)
+    mdo.module_metadata = json.dumps(
+        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
     )
-
+    mdo.parameters = load_parameter_values(
+        deployment_name=cast(str, mdo.deployment_manifest.name),
+        parameters=module_manifest.parameters,
+        deployment_manifest=mdo.deployment_manifest,
+        target_account=target_account_id,
+        target_region=target_region,
+    )
     module_stack_name, module_role_name = commands.get_module_stack_info(
-        deployment_name=cast(str, deployment_manifest.name),
-        group_name=group_name,
-        module_name=module_manifest.name,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
+        group_name=mdo.group_name,
+        module_name=mdo.module_name,
         account_id=target_account_id,
         region=target_region,
     )
+
+    mdo.module_role_name = module_role_name
 
     commands.force_manage_policy_attach(
-        deployment_name=cast(str, deployment_manifest.name),
-        group_name=group_name,
-        module_name=module_manifest.name,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
+        group_name=mdo.group_name,
+        module_name=mdo.module_name,
         account_id=target_account_id,
         region=target_region,
-        module_role_name=module_role_name,
+        module_role_name=mdo.module_role_name,
     )
-
-    resp = commands.destroy_module(
-        deployment_name=cast(str, deployment_manifest.name),
-        deployment_partition=cast(str, deployment_manifest._partition),
-        group_name=group_name,
-        module_path=module_path,
-        module_manifest=module_manifest,
-        account_id=target_account_id,
-        region=target_region,
-        parameters=load_parameter_values(
-            deployment_name=cast(str, deployment_manifest.name),
-            parameters=module_manifest.parameters,
-            deployment_manifest=deployment_manifest,
-            target_account=module_manifest.target_account,
-            target_region=module_manifest.target_region,
-        ),
-        module_metadata=module_metadata,
-        module_role_name=module_role_name,
-        codebuild_image=codebuild_image,
-    )
-
+    resp = commands.destroy_module(mdo)
     if resp.status == StatusType.SUCCESS.value:
         commands.destroy_module_stack(
-            cast(str, deployment_manifest.name),
-            group_name,
-            module_manifest.name,
-            account_id=cast(str, module_manifest.get_target_account_id()),
-            region=cast(str, module_manifest.target_region),
-            docker_credentials_secret=docker_credentials_secret,
+            cast(str, mdo.deployment_manifest.name),
+            mdo.group_name,
+            mdo.module_name,
+            account_id=target_account_id,
+            region=target_region,
+            docker_credentials_secret=mdo.docker_credentials_secret,
         )
 
     return resp
@@ -226,7 +192,6 @@ def _execute_destroy(
 
 def _deploy_validated_deployment(
     deployment_manifest: DeploymentManifest,
-    deployment_manifest_wip: DeploymentManifest,
     groups_to_deploy: List[ModulesManifest],
     dryrun: bool,
 ) -> None:
@@ -241,63 +206,38 @@ def _deploy_validated_deployment(
                 f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}", mods_would_deploy
             )
             return
-        deployment_manifest_wip.groups = groups_to_deploy
+        deployment_manifest.groups = groups_to_deploy
         print_manifest_inventory(
-            f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
-            deployment_manifest_wip,
+            f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}",
+            deployment_manifest,
             True,
         )
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
-                "DeploymentManifest for deploy after filter =  %s", json.dumps(deployment_manifest_wip.dict())
+                "DeploymentManifest for deploy after filter =  %s", json.dumps(deployment_manifest.model_dump())
             )
-        for _group in deployment_manifest_wip.groups:
+        for _group in deployment_manifest.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
 
-                    def _exec_deploy(args: Dict[str, Any]) -> ModuleDeploymentResponse:
+                    def _exec_deploy(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
                         threading.current_thread().name = (
-                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                            f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
                         ).replace("_", "-")
-                        return _execute_deploy(**args)
+                        return _execute_deploy(mdo)
 
-                    def _render_permissions_boundary_arn(
-                        account_id: Optional[str], partition: Optional[str], permissions_boundary_name: Optional[str]
-                    ) -> Optional[str]:
-                        return (
-                            f"arn:{partition}:iam::{account_id}:policy/{permissions_boundary_name}"
-                            if permissions_boundary_name is not None
-                            else None
-                        )
+                    mdos = []
+                    for _module in _group.modules:
+                        if _module and _module.deploy_spec:
+                            mdo = ModuleDeployObject(
+                                deployment_manifest=deployment_manifest,
+                                group_name=_group.name,
+                                module_name=_module.name,
+                            )
+                            mdos.append(mdo)
 
-                    params = [
-                        {
-                            "group_name": _group.name,
-                            "module_manifest": _module,
-                            "deployment_manifest": deployment_manifest,
-                            "docker_credentials_secret": deployment_manifest_wip.get_parameter_value(
-                                "dockerCredentialsSecret",
-                                account_alias=_module.target_account,
-                                region=_module.target_region,
-                            ),
-                            "permissions_boundary_arn": _render_permissions_boundary_arn(
-                                account_id=_module.get_target_account_id(),
-                                partition=deployment_manifest_wip._partition,
-                                permissions_boundary_name=deployment_manifest_wip.get_parameter_value(
-                                    "permissionsBoundaryName",
-                                    account_alias=_module.target_account,
-                                    region=_module.target_region,
-                                ),
-                            ),
-                            "codebuild_image": deployment_manifest_wip.get_region_codebuild_image(
-                                account_alias=_module.target_account, region=_module.target_region
-                            ),
-                        }
-                        for _module in _group.modules
-                        if _module and _module.deploy_spec
-                    ]
-                    deploy_response = list(workers.map(_exec_deploy, params))
+                    deploy_response = list(workers.map(_exec_deploy, mdos))
                     _logger.debug(deploy_response)
                     (
                         print_modules_build_info("Build Info Debug Data", deploy_response)  # type: ignore
@@ -314,9 +254,9 @@ def _deploy_validated_deployment(
                                 error_message="At least one module failed to deploy...exiting deployment"
                             )
 
-        print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
+        print_manifest_inventory(f"Modules Deployed: {deployment_manifest.name}", deployment_manifest, False)
     else:
-        _logger.info(" All modules in %s up to date", deployment_manifest_wip.name)
+        _logger.info(" All modules in %s up to date", deployment_manifest.name)
     # Write the deployment manifest once completed to preserve group order
     du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
@@ -444,16 +384,15 @@ def destroy_deployment(
                     max_workers=threads, thread_name_prefix="Destroy"
                 ) as workers:
 
-                    def _exec_destroy(args: Dict[str, Any]) -> Optional[ModuleDeploymentResponse]:
+                    def _exec_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
                         threading.current_thread().name = (
-                            f"{threading.current_thread().name}-{args['group_name']}_{args['module_manifest'].name}"
+                            f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
                         ).replace("_", "-")
-                        return _execute_destroy(**args)
+                        return _execute_destroy(mdo)
 
-                    params = []
+                    mdos = []
                     for _module in _group.modules:
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
-
                         (
                             _process_data_files(
                                 data_files=_module.data_files, module_name=_module.name, group_name=_group.name
@@ -461,26 +400,12 @@ def destroy_deployment(
                             if _module.data_files is not None
                             else None
                         )
-
                         if _module and _module.deploy_spec:
-                            params = [
-                                {
-                                    "group_name": _group.name,
-                                    "module_manifest": _module,
-                                    "module_path": str(_module.get_local_path()),
-                                    "deployment_manifest": destroy_manifest,
-                                    "docker_credentials_secret": destroy_manifest.get_parameter_value(
-                                        "dockerCredentialsSecret",
-                                        account_alias=_module.target_account,
-                                        region=_module.target_region,
-                                    ),
-                                    "codebuild_image": destroy_manifest.get_region_codebuild_image(
-                                        account_alias=_module.target_account, region=_module.target_region
-                                    ),
-                                }
-                                for _module in _group.modules
-                            ]
-                    destroy_response = list(workers.map(_exec_destroy, params))
+                            mdo = ModuleDeployObject(
+                                deployment_manifest=destroy_manifest, group_name=_group.name, module_name=_module.name
+                            )
+                            mdos.append(mdo)
+                    destroy_response = list(workers.map(_exec_destroy, mdos))
                     _logger.debug(destroy_response)
                     (
                         print_modules_build_info("Build Info Debug Data", destroy_response)
@@ -539,13 +464,10 @@ def deploy_deployment(
 
         By default False
     """
-    deployment_manifest_wip = deployment_manifest.model_copy()
-    deployment_name = cast(str, deployment_manifest_wip.name)
+    deployment_name = cast(str, deployment_manifest.name)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
-    print_manifest_inventory(
-        f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
-    )
+    print_manifest_inventory(f"Modules added to manifest: {deployment_manifest.name}", deployment_manifest, True)
 
     if deployment_manifest.force_dependency_redeploy:
         _logger.warn("You have configured your deployment to FORCE all dependent modules to redeploy")
@@ -554,7 +476,7 @@ def deploy_deployment(
     groups_to_deploy = []
     unchanged_modules = []
     _group_mod_to_deploy: List[str] = []
-    for group in deployment_manifest_wip.groups:
+    for group in deployment_manifest.groups:
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         du.validate_group_parameters(group=group)
@@ -590,9 +512,7 @@ def deploy_deployment(
                 data_files=module.data_files,
                 excluded_files=md5_excluded_module_files,
             )
-            resolve_params_for_checksum(
-                deployment_manifest=deployment_manifest_wip, module=module, group_name=group.name
-            )
+            resolve_params_for_checksum(deployment_manifest=deployment_manifest, module=module, group_name=group.name)
 
             module.manifest_md5 = hashlib.md5(
                 json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
@@ -636,7 +556,6 @@ def deploy_deployment(
     )
     _deploy_validated_deployment(
         deployment_manifest=deployment_manifest,
-        deployment_manifest_wip=deployment_manifest_wip,
         groups_to_deploy=groups_to_deploy,
         dryrun=dryrun,
     )

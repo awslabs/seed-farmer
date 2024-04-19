@@ -12,6 +12,7 @@ import seedfarmer.commands._module_commands as mc
 import seedfarmer.errors
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
+from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -166,23 +167,27 @@ def test_deploy_modules(session_manager, mocker):
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
     )
     dep = DeploymentManifest(**deployment_manifest_json)
+    dep.validate_and_set_module_defaults()
     group_name = dep.groups[1].name
     module_manifest = dep.groups[1].modules[0]
     module_manifest.deploy_spec = DeploySpec(**dummy_deployspec)
 
-    mc.deploy_module(
-        deployment_name=dep.name,
-        deployment_partition="aws",
-        group_name=group_name,
-        module_manifest=module_manifest,
-        account_id="123456789012",
-        region="us-east-1",
-        parameters=module_manifest.parameters,
-        module_metadata=json.dumps(dummy_list_params),
-        docker_credentials_secret="aws-addf-docker-credentials",
-        permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
-        module_role_name="mlops-optionals-efs",
-    )
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group_name, module_name=module_manifest.name)
+  
+    mdo.codebuild_image = "aws/codebuild/standard:7.0"
+    mdo.parameters = [
+        ModuleParameter(
+            **{
+                "name": "test",
+                "value": "af",
+            }
+        )
+    ]
+    mdo.permissions_boundary_arn = ("arn:aws:iam::123456789012:policy/boundary",)
+    mdo.module_role_name = ("mlops-optionals-efs",)
+    mdo.docker_credentials_secret = ("aws-addf-docker-credentials",)
+    mdo.module_metadata = (json.dumps(dummy_list_params),)
+    mc.deploy_module(mdo)
 
 
 @pytest.mark.commands
@@ -194,26 +199,32 @@ def test_deploy_modules_error_deployspec(session_manager, mocker):
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
     )
     dep = DeploymentManifest(**deployment_manifest_json)
+    dep.validate_and_set_module_defaults()
     group_name = dep.groups[1].name
     module_manifest = dep.groups[1].modules[0]
     spec = DeploySpec(**dummy_deployspec)
     spec.deploy = None
     module_manifest.deploy_spec = spec
 
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group_name, module_name=module_manifest.name)
+    mdo.codebuild_image = "aws/codebuild/standard:7.0"
+    mdo.parameters = [
+        {
+            "name": "test",
+            "value": "af",
+        },
+        {
+            "name": "deptest",
+            "value": "something",
+        },
+    ]
+    mdo.permissions_boundary_arn = ("arn:aws:iam::123456789012:policy/boundary",)
+    mdo.module_role_name = ("mlops-optionals-efs",)
+    mdo.docker_credentials_secret = ("aws-addf-docker-credentials",)
+    mdo.module_metadata = (json.dumps(dummy_list_params),)
+
     with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
-        mc.deploy_module(
-            deployment_name=dep.name,
-            deployment_partition="aws",
-            group_name=group_name,
-            module_manifest=module_manifest,
-            account_id="123456789012",
-            region="us-east-1",
-            parameters=module_manifest.parameters,
-            module_metadata=json.dumps(dummy_list_params),
-            docker_credentials_secret="aws-addf-docker-credentials",
-            permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
-            module_role_name="mlops-optionals-efs",
-        )
+        mc.deploy_module(mdo)
 
 
 @pytest.mark.commands
@@ -225,22 +236,27 @@ def test_destroy_modules(session_manager, mocker):
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
     )
     dep = DeploymentManifest(**deployment_manifest_json)
+    dep.validate_and_set_module_defaults()
     group_name = dep.groups[1].name
     module_manifest = dep.groups[1].modules[0]
     module_manifest.deploy_spec = DeploySpec(**dummy_deployspec)
 
-    mc.destroy_module(
-        deployment_name=dep.name,
-        deployment_partition="aws",
-        group_name=group_name,
-        module_path="module/path/path",
-        module_manifest=module_manifest,
-        account_id="123456789012",
-        region="us-east-1",
-        parameters=module_manifest.parameters,
-        module_metadata=json.dumps(dummy_list_params),
-        module_role_name="mlops-optionals-efs",
-    )
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group_name, module_name=module_manifest.name)
+    mdo.codebuild_image = "aws/codebuild/standard:7.0"
+    mdo.parameters = [
+        ModuleParameter(
+            **{
+                "name": "test",
+                "value": "af",
+            }
+        )
+    ]
+    mdo.permissions_boundary_arn = ("arn:aws:iam::123456789012:policy/boundary",)
+    mdo.module_role_name = ("mlops-optionals-efs",)
+    mdo.docker_credentials_secret = ("aws-addf-docker-credentials",)
+    mdo.module_metadata = (json.dumps(dummy_list_params),)
+
+    mc.destroy_module(mdo)
 
 
 @pytest.mark.commands
@@ -252,22 +268,28 @@ def test_destroy_modules_error_deployspec(session_manager, mocker):
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
     )
     dep = DeploymentManifest(**deployment_manifest_json)
+    dep.validate_and_set_module_defaults()
     group_name = dep.groups[1].name
     module_manifest = dep.groups[1].modules[0]
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group_name, module_name=module_manifest.name)
+    mdo.codebuild_image = "aws/codebuild/standard:7.0"
+    mdo.parameters = [
+        {
+            "name": "test",
+            "value": "af",
+        },
+        {
+            "name": "deptest",
+            "value": "something",
+        },
+    ]
+    mdo.permissions_boundary_arn = ("arn:aws:iam::123456789012:policy/boundary",)
+    mdo.module_role_name = ("mlops-optionals-efs",)
+    mdo.docker_credentials_secret = ("aws-addf-docker-credentials",)
+    mdo.module_metadata = (json.dumps(dummy_list_params),)
 
     with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
-        mc.destroy_module(
-            deployment_name=dep.name,
-            deployment_partition="aws",
-            group_name=group_name,
-            module_path="module/path/path",
-            module_manifest=module_manifest,
-            account_id="123456789012",
-            region="us-east-1",
-            parameters=module_manifest.parameters,
-            module_metadata=json.dumps(dummy_list_params),
-            module_role_name="mlops-optionals-efs",
-        )
+        mc.destroy_module(mdo)
 
 
 @pytest.mark.commands

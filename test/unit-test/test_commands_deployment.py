@@ -16,7 +16,13 @@ from moto import mock_sts
 import seedfarmer.commands._deployment_commands as dc
 import seedfarmer.errors
 from seedfarmer.models._deploy_spec import DeploySpec
-from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests import (
+    DataFile,
+    DeploymentManifest,
+    ModuleManifest,
+    ModuleParameter,
+)
+from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -126,7 +132,9 @@ def test_destroy_not_found(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_process_data_files(mocker):
-    mocker.patch("seedfarmer.commands._deployment_commands.sf_git.clone_module_repo", return_value=("git", "path", "sdfasfas"))
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.sf_git.clone_module_repo", return_value=("git", "path", "sdfasfas")
+    )
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=[])
     git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     datafile_list = []
@@ -139,7 +147,9 @@ def test_process_data_files(mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_process_data_files_error(mocker):
-    mocker.patch("seedfarmer.commands._deployment_commands.sf_git.clone_module_repo", return_value=("git", "path", "sdfasfas"))
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.sf_git.clone_module_repo", return_value=("git", "path", "sdfasfas")
+    )
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=["hey"])
     git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
     datafile_list = []
@@ -160,16 +170,12 @@ def test_execute_deploy_invalid_spec(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
-    group = dep.groups[0]
+    dep.validate_and_set_module_defaults()
+    mdo = ModuleDeployObject(
+        deployment_manifest=dep, group_name=dep.groups[0].name, module_name=dep.groups[0].modules[0].name
+    )
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
-        dc._execute_deploy(
-            group_name=group.name,
-            module_manifest=group.modules[0],
-            deployment_manifest=dep,
-            docker_credentials_secret=None,
-            permissions_boundary_arn=None,
-            codebuild_image=None,
-        )
+        dc._execute_deploy(mdo)
 
 
 @pytest.mark.commands
@@ -184,17 +190,12 @@ def test_execute_deploy(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.deploy_module", return_value=None)
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep.validate_and_set_module_defaults()
     group = dep.groups[0]
     module_manifest = group.modules[0]
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
-    dc._execute_deploy(
-        group_name=group.name,
-        module_manifest=module_manifest,
-        deployment_manifest=dep,
-        docker_credentials_secret=None,
-        permissions_boundary_arn=None,
-        codebuild_image=None,
-    )
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
+    dc._execute_deploy(mdo)
 
 
 @pytest.mark.commands
@@ -203,6 +204,7 @@ def test_execute_destroy_invalid_spec(session_manager, mocker):
     from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
 
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep.validate_and_set_module_defaults()
     group = dep.groups[0]
     module_manifest = group.modules[0]
     mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
@@ -213,15 +215,11 @@ def test_execute_destroy_invalid_spec(session_manager, mocker):
         return_value=("stack_name", "role_name"),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module", return_value=mod_resp)
+    mdo = ModuleDeployObject(
+        deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name
+    )
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
-        dc._execute_destroy(
-            group_name=group.name,
-            module_manifest=module_manifest,
-            module_path="to/my/module",
-            deployment_manifest=dep,
-            docker_credentials_secret=None,
-            codebuild_image=None,
-        )
+        dc._execute_destroy(mdo)
 
 
 @pytest.mark.commands
@@ -230,6 +228,7 @@ def test_execute_destroy(session_manager, mocker):
     from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
 
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep.validate_and_set_module_defaults()
     group = dep.groups[0]
     module_manifest = group.modules[0]
     mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
@@ -242,14 +241,8 @@ def test_execute_destroy(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.force_manage_policy_attach", return_value=None)
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
-    dc._execute_destroy(
-        group_name=group.name,
-        module_manifest=module_manifest,
-        module_path="to/my/module",
-        deployment_manifest=dep,
-        docker_credentials_secret=None,
-        codebuild_image=None,
-    )
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group.name, module_name=module_manifest.name)
+    dc._execute_destroy(mdo)
 
 
 @pytest.mark.commands

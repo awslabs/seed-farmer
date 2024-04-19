@@ -57,6 +57,8 @@ class RegionMapping(CamelModel):
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping] = None
     codebuild_image: Optional[str] = None
+    npm_mirror: Optional[str] = None
+    pypi_mirror: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -72,6 +74,8 @@ class TargetAccountMapping(CamelModel):
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
     codebuild_image: Optional[str] = None
+    npm_mirror: Optional[str] = None
+    pypi_mirror: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
 
@@ -298,6 +302,66 @@ class DeploymentManifest(CamelModel):
                             image = region_mapping.seedkit_metadata["CodeBuildProjectBuildImage"]
 
                         return image
+        else:
+            return None
+
+    def get_region_npm_mirror(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the npm_mirror is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        npm_mirror = (
+                            region_mapping.npm_mirror
+                            if region_mapping.npm_mirror is not None
+                            else target_account.npm_mirror
+                        )
+                        return npm_mirror
+        else:
+            return None
+
+    def get_region_pypi_mirror(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the pypi_mirror is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        pypi_mirror = (
+                            region_mapping.pypi_mirror
+                            if region_mapping.pypi_mirror is not None
+                            else target_account.pypi_mirror
+                        )
+                        return pypi_mirror
         else:
             return None
 

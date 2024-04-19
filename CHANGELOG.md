@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+
+## v3.4.0 (2024-04-19)
+
+### New
 - added support for pypi mirror at module, region and account levels
 - added support for npm mirror at module, region and account levels
 ### Changes

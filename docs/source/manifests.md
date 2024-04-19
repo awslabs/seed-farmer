@@ -29,6 +29,8 @@ targetAccountMappings:
         envVariable: PRIMARY_ACCOUNT
     default: true
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
+    npmMirror: https://registry.npmjs.org/
+    pypiMirror: https://pypi.python.org/simple
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
@@ -36,6 +38,8 @@ targetAccountMappings:
       - region: us-east-2
         default: true
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
+        npmMirror: https://registry.npmjs.org/
+        pypiMirror: https://pypi.python.org/simple
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
@@ -92,6 +96,8 @@ targetAccountMappings:
   - **account** - the account id tied to the alias.  This parameter also supports [Environment Variables](envVariable)
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
   - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+  - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+  - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
@@ -99,6 +105,8 @@ targetAccountMappings:
     - **region** - the region name
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
     - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+    - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+    - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
@@ -241,6 +249,8 @@ path: modules/optionals/buckets
 targetAccount: secondary
 targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
+npmMirror: https://registry.npmjs.org/
+pypiMirror: https://pypi.python.org/simple
 parameters:
   - name: encryption-type
     value: SSE
@@ -263,6 +273,8 @@ dataFiles:
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+- **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+- **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
 - **dataFiles** - additional files to add to the bundle that are outside of the module code
   - this is LIST and EVERY element in the list must have the keyword **filePath**
@@ -324,6 +336,16 @@ There are three (3) places to configure a custom build image:
 2. if the image is defined at the account/region level --- USE IT... ELSE
 3. if the image is defined at the account level --- USE IT... ELSE
 4. use the default image 
+
+
+(mirroroverride)=
+## Mirror Overrides
+ `seed-farmer`  is python based and uses Pypi for code distribution.  Also, NPM is heavily used.  By default, `seed-farmer` uses the default configuration for these repositories.  In some cases, you may want to override the default mirror / registry that `seed-farmer` uses to pull in supporting artifacts like `AWS-CodeSeeder` and AWS-CLI for NPM.  For example, when running in the China partition, a mirror is very helpful. `seed-farmer` supports mirror configuration.  Like the codebuild image, there is a level of logic that is followed:
+1. if a mirror is defined at the module level --- USE IT... ELSE
+2. if a mirror is defined at the account/region level --- USE IT... ELSE
+3. if a mirror is defined at the account level --- USE IT... ELSE
+4. no mirror is set
+
 
 
 

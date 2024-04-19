@@ -31,6 +31,7 @@ from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
+from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import generate_session_hash
 
@@ -82,33 +83,23 @@ def _env_vars(
     return env_vars
 
 
-def deploy_module(
-    deployment_name: str,
-    deployment_partition: str,
-    group_name: str,
-    module_manifest: ModuleManifest,
-    account_id: str,
-    region: str,
-    parameters: Optional[List[ModuleParameter]] = None,
-    module_metadata: Optional[str] = None,
-    docker_credentials_secret: Optional[str] = None,
-    permissions_boundary_arn: Optional[str] = None,
-    module_role_name: Optional[str] = None,
-    codebuild_image: Optional[str] = None,
-) -> ModuleDeploymentResponse:
+def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    account_id = str(module_manifest.get_target_account_id())
+    region = str(module_manifest.target_region)
     if module_manifest.deploy_spec is None or module_manifest.deploy_spec.deploy is None:
         raise seedfarmer.errors.InvalidConfigurationError("Missing `deploy` in module's deployspec.yaml")
 
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
-        deployment_name=deployment_name,
-        deployment_partition=deployment_partition,
-        group_name=group_name,
+        deployment_name=str(mdo.deployment_manifest.name),
+        deployment_partition=str(mdo.deployment_manifest._partition),
+        group_name=mdo.group_name,
         module_manifest_name=module_manifest.name,
-        parameters=parameters,
-        module_metadata=module_metadata,
-        docker_credentials_secret=docker_credentials_secret,
-        permissions_boundary_arn=permissions_boundary_arn,
+        parameters=mdo.parameters,
+        module_metadata=mdo.module_metadata,
+        docker_credentials_secret=mdo.docker_credentials_secret,
+        permissions_boundary_arn=mdo.permissions_boundary_arn,
         session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
         use_project_prefix=use_project_prefix,
     )
@@ -118,8 +109,8 @@ def deploy_module(
 
     md5_put = [
         (
-            f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {deployment_name} "
-            f"-g {group_name} -m {module_manifest.name} -t bundle --debug ;"
+            f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {mdo.deployment_manifest.name} "
+            f"-g {mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
         )
     ]
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
@@ -134,7 +125,7 @@ def deploy_module(
         f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
         (
             f"echo ${metadata_env_variable} | seedfarmer store moduledata "
-            f"-d {deployment_name} -g {group_name} -m {module_manifest.name} "
+            f"-d { mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
         ),
     ]
 
@@ -149,12 +140,14 @@ def deploy_module(
 
     _phases = module_manifest.deploy_spec.deploy.phases
     active_codebuild_image = (
-        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else codebuild_image
+        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
     )
+    npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
+    pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
     try:
         resp_dict_str, dict_metadata = _execute_module_commands(
-            deployment_name=deployment_name,
-            group_name=group_name,
+            deployment_name=str(mdo.deployment_manifest.name),
+            group_name=mdo.group_name,
             module_manifest_name=module_manifest.name,
             account_id=account_id,
             region=region,
@@ -173,15 +166,17 @@ def deploy_module(
             + metadata_put,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
-            codebuild_role_name=module_role_name,
+            codebuild_role_name=mdo.module_role_name,
             codebuild_image=active_codebuild_image,
+            npm_mirror=npm_mirror,
+            pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
         )
         _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
         resp = ModuleDeploymentResponse(
-            deployment=deployment_name,
-            group=group_name,
+            deployment=mdo.deployment_manifest.name,
+            group=mdo.group_name,
             module=module_manifest.name,
             status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
@@ -191,8 +186,8 @@ def deploy_module(
         _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
         l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
         resp = ModuleDeploymentResponse(
-            deployment=deployment_name,
-            group=group_name,
+            deployment=mdo.deployment_manifest.name,
+            group=mdo.group_name,
             module=module_manifest.name,
             status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
@@ -200,41 +195,33 @@ def deploy_module(
     return resp
 
 
-def destroy_module(
-    deployment_name: str,
-    deployment_partition: str,
-    group_name: str,
-    module_path: str,
-    module_manifest: ModuleManifest,
-    account_id: str,
-    region: str,
-    parameters: Optional[List[ModuleParameter]] = None,
-    module_metadata: Optional[str] = None,
-    module_role_name: Optional[str] = None,
-    codebuild_image: Optional[str] = None,
-) -> ModuleDeploymentResponse:
+def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    account_id = str(module_manifest.get_target_account_id())
+    region = str(module_manifest.target_region)
     if module_manifest.deploy_spec is None or module_manifest.deploy_spec.destroy is None:
         raise seedfarmer.errors.InvalidConfigurationError(
             f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml"
         )
-
     use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
     env_vars = _env_vars(
-        deployment_name=deployment_name,
-        deployment_partition=deployment_partition,
-        group_name=group_name,
+        deployment_name=str(mdo.deployment_manifest.name),
+        deployment_partition=str(mdo.deployment_manifest._partition),
+        group_name=mdo.group_name,
         module_manifest_name=module_manifest.name,
-        parameters=parameters,
-        module_metadata=module_metadata,
+        parameters=mdo.parameters,
+        module_metadata=mdo.module_metadata,
         session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
         use_project_prefix=use_project_prefix,
     )
 
-    remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"]
+    remove_ssm = [
+        f"seedfarmer remove moduledata -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name}"
+    ]
 
     export_info = [
-        f"export DEPLOYMENT={deployment_name}",
-        f"export GROUP={group_name}",
+        f"export DEPLOYMENT={mdo.deployment_manifest.name}",
+        f"export GROUP={mdo.group_name}",
         f"export MODULE={module_manifest.name}",
     ]
 
@@ -249,12 +236,15 @@ def destroy_module(
         }
 
     active_codebuild_image = (
-        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else codebuild_image
+        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
     )
+    npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
+    pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
+    module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
     try:
         resp_dict_str, _ = _execute_module_commands(
-            deployment_name=deployment_name,
-            group_name=group_name,
+            deployment_name=str(mdo.deployment_manifest.name),
+            group_name=mdo.group_name,
             module_manifest_name=module_manifest.name,
             account_id=account_id,
             region=region,
@@ -267,13 +257,15 @@ def destroy_module(
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
-            codebuild_role_name=module_role_name,
+            codebuild_role_name=mdo.module_role_name,
             codebuild_image=active_codebuild_image,
+            npm_mirror=npm_mirror,
+            pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
         )
         resp = ModuleDeploymentResponse(
-            deployment=deployment_name,
-            group=group_name,
+            deployment=mdo.deployment_manifest.name,
+            group=mdo.group_name,
             module=module_manifest.name,
             status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
@@ -282,8 +274,8 @@ def destroy_module(
         _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
         l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
         resp = ModuleDeploymentResponse(
-            deployment=deployment_name,
-            group=group_name,
+            deployment=mdo.deployment_manifest.name,
+            group=mdo.group_name,
             module=module_manifest.name,
             status=StatusType.ERROR.value,
             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
@@ -308,6 +300,8 @@ def _execute_module_commands(
     codebuild_compute_type: Optional[str] = None,
     codebuild_role_name: Optional[str] = None,
     codebuild_image: Optional[str] = None,
+    npm_mirror: Optional[str] = None,
+    pypi_mirror: Optional[str] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session_getter: Optional[Callable[[], Session]] = None
@@ -334,6 +328,8 @@ def _execute_module_commands(
         extra_exported_env_vars=[metadata_env_variable],
         codebuild_role=codebuild_role_name,
         codebuild_image=codebuild_image,
+        npm_mirror=npm_mirror,
+        pypi_mirror=pypi_mirror,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
         codebuild_compute_type=codebuild_compute_type,
         extra_files=extra_file_bundle,

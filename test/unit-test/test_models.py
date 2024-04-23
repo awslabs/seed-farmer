@@ -428,11 +428,6 @@ targetAccount: primary
 targetRegion: us-west-2
 parameters:
   - name: param1
-    # missing value_from
-    moduleMetadata:
-      group: test-group
-      name: test-module-1
-      key: param-key
 """
     )
 
@@ -508,5 +503,4 @@ def test_deployresponses():
         aws_region="us-east-1",
         codebuild_build_id="codebuild:12345",
         codebuild_log_path="/somepath",
-        status="success",
     )

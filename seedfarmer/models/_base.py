@@ -25,7 +25,7 @@ def to_camel(string: str) -> str:
 class CamelModel(BaseModel):
     # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
 
 
 class ModuleRef(CamelModel):

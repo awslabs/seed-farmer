@@ -15,6 +15,7 @@
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 from aws_codeseeder import EnvVar, EnvVarType
@@ -83,17 +84,19 @@ def load_parameter_values(
                         f"The environment variable ({parameter.value_from.env_variable}) is not available"
                     )
             elif parameter.value_from.parameter_store:
+                resolved_key = _resolve_parameter_value_key(parameter.value_from.parameter_store)
                 parameter_values.append(
                     ModuleParameter(
                         name=parameter.name,
-                        value=EnvVar(value=parameter.value_from.parameter_store, type=EnvVarType.PARAMETER_STORE),
+                        value=EnvVar(value=resolved_key, type=EnvVarType.PARAMETER_STORE),
                     ),
                 )
             elif parameter.value_from.secrets_manager:
+                resolved_key = _resolve_parameter_value_key(parameter.value_from.secrets_manager)
                 parameter_values.append(
                     ModuleParameter(
                         name=parameter.name,
-                        value=EnvVar(value=parameter.value_from.secrets_manager, type=EnvVarType.SECRETS_MANAGER),
+                        value=EnvVar(value=resolved_key, type=EnvVarType.SECRETS_MANAGER),
                     ),
                 )
             elif parameter.value_from.parameter_value:
@@ -121,7 +124,7 @@ def resolve_params_for_checksum(
                     f"CodeBuild does not support Versioned SSM Parameters -- see {group_name}-{module.name}"
                 )
             param.version = mi.get_ssm_parameter_version(
-                ssm_parameter_name=param.value_from.parameter_store,
+                ssm_parameter_name=_resolve_parameter_value_key(param.value_from.parameter_store),
                 session=SessionManager()
                 .get_or_create()
                 .get_deployment_session(
@@ -131,7 +134,7 @@ def resolve_params_for_checksum(
             )
 
         elif param.value_from and param.value_from.secrets_manager:
-            param_name = param.value_from.secrets_manager
+            param_name = _resolve_parameter_value_key(param.value_from.secrets_manager)
             version_ref = None
             if ":" in param_name:
                 parsed = param_name.split(":")
@@ -225,3 +228,14 @@ def _module_metatdata(
                 value=parameter_value,
             )
     return None
+
+
+def _resolve_parameter_value_key(valueKey: str) -> str:
+    matches = re.findall(r"<\$(.*?)>", valueKey)
+    for match in matches:
+        _logger.debug(f"Trying to resolve paramter key  {match}")
+        try:
+            valueKey = valueKey.replace("<$" + match + ">", os.environ[match])
+        except KeyError:
+            raise seedfarmer.errors.InvalidManifestError(f"The environment variable ({match}) is not available")
+    return valueKey

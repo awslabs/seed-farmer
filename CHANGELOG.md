@@ -6,7 +6,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
-
+- adding support for environment variable in the keys of SSM Parameter and SecretManager
+  - must use the format `<$ >`  for example: `/addf/somekey/<$MY_ENV_PARAM>/something` where `MY_ENV_PARAM` is the env key
 ### Changes
 
 ### Fixes

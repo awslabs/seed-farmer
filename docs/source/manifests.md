@@ -486,7 +486,7 @@ path: modules/core/opensearch/
 parameters:
   - name: vpc-id
     valueFrom:
-      parameterStore: my-vpc-id
+      parameterStore: /addf/my-vpc-id
 ```
 In this example, the `opensearch` module is referencing an SSM parameter named `my-vpc-id` from AWS SSM Parameter Store. <br>
 
@@ -495,6 +495,17 @@ The `opensearch` module deployment will then have an environment parameter set i
 `SeedFarmer` will respect changes to the SSM parameter via versioning.  If a module is deployed with an SSM Parameter, and then that parameter value is changed (invoking a version change of the parameter), `SeedFarmer` will detect that change and redeploy the module.  
 
 NOTE: AWS CodeBuild does not currently respect passing in versions, so you cannot pass in a particular version in the manifest.  In other words, passing in `my-vpc-id:3` as a value for `parameterStore` will cause a failure.
+
+This paramter also support using environment variables as part of the key.  The variable MUST be wrapped in `<$ >`.  For example, if we have an environment variable `MY_ENV_VARIABLE` set and available and set to `thekey`, it can be used as such:
+```yaml
+name: opensearch
+path: modules/core/opensearch/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      parameterStore: /addf/<$MY_ENV_VARIABLE>/my-vpc-id
+```
+The `parameterStore` value will be resolved to `/addf/thekey/my-vpc-id` and used as the lookup key.
 
 (secrets_manager)=
 ### AWS SecretsManager
@@ -515,6 +526,17 @@ The `opensearch` module deployment will then have an environment parameter set i
 
 NOTE: AWS CodeBuild does currently respect passing in version-id and version-stage, as defined in the [documentation HERE](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.env.secrets-manager).  If no version-stage or version-id is passed in, then we will look for the version-id corresponding to the version-stage of `AWSCURRENT`. 
 
+
+This paramter also support using environment variables as part of the key.  The variable MUST be wrapped in `<$ >`.  For example, if we have an environment variable `MY_SECRET_KEY` set and available and set to `my-secret-vpc-id`, it can be used as such:
+```yaml
+name: opensearch
+path: modules/core/opensearch/
+parameters:
+  - name: vpc-id
+    valueFrom:
+      secretsManager: <$MY_SECRET_KEY>
+```
+The `secretsManager` value will be resolved to `my-secret-vpc-id` and used as the lookup key.
 
 (dockerCredentialsSecret)=
 ### Docker Credentials Secret

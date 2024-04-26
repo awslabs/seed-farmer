@@ -42,10 +42,10 @@ class BuildPhases(CamelModel):
     install, pre_build,  build, post_build
     """
 
-    install: BuildPhase = BuildPhase()
-    pre_build: BuildPhase = BuildPhase()
-    build: BuildPhase = BuildPhase()
-    post_build: BuildPhase = BuildPhase()
+    install: BuildPhase = BuildPhase.model_construct()
+    pre_build: BuildPhase = BuildPhase.model_construct()
+    build: BuildPhase = BuildPhase.model_construct()
+    post_build: BuildPhase = BuildPhase.model_construct()
 
 
 class ExecutionType(CamelModel):
@@ -55,7 +55,7 @@ class ExecutionType(CamelModel):
     object of the DeploySpec
     """
 
-    phases: BuildPhases = BuildPhases()
+    phases: BuildPhases = BuildPhases.model_construct()
 
 
 class DeploySpec(CamelModel):

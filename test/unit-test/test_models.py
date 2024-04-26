@@ -16,6 +16,7 @@ import logging
 import os
 from copy import deepcopy
 
+from unittest import mock
 import pytest
 import yaml
 
@@ -413,6 +414,57 @@ parameters:
         module = ModuleManifest(**module_yaml)
         manifest.groups[0].modules = [module]
         manifest.validate_and_set_module_defaults()
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_unknown_value():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value: value1
+    non_existent_value: fail_me
+"""
+    )
+
+    with pytest.raises(InvalidManifestError):
+        module = ModuleManifest(**module_yaml)
+        manifest.groups[0].modules = [module]
+        manifest.validate_and_set_module_defaults()
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_unknown_value_config_no_fail():
+    manifest = DeploymentManifest(**deployment_yaml)
+
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value: value1
+    non_existent_value: fail_me
+"""
+    )
+
+    with mock.patch("seedfarmer.config") as config:
+        config.MANIFEST_VALIDATION_FAIL_ON_UNKNOWN_FIELDS = False
+
+        module = ModuleManifest(**module_yaml)
+        manifest.groups[0].modules = [module]
+        manifest.validate_and_set_module_defaults()
+
 
 
 @pytest.mark.models

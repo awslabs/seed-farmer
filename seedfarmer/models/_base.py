@@ -15,7 +15,9 @@
 from typing import Optional, cast
 
 import humps
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
+
+from seedfarmer.errors.seedfarmer_errors import InvalidManifestError
 
 
 def to_camel(string: str) -> str:
@@ -25,7 +27,16 @@ def to_camel(string: str) -> str:
 class CamelModel(BaseModel):
     # TODO[pydantic]: The following keys were removed: `underscore_attrs_are_private`.
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="allow")
+
+    @model_validator(mode="after")
+    def check_for_extra_fields(self) -> "CamelModel":
+        from seedfarmer import config
+
+        if config.MANIFEST_VALIDATION_FAIL_ON_UNKNOWN_FIELDS and self.model_extra:
+            raise InvalidManifestError(f"The following keys are not allowed: {self.model_extra}")
+
+        return self
 
 
 class ModuleRef(CamelModel):

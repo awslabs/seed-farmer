@@ -1,2 +1,3 @@
 project: myapp
 description: unit testing
+manifest_validation_fail_on_unknown_fields: true

@@ -252,3 +252,47 @@ deployment_manifest = {
         }
     ],
 }
+
+
+deployment_manifest_batch_replace = {
+    "name": "${DEP_NAME}",
+    "toolchain_region": "${REGION}",
+    "groups": [
+        {
+            "name": "optionals",
+            "path": "manifests/mlops/optional-modules.yaml",
+            "modules": [
+                {
+                    "name": "networking",
+                    "path": "modules/optionals/networking/",
+                    "parameters": [{"name": "internet-accessible", "value": True}],
+                    "target_account": "primary",
+                    "target_region": "us-east-1",
+                },
+                {
+                    "name": "datalake-buckets",
+                    "path": "modules/optionals/datalake-buckets",
+                    "parameters": [{"name": "encryption-type", "value": "SSE"}],
+                    "target_account": "primary",
+                    "target_region": "us-east-1",
+                },
+            ],
+        }
+    ],
+    "target_account_mappings": [
+        {
+            "alias": "primary",
+            "account_id": "${ACCOUNT_ID}",
+            "default": True,
+            "parameters_global": {"dockerCredentialsSecret": "aws-addf-docker-credentials"},
+            "region_mappings": [
+                {
+                    "region": "us-east-1",
+                    "default": True,
+                    "parameters_regional": {},
+                }
+            ],
+        }
+    ],
+}
+

@@ -15,6 +15,7 @@
 import hashlib
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 import humps
@@ -22,6 +23,7 @@ import yaml
 from boto3 import Session
 from dotenv import dotenv_values, load_dotenv
 
+import seedfarmer.errors
 from seedfarmer.services._service_utils import get_region, get_sts_identity_info
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -192,3 +194,34 @@ def remove_nulls(payload: Dict[str, Any]) -> Dict[str, Any]:
         return [remove_nulls(v) for v in payload]
     else:
         return payload
+
+
+def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
+    pattern = r"\${(.*?)}"
+
+    def replace_str(value: str) -> str:
+        matches = re.findall(pattern, value)
+        for match in matches:
+            try:
+                return value.replace("${" + match + "}", os.environ[match.strip()])
+            except KeyError:
+                raise seedfarmer.errors.InvalidManifestError(
+                    f"The environment variable ({match.strip()}) is not available"
+                )
+        return value
+
+    def recurse_elements(working_element: Any) -> Any:
+        if isinstance(working_element, dict):
+            for key, value in working_element.items():
+                if isinstance(value, str):
+                    working_element[key] = replace_str(value)
+                elif isinstance(value, list):
+                    for item in value:
+                        recurse_elements(item)
+                elif isinstance(value, dict) and key not in ["deploy_spec"]:
+                    recurse_elements(value)
+            return working_element
+        return working_element
+
+    payload = recurse_elements(payload)
+    return payload

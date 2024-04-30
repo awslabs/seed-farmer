@@ -177,6 +177,9 @@ class DeploymentManifest(CamelModel):
     _partition: Optional[str] = PrivateAttr(default="aws")
 
     def __init__(self, **kwargs: Any) -> None:
+        from seedfarmer.utils import batch_replace_env
+
+        kwargs = batch_replace_env(payload=kwargs)
         super().__init__(**kwargs)
 
         if self.name is None and self.name_generator is None:

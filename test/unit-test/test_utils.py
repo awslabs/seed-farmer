@@ -13,11 +13,20 @@
 #    limitations under the License.
 
 import logging
-from copy import deepcopy
-
+import mock_data.mock_deployment_manifest_huge as mock
+import os 
 import pytest
+import seedfarmer.errors
+import seedfarmer.utils as utils
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="function")
+def env_params():
+    os.environ["DEP_NAME"] = "testing"
+    os.environ["REGION"] = "us-east-1"
+    os.environ["ACCOUNT_ID"] = "123456789012"
 
 
 @pytest.mark.utils_test
@@ -37,3 +46,13 @@ def test_utils():
     pascal_case = utils.upper_snake_case("Pascal_Case")
     assert pascal_case == "PASCAL_CASE"
     # session_hash = utils.generate_session_hash()
+
+
+@pytest.mark.utils_test
+def test_validate_module_dependencies(env_params):
+    replaced = utils.batch_replace_env(mock.deployment_manifest_batch_replace)
+    assert replaced["name"] == "testing"
+    assert replaced["toolchain_region"] == "us-east-1"
+    assert replaced["target_account_mappings"][0]["account_id"] == '123456789012'
+    
+

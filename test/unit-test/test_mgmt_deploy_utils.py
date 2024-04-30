@@ -204,9 +204,9 @@ def test_generate_deployed_manifest_already_deployed(mocker, session_manager):
     )
     mocker.patch("seedfarmer.mgmt.deploy_utils.populate_module_info_index", return_value=None)
     mocker.patch(
-        "seedfarmer.mgmt.deploy_utils._populate_group_modules_from_index",
-        return_value=mock_manifests.deployment_manifest["groups"],
-    )
+    "seedfarmer.mgmt.deploy_utils._populate_group_modules_from_index",
+        side_effect=[group["modules"] for group in mock_manifests.deployment_manifest["groups"]],
+    ) 
     du.generate_deployed_manifest(deployment_name="myapp", skip_deploy_spec=True, ignore_deployed=True)
 
 
@@ -219,9 +219,9 @@ def test_generate_deployed_manifest(mocker, session_manager):
     )
     mocker.patch("seedfarmer.mgmt.deploy_utils.populate_module_info_index", return_value=None)
     mocker.patch(
-        "seedfarmer.mgmt.deploy_utils._populate_group_modules_from_index",
-        return_value=mock_manifests.deployment_manifest["groups"],
-    )
+    "seedfarmer.mgmt.deploy_utils._populate_group_modules_from_index",
+        side_effect=[group["modules"] for group in mock_manifests.deployment_manifest["groups"]],
+    )    
     du.generate_deployed_manifest(deployment_name="myapp", skip_deploy_spec=True, ignore_deployed=False)
 
 

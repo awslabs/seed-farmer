@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- enforce strict validation for unknown values in manifests
 
 ### Fixes
 

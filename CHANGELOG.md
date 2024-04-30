@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding universal environment replace in manifests (ref: `${SOMEKEY}`)
 
 ### Changes
+- enforce strict validation for unknown values in manifests
 
 ### Fixes
 

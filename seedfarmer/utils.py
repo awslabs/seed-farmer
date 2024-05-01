@@ -210,18 +210,25 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
                 )
         return value
 
-    def recurse_elements(working_element: Any) -> Any:
-        if isinstance(working_element, dict):
-            for key, value in working_element.items():
-                if isinstance(value, str):
-                    working_element[key] = replace_str(value)
-                elif isinstance(value, list):
-                    for item in value:
-                        recurse_elements(item)
-                elif isinstance(value, dict) and key not in ["deploy_spec"]:
-                    recurse_elements(value)
-            return working_element
+    def recurse_list(working_list: List[Any]) -> List[Any]:
+        for key, value in enumerate(working_list):
+            if isinstance(value, str):
+                working_list[key] = replace_str(value)
+            elif isinstance(value, list):
+                recurse_list(value)
+            elif isinstance(value, dict):
+                recurse_dict(value)
+        return working_list
+
+    def recurse_dict(working_element: Dict[str, Any]) -> Dict[str, Any]:
+        for key, value in working_element.items():
+            if isinstance(value, str):
+                working_element[key] = replace_str(value)
+            elif isinstance(value, list):
+                recurse_list(value)
+            elif isinstance(value, dict) and key not in ["deploy_spec"]:
+                recurse_dict(value)
         return working_element
 
-    payload = recurse_elements(payload)
+    payload = recurse_dict(payload)
     return payload

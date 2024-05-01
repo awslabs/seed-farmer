@@ -299,6 +299,49 @@ When using this feature, any change to these file(s) (modifying, add to manifest
 
 ***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everthing so wet??)***
 
+(universaloverride)=
+## Universal Environment Variable Replacement in Manifests
+As of the release of `seed-farmer==3.5.0`, we have added support for dynamic replacement of values with environment variables in manifests.  This does not replace the any pre-existing functionality.  This also is limited to only manifests (`deployment_manifest` and `module_manifest`).  Things like the `deployspec` and the `modulestack` are NOT included in this functionality.  We strongly recommend using hard-coded values in manifests or leveraging the facilities already in place, but we have added this feature based on feedback from experienced users.
+
+Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`.   
+
+The following is a valid manifest:
+
+```yaml
+name: dummy
+path: git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.2.0
+targetAccount: primary
+targetRegion: us-east-1
+parameters:
+  - name: test
+    value: hiyooo
+  - name:  myparamkey
+    valueFrom:
+      parameterStore: /idf/${SOMEKEY}/somekey
+  - name: test2
+    value: ${SOMEKEY}
+  - name: private-subnet-ids
+    valueFrom:
+      moduleMetadata:
+        group: optionals
+        name: networking
+        key: PrivateSubnetIds
+  - name: vpc-id
+    valueFrom:
+      secretsManager: ${SOMEKEY}
+```
+This can be applied to all values in the manifest.  We do not recommend using this in the `name` field of manifests as any value that is referenced by downstream manifests MUST align.  For example, in the following:
+
+```yaml
+name: ${SOMEKEY}
+path: git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.2.0
+targetAccount: primary
+targetRegion: us-east-1
+```
+
+This can be done, but is strongly discouraged as the need to align all modules that refer to this module MUST use the same environment key (`SOMEKEY`).  That responsiblity is on the user to manage.
+
+
 
 (buildimageoverride)=
 ## Codebuild Image Override

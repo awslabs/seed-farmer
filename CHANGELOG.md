@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 - adding universal environment replace in manifests (ref: `${SOMEKEY}`)
+- adding list recursion of manifests for environment variable replace
 
 ### Changes
 - enforce strict validation for unknown values in manifests

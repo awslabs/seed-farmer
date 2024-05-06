@@ -98,7 +98,7 @@ def load_parameter_values(
                 )
             elif parameter.value_from.parameter_value:
                 p_value = deployment_manifest.get_parameter_value(
-                    parameter=parameter.value_from.parameter_value, account_alias=target_account, region=target_region
+                    parameter=parameter.value_from.parameter_value, account_id=target_account, region=target_region
                 )
                 if p_value is not None:
                     p_value = str(p_value) if isinstance(p_value, str) else json.dumps(p_value)

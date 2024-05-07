@@ -339,7 +339,7 @@ targetAccount: primary
 targetRegion: us-east-1
 ```
 
-This can be done, but is strongly discouraged as the need to align all modules that refer to this module MUST use the same environment key (`SOMEKEY`).  That responsiblity is on the user to manage.
+This can be done, but is strongly discouraged as the need to align all modules that refer to this module MUST use the same environment key (`SOMEKEY`).  That responsibility is on the user to manage.
 
 
 

@@ -31,6 +31,7 @@ targetAccountMappings:
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
     npmMirror: https://registry.npmjs.org/
     pypiMirror: https://pypi.python.org/simple
+    pypiMirrorSecret: /something/aws-addf-mirror-secret
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
@@ -40,6 +41,7 @@ targetAccountMappings:
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
         npmMirror: https://registry.npmjs.org/
         pypiMirror: https://pypi.python.org/simple
+        pypiMirrorSecret: /something/aws-addf-mirror-secret
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
@@ -98,6 +100,7 @@ targetAccountMappings:
   - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
   - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
   - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
+  - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
@@ -107,6 +110,7 @@ targetAccountMappings:
     - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
     - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
     - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
+    - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
     - **parametersRegional** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
       - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
@@ -251,6 +255,7 @@ targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
 npmMirror: https://registry.npmjs.org/
 pypiMirror: https://pypi.python.org/simple
+pypiMirrorSecret: /something/aws-addf-mirror-secret
 parameters:
   - name: encryption-type
     value: SSE
@@ -275,6 +280,7 @@ dataFiles:
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
 - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
+- **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
 - **dataFiles** - additional files to add to the bundle that are outside of the module code
   - this is LIST and EVERY element in the list must have the keyword **filePath**
@@ -389,6 +395,75 @@ There are three (3) places to configure a custom build image:
 3. if a mirror is defined at the account level --- USE IT... ELSE
 4. no mirror is set
 
+### Mirror Secrets
+If using a Pypi-compliant mirror that is not public or needs an authentication scheme, the `pypiMirrorSecret` provides a means to set a username / password (or user / token) in the global definition of the AWS Codebuild runtime.  To use this feature, you MUST adhere to the following:
+1. Be sure to have `seed-farmer` version >= 3.5.0 and have properly updated if migrating from an older version
+2. have an AWS SecretsManager set in EACH account/region combination that you want to leverage it (the user MUST set this up prior to using)
+3. the content of the AWS SecretsManager adheres to the format defined below
+4. the name of the AWS SecretsManager adheres to the format defined below
+5. a `pypiMirror` is defined at the SAME LEVEL in the manifest
+
+The `pypiMirrorSecret` feature can support multiple entries for use.  It is NOT apart of the calculation for redeploy (ie. you can change it at will and it will not force a redeploy of any module referencing it - to allow updates and additions over time).  
+
+The AWS SecretManager name must follow the following pattern (NO exceptions):
+```code
+*-mirror-credentials*
+```
+Here are some examples of valid names:
+- /aws-addf-mirror-credentials
+- /something/important/hey-mirror-credentials
+
+Here are some names that are in-valid
+- /aws-addfmirror-credentials
+- /something/important/mirror-credentials
+
+The content of the AWS SecretsManager allows multiple entries to support different configuratons.  It MUST be a JSON dict of dict, where each top-level dict is the name of the key-par and its child elements contain `username` and `password` keys.  Lets look at an example of a value payload:
+
+```json
+{
+  "pypi": { 
+    "username": "derekpypi", 
+    "password": "thepasswordpypi" 
+  },
+  "artifactory": {
+    "username": "myuser@amazon.com",
+    "password": "agobbleygookofahexcodehere"
+  },
+  "pypi2": { 
+    "username": "hey", 
+    "password": "yooooo" 
+  },
+}
+```
+This example has valid entries.  The default key is `pypi`.  In order to leverage this scheme, a particular pattern MUST be followed in your manifest under the `pypiMirrorSecret` key: `name-of-secret::name-of-key`.  The `::` indicates to `seed-farmer` and `AWS-CodeSeeder` what username/password combination to use.  
+
+Lets walk thru an example.  Assume that the previous example of a secret payload is set and the secret name is `/aws-addf-mirror-credentials`.  I want to use the `artifactory` username/password entry.  My manifest would look like the following:
+```yaml
+...
+pypiMirror: https://the-mirror-dns/simple/pypi
+pypiMirrorSecret: /aws-addf-mirror-credentials::artifactory
+...
+
+```
+This would result in the creation of the url `https://myuser@amazon.com:agobbleygookofahexcodehere@the-mirror-dns/simple/pypi` and the global config in the runtime will be set via:
+
+```code
+pip config set global.index-url https://myuser@amazon.com:agobbleygookofahexcodehere@the-mirror-dns/simple/pypi
+
+```
+
+If I wanted to user the default `pypi` entry, my manifest would look like:
+```yaml
+...
+pypiMirror: https://the-mirror-dns/simple/pypi
+pypiMirrorSecret: /aws-addf-mirror-credentials
+...
+
+```
+This would result in the creation of the url `https://derekpypi:thepasswordpypi@the-mirror-dns/simple/pypi` and the global config in the runtime will be set via:
+```code
+pip config set global.index-url https://derekpypi:thepasswordpypi@the-mirror-dns/simple/pypi
+```
 
 
 

@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v3.5.0 (2024-05-09)
+
+### New
 - adding universal environment replace in manifests (ref: `${SOMEKEY}`)
 - adding list recursion of manifests for environment variable replace
 - adding support for AWS SecretsManager integration for pypi mirrors

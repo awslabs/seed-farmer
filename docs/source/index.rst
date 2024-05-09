@@ -18,6 +18,7 @@ It has a CommandLine Interface (CLI) based in Python.
    quick_start
    architecture
    installation
+   upgrades
    bootstrapping
    project_development
    manifests

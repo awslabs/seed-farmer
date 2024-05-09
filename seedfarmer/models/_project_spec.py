@@ -14,6 +14,9 @@
 
 from typing import Optional, Union
 
+from pydantic import model_validator
+
+from seedfarmer.errors.seedfarmer_errors import InvalidManifestError
 from seedfarmer.models._base import CamelModel
 
 
@@ -28,3 +31,11 @@ class ProjectSpec(CamelModel):
     description: Optional[str] = None
     project_policy_path: Optional[str] = None
     seedfarmer_version: Optional[Union[int, str]] = None
+    manifest_validation_fail_on_unknown_fields: bool = False
+
+    @model_validator(mode="after")
+    def check_for_extra_fields(self) -> "ProjectSpec":
+        if self.manifest_validation_fail_on_unknown_fields and self.model_extra:
+            raise InvalidManifestError(f"The following keys are not allowed: {self.model_extra}")
+
+        return self

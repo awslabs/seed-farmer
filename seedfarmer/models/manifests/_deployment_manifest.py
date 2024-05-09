@@ -59,6 +59,7 @@ class RegionMapping(CamelModel):
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
+    pypi_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -76,6 +77,7 @@ class TargetAccountMapping(CamelModel):
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
+    pypi_mirror_secret: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
 
@@ -177,6 +179,9 @@ class DeploymentManifest(CamelModel):
     _partition: Optional[str] = PrivateAttr(default="aws")
 
     def __init__(self, **kwargs: Any) -> None:
+        from seedfarmer.utils import batch_replace_env
+
+        kwargs = batch_replace_env(payload=kwargs)
         super().__init__(**kwargs)
 
         if self.name is None and self.name_generator is None:
@@ -362,6 +367,36 @@ class DeploymentManifest(CamelModel):
                             else target_account.pypi_mirror
                         )
                         return pypi_mirror
+        else:
+            return None
+
+    def get_region_pypi_mirror_secret(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the pypi_mirror_secret is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        pypi_mirror_secret = (
+                            region_mapping.pypi_mirror_secret
+                            if region_mapping.pypi_mirror_secret is not None
+                            else target_account.pypi_mirror_secret
+                        )
+                        return pypi_mirror_secret
         else:
             return None
 

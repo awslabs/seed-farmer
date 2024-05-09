@@ -98,11 +98,16 @@ class ModuleManifest(CamelModel):
     commit_hash: SkipJsonSchema[Optional[str]] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
+    pypi_mirror_secret: Optional[str] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
     _local_path: Optional[str] = PrivateAttr(default=None)
 
-    def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
+    def __init__(self, **kwargs: Any) -> None:
+
+        from seedfarmer.utils import batch_replace_env
+
+        kwargs = batch_replace_env(payload=kwargs)
+        super().__init__(**kwargs)
         self._local_path = self.path
 
     def set_target_account_id(self, account_id: str) -> None:

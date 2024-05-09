@@ -137,5 +137,11 @@ class Config(object):
             self._load_config_data()
         return str(cast(ProjectSpec, self._project_spec).project_policy_path)
 
+    @property
+    def MANIFEST_VALIDATION_FAIL_ON_UNKNOWN_FIELDS(self) -> bool:
+        if self._project_spec is None:
+            self._load_config_data()
+        return cast(ProjectSpec, self._project_spec).manifest_validation_fail_on_unknown_fields
+
 
 config = Config()

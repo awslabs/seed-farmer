@@ -197,7 +197,7 @@ def test_load_parameter_values(session_manager, mocker):
         deployment_name="mlops",
         deployment_manifest=dep,
         parameters=dep.groups[1].modules[0].parameters,
-        target_account="primary",
+        target_account="123456789012",
         target_region="us-east-1",
     )
     names = []

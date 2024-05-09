@@ -28,6 +28,7 @@ project: <your project name>
 description: <your project description>
 projectPolicyPath: <relativepath/policyname.yaml>
 seedfarmer_version: <minimum required seedfermer version>
+manifestValidationFailOnUnknownFields: <whether to fail on unknown fields in the manifest>
 ```
 - **project** (REQUIRED) - this is the name of the project that all deployments will reference 
 - **description** (OPTIONAL) - this is the description of the project
@@ -36,6 +37,8 @@ seedfarmer_version: <minimum required seedfermer version>
   - to synth the existing project policy, run `seedfarmer projectpolicy synth` 
 - **seedfarmer_version** (OPTIONAL) - this specifies what is the minimum allowable version of `seed-farmer` the project supports
   - if this value is set AND the runtime version of seedfarmer is greater, `seed-farmer` will exit immediately
+- **manifestValidationFailOnUnknownFields** (OPTIONAL) - this specifies whether SeedFarmer will fail if it finds unknown fields ion the manifest
+  - possible values are `true` or `false`, where `false` is the default
 
 
 (project_initalization)=

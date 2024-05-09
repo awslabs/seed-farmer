@@ -17,6 +17,7 @@ class ModuleDeployObject(CamelModel):
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
+    pypi_mirror_secret: Optional[str] = None
 
     def _render_permissions_boundary_arn(
         self, account_id: Optional[str], partition: Optional[str], permissions_boundary_name: Optional[str]
@@ -54,8 +55,13 @@ class ModuleDeployObject(CamelModel):
             account_alias=_module.target_account, region=_module.target_region
         )
 
+        pypi_mirror_secret = self.deployment_manifest.get_region_pypi_mirror_secret(
+            account_alias=_module.target_account, region=_module.target_region
+        )
+
         self.permissions_boundary_arn = pba if pba is not None else None
         self.codebuild_image = codebuild_image if codebuild_image is not None else None
         self.docker_credentials_secret = dcs if dcs else None
         self.npm_mirror = npm_mirror if npm_mirror is not None else None
         self.pypi_mirror = pypi_mirror if pypi_mirror is not None else None
+        self.pypi_mirror_secret = pypi_mirror_secret if pypi_mirror_secret is not None else None

@@ -50,7 +50,9 @@ colorama==0.4.4
 coverage[toml]==7.2.7
     # via pytest-cov
 cryptography==42.0.4
-    # via moto
+    # via
+    #   moto
+    #   secretstorage
 docutils==0.16
     # via
     #   awscli
@@ -77,6 +79,10 @@ isort==5.10.1
     # via -r requirements-dev.in
 jaraco-classes==3.2.3
     # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.3
     # via
     #   moto
@@ -206,6 +212,8 @@ s3transfer==0.8.2
     # via
     #   awscli
     #   boto3
+secretstorage==3.3.3
+    # via keyring
 six==1.16.0
     # via
     #   bleach
@@ -271,7 +279,7 @@ urllib3==1.26.18
     #   twine
 webencodings==0.5.1
     # via bleach
-werkzeug==2.3.8
+werkzeug==3.0.3
     # via
     #   -r requirements-dev.in
     #   moto

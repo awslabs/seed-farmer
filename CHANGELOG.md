@@ -11,6 +11,18 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v3.5.0 (2024-05-09)
+
+### New
+- adding universal environment replace in manifests (ref: `${SOMEKEY}`)
+- adding list recursion of manifests for environment variable replace
+- adding support for AWS SecretsManager integration for pypi mirrors
+
+### Changes
+- enforce strict validation for unknown values in manifests
+
+### Fixes
+- resolving parameter values via regional / global mappings needs to use account id, not alias
 
 ## v3.4.0 (2024-04-19)
 

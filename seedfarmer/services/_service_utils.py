@@ -25,6 +25,8 @@ import seedfarmer.errors
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
+_endpoint_url =  os.getenv('ENDPOINT_URL')
+
 
 def setup_proxies() -> Dict[str, Optional[str]]:
     proxies = {}
@@ -69,15 +71,23 @@ def boto3_client(
     aws_session_token: Optional[str] = None,
 ) -> boto3.client:
     if aws_access_key_id and aws_secret_access_key and aws_session_token:
-        return create_new_session_with_creds(
-            aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
-        ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        if not _endpoint_url:
+            return create_new_session_with_creds(
+                aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
+            ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        else:
+            return create_new_session_with_creds(
+                aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
+            ).client(service_name=service_name, use_ssl=True, config=get_botocore_config(), endpoint_url=_endpoint_url)
     elif not session:
         return create_new_session(region_name, profile).client(
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )
     else:
-        return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        if not _endpoint_url:
+            return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        else:
+            return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config(), endpoint_url=_endpoint_url)
 
 
 def boto3_resource(

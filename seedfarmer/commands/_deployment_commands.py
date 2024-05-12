@@ -262,7 +262,7 @@ def _deploy_validated_deployment(
 
 
 def prime_target_accounts(
-    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
+    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False, profile: str = None
 ) -> None:
     _logger.info("Priming Accounts")
 
@@ -286,6 +286,7 @@ def prime_target_accounts(
                 "region": target_account_region["region"],
                 "update_seedkit": update_seedkit,
                 "update_project_policy": update_project_policy,
+                "profile": profile,
             }
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
@@ -672,6 +673,7 @@ def apply(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
+        profile=profile
     )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)

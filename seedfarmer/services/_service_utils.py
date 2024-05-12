@@ -49,13 +49,14 @@ def create_new_session(region_name: Optional[str] = None, profile: Optional[str]
 
 
 def create_new_session_with_creds(
-    aws_access_key_id: str, aws_secret_access_key: str, aws_session_token: str, region_name: Optional[str] = None
+    aws_access_key_id: str, aws_secret_access_key: str, aws_session_token: str, region_name: Optional[str] = None, profile_name: Optional[str] = None
 ) -> Session:
     return boto3.Session(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
         region_name=region_name,
+        profile_name=profile_name,
     )
 
 
@@ -70,7 +71,7 @@ def boto3_client(
 ) -> boto3.client:
     if aws_access_key_id and aws_secret_access_key and aws_session_token:
         return create_new_session_with_creds(
-            aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
+            aws_access_key_id, aws_secret_access_key, aws_session_token, region_name, profile_name=profile
         ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
     elif not session:
         return create_new_session(region_name, profile).client(

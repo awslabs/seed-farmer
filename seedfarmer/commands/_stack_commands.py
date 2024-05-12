@@ -440,6 +440,7 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
+    profile: Optional[str] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
@@ -459,7 +460,7 @@ def deploy_seedkit(
     security_group_ids: Optional[List[str]]
         The Security Group IDs to associate seedkit with (codebuild)
     """
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManager().get_or_create(profile=profile).get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
     if stack_exists and not update_seedkit:
@@ -479,7 +480,7 @@ def deploy_seedkit(
     return dict(stack_outputs)
 
 
-def destroy_seedkit(account_id: str, region: str) -> None:
+def destroy_seedkit(account_id: str, region: str, profile: Optional[str] = None) -> None:
     """
     destroy_seedkit
         Accessor method to CodeSeeder to destroy the SeedKit if deployed
@@ -490,7 +491,7 @@ def destroy_seedkit(account_id: str, region: str) -> None:
         The Account Id where the module is deployed
     region: str
         The region wher"""
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManager().get_or_create(profile=profile).get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
     commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
 

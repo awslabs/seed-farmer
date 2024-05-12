@@ -119,6 +119,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
         qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
+        profile = self.config["profile"]
         if not self.created:
             raise seedfarmer.errors.InvalidConfigurationError("The SessionManager object was never properly created...")
         if session_key not in self.sessions.keys():
@@ -131,6 +132,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
                 aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=toolchain_role["Credentials"]["SessionToken"],
+                profile=profile,
             )
             partition = sts_toolchain_client.get_caller_identity().get("Arn").split(":")[1]
             deployment_role_arn = get_deployment_role_arn(
@@ -165,6 +167,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 aws_secret_access_key=deployment_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=deployment_role["Credentials"]["SessionToken"],
                 region_name=region_name,
+                profile_name=profile,
             )
             self.sessions[session_key] = {self.SESSION: deployment_session, self.ROLE: deployment_role}
             return deployment_session
@@ -230,6 +233,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
             aws_session_token=toolchain_role["Credentials"]["SessionToken"],
             region_name=toolchain_region if toolchain_region else region_name,
+            profile_name=profile_name
         )
 
         return toolchain_session, toolchain_role

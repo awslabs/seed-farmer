@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 from seedfarmer.cli_groups._bootstrap_group import bootstrap
+from seedfarmer.cli_groups._bundle_group import bundle
 from seedfarmer.cli_groups._init_group import init
 from seedfarmer.cli_groups._list_group import list
 from seedfarmer.cli_groups._manage_metadata_group import metadata
@@ -20,4 +21,4 @@ from seedfarmer.cli_groups._project_group import projectpolicy
 from seedfarmer.cli_groups._remove_group import remove
 from seedfarmer.cli_groups._store_group import store
 
-__all__ = ["bootstrap", "init", "list", "remove", "store", "projectpolicy", "metadata"]
+__all__ = ["bootstrap", "init", "list", "remove", "store", "projectpolicy", "metadata", "bundle"]

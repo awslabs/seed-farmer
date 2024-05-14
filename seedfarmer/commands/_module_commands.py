@@ -27,6 +27,7 @@ from boto3 import Session
 
 import seedfarmer
 import seedfarmer.errors
+import seedfarmer.mgmt.bundle_support as bs
 from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
@@ -86,6 +87,24 @@ def _env_vars(
     return env_vars
 
 
+def _prebuilt_bundle_check(mdo: ModuleDeployObject) -> Optional[str]:
+    if mdo.seedfarmer_bucket:
+        module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+        account_id = str(module_manifest.get_target_account_id())
+        region = str(module_manifest.target_region)
+        deployment = str(mdo.deployment_manifest.name)
+        group = mdo.group_name
+        module = mdo.module_name
+        bucket = mdo.seedfarmer_bucket
+        session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+        if bs.check_bundle_exists_in_sf(deployment, group, module, bucket, session):
+            return bs.get_bundle_sf_path(deployment, group, module, bucket)
+        else:
+            return None
+    else:
+        return None
+
+
 def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
     account_id = str(module_manifest.get_target_account_id())
@@ -132,6 +151,10 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         (
             f"echo ${metadata_env_variable} | seedfarmer store moduledata "
             f"-d { mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
+        ),
+        (
+            f"seedfarmer bundle store -d { mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
+            f"-o $CODEBUILD_SOURCE_REPO_URL -b { mdo.seedfarmer_bucket} || true"
         ),
     ]
 
@@ -228,6 +251,13 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         f"seedfarmer remove moduledata -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name}"
     ]
 
+    remove_sf_bundle = [
+        (
+            f"seedfarmer bundle delete -d {mdo.deployment_manifest.name} -g {mdo.group_name} "
+            f"-m {module_manifest.name} -b {mdo.seedfarmer_bucket} || true"
+        )
+    ]
+
     export_info = [
         f"export DEPLOYMENT={mdo.deployment_manifest.name}",
         f"export GROUP={mdo.group_name}",
@@ -263,7 +293,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
             extra_build_commands=["cd module/"] + _phases.build.commands,
-            extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm,
+            extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm + remove_sf_bundle,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=mdo.module_role_name,
@@ -271,6 +301,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             npm_mirror=npm_mirror,
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
+            prebuilt_bundle=_prebuilt_bundle_check(mdo),
         )
         resp = ModuleDeploymentResponse(
             deployment=mdo.deployment_manifest.name,
@@ -312,6 +343,7 @@ def _execute_module_commands(
     npm_mirror: Optional[str] = None,
     pypi_mirror: Optional[str] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
+    prebuilt_bundle: Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session_getter: Optional[Callable[[], Session]] = None
 
@@ -344,6 +376,7 @@ def _execute_module_commands(
         extra_files=extra_file_bundle,
         boto3_session=session_getter,
         runtime_versions=runtime_versions,
+        prebuilt_bundle=prebuilt_bundle,
     )
     def _execute_module_commands(
         deployment_name: str,

@@ -15,3 +15,26 @@ seedfarmer apply <manifest-path> --update-seedkit
 ```
 
 Please see the [CLI references](./cli_commands.rst) for more details
+
+
+## Upgrading to 4.0.0  
+This is a **BREAKING CHANGE !!!**
+
+`seed-farmer` 4.0.0 introduces the support of S3 to persist bundles of sucessfully deployed modules.  This is meant to help when destroying modules that may have changed code over time.  For example, if a developer has deployed a module from a local path, then moves that module, `seed-farmer` will still be able to destroy that module as the bundle used to deploy is stored in S3.  The change is backward-compatible, but the permissions ARE BREAKING from an older version, so you MUST perform the following steps.  
+
+To upgrade:
+1. Identify ALL target accounts where modules are deployed and DELETE the `seedfarmer-<project>-deployment-role` in these accounts (IAM is a global service, not regional).
+2. Update your version of `seed-farmer` via
+    ```code
+    pip install --upgrade seed-farmer==4.0.0
+     ```
+3. Redeploy the `seedfarmer-<project>-deployment-role` in EVERY ACCOUNT
+    ``` code
+    seedfarmer bootstrap target -p <project> -t <toolchain-account-id>
+    ``` 
+4. Update the project policy on the next deployment (only once)
+    ```code 
+    seedfarmer apply <manifest-path> --update-project-policy
+    ```  
+
+Your existing deployment is unaffected after this change, and `seed-farmer` will continue to destroy as it previously did UNTIL the module you are looking to destroy has been sucessfully deployed with this version.  In other words, your modules WILL NOT benefit from the persisted bundle feature UNTIL they are deployed successfully with this new `seed-farmer` version.  In that regard, `seed-farmer` will continue to delete modules they way it always has (is backward compatible).

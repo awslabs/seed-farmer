@@ -8,7 +8,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
-
+- adding local path of manifests that fail to load to the actual final string printed
+  - this is already being done, but moving closer to last line of output
 ### Fixes
 
 ## v3.5.0 (2024-05-09)

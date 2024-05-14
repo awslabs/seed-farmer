@@ -71,6 +71,16 @@ Resources:
               - "sts:AssumeRole"
             Resource:
               - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk*"
+          - Action:
+            - s3:Delete*
+            - s3:Put*
+            - s3:Get*
+            - s3:Create*
+            - s3:List*
+            Effect: Allow
+            Resource:
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*"
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*/*" 
         Version: '2012-10-17'
 
 Outputs:

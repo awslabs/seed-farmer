@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- adding support for S3 to store bundles
 
 ### Changes
 - adding local path of manifests that fail to load to the actual final string printed

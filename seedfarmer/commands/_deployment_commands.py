@@ -661,11 +661,15 @@ def apply(
             try:
                 with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
                     module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            except FileNotFoundError as fe:
+                _logger.error(fe)
+                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                _logger.error("Verify (in deployment manifest) that relative path to the module manifest is correct")
+                raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
             except Exception as e:
                 _logger.error(e)
-                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
                 _logger.error("Verify that elements are filled out and yaml compliant")
-                raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
+                raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(

@@ -23,7 +23,7 @@ This is a **BREAKING CHANGE !!!**
 `seed-farmer` 4.0.0 introduces the support of S3 to persist bundles of sucessfully deployed modules.  This is meant to help when destroying modules that may have changed code over time.  For example, if a developer has deployed a module from a local path, then moves that module, `seed-farmer` will still be able to destroy that module as the bundle used to deploy is stored in S3.  The change is backward-compatible, but the permissions ARE BREAKING from an older version, so you MUST perform the following steps.  
 
 To upgrade:
-1. Identify ALL target accounts where modules are deployed and DELETE the `seedfarmer-<project>-deployment-role` in these accounts (IAM is a global service, not regional).
+1. Identify ALL target accounts where modules are deployed and DELETE the `seedfarmer-<project>-deployment-role` Cloudformation stack in these accounts (IAM is a global service, not regional but the Cloudformation template is regional)
 2. Update your version of `seed-farmer` via
     ```code
     pip install --upgrade seed-farmer==4.0.0

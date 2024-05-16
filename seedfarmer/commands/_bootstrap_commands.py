@@ -25,7 +25,7 @@ from botocore.exceptions import WaiterError
 from jinja2 import Template
 
 import seedfarmer.errors
-from seedfarmer import CLI_ROOT
+from seedfarmer import CLI_ROOT, __version__
 from seedfarmer.services import create_new_session, get_region, get_sts_identity_info
 from seedfarmer.services._iam import get_role
 from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, get_toolchain_role_name, valid_qualifier
@@ -48,7 +48,7 @@ def get_toolchain_template(
     if permissions_boundary_arn:
         role["Resources"]["ToolchainRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
     template = Template(json.dumps(role))
-    t = template.render({"project_name": project_name, "role_name": role_name})
+    t = template.render({"project_name": project_name, "role_name": role_name, "seedfarmer_version": __version__})
     return dict(json.loads(t))
 
 
@@ -67,7 +67,12 @@ def get_deployment_template(
         role["Resources"]["DeploymentRole"]["Properties"]["ManagedPolicyArns"] = policy_arns
     template = Template(json.dumps(role))
     t = template.render(
-        {"toolchain_role_arn": toolchain_role_arn, "project_name": project_name, "role_name": role_name}
+        {
+            "toolchain_role_arn": toolchain_role_arn,
+            "project_name": project_name,
+            "role_name": role_name,
+            "seedfarmer_version": __version__,
+        }
     )
     return dict(json.loads(t))
 

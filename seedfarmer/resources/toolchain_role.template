@@ -45,6 +45,6 @@ Resources:
                 Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:*"
       RoleName: "{{ role_name }}"
       Tags:
-        - Key: "seedfarmer"
+        - Key: "SeedFarmer"
           Value: "{{ seedfarmer_version }}"
     Type: AWS::IAM::Role

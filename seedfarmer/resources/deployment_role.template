@@ -155,6 +155,6 @@ Resources:
                 - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
       RoleName: "{{ role_name }}"
       Tags:
-        - Key: "seedfarmer"
+        - Key: "SeedFarmer"
           Value: "{{ seedfarmer_version }}"
     Type: AWS::IAM::Role

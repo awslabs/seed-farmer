@@ -275,14 +275,11 @@ def test_update_deployspec(mocker, session):
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils
 def test_populate_module_info_index(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",
         return_value=mock_module_info_huge.module_index_info_huge,
     )
-    du.populate_module_info_index(
-        deployment_manifest=DeploymentManifest(**mock_manifests.deployment_manifest)
-    )
+    du.populate_module_info_index(deployment_manifest=DeploymentManifest(**mock_manifests.deployment_manifest))
 
 
 # -----------------------
@@ -291,7 +288,6 @@ def test_populate_module_info_index(session_manager, mocker):
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils_filter
 def test_filter_destroy_deploy(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",
         return_value=mock_module_info_huge.module_index_info_huge,
@@ -306,7 +302,6 @@ def test_filter_destroy_deploy(session_manager, mocker):
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils_filter
 def test_filter_destroy_deploy_with_destroy(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",
         return_value=mock_module_info_huge.module_index_info_huge,
@@ -321,7 +316,6 @@ def test_filter_destroy_deploy_with_destroy(session_manager, mocker):
 @pytest.mark.mgmt
 @pytest.mark.mgmt_deployment_utils_filter
 def test_populate_groups_to_remove(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.mgmt.deploy_utils.mi.get_parameter_data_cache",
         return_value=mock_module_info_huge.module_index_info_huge,

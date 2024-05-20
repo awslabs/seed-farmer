@@ -330,9 +330,9 @@ def test_sgs_subnets_from_regional_parameter(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_parameters
 def test_too_many_subgroups(session_manager, mocker):
-    os.environ[
-        "testsgs"
-    ] = '["sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2"]'  # noqa: E501
+    os.environ["testsgs"] = (
+        '["sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2"]'  # noqa: E501
+    )
 
     deployment_manifest_json["target_account_mappings"][0]["region_mappings"][0]["network"] = {
         "vpc_id": "vpc-01e556d052f429282",

@@ -15,14 +15,12 @@
 import logging
 import os
 
-
 import pytest
 from moto import mock_sts
 
-import seedfarmer.mgmt.build_info as bi
+import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
-import seedfarmer.mgmt.git_support as sf_git
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -53,7 +51,6 @@ def session_manager(sts_client):
         toolchain_region="us-east-1",
         enable_reaper=False,
     )
-
 
 
 @pytest.mark.mgmt
@@ -98,6 +95,3 @@ def test_clone_module_repo_main(mocker):
     sf_git_dir, module_path, commit_hash = sf_git.clone_module_repo(git_path=git_path_test)
     # Make sure the pull works on an existing repo
     sf_git_dir, module_path, commit_hash = sf_git.clone_module_repo(git_path=git_path_test_redo)
-
-
-

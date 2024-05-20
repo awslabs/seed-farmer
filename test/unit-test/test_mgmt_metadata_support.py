@@ -97,7 +97,7 @@ def test_module_parameter_generic(build_env):
 def test_module_parameter_generic_error(build_env):
     _copyfile("deployspec_generic.yaml", "deployspec.yaml")
     param_val = ms.get_parameter_value("DEPLOYMENT_NAME_NOT_EXISTANT")
-    assert param_val == None
+    assert param_val is None
 
 
 @pytest.mark.mgmt_metadata_support
@@ -114,7 +114,7 @@ def test_module_add_kv_generic(build_env):
     _copyfile("deployspec_generic.yaml", "deployspec.yaml")
     ms.add_kv_output(key="TestKV", value="KVValue")
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "TestKV" in metadata.keys()
 
@@ -125,7 +125,7 @@ def test_module_add_json_generic(build_env):
     ms.add_kv_output(key="TestKV", value="KVValue")
     ms.add_json_output(json_string='{"TestJsonString":"Yo"}')
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "TestJsonString" in metadata.keys()
 
@@ -135,7 +135,7 @@ def test_module_convert_cdkexports_generic(build_env):
     _copyfile("deployspec_generic.yaml", "deployspec.yaml")
     ms.convert_cdkexports(json_file="cdk-exports.json")
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "ArtifactsBucketName" in metadata.keys()
 
@@ -147,7 +147,7 @@ def test_module_convert_cdkexports_generic_jq(build_env):
         json_file="cdk-exports.json", jq_path="addf-workshop-demo-integration-rosbag-ddb-to-os.metadata"
     )
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "ArtifactsBucketName" in metadata.keys()
 
@@ -170,7 +170,7 @@ def test_module_parameter_project(build_env):
 def test_module_parameter_project_error(build_env):
     _copyfile("deployspec_project.yaml", "deployspec.yaml")
     param_val = ms.get_parameter_value("DEPLOYMENT_NAME_NOT_THERE")
-    assert param_val == None
+    assert param_val is None
 
 
 @pytest.mark.mgmt_metadata_support
@@ -178,7 +178,7 @@ def test_module_add_kv_project(build_env):
     _copyfile("deployspec_project.yaml", "deployspec.yaml")
     ms.add_kv_output(key="TestKV", value="KVValue")
     output_path, does_exist = _project_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "TestKV" in metadata.keys()
 
@@ -189,7 +189,7 @@ def test_module_add_json_project(build_env):
     ms.add_kv_output(key="TestKV", value="KVValue")
     ms.add_json_output(json_string='{"TestJsonString":"Yo"}')
     output_path, does_exist = _project_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "TestJsonString" in metadata.keys()
 
@@ -199,7 +199,7 @@ def test_module_convert_cdkexports_project(build_env):
     _copyfile("deployspec_project.yaml", "deployspec.yaml")
     ms.convert_cdkexports(json_file="cdk-exports.json")
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "ArtifactsBucketName" in metadata.keys()
 
@@ -211,6 +211,6 @@ def test_module_convert_cdkexports_project_jq(build_env):
         json_file="cdk-exports.json", jq_path="addf-workshop-demo-integration-rosbag-ddb-to-os.metadata"
     )
     output_path, does_exist = _generic_file_exists()
-    assert True == does_exist
+    assert True is does_exist
     metadata = _open_metadata(output_path)
     assert "ArtifactsBucketName" in metadata.keys()

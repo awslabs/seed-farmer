@@ -15,15 +15,15 @@
 import logging
 import os
 from copy import deepcopy
-
 from unittest import mock
+
 import pytest
 import yaml
 
 import seedfarmer.errors
+from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models.deploy_responses import CodeSeederMetadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
-from seedfarmer.errors import InvalidManifestError
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
 # Override _stack_commands OPS_ROOT to reflect path of resource policy needed for some testing #
@@ -466,7 +466,6 @@ parameters:
         manifest.validate_and_set_module_defaults()
 
 
-
 @pytest.mark.models
 @pytest.mark.models_module_manifest
 def test_module_manifest_with_both_value_and_value_from_error():
@@ -488,6 +487,7 @@ parameters:
         manifest.groups[0].modules = [module]
         manifest.validate_and_set_module_defaults()
 
+
 @pytest.mark.models
 @pytest.mark.models_deployspec
 def test_deployspec():
@@ -495,7 +495,7 @@ def test_deployspec():
     updated_deployment_yaml = deepcopy(deployment_yaml)
     updated_deployment_yaml["targetAccountMappings"][0]["default"] = False
     updated_deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["default"] = False
-    manifest = DeploymentManifest(**updated_deployment_yaml)
+    DeploymentManifest(**updated_deployment_yaml)
 
     deployspec_yaml = yaml.safe_load(
         """
@@ -520,7 +520,7 @@ build_type: BUILD_GENERAL1_SMALL
 """
     )
 
-    deploy_spec = DeploySpec(**deployspec_yaml)
+    DeploySpec(**deployspec_yaml)
 
     deploy_spec_default = yaml.safe_load(
         """
@@ -550,7 +550,7 @@ destroy:
 @pytest.mark.models
 @pytest.mark.models_deployresponses
 def test_deployresponses():
-    cm = CodeSeederMetadata(
+    CodeSeederMetadata(
         aws_account_id="123456789012",
         aws_region="us-east-1",
         codebuild_build_id="codebuild:12345",

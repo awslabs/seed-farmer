@@ -20,6 +20,6 @@ destroy:
       - pip install -r requirements.txt
     build:
       commands:
-      - echo 'Look Ma....destroying'                                  
+      - echo 'Look Ma....destroying'
     """
 )

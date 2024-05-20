@@ -1,9 +1,6 @@
 import json
-import logging
 import os
-from typing import Tuple, cast
 
-import boto3
 import pytest
 import yaml
 from moto import mock_sts
@@ -11,7 +8,7 @@ from moto import mock_sts
 import seedfarmer.commands._module_commands as mc
 import seedfarmer.errors
 from seedfarmer.models._deploy_spec import DeploySpec
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -134,7 +131,7 @@ destroy:
       - pip install -r requirements.txt
     build:
       commands:
-      - echo 'Look Ma....destroying'                                  
+      - echo 'Look Ma....destroying'
     """
 )
 
@@ -161,7 +158,6 @@ def test_generate_export_raw_env_params():
 @pytest.mark.commands
 @pytest.mark.commands_modules
 def test_deploy_modules(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._module_commands._execute_module_commands",
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
@@ -173,7 +169,7 @@ def test_deploy_modules(session_manager, mocker):
     module_manifest.deploy_spec = DeploySpec(**dummy_deployspec)
 
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group_name, module_name=module_manifest.name)
-  
+
     mdo.codebuild_image = "aws/codebuild/standard:7.0"
     mdo.parameters = [
         ModuleParameter(
@@ -193,7 +189,6 @@ def test_deploy_modules(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_modules
 def test_deploy_modules_error_deployspec(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._module_commands._execute_module_commands",
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
@@ -230,7 +225,6 @@ def test_deploy_modules_error_deployspec(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_modules
 def test_destroy_modules(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._module_commands._execute_module_commands",
         return_value=(json.dumps(resp_dict_str), resp_dict_str),
@@ -262,7 +256,6 @@ def test_destroy_modules(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_modules
 def test_destroy_modules_error_deployspec(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._module_commands._execute_module_commands",
         return_value=(json.dumps(resp_dict_str), resp_dict_str),

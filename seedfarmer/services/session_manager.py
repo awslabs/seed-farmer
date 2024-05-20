@@ -48,13 +48,16 @@ class ISessionManager(object):
         profile: Optional[str] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
-    ) -> Any: ...
+    ) -> Any:
+        ...
 
     @abstractproperty
-    def toolchain_session(self) -> Session: ...
+    def toolchain_session(self) -> Session:
+        ...
 
     @abstractmethod
-    def get_deployment_session(self, account_id: str, region_name: str) -> Session: ...
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        ...
 
 
 class SessionManager(ISessionManager, metaclass=SingletonMeta):

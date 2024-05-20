@@ -23,7 +23,7 @@ def _test_command(
     exit_code: int,
     expected_output: Optional[str] = None,
     return_result: Optional[bool] = False,
-    skip_eval:Optional[bool] = False,
+    skip_eval: Optional[bool] = False,
 ):
     runner = CliRunner()
     command_output = runner.invoke(sub_command, options)

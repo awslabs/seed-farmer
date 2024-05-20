@@ -1,16 +1,12 @@
 import json
-import logging
 import os
-from typing import Tuple, cast
 
-import boto3
 import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
 import mock_data.mock_deployspec as mock_deployspec
 import mock_data.mock_manifests as mock_manifests
 import mock_data.mock_module_info_huge as mock_module_info_huge
 import pytest
-import yaml
 from moto import mock_sts
 
 import seedfarmer.commands._deployment_commands as dc
@@ -19,8 +15,6 @@ from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import (
     DataFile,
     DeploymentManifest,
-    ModuleManifest,
-    ModuleParameter,
 )
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services._service_utils import boto3_client
@@ -58,7 +52,6 @@ def session_manager(sts_client):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_apply_clean(session_manager, mocker):
-
     mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.populate_module_info_index", return_value=None)
@@ -73,7 +66,6 @@ def test_apply_clean(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_apply_violations(session_manager, mocker):
-
     mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.du.populate_module_info_index", return_value=None)
@@ -90,7 +82,6 @@ def test_apply_violations(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_destroy_clean(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._deployment_commands.du.generate_deployed_manifest",
         return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
@@ -103,7 +94,6 @@ def test_destroy_clean(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_deployment
 def test_destroy_not_found(session_manager, mocker):
-
     mocker.patch(
         "seedfarmer.commands._deployment_commands.du.generate_deployed_manifest",
         return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
@@ -120,13 +110,13 @@ def test_destroy_not_found(session_manager, mocker):
 # @pytest.mark.commands
 # @pytest.mark.commands_deployment
 # def test_tear_down_target_accounts(session_manager,mocker):
-#     mocker.patch("seedfarmer.commands._deployment_commands.tear_down_target_accounts._teardown_accounts", return_value=None)
+#     mocker.patch("seedfarmer.commands._deployment_commands.tear_down_target_accounts._teardown_accounts", return_value=None)  # noqa: E501
 #     # mocker.patch("seedfarmer.commands._deployment_commands.tear_down_target_accounts._teardown_accounts",
 #     #              return_value=None)
 #     # with mocker.patch('seedfarmer.commands._deployment_commands.tear_down_target_accounts') as teardown:
 #     #     teardown.
 ### COMMENT....I cannot get the nested threads to mock
-#     dc.tear_down_target_accounts(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest))
+#     dc.tear_down_target_accounts(deployment_manifest=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest))  # noqa: E501
 
 
 @pytest.mark.commands
@@ -215,9 +205,7 @@ def test_execute_destroy_invalid_spec(session_manager, mocker):
         return_value=("stack_name", "role_name"),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module", return_value=mod_resp)
-    mdo = ModuleDeployObject(
-        deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name
-    )
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_destroy(mdo)
 

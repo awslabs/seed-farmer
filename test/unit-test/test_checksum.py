@@ -37,7 +37,7 @@ def test_private_methods_checksum():
     import seedfarmer.checksum as checksum
 
     file_tst = os.path.abspath(__file__)
-    assert False == checksum._evaluate_file(filename=file_tst, ignore_maps=None)
+    assert checksum._evaluate_file(filename=file_tst, ignore_maps=None) is False
 
     _check_non = checksum._generate_file_hash(filepath=f"{file_tst}_bak")
     assert _check_non == "d41d8cd98f00b204e9800998ecf8427e"

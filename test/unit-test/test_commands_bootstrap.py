@@ -1,15 +1,12 @@
-import logging
 import os
 
 import boto3
 import pytest
-import yaml
 from moto import mock_sts
 
 import seedfarmer
 import seedfarmer.commands._bootstrap_commands as bc
 import seedfarmer.errors
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -125,7 +122,6 @@ def test_apply_deploy_logic_stack_not_exists(session_manager, mocker):
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account(mocker, session):
-
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
     mocker.patch(
@@ -146,7 +142,6 @@ def test_bootstrap_toolchain_account(mocker, session):
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account_synth(mocker, session):
-
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     bc.bootstrap_toolchain_account(
         project_name="testing",
@@ -162,7 +157,6 @@ def test_bootstrap_toolchain_account_synth(mocker, session):
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account_synth_with_qualifier(mocker, session):
-
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     bc.bootstrap_toolchain_account(
         project_name="testing",
@@ -197,7 +191,6 @@ def test_bootstrap_toolchain_account_synth_with_qualifier_fail(mocker, session):
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account_with_policies(mocker, session):
-
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
     mocker.patch(

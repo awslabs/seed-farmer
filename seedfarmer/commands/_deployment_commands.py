@@ -248,7 +248,8 @@ def _deploy_validated_deployment(
                         if dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to deploy...exiting deployment")
                             print_errored_modules_build_info(
-                                "These modules had errors deploying", deploy_response  # type: ignore
+                                "These modules had errors deploying",
+                                deploy_response,  # type: ignore
                             )
                             raise seedfarmer.errors.ModuleDeploymentError(
                                 error_message="At least one module failed to deploy...exiting deployment"

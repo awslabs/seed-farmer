@@ -1,10 +1,7 @@
-import json
 import os
 from typing import Any, Dict, cast
 
-import boto3
 import pytest
-import yaml
 from moto import mock_sts
 
 import seedfarmer.commands._network_parameter_commands as npc
@@ -120,7 +117,7 @@ def test_no_values(session_manager, mocker):
 
     target_account_region = dep.target_accounts_regions[0]
 
-    networkOut = npc.load_network_values(
+    npc.load_network_values(
         cast(NetworkMapping, target_account_region["network"]),
         cast(Dict[str, Any], target_account_region["parameters_regional"]),
         target_account_region["account_id"],
@@ -335,7 +332,7 @@ def test_sgs_subnets_from_regional_parameter(session_manager, mocker):
 def test_too_many_subgroups(session_manager, mocker):
     os.environ[
         "testsgs"
-    ] = '["sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2"]'
+    ] = '["sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2","sg-049033188c114a3d2"]'  # noqa: E501
 
     deployment_manifest_json["target_account_mappings"][0]["region_mappings"][0]["network"] = {
         "vpc_id": "vpc-01e556d052f429282",

@@ -21,11 +21,10 @@ from _test_cli_helper_functions import _test_command
 from moto import mock_sts
 
 from seedfarmer import config
-from seedfarmer.__main__ import apply, bootstrap, destroy, init
+from seedfarmer.__main__ import apply, bootstrap, destroy, init, metadata, projectpolicy, remove, store, version
 from seedfarmer.__main__ import list as list
-from seedfarmer.__main__ import metadata, projectpolicy, remove, store, version
 from seedfarmer.models._deploy_spec import DeploySpec
-from seedfarmer.models.manifests import DeploymentManifest, ModulesManifest
+from seedfarmer.models.manifests import DeploymentManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -115,7 +114,6 @@ def session_manager(sts_client):
 
 @pytest.mark.init
 def test_init_create_group_module(mocker):
-
     module_name = "test-module"
     group_name = "group"
 
@@ -127,7 +125,6 @@ def test_init_create_group_module(mocker):
 
 @pytest.mark.init
 def test_init_create_project(mocker):
-
     mocker.patch("seedfarmer.cli_groups._init_group.minit.create_project", return_value=None)
     _test_command(sub_command=init, options=["project"], exit_code=0)
 
@@ -184,7 +181,7 @@ def test_apply_deployment(mocker):
     # Deploys a functioning module
     mocker.patch("seedfarmer.__main__.commands.apply", return_value=None)
     deployment_manifest = f"{_TEST_ROOT}/manifests/module-test/deployment.yaml"
-    command_output = _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
+    _test_command(sub_command=apply, options=[deployment_manifest, "--debug"], exit_code=0)
 
 
 @pytest.mark.first
@@ -227,7 +224,11 @@ def test_apply_deployment__env_variables_multiple_env_files(mocker, reverse_orde
     if reverse_order:
         env_files = env_files[::-1]
 
-    _test_command(sub_command=apply, options=[deployment_manifest, "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
+    _test_command(
+        sub_command=apply,
+        options=[deployment_manifest, "--debug", "--env-file", env_files[0], "--env-file", env_files[1]],
+        exit_code=0,
+    )
 
     assert os.environ == {
         "PRIMARY_ACCOUNT": "123456789012" if reverse_order else "000000000000",
@@ -240,14 +241,14 @@ def test_apply_deployment__env_variables_multiple_env_files(mocker, reverse_orde
 def test_destroy_deployment_dry_run(mocker):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
-    command_output = _test_command(sub_command=destroy, options=["myapp", "--debug", "--dry-run"], exit_code=0)
+    _test_command(sub_command=destroy, options=["myapp", "--debug", "--dry-run"], exit_code=0)
 
 
 @pytest.mark.destroy
 def test_destroy_deployment(mocker):
     # Destroy a functioning module
     mocker.patch("seedfarmer.__main__.commands.destroy", return_value=None)
-    command_output = _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
+    _test_command(sub_command=destroy, options=["myapp", "--debug"], exit_code=0)
 
 
 @pytest.mark.destroy
@@ -283,7 +284,11 @@ def test_destroy__deployment_env_variables_multiple_env_files(mocker, reverse_or
     if reverse_order:
         env_files = env_files[::-1]
 
-    _test_command(sub_command=destroy, options=["myapp", "--debug", "--env-file",  env_files[0], "--env-file", env_files[1]], exit_code=0)
+    _test_command(
+        sub_command=destroy,
+        options=["myapp", "--debug", "--env-file", env_files[0], "--env-file", env_files[1]],
+        exit_code=0,
+    )
 
     assert os.environ == {
         "PRIMARY_ACCOUNT": "123456789012" if reverse_order else "000000000000",
@@ -301,7 +306,8 @@ def test_bootstrap_toolchain_only(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["toolchain", "--trusted-principal", "arn:aws:iam::123456789012:role/AdminRole", "--debug"],
-        exit_code=0, skip_eval=True
+        exit_code=0,
+        skip_eval=True,
     )
 
 
@@ -322,7 +328,7 @@ def test_bootstrap_toolchain_only_with_qualifier(mocker):
             "--debug",
         ],
         exit_code=0,
-        skip_eval=True
+        skip_eval=True,
     )
 
 
@@ -343,7 +349,7 @@ def test_bootstrap_toolchain_only_with_policies_fail(mocker):
             "--debug",
         ],
         exit_code=1,
-        skip_eval=True
+        skip_eval=True,
     )
 
 
@@ -354,7 +360,10 @@ def test_bootstrap_target_account(mocker):
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_toolchain_account", return_value=None)
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value=None)
     _test_command(
-        sub_command=bootstrap, options=["target", "--toolchain-account", "123456789012", "--debug"], exit_code=0, skip_eval=True
+        sub_command=bootstrap,
+        options=["target", "--toolchain-account", "123456789012", "--debug"],
+        exit_code=0,
+        skip_eval=True,
     )
 
 
@@ -367,7 +376,8 @@ def test_bootstrap_target_account_with_qualifier(mocker):
     _test_command(
         sub_command=bootstrap,
         options=["target", "--toolchain-account", "123456789012", "--qualifier", "testit", "--debug"],
-        exit_code=0, skip_eval=True
+        exit_code=0,
+        skip_eval=True,
     )
 
 
@@ -589,7 +599,6 @@ def test_list_deployments_help():
 @pytest.mark.list
 @pytest.mark.list_deployments
 def test_list_deployments_extra_args():
-
     _test_command(
         sub_command=list,
         options=[
@@ -1214,7 +1223,6 @@ def test_store_md5_missing_type_arg():
 @pytest.mark.store
 @pytest.mark.store_md5
 def test_store_md5_deployspec():
-
     # Store hash to SSM of type spec
     _test_command(
         sub_command=store,
@@ -1404,7 +1412,6 @@ def test_store_deployspec_missing_path():
 @pytest.mark.store
 @pytest.mark.store_deployspec
 def test_store_deployspec_missing_acct():
-    path = "module/test/test"
     _test_command(
         sub_command=store,
         options=[
@@ -1430,7 +1437,6 @@ def test_store_deployspec_missing_acct():
 @pytest.mark.store_deployspec
 @pytest.mark.parametrize("session", [None])
 def test_store_deployspec(session_manager, session):
-
     _test_command(
         sub_command=store,
         options=[
@@ -1457,13 +1463,11 @@ def test_store_deployspec(session_manager, session):
 
 @pytest.mark.projectpolicy
 def test_get_projectpolicy():
-
     _test_command(sub_command=projectpolicy, options=["synth"], exit_code=0)
 
 
 @pytest.mark.projectpolicy
 def test_get_projectpolicy_debug():
-
     _test_command(sub_command=projectpolicy, options=["synth", "--debug"], exit_code=0)
 
 

@@ -1,16 +1,12 @@
-import logging
 import os
-from typing import cast
 
-import boto3
-import pytest
-import yaml
-from moto import mock_sts
 import pydantic_core
+import pytest
+from moto import mock_sts
 
 import seedfarmer.commands._parameter_commands as pc
 import seedfarmer.errors
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests import DeploymentManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -203,11 +199,11 @@ def test_load_parameter_values(session_manager, mocker):
     names = []
     for module_parameter in params:
         names.append(module_parameter.name)
-    assert ("removal-policy" in names) == True
-    assert ("vpc-id" in names) == True
-    assert ("test-secrets-manager" in names) == True
-    assert ("test-ssm-store" in names) == True
-    assert ("test-regional-param" in names) == True
+    assert ("removal-policy" in names) is True
+    assert ("vpc-id" in names) is True
+    assert ("test-secrets-manager" in names) is True
+    assert ("test-ssm-store" in names) is True
+    assert ("test-regional-param" in names) is True
 
 
 @pytest.mark.commands

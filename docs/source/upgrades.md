@@ -32,9 +32,26 @@ To upgrade:
     ``` code
     seedfarmer bootstrap target -p <project> -t <toolchain-account-id>
     ``` 
-4. Update the project policy on the next deployment (only once)
+4. Update the project policy on the next deployment (only once) *See Below*
     ```code 
     seedfarmer apply <manifest-path> --update-project-policy
     ```  
+
+**NOTE:** If you are using your own `projectpolicy.yaml` (not using the one provided by `seed-farmer` and have defined it in your manifests) you can update your project policy with the following prior to running ***Step 4*** :
+
+```yaml
+          - Action:
+            - s3:Delete*
+            - s3:Put*
+            - s3:Get*
+            - s3:Create*
+            - s3:List*
+            Effect: Allow
+            Resource:
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*"
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*/*" 
+```
+      
+  ** *please update ${ProjectName} accordingly -- this is for you to manage*
 
 Your existing deployment is unaffected after this change, and `seed-farmer` will continue to destroy as it previously did UNTIL the module you are looking to destroy has been sucessfully deployed with this version.  In other words, your modules WILL NOT benefit from the persisted bundle feature UNTIL they are deployed successfully with this new `seed-farmer` version.  In that regard, `seed-farmer` will continue to delete modules they way it always has (is backward compatible).

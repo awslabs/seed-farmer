@@ -139,7 +139,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         )
     ]
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
-    sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v { aws_codeseeder.__version__} || true"]
+    sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v {aws_codeseeder.__version__} || true"]
     cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
     githash_add = (
         [f"seedfarmer metadata add -k SeedFarmerModuleCommitHash -v {module_manifest.commit_hash} || true"]
@@ -150,11 +150,11 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
         (
             f"echo ${metadata_env_variable} | seedfarmer store moduledata "
-            f"-d { mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
+            f"-d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
         ),
         (
-            f"seedfarmer bundle store -d { mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
-            f"-o $CODEBUILD_SOURCE_REPO_URL -b { mdo.seedfarmer_bucket} || true"
+            f"seedfarmer bundle store -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
+            f"-o $CODEBUILD_SOURCE_REPO_URL -b {mdo.seedfarmer_bucket} || true"
         ),
     ]
 

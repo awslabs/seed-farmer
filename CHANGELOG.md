@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 - adding local path of manifests that fail to load to the actual final string printed
   - this is already being done, but moving closer to last line of output
+- updating idna>=3.7 everywhere
 ### Fixes
 
 ## v3.5.1 (2024-05-21)

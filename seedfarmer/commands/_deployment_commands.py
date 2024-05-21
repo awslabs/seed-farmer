@@ -277,6 +277,8 @@ def prime_target_accounts(
             ).replace("_", "-")
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
+            seedfarmer_bucket = commands.deploy_bucket_storage_stack(**args)
+            seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
             return [args["account_id"], args["region"], seedkit_stack_outputs]
 
@@ -321,6 +323,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
             ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
+            commands.destroy_bucket_storage_stack(**args)
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)

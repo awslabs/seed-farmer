@@ -13,7 +13,8 @@ module code and the AWS Cloud via AWS CodeSeeder.
 2. **seedfarmer** via `toolchain role` reads/writes deployment metadata with AWS Systems Manager
 3. **seedfarmer** `toolchain role` assumes `deployment role` in all `target acccount` to fetch module metadata
 4. **seedfarmer** via `deployment role` in `target acccount` initiates module deployment ([see below](method_processing))
-5. **seedfarmer** via `deployment role` assumes `module deployment role` to complete module deployment
+5. **seedfarmer** via `deployment role` interacts with S3 for bundle references
+6. **seedfarmer** via `deployment role` assumes `module deployment role` to complete module deployment
 
 
 (method_processing)=

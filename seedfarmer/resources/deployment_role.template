@@ -95,6 +95,7 @@ Resources:
               Resource:
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}/*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-{{ project_name }}/*"
             - Action:
               - s3:Delete*
               - s3:Put*
@@ -106,6 +107,8 @@ Resources:
               Resource:
               - Fn::Sub: "arn:${AWS::Partition}:s3:::codeseeder-{{ project_name }}*"
               - Fn::Sub: "arn:${AWS::Partition}:s3:::codeseeder-{{ project_name }}*/*"
+              - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-{{ project_name }}*"
+              - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-{{ project_name }}*/*"              
               Sid: DeploymentS3
             - Action:
               - sts:AssumeRole
@@ -139,9 +142,11 @@ Resources:
             - Action:
               - cloudformation:Create*
               - cloudformation:Execute*
+              - cloudformation:DeleteStack
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-{{ project_name }}*/*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-{{ project_name }}*/*" 
             - Action:
               - codeartifact:*
               Effect: Allow
@@ -149,4 +154,7 @@ Resources:
                 - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
                 - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
       RoleName: "{{ role_name }}"
+      Tags:
+        - Key: "SeedFarmer"
+          Value: "{{ seedfarmer_version }}"
     Type: AWS::IAM::Role

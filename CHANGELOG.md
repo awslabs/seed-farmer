@@ -16,6 +16,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
   - this is already being done, but moving closer to last line of output
 ### Fixes
 
+## v3.5.1 (2024-05-21)
+
+### New
+
+### Changes
+
+### Fixes
+- updating requests library  `requests==2.32.0`
+
 ## v3.5.0 (2024-05-09)
 
 ### New

@@ -189,7 +189,7 @@ pyyaml==6.0.1
     #   sphinx-autoapi
 readme-renderer==37.3
     # via twine
-requests==2.31.0
+requests==2.32.0
     # via
     #   -r requirements-dev.in
     #   moto

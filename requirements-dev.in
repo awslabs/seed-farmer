@@ -21,6 +21,6 @@ sphinx-autoapi~=1.8.0
 sphinx-rtd-theme~=1.0.0
 sphinx~=4.3.0
 moto[s3,sts,iam,codebuild,secretsmanager,ssm]~=4.0.9
-requests~=2.31.0
+requests~=2.32.0
 werkzeug~=3.0.3
 urllib3~=1.26.18

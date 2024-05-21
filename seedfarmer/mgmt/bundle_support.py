@@ -28,7 +28,6 @@ BUNDLE_PREFIX = "bundle"
 
 
 class BundleS3Support:
-
     codeseeder_bucket: Optional[str] = None
     codeseeder_key: Optional[str] = None
     seedfarmer_bucket: Optional[str] = None

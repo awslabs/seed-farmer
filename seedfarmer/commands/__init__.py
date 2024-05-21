@@ -19,9 +19,11 @@ from seedfarmer.commands._network_parameter_commands import load_network_values
 from seedfarmer.commands._parameter_commands import generate_export_env_params, generate_export_raw_env_params
 from seedfarmer.commands._project_policy_commands import get_default_project_policy
 from seedfarmer.commands._stack_commands import (
+    deploy_bucket_storage_stack,
     deploy_managed_policy_stack,
     deploy_module_stack,
     deploy_seedkit,
+    destroy_bucket_storage_stack,
     destroy_managed_policy_stack,
     destroy_module_stack,
     destroy_seedkit,
@@ -48,4 +50,6 @@ __all__ = [
     "get_default_project_policy",
     "load_network_values",
     "force_manage_policy_attach",
+    "deploy_bucket_storage_stack",
+    "destroy_bucket_storage_stack",
 ]

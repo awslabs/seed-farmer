@@ -103,7 +103,6 @@ class ModuleManifest(CamelModel):
     _local_path: Optional[str] = PrivateAttr(default=None)
 
     def __init__(self, **kwargs: Any) -> None:
-
         from seedfarmer.utils import batch_replace_env
 
         kwargs = batch_replace_env(payload=kwargs)

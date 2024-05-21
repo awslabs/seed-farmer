@@ -6,10 +6,24 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+- adding support for S3 to store bundles
+- adding seedfarmer version tag to toolchain and deployment roles
+- removing python 3.7 support
+- adding python 3.12 support 
+
+### Changes
+- adding local path of manifests that fail to load to the actual final string printed
+  - this is already being done, but moving closer to last line of output
+### Fixes
+
+## v3.5.1 (2024-05-21)
+
+### New
 
 ### Changes
 
 ### Fixes
+- updating requests library  `requests==2.32.0`
 
 
 ## v3.5.1 (2024-05-21)

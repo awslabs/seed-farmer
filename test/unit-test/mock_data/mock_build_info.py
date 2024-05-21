@@ -15,14 +15,14 @@ codebuild_response = {
                     "phaseStatus": "SUCCEEDED",
                     "startTime": "2024-03-13T20:24:02.191000-04:00",
                     "endTime": "2024-03-13T20:24:02.360000-04:00",
-                    "durationInSeconds": 0
+                    "durationInSeconds": 0,
                 },
                 {
                     "phaseType": "QUEUED",
                     "phaseStatus": "SUCCEEDED",
                     "startTime": "2024-03-13T20:24:02.360000-04:00",
                     "endTime": "2024-03-13T20:24:03.331000-04:00",
-                    "durationInSeconds": 0
+                    "durationInSeconds": 0,
                 },
                 {
                     "phaseType": "PROVISIONING",
@@ -30,12 +30,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:24:03.331000-04:00",
                     "endTime": "2024-03-13T20:24:11.188000-04:00",
                     "durationInSeconds": 7,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "DOWNLOAD_SOURCE",
@@ -43,12 +38,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:24:11.188000-04:00",
                     "endTime": "2024-03-13T20:24:17.501000-04:00",
                     "durationInSeconds": 6,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "INSTALL",
@@ -56,12 +46,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:24:17.501000-04:00",
                     "endTime": "2024-03-13T20:26:16.074000-04:00",
                     "durationInSeconds": 118,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "PRE_BUILD",
@@ -69,12 +54,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:26:16.074000-04:00",
                     "endTime": "2024-03-13T20:26:16.246000-04:00",
                     "durationInSeconds": 0,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "BUILD",
@@ -82,12 +62,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:26:16.246000-04:00",
                     "endTime": "2024-03-13T20:26:31.774000-04:00",
                     "durationInSeconds": 15,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "POST_BUILD",
@@ -95,12 +70,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:26:31.774000-04:00",
                     "endTime": "2024-03-13T20:26:32.877000-04:00",
                     "durationInSeconds": 1,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "UPLOAD_ARTIFACTS",
@@ -108,12 +78,7 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:26:32.877000-04:00",
                     "endTime": "2024-03-13T20:26:32.931000-04:00",
                     "durationInSeconds": 0,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
                 {
                     "phaseType": "FINALIZING",
@@ -121,17 +86,9 @@ codebuild_response = {
                     "startTime": "2024-03-13T20:26:32.931000-04:00",
                     "endTime": "2024-03-13T20:26:33.189000-04:00",
                     "durationInSeconds": 0,
-                    "contexts": [
-                        {
-                            "statusCode": "",
-                            "message": ""
-                        }
-                    ]
+                    "contexts": [{"statusCode": "", "message": ""}],
                 },
-                {
-                    "phaseType": "COMPLETED",
-                    "startTime": "2024-03-13T20:26:33.189000-04:00"
-                }
+                {"phaseType": "COMPLETED", "startTime": "2024-03-13T20:26:33.189000-04:00"},
             ],
             # "source": {
             #     "type": "S3",
@@ -141,90 +98,34 @@ codebuild_response = {
             # },
             "secondarySources": [],
             "secondarySourceVersions": [],
-            "artifacts": {
-                "location": ""
-            },
-            "cache": {
-                "type": "NO_CACHE"
-            },
+            "artifacts": {"location": ""},
+            "cache": {"type": "NO_CACHE"},
             "environment": {
                 "type": "LINUX_CONTAINER",
                 "image": "aws/codebuild/standard:6.0",
                 "computeType": "BUILD_GENERAL1_SMALL",
                 "environmentVariables": [
-                    {
-                        "name": "AWS_CODESEEDER_DOCKER_SECRET",
-                        "value": "NONE",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_PARAMETER_REPOSITORY_NAME",
-                        "value": "ml-mnist-images",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "AWS_CODESEEDER_NAME",
-                        "value": "idf",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_MODULE_NAME",
-                        "value": "ecr-ecr-ml-images",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_VERSION",
-                        "value": "3.3.0.dev0",
-                        "type": "PLAINTEXT"
-                    },
+                    {"name": "AWS_CODESEEDER_DOCKER_SECRET", "value": "NONE", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_PARAMETER_REPOSITORY_NAME", "value": "ml-mnist-images", "type": "PLAINTEXT"},
+                    {"name": "AWS_CODESEEDER_NAME", "value": "idf", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_MODULE_NAME", "value": "ecr-ecr-ml-images", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_VERSION", "value": "3.3.0.dev0", "type": "PLAINTEXT"},
                     {
                         "name": "SEEDFARMER_MODULE_METADATA",
-                        "value": "{\"AwsCodeSeederDeployed\": \"0.11.1\", \"EcrRepositoryArn\": \"arn:aws:ecr:us-east-1:123456789012:repository/ml-mnist-images\", \"EcrRepositoryName\": \"ml-mnist-images\", \"LifecycleMaxImages\": \"10\", \"SeedFarmerDeployed\": \"3.3.0.dev0\"}",
-                        "type": "PLAINTEXT"
+                        "value": '{"AwsCodeSeederDeployed": "0.11.1", "EcrRepositoryArn": "arn:aws:ecr:us-east-1:123456789012:repository/ml-mnist-images", "EcrRepositoryName": "ml-mnist-images", "LifecycleMaxImages": "10", "SeedFarmerDeployed": "3.3.0.dev0"}',
+                        "type": "PLAINTEXT",
                     },
-                    {
-                        "name": "SEEDFARMER_DEPLOYMENT_NAME",
-                        "value": "dummy",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "AWS_PARTITION",
-                        "value": "aws",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "AWS_CODESEEDER_VERSION",
-                        "value": "0.11.1",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "AWS_ACCOUNT_ID",
-                        "value": "123456789012",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_PROJECT_NAME",
-                        "value": "idf",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_HASH",
-                        "value": "074ff5b4",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_PARAMETER_LIFECYCLE_MAX_IMAGE_COUNT",
-                        "value": "10",
-                        "type": "PLAINTEXT"
-                    },
-                    {
-                        "name": "SEEDFARMER_PARAMETER_IMAGE_TAG_MUTABILITY",
-                        "value": "MUTABLE",
-                        "type": "PLAINTEXT"
-                    }
+                    {"name": "SEEDFARMER_DEPLOYMENT_NAME", "value": "dummy", "type": "PLAINTEXT"},
+                    {"name": "AWS_PARTITION", "value": "aws", "type": "PLAINTEXT"},
+                    {"name": "AWS_CODESEEDER_VERSION", "value": "0.11.1", "type": "PLAINTEXT"},
+                    {"name": "AWS_ACCOUNT_ID", "value": "123456789012", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_PROJECT_NAME", "value": "idf", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_HASH", "value": "074ff5b4", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_PARAMETER_LIFECYCLE_MAX_IMAGE_COUNT", "value": "10", "type": "PLAINTEXT"},
+                    {"name": "SEEDFARMER_PARAMETER_IMAGE_TAG_MUTABILITY", "value": "MUTABLE", "type": "PLAINTEXT"},
                 ],
                 "privilegedMode": "true",
-                "imagePullCredentialsType": "CODEBUILD"
+                "imagePullCredentialsType": "CODEBUILD",
             },
             "serviceRole": "arn:aws:iam::123456789012:role/idf-dummy-ecr-ecr-ml-images-074ff5b4",
             "logs": {
@@ -235,12 +136,9 @@ codebuild_response = {
                 "cloudWatchLogs": {
                     "status": "ENABLED",
                     "groupName": "/aws/codebuild/codeseeder-idf",
-                    "streamName": "codeseeder-bzchpmli"
+                    "streamName": "codeseeder-bzchpmli",
                 },
-                "s3Logs": {
-                    "status": "DISABLED",
-                    "encryptionDisabled": "false"
-                }
+                "s3Logs": {"status": "DISABLED", "encryptionDisabled": "false"},
             },
             "timeoutInMinutes": 120,
             "queuedTimeoutInMinutes": 480,
@@ -249,13 +147,13 @@ codebuild_response = {
             "exportedEnvironmentVariables": [
                 {
                     "name": "AWS_CODESEEDER_OUTPUT",
-                    "value": "\"{\\\"aws_region\\\": \\\"us-east-1\\\", \\\"aws_account_id\\\": \\\"123456789012\\\", \\\"aws_partition\\\": \\\"aws\\\", \\\"codebuild_build_id\\\": \\\"codeseeder-idf:7f53415b-f47d-4e5e-860f-93d7f440aa30\\\", \\\"codebuild_log_path\\\": \\\"codeseeder-bzchpmli/7f53415b-f47d-4e5e-860f-93d7f440aa30\\\"}\""
+                    "value": '"{\\"aws_region\\": \\"us-east-1\\", \\"aws_account_id\\": \\"123456789012\\", \\"aws_partition\\": \\"aws\\", \\"codebuild_build_id\\": \\"codeseeder-idf:7f53415b-f47d-4e5e-860f-93d7f440aa30\\", \\"codebuild_log_path\\": \\"codeseeder-bzchpmli/7f53415b-f47d-4e5e-860f-93d7f440aa30\\"}"',
                 },
                 {
                     "name": "SEEDFARMER_MODULE_METADATA",
-                    "value": "{\"AwsCodeSeederDeployed\": \"0.11.1\", \"EcrRepositoryArn\": \"arn:aws:ecr:us-east-1:123456789012:repository/ml-mnist-images\", \"EcrRepositoryName\": \"ml-mnist-images\", \"LifecycleMaxImages\": \"10\", \"SeedFarmerDeployed\": \"3.3.0.dev0\"}"
-                }
-            ]
+                    "value": '{"AwsCodeSeederDeployed": "0.11.1", "EcrRepositoryArn": "arn:aws:ecr:us-east-1:123456789012:repository/ml-mnist-images", "EcrRepositoryName": "ml-mnist-images", "LifecycleMaxImages": "10", "SeedFarmerDeployed": "3.3.0.dev0"}',
+                },
+            ],
         }
     ],
     "buildsNotFound": [],
@@ -266,8 +164,8 @@ codebuild_response = {
             "x-amzn-requestid": "11701f62-9639-4fe3-82d9-dcbc38ac41af",
             "content-type": "application/x-amz-json-1.1",
             "content-length": "7670",
-            "date": "Fri, 29 Mar 2024 14:38:06 GMT"
+            "date": "Fri, 29 Mar 2024 14:38:06 GMT",
         },
-        "RetryAttempts": 0
-    }
+        "RetryAttempts": 0,
+    },
 }

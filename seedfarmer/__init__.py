@@ -37,6 +37,7 @@ INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
+S3_BUCKET_CFN_PATH = "resources/s3_bucket.yaml"
 
 
 def enable_debug(format: str) -> None:
@@ -142,6 +143,12 @@ class Config(object):
         if self._project_spec is None:
             self._load_config_data()
         return cast(ProjectSpec, self._project_spec).manifest_validation_fail_on_unknown_fields
+
+    @property
+    def BUCKET_STORAGE_PATH(self) -> str:
+        if self._project_spec is None:
+            self._load_config_data()
+        return str(os.path.join(CLI_ROOT, S3_BUCKET_CFN_PATH))
 
 
 config = Config()

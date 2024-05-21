@@ -833,5 +833,5 @@ def get_modulestack_path(module_path: str) -> Any:
 def get_deployspec_path(module_path: str) -> str:
     p = os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")
     if not os.path.exists(p):
-        raise seedfarmer.errors.InvalidPathError("No deployspec.yaml file found in module directory: %s", p)
+        raise seedfarmer.errors.InvalidPathError(f"No deployspec.yaml file found in module directory: {p}")
     return os.path.join(config.OPS_ROOT, module_path, "deployspec.yaml")

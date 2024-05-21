@@ -25,22 +25,34 @@ from cfn_tools import load_yaml
 import seedfarmer.errors
 import seedfarmer.services._iam as iam
 from seedfarmer import config
+from seedfarmer.mgmt.bundle_support import BUNDLE_PREFIX
 from seedfarmer.mgmt.module_info import get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
-from seedfarmer.utils import upper_snake_case
+from seedfarmer.utils import generate_hash, upper_snake_case
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 class StackInfo(object):
     _PROJECT_MANAGED_POLICY_CFN_NAME: Optional[str] = None
+    _SEEDFARMER_BUCKET_CFN_NAME: Optional[str] = None
+    _region: Optional[str] = None
+    _account_id: Optional[str] = None
+
+    def __init__(self, account_id: Optional[str] = None, region: Optional[str] = None) -> None:
+        self._account_id = account_id
+        self._region = region
 
     @property
     def PROJECT_MANAGED_POLICY_CFN_NAME(self) -> str:
         if self._PROJECT_MANAGED_POLICY_CFN_NAME is None:
             self._PROJECT_MANAGED_POLICY_CFN_NAME = f"{config.PROJECT.lower()}-managed-policy"
         return self._PROJECT_MANAGED_POLICY_CFN_NAME
+
+    @property
+    def SEEDFARMER_BUCKET_STACK_NAME(self) -> str:
+        return f"seedfarmer-{config.PROJECT.lower()}-artifacts"
 
 
 info = StackInfo()
@@ -77,6 +89,55 @@ def _get_project_managed_policy_arn(session: boto3.Session) -> str:
         return project_managed_policy_arn
 
 
+def deploy_bucket_storage_stack(
+    account_id: str,
+    region: str,
+    **kwargs: Any,
+) -> str:
+    """
+    deploy_bucket_storage_stack
+        This function deploys the account/region bucket for storing artifacts
+
+    Parameters
+    ----------
+    account_id: str
+        The Account Id where the module is deployed
+    region: str
+        The region
+
+
+
+    Returns
+    -------
+    str
+        the bucket name
+    """
+
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    info = StackInfo(account_id=account_id, region=region)
+    bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
+
+    stack_exists, output = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+
+    if not stack_exists:
+        _logger.info("Deploying the bucket storage stack %s", bucket_stack_name)
+        hash = generate_hash(string=f"{account_id}-{region}", length=6)
+        bucket_name = f"seedfarmer-{config.PROJECT.lower()}-{region}-{account_id}-{hash}-no-delete"
+        if len(bucket_name) > 63:
+            limit = len(f"seedfarmer--{config.PROJECT.lower()}-no-delete")
+            sm_hash = generate_hash(string=f"{config.PROJECT.lower()}-{region}-{account_id}", length=63 - limit)
+            bucket_name = f"seedfarmer-{config.PROJECT.lower()}-{sm_hash}-no-delete"
+        services.cfn.deploy_template(
+            stack_name=bucket_stack_name,
+            filename=config.BUCKET_STORAGE_PATH,
+            seedkit_tag=config.PROJECT.lower(),
+            parameters={"ProjectName": config.PROJECT.lower(), "BucketName": bucket_name[:63]},
+            session=session,
+        )
+        stack_exists, output = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+    return str(output.get("Bucket"))
+
+
 def deploy_managed_policy_stack(
     deployment_manifest: DeploymentManifest,
     account_id: str,
@@ -96,6 +157,8 @@ def deploy_managed_policy_stack(
         The Account Id where the module is deployed
     region: str
         The region
+    update_project_policy: bool
+        Force update the project policy if already deployed
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
@@ -119,6 +182,48 @@ def deploy_managed_policy_stack(
             parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": deployment_manifest.name},
             session=session,
         )
+
+
+def destroy_bucket_storage_stack(
+    account_id: str,
+    region: str,
+    **kwargs: Any,
+) -> None:
+    """
+    destroy_bucket_storage_stack
+        This function destroys the buckeet stack for SeedFarmer
+
+    Parameters
+    ----------
+    account_id: str
+        The Account Id where the module is deployed
+    region: str
+        The region where deployed
+    """
+
+    # Determine if managed policy stack already deployed
+    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    info = StackInfo(account_id=account_id, region=region)
+    bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
+    bucket_stack_exists, outputs = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+    if bucket_stack_exists and outputs is not None:
+        bucket_name = str(outputs.get("Bucket"))
+        bucket_empty = services.s3.is_bucket_empty(bucket=bucket_name, folder=BUNDLE_PREFIX, session=session)
+        if bucket_empty:
+            _logger.info("Destroying Stack %s in Account/Region: %s/%s", bucket_stack_name, account_id, region)
+            import botocore.exceptions
+
+            try:
+                services.s3.delete_objects(bucket=bucket_name, session=session)
+                services.cfn.destroy_stack(
+                    stack_name=bucket_stack_name,
+                    session=session,
+                )
+            except (botocore.exceptions.WaiterError, botocore.exceptions.ClientError):
+                _logger.info(f"Failed to delete project stack {bucket_stack_name}, ignoring and moving on")
+        else:
+            _logger.info("Stack %s left, S3 bucket %s not empty", bucket_stack_name, bucket_name)
+            return
 
 
 def destroy_managed_policy_stack(account_id: str, region: str) -> None:

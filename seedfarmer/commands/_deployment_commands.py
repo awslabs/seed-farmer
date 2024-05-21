@@ -248,7 +248,8 @@ def _deploy_validated_deployment(
                         if dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to deploy...exiting deployment")
                             print_errored_modules_build_info(
-                                "These modules had errors deploying", deploy_response  # type: ignore
+                                "These modules had errors deploying",
+                                deploy_response,  # type: ignore
                             )
                             raise seedfarmer.errors.ModuleDeploymentError(
                                 error_message="At least one module failed to deploy...exiting deployment"
@@ -276,6 +277,8 @@ def prime_target_accounts(
             ).replace("_", "-")
             _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
+            seedfarmer_bucket = commands.deploy_bucket_storage_stack(**args)
+            seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
             return [args["account_id"], args["region"], seedkit_stack_outputs]
 
@@ -320,6 +323,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
             ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
+            commands.destroy_bucket_storage_stack(**args)
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
@@ -661,11 +665,15 @@ def apply(
             try:
                 with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
                     module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+            except FileNotFoundError as fe:
+                _logger.error(fe)
+                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                _logger.error("Verify (in deployment manifest) that relative path to the module manifest is correct")
+                raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
             except Exception as e:
                 _logger.error(e)
-                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
                 _logger.error("Verify that elements are filled out and yaml compliant")
-                raise seedfarmer.errors.InvalidPathError("Cannot parse manifest file path")
+                raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(

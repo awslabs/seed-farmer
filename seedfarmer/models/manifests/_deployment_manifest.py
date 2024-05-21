@@ -61,6 +61,7 @@ class RegionMapping(CamelModel):
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
+    seedfarmer_artifact_bucket: Optional[str] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -400,6 +401,35 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
+    def get_region_seedfarmer_bucket(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[str]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        sf_bucket = (
+                            region_mapping.seedfarmer_artifact_bucket
+                            if region_mapping.seedfarmer_artifact_bucket is not None
+                            else None
+                        )
+                        return sf_bucket
+        else:
+            return None
+
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:
             for module in group.modules:
@@ -438,4 +468,9 @@ class DeploymentManifest(CamelModel):
             for region_mapping in target_account.region_mappings:
                 if target_account.actual_account_id == account_id and region_mapping.region == region:
                     region_mapping.seedkit_metadata = seedkit_dict
+                    region_mapping.seedfarmer_artifact_bucket = (
+                        seedkit_dict.get("SeedfarmerArtifactBucket")
+                        if seedkit_dict.get("SeedfarmerArtifactBucket")
+                        else None
+                    )
                     break

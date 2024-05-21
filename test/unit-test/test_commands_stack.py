@@ -1,13 +1,11 @@
-import logging
 import os
 
-import boto3
 import pytest
 import yaml
 from moto import mock_sts
 
 import seedfarmer.commands._stack_commands as sc
-from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModulesManifest
+from seedfarmer.models.manifests import DeploymentManifest
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
 
@@ -59,7 +57,7 @@ targetAccountMappings:
 """
 )
 
-manage_policy_json={
+manage_policy_json = {
     "Policy": {
         "PolicyName": "addf-managed-policy-ProjectPolicy-7PSXY0GVW23I",
         "PolicyId": "ANPAY667V3NQ3CYB253RG",
@@ -70,7 +68,7 @@ manage_policy_json={
         "PermissionsBoundaryUsageCount": 0,
         "IsAttachable": True,
         "Description": "Managed Policy granting access to build a project",
-        "Tags": []
+        "Tags": [],
     }
 }
 

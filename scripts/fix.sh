@@ -45,9 +45,9 @@ cd ${DIR}/..
 echo "Fixing: $(cd "$(dirname "$FIX_PATH")"; pwd)/$(basename "$FIX_PATH"), Language: ${LANGUAGE}"
 
 if [[ $LANGUAGE == "python" ]]; then
-    echo "Running isort, black"
-    isort ${FIX_PATH}
-    black ${FIX_PATH}
+    echo "Running ruff"
+    ruff format ${FIX_PATH}
+    ruff check --fix ${FIX_PATH}
 elif [[ $LANGUAGE == "typescript" ]]; then
     echo "Running prettier"
     npx prettier --write ${FIX_PATH}

@@ -12,9 +12,8 @@ import logging
 import os
 
 import boto3
-import botocore
 import pytest
-from moto import mock_codebuild, mock_iam, mock_secretsmanager, mock_ssm, mock_sts
+from moto import mock_codebuild, mock_iam, mock_ssm, mock_sts
 
 from seedfarmer.services import _service_utils
 from seedfarmer.services._service_utils import boto3_client
@@ -36,7 +35,7 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def session(aws_credentials):
-    session = boto3.Session()
+    boto3.Session()
 
 
 @pytest.fixture(scope="function")
@@ -78,7 +77,6 @@ def test_utils_get_region(sts_client, session):
 
 
 def test_utils_get_account_id(sts_client, mocker):
-
     mocker.patch(
         "seedfarmer.services._service_utils._call_sts", return_value={"Account": "123456789012", "Arn": "arn:aws:iam::"}
     )

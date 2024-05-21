@@ -13,10 +13,11 @@
 #    limitations under the License.
 
 import logging
+import os
+
 import mock_data.mock_deployment_manifest_huge as mock
-import os 
 import pytest
-import seedfarmer.errors
+
 import seedfarmer.utils as utils
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -53,6 +54,4 @@ def test_validate_module_dependencies(env_params):
     replaced = utils.batch_replace_env(mock.deployment_manifest_batch_replace)
     assert replaced["name"] == "testing"
     assert replaced["toolchain_region"] == "us-east-1"
-    assert replaced["target_account_mappings"][0]["account_id"] == '123456789012'
-    
-
+    assert replaced["target_account_mappings"][0]["account_id"] == "123456789012"

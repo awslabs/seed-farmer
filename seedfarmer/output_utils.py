@@ -156,7 +156,8 @@ def print_modules_build_info(
     console.print(f"[bold {color}]{description}", crop=False)
     for r_obj in modules_data:
         console.print(
-            f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module} status: {r_obj.status}", crop=False  # type: ignore
+            f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module} status: {r_obj.status}",  # type: ignore
+            crop=False,
         )
         (
             console.print(f"    {r_obj.codeseeder_metadata.build_url}", crop=False)  # type: ignore

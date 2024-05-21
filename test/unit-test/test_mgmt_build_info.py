@@ -58,17 +58,13 @@ def session_manager(sts_client):
 @pytest.mark.mgmt_build_info
 def test_get_build_params(mocker):
     mocker.patch("seedfarmer.mgmt.build_info.codebuild.get_build_data", return_value=mock_build_info.codebuild_response)
-    build_id = 'codeseeder-idf:7f53415b-f47d-4e5e-860f-93d7f440aa30'
-    env_params = bi.get_build_env_params(build_ids=[build_id]) #[Dict[str, Any]
+    build_id = "codeseeder-idf:7f53415b-f47d-4e5e-860f-93d7f440aa30"
+    env_params = bi.get_build_env_params(build_ids=[build_id])  # [Dict[str, Any]
     assert "SEEDFARMER_HASH" in env_params.keys()
     assert "SEEDFARMER_PROJECT_NAME" in env_params.keys()
-
 
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_build_info
 def test_validate_group_parameters():
     bi.get_manifest_schema()
-
-
-

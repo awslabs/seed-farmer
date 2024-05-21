@@ -52,7 +52,7 @@ setup(
         "executor~=23.2",
         "typing-extensions>=4.6.3",
         "rich~=12.4.0",
-        "requests>=2.28,<2.32",
+        "requests>=2.28,<2.33",
         "python-dotenv~=0.21.0",
         "gitpython~=3.1.30",
         "gitignore-parser~=0.1.2",

@@ -89,6 +89,12 @@ def version() -> None:
     type=bool,
 )
 @click.option(
+    "--target",
+    default=None,
+    help="Target one module exclusively during deplooyment process. E.g. `mygroupname.mymodulename`",
+    required=False,
+)
+@click.option(
     "--show-manifest/--no-show-manifest",
     default=False,
     help="Write out the generated deployment manifest to console",
@@ -128,6 +134,7 @@ def apply(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    target: Optional[str],
     env_files: List[str],
     debug: bool,
     dry_run: bool,
@@ -153,6 +160,7 @@ def apply(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        target=target,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,

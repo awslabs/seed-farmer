@@ -18,7 +18,7 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import yaml
 
@@ -339,6 +339,8 @@ def destroy_deployment(
     destroy_manifest: DeploymentManifest,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
+    target_module: Union[str, None] = None,
+    target_group: Union[str, None] = None,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
 ) -> None:
@@ -396,6 +398,14 @@ def destroy_deployment(
 
                     mdos = []
                     for _module in _group.modules:
+                        if target_group and target_module:
+                            _logger.info("Deployment in single-module target mode.")
+                            if target_module == _module.name and target_group == _group.name:
+                                _logger.info(f"Module: {_group.name}.{_module.name} will be deployed exclusively.")
+                                continue
+                            else:
+                                _logger.debug(f"Module: {_group.name}.{_module.name} not targeted")
+                                break
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
                         (
                             _process_data_files(
@@ -441,12 +451,14 @@ def deploy_deployment(
     module_info_index: du.ModuleInfoIndex,
     module_upstream_dep: Dict[str, List[str]],
     dryrun: bool = False,
+    target_module: Union[str, None] = None,
+    target_group: Union[str, None] = None,
     show_manifest: bool = False,
 ) -> None:
     """
     deploy_deployment
         This function takes a populated DeploymentManifest object and deploys all modules in it.
-        It evaluates whether the modules have bee previously deployed and if anything has changed
+        It evaluates whether the modules have been previously deployed and if anything has changed
         since the last deployment - ignoring if there are no changes.
 
     Parameters
@@ -485,6 +497,15 @@ def deploy_deployment(
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         du.validate_group_parameters(group=group)
         for module in group.modules:
+            if target_group and target_module:
+                _logger.info("Deployment in single-module target mode.")
+                if target_module == module.name and target_group == group.name:
+                    _logger.info(f"Module: {group.name}.{module.name} will be deployed exclusively.")
+                    continue
+                else:
+                    _logger.debug(f"Module: {group.name}.{module.name} not targeted")
+                    break
+
             _logger.debug("Working on -- %s", module)
             if not module.path:
                 raise seedfarmer.errors.InvalidManifestError("Unable to parse module manifest, `path` not specified")
@@ -572,6 +593,7 @@ def apply(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     qualifier: Optional[str] = None,
+    target: Optional[str] = "",
     dryrun: bool = False,
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
@@ -696,9 +718,12 @@ def apply(
         )
         raise seedfarmer.errors.InvalidConfigurationError("Modules cannot be destroyed due to dependencies")
 
+    target_group, target_module = du.get_target_module_and_group(target)
     destroy_deployment(
         destroy_manifest=destroy_manifest,
         remove_deploy_manifest=False,
+        target_group=target_group,
+        target_module=target_module,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )
@@ -706,6 +731,8 @@ def apply(
         deployment_manifest=deployment_manifest,
         module_info_index=module_info_index,
         module_upstream_dep=module_depends_on_dict,
+        target_group=target_group,
+        target_module=target_module,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )

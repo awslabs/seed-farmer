@@ -16,7 +16,7 @@ import concurrent.futures
 import logging
 import os
 from threading import Lock
-from typing import Any, Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import yaml
 from boto3 import Session
@@ -688,3 +688,14 @@ def update_deployspec(
     with open(d_path) as deploymentspec:
         new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
     mi.write_deployspec(deployment, group, module, new_spec.model_dump(), session=session)
+
+
+def get_target_module_and_group(
+    target: str,
+) -> Tuple[Union[str, None]]:
+    if target == "":
+        return None, None
+    try:
+        return target.split(".")[0], target.split(".")[1]
+    except Exception as e:
+        raise seedfarmer.errors.SeedFarmerException(f"Error during target module and path retrieval: {e}")

@@ -6,7 +6,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New
+
+### Changes
+
+### Fixes
+
+## v4.0.0 (2024-06-03)
+
+### New
 - adding support for S3 to store bundles
+  - see [UPGRADE to 4.0.0](https://seed-farmer.readthedocs.io/en/latest/upgrades.html#upgrading-to-4-0-0)
 - adding seedfarmer version tag to toolchain and deployment roles
 - removing python 3.7 support
 - adding python 3.12 support 

@@ -13,7 +13,7 @@ import os
 
 import boto3
 import pytest
-from moto import mock_codebuild, mock_iam, mock_ssm, mock_sts
+from moto import mock_aws
 
 from seedfarmer.services import _service_utils
 from seedfarmer.services._service_utils import boto3_client
@@ -40,7 +40,7 @@ def session(aws_credentials):
 
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="sts", session=None)
 
 
@@ -57,7 +57,7 @@ def session_manager(sts_client):
 
 @pytest.fixture(scope="function")
 def secretsmanager_client(aws_credentials, session_manager):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="secretsmanager", session=None)
 
 
@@ -86,7 +86,7 @@ def test_utils_get_account_id(sts_client, mocker):
 
 @pytest.fixture(scope="function")
 def iam_client(aws_credentials):
-    with mock_iam():
+    with mock_aws():
         yield _service_utils.boto3_client(service_name="iam", session=None)
 
 
@@ -95,7 +95,7 @@ def iam_client(aws_credentials):
 def test_codebuild(session) -> None:
     import seedfarmer.services._codebuild as codebuild
 
-    with mock_codebuild():
+    with mock_aws():
         codebuild.get_build_data(build_ids=["codebuild:12345"], session=session)
         codebuild.get_build_data(build_ids=["12345"], session=session)
 
@@ -105,7 +105,7 @@ def test_codebuild(session) -> None:
 def test_iam(iam_client, session) -> None:
     import seedfarmer.services._iam as iam
 
-    with mock_iam():
+    with mock_aws():
         iam.create_check_iam_role(
             project_name="test",
             deployment_name="test",
@@ -160,7 +160,7 @@ def test_iam(iam_client, session) -> None:
 def test_get_ssm_params(session) -> None:
     import seedfarmer.services._ssm as ssm
 
-    with mock_ssm():
+    with mock_aws():
         ssm.put_parameter(name="/myapp/test/", obj={"Hey": "tsting"}, session=session)
         ssm.does_parameter_exist(name="/myapp/test/", session=session)
         ssm.does_parameter_exist(name="/garbage/", session=session)
@@ -174,7 +174,7 @@ def test_get_ssm_params(session) -> None:
 def test_put_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
 
-    with mock_ssm():
+    with mock_aws():
         ssm.put_parameter(name="/myapp/test/", obj={"Hey": "tsting"}, session=session)
 
 
@@ -182,7 +182,7 @@ def test_put_ssm_param(session) -> None:
 def test_list_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
 
-    with mock_ssm():
+    with mock_aws():
         ssm.put_parameter(name="/myapp/test/", obj={"Hey": "testing"}, session=session)
         ssm.list_parameters(prefix="/myapp/test/", session=session)
         ssm.list_parameters_with_filter(prefix="/myapp/", contains_string="test", session=session)
@@ -192,7 +192,7 @@ def test_list_ssm_param(session) -> None:
 def test_delete_ssm_param(session) -> None:
     import seedfarmer.services._ssm as ssm
 
-    with mock_ssm():
+    with mock_aws():
         ssm.delete_parameters(parameters=["/myapp", "/myapp/test/"], session=session)
         ssm.delete_parameters(
             parameters=[
@@ -215,7 +215,7 @@ def test_delete_ssm_param(session) -> None:
 def test_get_ssm_metadata(session) -> None:
     import seedfarmer.services._ssm as ssm
 
-    with mock_ssm():
+    with mock_aws():
         ssm.put_parameter(name="/myapp/test/", obj={"Hey": "testing"}, session=session)
         ssm.describe_parameter(name="/myapp/test/", session=session)
 

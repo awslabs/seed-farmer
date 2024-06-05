@@ -2,7 +2,7 @@ import os
 
 import pytest
 import yaml
-from moto import mock_sts
+from moto import mock_aws
 
 import seedfarmer.commands._stack_commands as sc
 from seedfarmer.models.manifests import DeploymentManifest
@@ -23,7 +23,7 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="sts", session=None)
 
 

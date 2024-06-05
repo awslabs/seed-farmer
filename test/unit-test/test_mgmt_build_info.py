@@ -17,7 +17,7 @@ import os
 
 import mock_data.mock_build_info as mock_build_info
 import pytest
-from moto import mock_sts
+from moto import mock_aws
 
 import seedfarmer.mgmt.build_info as bi
 from seedfarmer.services._service_utils import boto3_client
@@ -39,7 +39,7 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="sts", session=None)
 
 

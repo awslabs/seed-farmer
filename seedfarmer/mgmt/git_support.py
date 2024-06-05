@@ -54,7 +54,7 @@ def clone_module_repo(git_path: str) -> Tuple[str, str, Optional[str]]:
     if "?" in git_path:
         git_path, query = git_path.split("?")
         query_params = parse_qs(query)
-        ref = query_params.get("ref", [None])[0]  # type: ignore
+        ref = query_params.get("ref", [None])[0]
         if "depth" in query_params and query_params["depth"][0].isnumeric():
             depth = int(query_params["depth"][0])
 

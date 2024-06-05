@@ -130,7 +130,7 @@ class NameGenerator(CamelModel):
     prefix: Union[str, ValueFromRef]
     suffix: Union[str, ValueFromRef]
 
-    def _get_value(self, value: Union[str, ValueFromRef]) -> str:
+    def _get_value(self, value: Union[str, ValueFromRef]) -> str:  # type: ignore[override]
         if isinstance(value, str):
             return value
         elif isinstance(value, ValueFromRef):

@@ -10,7 +10,7 @@ astroid==2.15.5
     # via sphinx-autoapi
 babel==2.12.1
     # via sphinx
-certifi==2023.7.22
+certifi==2024.6.2
     # via
     #   -r docs/requirements-docs.in
     #   requests
@@ -52,12 +52,12 @@ packaging==23.1
     # via sphinx
 pygments==2.15.1
     # via sphinx
-pyyaml==5.4
+pyyaml==6.0.1
     # via
     #   -r docs/requirements-docs.in
     #   myst-parser
     #   sphinx-autoapi
-requests==2.32.0
+requests==2.32.3
     # via sphinx
 snowballstemmer==2.2.0
     # via sphinx
@@ -70,19 +70,19 @@ sphinx==6.2.1
     #   sphinxcontrib-jquery
 sphinx-autoapi==2.1.0
     # via -r docs/requirements-docs.in
-sphinx-click==5.1.0
+sphinx-click==6.0.0
     # via -r docs/requirements-docs.in
-sphinx-rtd-theme==1.2.1
+sphinx-rtd-theme==1.3.0
     # via -r docs/requirements-docs.in
-sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-applehelp==1.0.8
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-devhelp==1.0.6
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-htmlhelp==2.0.5
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
@@ -94,15 +94,15 @@ sphinxcontrib-jsmath==1.0.1
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-qthelp==1.0.7
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-sphinxcontrib-serializinghtml==1.1.5
+sphinxcontrib-serializinghtml==1.1.10
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-typing-extensions==4.5.0
+typing-extensions==4.12.1
     # via -r docs/requirements-docs.in
 unidecode==1.3.6
     # via sphinx-autoapi
@@ -110,7 +110,7 @@ urllib3==1.26.18
     # via
     #   -r docs/requirements-docs.in
     #   requests
-wheel==0.38.1
+wheel==0.43.0
     # via -r docs/requirements-docs.in
 wrapt==1.15.0
     # via astroid

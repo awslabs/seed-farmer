@@ -8,8 +8,6 @@ alabaster==0.7.13
     # via sphinx
 astroid==2.15.8
     # via sphinx-autoapi
-attrs==23.2.0
-    # via pytest
 awscli==1.31.13
     # via -r requirements-dev.in
 babel==2.14.0
@@ -24,7 +22,7 @@ botocore==1.33.13
     #   boto3
     #   moto
     #   s3transfer
-build==0.10.0
+build==1.2.1
     # via
     #   check-manifest
     #   pip-tools
@@ -93,7 +91,6 @@ markdown-it-py==2.2.0
 markupsafe==2.1.5
     # via
     #   jinja2
-    #   moto
     #   werkzeug
 mdit-py-plugins==0.3.5
     # via myst-parser
@@ -101,9 +98,9 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via jaraco-classes
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==4.0.13
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.9
     # via -r requirements-dev.in
-mypy==0.991
+mypy==1.10.0
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -115,17 +112,19 @@ packaging==23.2
     #   pyroma
     #   pytest
     #   sphinx
-pip-tools==6.14.0
+pip-tools==7.4.1
     # via -r requirements-dev.in
 pkginfo==1.9.6
     # via twine
-pluggy==1.2.0
+pluggy==1.5.0
     # via pytest
+py-partiql-parser==0.5.5
+    # via moto
 pyasn1==0.5.1
     # via rsa
 pycparser==2.21
     # via cffi
-pydot==1.4.2
+pydot==2.0.0
     # via -r requirements-dev.in
 pygments==2.17.2
     # via
@@ -136,18 +135,20 @@ pygments==2.17.2
 pyparsing==3.1.1
     # via pydot
 pyproject-hooks==1.0.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 pyroma==4.2
     # via -r requirements-dev.in
-pytest==7.2.2
+pytest==8.2.2
     # via
     #   -r requirements-dev.in
     #   pytest-cov
     #   pytest-mock
     #   pytest-ordering
-pytest-cov==4.0.0
+pytest-cov==5.0.0
     # via -r requirements-dev.in
-pytest-mock==3.10.0
+pytest-mock==3.14.0
     # via -r requirements-dev.in
 pytest-ordering==0.6
     # via -r requirements-dev.in
@@ -183,7 +184,7 @@ rich==13.7.0
     # via twine
 rsa==4.7.2
     # via awscli
-ruff==0.4.4
+ruff==0.4.8
     # via -r requirements-dev.in
 s3transfer==0.8.2
     # via
@@ -221,13 +222,13 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 trove-classifiers==2024.2.22
     # via pyroma
-twine==4.0.2
+twine==5.1.0
     # via -r requirements-dev.in
-types-pyyaml==6.0.12.12
+types-pyyaml==6.0.12.20240311
     # via
     #   -r requirements-dev.in
     #   responses
-types-setuptools==57.4.18
+types-setuptools==70.0.0.20240524
     # via -r requirements-dev.in
 typing-extensions==4.7.1
     # via

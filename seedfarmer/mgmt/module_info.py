@@ -792,7 +792,7 @@ def _fetch_helper(
     name: str, params_cache: Optional[Dict[str, Any]] = None, session: Optional[Session] = None
 ) -> Optional[Dict[str, Any]]:
     if params_cache:
-        return params_cache.get(name, None)
+        return params_cache.get(name, None)  # type: ignore[no-any-return]
     else:
         return ssm.get_parameter_if_exists(name=name, session=session)
 

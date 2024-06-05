@@ -105,7 +105,7 @@ def test_codebuild(session) -> None:
 def test_iam(iam_client, session) -> None:
     import seedfarmer.services._iam as iam
 
-    with mock_aws():
+    with mock_aws(config={"iam": {"load_aws_managed_policies": True}}):
         iam.create_check_iam_role(
             project_name="test",
             deployment_name="test",

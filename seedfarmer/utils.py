@@ -61,10 +61,10 @@ def upper_snake_case(value: str) -> str:
     str
         the string standardized
     """
-    if humps.is_camelcase(value):  # type: ignore
-        return humps.decamelize(value).upper()  # type: ignore
-    elif humps.is_pascalcase(value):  # type: ignore
-        return humps.depascalize(value).upper()  # type: ignore
+    if humps.is_camelcase(value):
+        return humps.decamelize(value).upper()
+    elif humps.is_pascalcase(value):
+        return humps.depascalize(value).upper()
     else:
         return value.replace("-", "_").upper()
 

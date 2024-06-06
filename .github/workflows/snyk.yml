@@ -17,11 +17,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/python-3.8@master
-        continue-on-error: true # To make sure that SARIF upload gets called
+        continue-on-error: true  # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=medium --file=requirements.txt --sarif-file-output=snyk.sarif
+          args: --severity-threshold=medium --package-manager=pip --file=requirements.txt --sarif-file-output=snyk.sarif
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:

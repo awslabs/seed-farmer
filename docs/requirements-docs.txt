@@ -106,7 +106,7 @@ sphinxcontrib-serializinghtml==1.1.5
     # via
     #   -r docs/requirements-docs.in
     #   sphinx
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   -r docs/requirements-docs.in
     #   astroid

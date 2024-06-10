@@ -13,5 +13,5 @@ docutils~=0.16
 PyYAML==6.0.1
 urllib3~=1.26.18
 wheel==0.43.0
-typing-extensions==4.12.1
+typing-extensions==4.12.2
 certifi~=2024.6.2

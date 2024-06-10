@@ -12,9 +12,9 @@ aws-codeseeder==1.0.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
-boto3==1.34.120
+boto3==1.34.122
     # via aws-codeseeder
-botocore==1.34.120
+botocore==1.34.122
     # via
     #   boto3
     #   s3transfer
@@ -71,7 +71,7 @@ markupsafe==2.1.5
     # via jinja2
 mypy-extensions==1.0.0
     # via aws-codeseeder
-packaging==24.0
+packaging==24.1
     # via seed-farmer (setup.py)
 property-manager==3.0
     # via executor
@@ -114,7 +114,7 @@ smmap==5.0.1
     # via gitdb
 text-unidecode==1.3
     # via python-slugify
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   pydantic
     #   pydantic-core

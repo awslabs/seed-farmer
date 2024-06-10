@@ -18,7 +18,7 @@ import os
 import mock_data.mock_manifests as mock_manifests
 import pytest
 from _test_cli_helper_functions import _test_command
-from moto import mock_sts
+from moto import mock_aws
 
 from seedfarmer import config
 from seedfarmer.__main__ import apply, bootstrap, destroy, init, metadata, projectpolicy, remove, store, version
@@ -75,7 +75,7 @@ def env_file2():
 
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="sts", session=None)
 
 

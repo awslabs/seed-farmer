@@ -11,6 +11,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+
+## v4.0.1 (2024-06-10)
+
+### New
+
+### Changes
+
+### Fixes
+- correcting how SeedFarmer stores deployed manifests of previously deployed modules in SSM
+
+
 ## v4.0.0 (2024-06-03)
 
 ### New

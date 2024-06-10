@@ -192,6 +192,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
 def _deploy_validated_deployment(
     deployment_manifest: DeploymentManifest,
+    deployment_manifest_wip: DeploymentManifest,
     groups_to_deploy: List[ModulesManifest],
     dryrun: bool,
 ) -> None:
@@ -206,17 +207,17 @@ def _deploy_validated_deployment(
                 f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}", mods_would_deploy
             )
             return
-        deployment_manifest.groups = groups_to_deploy
+        deployment_manifest_wip.groups = groups_to_deploy
         print_manifest_inventory(
-            f"Modules scheduled to be deployed (created or updated): {deployment_manifest.name}",
-            deployment_manifest,
+            f"Modules scheduled to be deployed (created or updated): {deployment_manifest_wip.name}",
+            deployment_manifest_wip,
             True,
         )
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
-                "DeploymentManifest for deploy after filter =  %s", json.dumps(deployment_manifest.model_dump())
+                "DeploymentManifest for deploy after filter =  %s", json.dumps(deployment_manifest_wip.model_dump())
             )
-        for _group in deployment_manifest.groups:
+        for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
                 threads = _group.concurrency if _group.concurrency else len(_group.modules)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
@@ -231,7 +232,7 @@ def _deploy_validated_deployment(
                     for _module in _group.modules:
                         if _module and _module.deploy_spec:
                             mdo = ModuleDeployObject(
-                                deployment_manifest=deployment_manifest,
+                                deployment_manifest=deployment_manifest_wip,
                                 group_name=_group.name,
                                 module_name=_module.name,
                             )
@@ -255,7 +256,7 @@ def _deploy_validated_deployment(
                                 error_message="At least one module failed to deploy...exiting deployment"
                             )
 
-        print_manifest_inventory(f"Modules Deployed: {deployment_manifest.name}", deployment_manifest, False)
+        print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
         _logger.info(" All modules in %s up to date", deployment_manifest.name)
     # Write the deployment manifest once completed to preserve group order
@@ -468,10 +469,13 @@ def deploy_deployment(
 
         By default False
     """
-    deployment_name = cast(str, deployment_manifest.name)
+    deployment_manifest_wip = deployment_manifest.model_copy()
+    deployment_name = cast(str, deployment_manifest_wip.name)
     _logger.debug("Setting up deployment for %s", deployment_name)
 
-    print_manifest_inventory(f"Modules added to manifest: {deployment_manifest.name}", deployment_manifest, True)
+    print_manifest_inventory(
+        f"Modules added to manifest: {deployment_manifest_wip.name}", deployment_manifest_wip, True
+    )
 
     if deployment_manifest.force_dependency_redeploy:
         _logger.warn("You have configured your deployment to FORCE all dependent modules to redeploy")
@@ -480,7 +484,7 @@ def deploy_deployment(
     groups_to_deploy = []
     unchanged_modules = []
     _group_mod_to_deploy: List[str] = []
-    for group in deployment_manifest.groups:
+    for group in deployment_manifest_wip.groups:
         modules_to_deploy = []
         _logger.info(" Verifying all modules in %s for deploy ", group.name)
         du.validate_group_parameters(group=group)
@@ -516,7 +520,9 @@ def deploy_deployment(
                 data_files=module.data_files,
                 excluded_files=md5_excluded_module_files,
             )
-            resolve_params_for_checksum(deployment_manifest=deployment_manifest, module=module, group_name=group.name)
+            resolve_params_for_checksum(
+                deployment_manifest=deployment_manifest_wip, module=module, group_name=group.name
+            )
 
             module.manifest_md5 = hashlib.md5(
                 json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
@@ -560,6 +566,7 @@ def deploy_deployment(
     )
     _deploy_validated_deployment(
         deployment_manifest=deployment_manifest,
+        deployment_manifest_wip=deployment_manifest_wip,
         groups_to_deploy=groups_to_deploy,
         dryrun=dryrun,
     )

@@ -20,7 +20,7 @@ import click
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, store
+from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, store, test
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.utils import load_dotenv_files
 
@@ -87,12 +87,6 @@ def version() -> None:
     help="Apply but do not execute....",
     show_default=True,
     type=bool,
-)
-@click.option(
-    "--target",
-    default=None,
-    help="Target one module exclusively during deplooyment process. E.g. `mygroupname.mymodulename`",
-    required=False,
 )
 @click.option(
     "--show-manifest/--no-show-manifest",
@@ -301,5 +295,6 @@ def main() -> int:
     cli.add_command(projectpolicy)
     cli.add_command(metadata)
     cli.add_command(bundle)
+    cli.add_command(test)
     cli()
     return 0

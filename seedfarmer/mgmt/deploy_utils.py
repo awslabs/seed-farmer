@@ -16,7 +16,7 @@ import concurrent.futures
 import logging
 import os
 from threading import Lock
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import yaml
 from boto3 import Session
@@ -692,7 +692,7 @@ def update_deployspec(
 
 def get_target_module_and_group(
     target: str,
-) -> Tuple[Union[str, None]]:
+) -> Tuple[Optional[str]]:
     if target == "":
         return None, None
     try:

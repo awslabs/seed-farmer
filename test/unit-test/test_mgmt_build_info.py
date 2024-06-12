@@ -67,4 +67,4 @@ def test_get_build_params(mocker):
 @pytest.mark.mgmt
 @pytest.mark.mgmt_build_info
 def test_validate_group_parameters():
-    bi.get_manifest_schema()
+    bi.get_manifest_schema(type="deployment")

@@ -18,7 +18,7 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, cast
 
 import yaml
 
@@ -346,8 +346,6 @@ def destroy_deployment(
     destroy_manifest: DeploymentManifest,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
-    target_module: Union[str, None] = None,
-    target_group: Union[str, None] = None,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
     test_destroy: Optional[bool] = False,
@@ -410,14 +408,6 @@ def destroy_deployment(
 
                     mdos = []
                     for _module in _group.modules:
-                        if target_group and target_module:
-                            _logger.info("Deployment in single-module target mode.")
-                            if target_module == _module.name and target_group == _group.name:
-                                _logger.info(f"Module: {_group.name}.{_module.name} will be deployed exclusively.")
-                                continue
-                            else:
-                                _logger.debug(f"Module: {_group.name}.{_module.name} not targeted")
-                                break
                         _process_module_path(module=_module) if _module.path.startswith("git::") else None
                         (
                             _process_data_files(

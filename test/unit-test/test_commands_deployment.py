@@ -7,7 +7,7 @@ import mock_data.mock_deployspec as mock_deployspec
 import mock_data.mock_manifests as mock_manifests
 import mock_data.mock_module_info_huge as mock_module_info_huge
 import pytest
-from moto import mock_sts
+from moto import mock_aws
 
 import seedfarmer.commands._deployment_commands as dc
 import seedfarmer.errors
@@ -34,7 +34,7 @@ def aws_credentials():
 
 @pytest.fixture(scope="function")
 def sts_client(aws_credentials):
-    with mock_sts():
+    with mock_aws():
         yield boto3_client(service_name="sts", session=None)
 
 

@@ -16,7 +16,7 @@
 import hashlib
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 from gitignore_parser import parse_gitignore
 
@@ -120,9 +120,7 @@ def get_module_md5(
         files = [
             f.path
             for f in os.scandir(dirname)
-            if f.is_file()
-            and os.path.split(f)[1] not in cast(List[str], excluded_files)
-            and not _evaluate_file(f.path, ignore_maps)
+            if f.is_file() and os.path.split(f)[1] not in excluded_files and not _evaluate_file(f.path, ignore_maps)
         ]
         all_files.extend(files)
         subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]

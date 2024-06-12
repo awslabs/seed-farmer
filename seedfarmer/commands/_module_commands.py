@@ -152,10 +152,12 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             f"echo ${metadata_env_variable} | seedfarmer store moduledata "
             f"-d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
         ),
+    ]
+    store_sf_bundle = [
         (
             f"seedfarmer bundle store -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name} "
             f"-o $CODEBUILD_SOURCE_REPO_URL -b {mdo.seedfarmer_bucket} || true"
-        ),
+        )
     ]
 
     module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
@@ -192,7 +194,8 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             + sf_version__add
             + cs_version_add
             + githash_add
-            + metadata_put,
+            + metadata_put
+            + store_sf_bundle,
             extra_env_vars=env_vars,
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=mdo.module_role_name,

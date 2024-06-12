@@ -655,7 +655,7 @@ def _populate_groups_to_remove(
                 skip_deploy_spec=False,
             ),
         }
-        destroy_group_list.append(ModulesManifest(**group_manifest))
+        destroy_group_list.append(ModulesManifest(**group_manifest))  # type: ignore[arg-type]
     return destroy_group_list
 
 

@@ -19,6 +19,7 @@ import mock_data.mock_build_info as mock_build_info
 import pytest
 from moto import mock_aws
 
+import seedfarmer.errors
 import seedfarmer.mgmt.build_info as bi
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -66,5 +67,18 @@ def test_get_build_params(mocker):
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_build_info
-def test_validate_group_parameters():
+def test_get_deployment_schema():
     bi.get_manifest_schema(type="deployment")
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_build_info
+def test_get_module_schema():
+    bi.get_manifest_schema(type="module")
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_build_info
+def test_get_module_schema_error():
+    with pytest.raises(seedfarmer.errors.SeedFarmerException):
+        bi.get_manifest_schema(type="somethingcrazy")

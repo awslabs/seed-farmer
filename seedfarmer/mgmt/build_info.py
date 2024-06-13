@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer.models.manifests._deployment_manifest import DeploymentManifest
 from seedfarmer.models.manifests._module_manifest import ModuleManifest
 from seedfarmer.services import _codebuild as codebuild
@@ -41,10 +42,10 @@ def get_build_env_params(build_ids: List[str], session: Optional[Session] = None
     return dict(ChainMap(*list_of_envs)) if list_of_envs else None
 
 
-def get_manifest_schema(type: str) -> Optional[Dict[str, Any]]:
+def get_manifest_schema(type: str) -> Dict[str, Any]:
     if "deployment" == type.lower():
         return DeploymentManifest.model_json_schema()
     elif "module" == type.lower():
         return ModuleManifest.model_json_schema()
     else:
-        return None
+        raise seedfarmer.errors.SeedFarmerException("Schema type selection not in [deployment, module]")

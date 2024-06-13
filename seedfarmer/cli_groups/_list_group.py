@@ -787,12 +787,10 @@ def list_build_env_params(
 @click.option(
     "--type",
     "-t",
+    type=click.Choice(["deployment", "module"], case_sensitive=True),
     help="Either 'deployment' or 'module' can be used, default is `deployment`",
     required=False,
     default="deployment",
 )
 def list_manifest_schema(type: str) -> None:
-    if type not in ["deployment", "module"]:
-        print_bolded(message="Only 'deployment' or 'module' can be passed in", color="yellow")
-        return
     print(json.dumps(bi.get_manifest_schema(type=type), indent=2))

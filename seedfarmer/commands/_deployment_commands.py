@@ -39,7 +39,13 @@ from seedfarmer.mgmt.module_info import (
 )
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest, NetworkMapping
+from seedfarmer.models.manifests import (
+    DataFile,
+    DeploymentManifest,
+    ModuleManifest,
+    ModulesManifest,
+    NetworkMapping,
+)
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.output_utils import (
     _print_modules,
@@ -342,6 +348,7 @@ def destroy_deployment(
     dryrun: bool = False,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
+    test_destroy: Optional[bool] = False,
 ) -> None:
     """
     destroy_deployment
@@ -368,6 +375,10 @@ def destroy_deployment(
         This flag indicates that the project seedkit should be removed.
         This will remove it (if set to True) regardless if other deployments in the
         project use it!!  Use with caution!!
+
+        By default False
+    test_destroy: bool, optional
+        This flag indicates that this is a test module destroy of a single module.
 
         By default False
     """
@@ -432,29 +443,30 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
+            if not test_destroy:
+                tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
 
 def deploy_deployment(
     deployment_manifest: DeploymentManifest,
-    module_info_index: du.ModuleInfoIndex,
     module_upstream_dep: Dict[str, List[str]],
+    module_info_index: Optional[du.ModuleInfoIndex] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
     """
     deploy_deployment
         This function takes a populated DeploymentManifest object and deploys all modules in it.
-        It evaluates whether the modules have bee previously deployed and if anything has changed
+        It evaluates whether the modules have been previously deployed and if anything has changed
         since the last deployment - ignoring if there are no changes.
 
     Parameters
     ----------
     deployment_manifest : DeploymentManifest
         The DeploymentManifest objec of all modules to deploy
-    module_info_index:ModuleInfoIndex
+    module_info_index:ModuleInfoIndex, optional
         An index of all Module Info stored in SSM across all target accounts and regions
     module_upstream_dep: Dict[str, List[str]]
         A dict containing all the upstream dependencies of a module.  Each key in the dict is a module name
@@ -541,7 +553,9 @@ def deploy_deployment(
                     account_id=cast(str, module.get_target_account_id()),
                     region=cast(str, module.target_region),
                     module_name=module.name,
-                ),
+                )
+                if module_info_index
+                else None,
             )
             if not _build_module:
                 unchanged_modules.append(
@@ -805,3 +819,110 @@ def destroy(
             region,
         )
         print_bolded(message=messages.no_deployment_found(deployment_name=deployment_name), color="yellow")
+
+
+def single_module_deploy(
+    manifest_path: str,
+    group_name: str,
+    module_name: str,
+    test_deployment_name_prefix: Optional[str] = "test",
+    destroy: Optional[bool] = False,
+    profile: Optional[str] = None,
+    region_name: Optional[str] = None,
+) -> None:
+    """
+    module-deploy
+
+    Parameters
+    ----------
+
+    Raises
+    ------
+    """
+
+    manifest_path = os.path.join(config.OPS_ROOT, manifest_path)
+    with open(manifest_path) as manifest_file:
+        deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
+    _logger.debug(deployment_manifest.model_dump())
+
+    # Initialize the SessionManager for the entire project
+    session_manager = SessionManager().get_or_create(
+        project_name=config.PROJECT,
+        profile=profile,
+        toolchain_region=deployment_manifest.toolchain_region,
+        region_name=region_name,
+    )
+    _, _, deployment_manifest._partition = get_sts_identity_info(session=session_manager.toolchain_session)
+
+    write_deployment_manifest(
+        cast(str, deployment_manifest.name),
+        deployment_manifest.model_dump(),
+        session=session_manager.toolchain_session,
+    )
+
+    for module_group in deployment_manifest.groups:
+        if module_group.path and module_group.modules:
+            _logger.debug("module_group: %s", module_group)
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "Only one of the `path` or `modules` attributes can be defined on a Group"
+            )
+        if not module_group.path and not module_group.modules:
+            _logger.debug("module_group: %s", module_group)
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "One of the `path` or `modules` attributes must be defined on a Group"
+            )
+        if module_group.path and module_group.name == group_name:
+            try:
+                with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
+                    module_group.modules = [
+                        ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file) if m["name"] == module_name
+                    ]
+                    _logger.debug(module_group.modules)
+            except FileNotFoundError as fe:
+                _logger.error(fe)
+                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                _logger.error("Verify (in deployment manifest) that relative path to the module manifest is correct")
+                raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
+            except Exception as e:
+                _logger.error(e)
+                _logger.error("Verify that elements are filled out and yaml compliant")
+                raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
+    deployment_manifest.validate_and_set_module_defaults()
+    deployment_manifest.name = f"{test_deployment_name_prefix}-{deployment_manifest.name}"
+
+    if destroy:
+        destroy_manifest = du.generate_deployed_manifest(
+            deployment_name=deployment_manifest.name, skip_deploy_spec=False
+        )
+        if destroy_manifest:
+            _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
+            destroy_manifest._partition = partition
+            destroy_manifest.validate_and_set_module_defaults()
+            destroy_deployment(
+                destroy_manifest,
+                remove_deploy_manifest=True,
+                dryrun=False,
+                show_manifest=False,
+                remove_seedkit=False,
+                test_destroy=True,
+            )
+        else:
+            account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
+            region = session_manager.toolchain_session.region_name
+            _logger.info(
+                """Deployment %s was not found in project %s in account %s and region %s
+                        """,
+                deployment_manifest.name,
+                config.PROJECT,
+                account_id,
+                region,
+            )
+            print_bolded(message=messages.no_deployment_found(deployment_name=deployment_manifest.name), color="yellow")
+
+    else:
+        deploy_deployment(
+            deployment_manifest=deployment_manifest,
+            module_upstream_dep={},  # Add Explicit metadata support
+            dryrun=False,
+            show_manifest=False,
+        )

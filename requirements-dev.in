@@ -17,4 +17,4 @@ wheel~=0.43.0
 moto[s3,sts,iam,codebuild,secretsmanager,ssm]~=5.0.9
 requests~=2.32.3
 werkzeug~=3.0.3
-urllib3~=1.26.18
+urllib3~=1.26.19

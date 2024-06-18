@@ -110,7 +110,7 @@ typing-extensions==4.12.2
     # via
     #   -r docs/requirements-docs.in
     #   astroid
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   -r docs/requirements-docs.in
     #   requests

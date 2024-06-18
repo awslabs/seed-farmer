@@ -195,7 +195,7 @@ typing-extensions==4.12.2
     # via
     #   mypy
     #   rich
-urllib3==1.26.18
+urllib3==1.26.19
     # via
     #   -r requirements-dev.in
     #   botocore

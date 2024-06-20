@@ -14,12 +14,13 @@
 
 
 import logging
-from typing import Optional
+from typing import List, Optional
 
 import click
 
-from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
+from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.commands import single_module_deploy
+from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -78,10 +79,22 @@ def test() -> None:
     help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
+@click.option(
+    "--env-file",
+    "env_files",
+    default=[".env"],
+    help="""A relative path to the .env file to load environment variables from.
+    Multiple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
+    multiple=True,
+    required=False,
+)
 def module_deploy(
     manifest_path: str,
     group: str,
     module: str,
+    env_files: List[str],
     debug: bool,
     deployment_name_prefix: Optional[str],
     profile: Optional[str],
@@ -90,6 +103,7 @@ def module_deploy(
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
+    load_dotenv_files(config.OPS_ROOT, env_files)
     single_module_deploy(
         manifest_path=manifest_path,
         group_name=group,
@@ -144,10 +158,22 @@ def module_deploy(
     help="The AWS region used to create a session to assume the toolchain role",
     required=False,
 )
+@click.option(
+    "--env-file",
+    "env_files",
+    default=[".env"],
+    help="""A relative path to the .env file to load environment variables from.
+    Multiple files can be passed in by repeating this flag, and the order will be
+    preserved when overriding duplicate values.
+    """,
+    multiple=True,
+    required=False,
+)
 def module_destroy(
     manifest_path: str,
     group: str,
     module: str,
+    env_files: List[str],
     debug: bool,
     deployment_name_prefix: Optional[str],
     profile: Optional[str],
@@ -156,6 +182,7 @@ def module_destroy(
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
+    load_dotenv_files(config.OPS_ROOT, env_files)
     single_module_deploy(
         manifest_path=manifest_path,
         group_name=group,

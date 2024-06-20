@@ -890,6 +890,7 @@ def single_module_deploy(
     deployment_manifest.validate_and_set_module_defaults()
     deployment_manifest.name = f"{test_deployment_name_prefix}-{deployment_manifest.name}"
 
+    prime_target_accounts(deployment_manifest=deployment_manifest, update_seedkit=False, update_project_policy=False)
     if destroy:
         destroy_manifest = du.generate_deployed_manifest(
             deployment_name=deployment_manifest.name, skip_deploy_spec=False

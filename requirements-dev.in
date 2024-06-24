@@ -1,4 +1,4 @@
-awscli~=1.33.9
+awscli~=1.33.13
 certifi~=2024.6.2
 check-manifest~=0.48
 mypy~=1.10
@@ -9,7 +9,7 @@ pytest~=8.2.2
 pytest-cov~=5.0.0
 pytest-mock~=3.14.0
 pytest-ordering~=0.6
-ruff~=0.4.9
+ruff~=0.4.10
 twine~=5.1.0
 types-PyYAML~=6.0.12
 types-setuptools~=70.0.0

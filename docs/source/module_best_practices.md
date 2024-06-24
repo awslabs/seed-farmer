@@ -28,7 +28,7 @@ Feel free to copy these scripts into your own project for application to your mo
 
 ### fix.sh
 The `fix.sh` script will apply standardization libraries to your code based on the language.
-* `python` code uses [isort](https://pycqa.github.io/isort/) and [black](https://black.readthedocs.io/en/stable/)
+* `python` code uses [ruff](https://docs.astral.sh/ruff/)
 * `typescript` code uses [prettier](https://www.npmjs.com/package/prettier)
 
 To run, from commandline pass in the language and relative path to yur module:
@@ -40,7 +40,7 @@ To run, from commandline pass in the language and relative path to yur module:
 
 ### validate.sh
 The `validate.sh` script will apply check libraries to your code based on the language.
-* `python` code uses [isort](https://pycqa.github.io/isort/), [black](https://black.readthedocs.io/en/stable/), [mypy](https://mypy.readthedocs.io/en/stable/), [flake8](https://flake8.pycqa.org/en/latest/)
+* `python` code uses [ruff](https://docs.astral.sh/ruff/) and [mypy](https://mypy.readthedocs.io/en/stable/)
 * `typescript` code uses [prettier](https://www.npmjs.com/package/prettier)
 * `ALL CODE` - [cfn-lint](https://github.com/aws-cloudformation/cfn-lint) is applied to all `modulestack.yaml` files
 

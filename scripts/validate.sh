@@ -52,8 +52,8 @@ echo "Validating: $(cd "$(dirname "$VALIDATE_PATH")"; pwd)/$(basename "$VALIDATE
 echo "Validating Formatting"
 if [[ $LANGUAGE == "python" ]]; then
     echo "Running ruff"
-    ruff format ${FIX_PATH}
-    ruff check --fix ${FIX_PATH}
+    ruff format --check ${VALIDATE_PATH}
+    ruff check --fix ${VALIDATE_PATH}
 elif [[ $LANGUAGE == "typescript" ]]; then
     echo "Checking prettier"
     npx prettier -c ${VALIDATE_PATH}
@@ -66,7 +66,6 @@ if [[ $SKIP_STATIC_CHECKS == "false" ]]; then
     echo "Validating Static Checks"
     if [[ $LANGUAGE == "python" ]]; then
         echo "Checking mypy"
-        #flake8 ${VALIDATE_PATH}
         mypy --ignore-missing-imports ${VALIDATE_PATH}
     else
         echo "ERROR Language: ${LANGUAGE}"

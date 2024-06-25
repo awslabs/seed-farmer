@@ -92,13 +92,14 @@ def _execute_deploy(
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
     account_id = str(module_manifest.get_target_account_id())
     region = str(module_manifest.target_region)
-
+    test_module_metadata = module_manifest.get_test_metadata()
     mdo.parameters = load_parameter_values(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         parameters=module_manifest.parameters,
         deployment_manifest=mdo.deployment_manifest,
         target_account=account_id,
         target_region=region,
+        test_module_metadata=test_module_metadata,
     )
 
     module_stack_name, module_role_name = commands.deploy_module_stack(
@@ -115,7 +116,7 @@ def _execute_deploy(
     )
     mdo.module_role_name = module_role_name
 
-    #   Get the current module's SSM if it was alreadly loaded...
+    #   Get the current module's SSM if it was already loaded...
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     mdo.module_metadata = json.dumps(
         get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
@@ -151,6 +152,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
     target_region = cast(str, module_manifest.target_region)
+    test_module_metadata = module_manifest.get_test_metadata()
     session = (
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
@@ -163,6 +165,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         deployment_manifest=mdo.deployment_manifest,
         target_account=target_account_id,
         target_region=target_region,
+        test_module_metadata=test_module_metadata,
     )
     module_stack_name, module_role_name = commands.get_module_stack_info(
         deployment_name=cast(str, mdo.deployment_manifest.name),
@@ -282,7 +285,7 @@ def prime_target_accounts(
             threading.current_thread().name = (
                 f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
             ).replace("_", "-")
-            _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Priming Account %s in %s", args["account_id"], args["region"])
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             seedfarmer_bucket = commands.deploy_bucket_storage_stack(**args)
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
@@ -328,7 +331,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
             threading.current_thread().name = (
                 f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
             ).replace("_", "-")
-            _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Tearing Down Account %s in %s", args["account_id"], args["region"])
             commands.destroy_managed_policy_stack(**args)
             commands.destroy_bucket_storage_stack(**args)
             if remove_seedkit:
@@ -357,7 +360,7 @@ def destroy_deployment(
     Parameters
     ----------
     deployment_manifest : DeploymentManifest
-        The DeploymentManifest objec of all modules to destroy
+        The DeploymentManifest object of all modules to destroy
     remove_deploy_manifest : bool, optional
         This flag indicates whether the project resource policy should be deleted.
         If there are ANY modules deployed, this should not be set to True.  This is only
@@ -454,6 +457,7 @@ def deploy_deployment(
     module_upstream_dep: Dict[str, List[str]],
     module_info_index: Optional[du.ModuleInfoIndex] = None,
     dryrun: bool = False,
+    test_deploy: Optional[bool] = False,
     show_manifest: bool = False,
 ) -> None:
     """
@@ -465,7 +469,7 @@ def deploy_deployment(
     Parameters
     ----------
     deployment_manifest : DeploymentManifest
-        The DeploymentManifest objec of all modules to deploy
+        The DeploymentManifest object of all modules to deploy
     module_info_index:ModuleInfoIndex, optional
         An index of all Module Info stored in SSM across all target accounts and regions
     module_upstream_dep: Dict[str, List[str]]
@@ -492,6 +496,9 @@ def deploy_deployment(
     if deployment_manifest.force_dependency_redeploy:
         _logger.warn("You have configured your deployment to FORCE all dependent modules to redeploy")
         _logger.debug(f"Upstream Module Dependencies : {json.dumps(module_upstream_dep, indent=4)}")
+
+    if not test_deploy and module_info_index is None:
+        raise seedfarmer.errors.InvalidConfigurationError("ModuleInfoIndex MUST be set when deploying")
 
     groups_to_deploy = []
     unchanged_modules = []
@@ -534,29 +541,34 @@ def deploy_deployment(
             )
             resolve_params_for_checksum(
                 deployment_manifest=deployment_manifest_wip, module=module, group_name=group.name
-            )
+            ) if not test_deploy else None
 
             module.manifest_md5 = hashlib.md5(
                 json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
             ).hexdigest()
             module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
 
-            _build_module = du.need_to_build(
-                deployment_name=deployment_name,
-                group_name=group.name,
-                module_manifest=module,
-                active_modules=_group_mod_to_deploy,
-                module_upstream_dep=module_upstream_dep,
-                force_redeploy_flag=cast(bool, deployment_manifest.force_dependency_redeploy),
-                deployment_params_cache=module_info_index.get_module_info(
-                    group=group.name,
-                    account_id=cast(str, module.get_target_account_id()),
-                    region=cast(str, module.target_region),
-                    module_name=module.name,
+            _build_module = (
+                du.need_to_build(
+                    deployment_name=deployment_name,
+                    group_name=group.name,
+                    module_manifest=module,
+                    active_modules=_group_mod_to_deploy,
+                    module_upstream_dep=module_upstream_dep,
+                    force_redeploy_flag=cast(bool, deployment_manifest.force_dependency_redeploy),
+                    deployment_params_cache=module_info_index.get_module_info(
+                        group=group.name,
+                        account_id=cast(str, module.get_target_account_id()),
+                        region=cast(str, module.target_region),
+                        module_name=module.name,
+                    )
+                    if module_info_index
+                    else None,
                 )
-                if module_info_index
-                else None,
+                if not test_deploy
+                else True
             )
+
             if not _build_module:
                 unchanged_modules.append(
                     [module.target_account, module.target_region, deployment_name, group.name, module.name]
@@ -819,111 +831,3 @@ def destroy(
             region,
         )
         print_bolded(message=messages.no_deployment_found(deployment_name=deployment_name), color="yellow")
-
-
-def single_module_deploy(
-    manifest_path: str,
-    group_name: str,
-    module_name: str,
-    test_deployment_name_prefix: Optional[str] = "test",
-    destroy: Optional[bool] = False,
-    profile: Optional[str] = None,
-    region_name: Optional[str] = None,
-) -> None:
-    """
-    module-deploy
-
-    Parameters
-    ----------
-
-    Raises
-    ------
-    """
-
-    manifest_path = os.path.join(config.OPS_ROOT, manifest_path)
-    with open(manifest_path) as manifest_file:
-        deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
-    _logger.debug(deployment_manifest.model_dump())
-
-    # Initialize the SessionManager for the entire project
-    session_manager = SessionManager().get_or_create(
-        project_name=config.PROJECT,
-        profile=profile,
-        toolchain_region=deployment_manifest.toolchain_region,
-        region_name=region_name,
-    )
-    _, _, deployment_manifest._partition = get_sts_identity_info(session=session_manager.toolchain_session)
-
-    write_deployment_manifest(
-        cast(str, deployment_manifest.name),
-        deployment_manifest.model_dump(),
-        session=session_manager.toolchain_session,
-    )
-
-    for module_group in deployment_manifest.groups:
-        if module_group.path and module_group.modules:
-            _logger.debug("module_group: %s", module_group)
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "Only one of the `path` or `modules` attributes can be defined on a Group"
-            )
-        if not module_group.path and not module_group.modules:
-            _logger.debug("module_group: %s", module_group)
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "One of the `path` or `modules` attributes must be defined on a Group"
-            )
-        if module_group.path and module_group.name == group_name:
-            try:
-                with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
-                    module_group.modules = [
-                        ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file) if m["name"] == module_name
-                    ]
-                    _logger.debug(module_group.modules)
-            except FileNotFoundError as fe:
-                _logger.error(fe)
-                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
-                _logger.error("Verify (in deployment manifest) that relative path to the module manifest is correct")
-                raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
-            except Exception as e:
-                _logger.error(e)
-                _logger.error("Verify that elements are filled out and yaml compliant")
-                raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
-    deployment_manifest.validate_and_set_module_defaults()
-    deployment_manifest.name = f"{test_deployment_name_prefix}-{deployment_manifest.name}"
-
-    prime_target_accounts(deployment_manifest=deployment_manifest, update_seedkit=False, update_project_policy=False)
-    if destroy:
-        destroy_manifest = du.generate_deployed_manifest(
-            deployment_name=deployment_manifest.name, skip_deploy_spec=False
-        )
-        if destroy_manifest:
-            _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
-            destroy_manifest._partition = partition
-            destroy_manifest.validate_and_set_module_defaults()
-            destroy_deployment(
-                destroy_manifest,
-                remove_deploy_manifest=True,
-                dryrun=False,
-                show_manifest=False,
-                remove_seedkit=False,
-                test_destroy=True,
-            )
-        else:
-            account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)
-            region = session_manager.toolchain_session.region_name
-            _logger.info(
-                """Deployment %s was not found in project %s in account %s and region %s
-                        """,
-                deployment_manifest.name,
-                config.PROJECT,
-                account_id,
-                region,
-            )
-            print_bolded(message=messages.no_deployment_found(deployment_name=deployment_manifest.name), color="yellow")
-
-    else:
-        deploy_deployment(
-            deployment_manifest=deployment_manifest,
-            module_upstream_dep={},  # Add Explicit metadata support
-            dryrun=False,
-            show_manifest=False,
-        )

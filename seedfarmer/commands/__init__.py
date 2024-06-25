@@ -13,7 +13,14 @@
 #    limitations under the License.
 
 from seedfarmer.commands._bootstrap_commands import bootstrap_target_account, bootstrap_toolchain_account
-from seedfarmer.commands._deployment_commands import apply, destroy, single_module_deploy
+from seedfarmer.commands._deployment_commands import (
+    apply,
+    deploy_deployment,
+    destroy,
+    destroy_deployment,
+    prime_target_accounts,
+)
+from seedfarmer.commands._deployment_test_commands import single_module_deploy
 from seedfarmer.commands._module_commands import deploy_module, destroy_module
 from seedfarmer.commands._network_parameter_commands import load_network_values
 from seedfarmer.commands._parameter_commands import generate_export_env_params, generate_export_raw_env_params
@@ -53,4 +60,8 @@ __all__ = [
     "force_manage_policy_attach",
     "deploy_bucket_storage_stack",
     "destroy_bucket_storage_stack",
+    "deploy_deployment",
+    "destroy_deployment",
+    "prime_target_accounts",
+    "single_module_deploy",
 ]

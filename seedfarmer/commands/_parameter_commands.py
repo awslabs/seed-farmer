@@ -52,9 +52,15 @@ def load_parameter_values(
     deployment_manifest: DeploymentManifest,
     target_account: Optional[str],
     target_region: Optional[str],
+    test_module_metadata: Optional[Dict[str, Any]] = None,
 ) -> List[ModuleParameter]:
     parameter_values = []
     parameter_values_cache: Dict[Tuple[str, str, str], Any] = {}
+    parameter_values_cache = (
+        _load_test_metatata_cache(deployment_name, test_module_metadata, parameter_values_cache)
+        if test_module_metadata
+        else {}
+    )
     for parameter in parameters:
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug("parameter: %s", parameter.model_dump())
@@ -225,3 +231,12 @@ def _module_metatdata(
                 value=parameter_value,
             )
     return None
+
+
+def _load_test_metatata_cache(
+    deployment_name: str, test_metadata: Dict[str, Any], parameter_values_cache: Dict[Tuple[str, str, str], Any]
+) -> Dict[Tuple[str, str, str], Any]:
+    for _group in test_metadata.keys():
+        for _module in test_metadata.get(_group):  # type: ignore
+            parameter_values_cache[(deployment_name, _group, _module)] = test_metadata[_group][_module]
+    return parameter_values_cache

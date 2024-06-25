@@ -481,21 +481,22 @@ def list_all_module_metadata(
         return
     dep_manifest.validate_and_set_module_defaults()
     try:
-        all_metadata_json = {
-            f"{group.name}-{module.name}": mi.get_module_metadata(
-                deployment=deployment,
-                group=group.name,
-                module=module.name,
-                session=(
-                    session.get_deployment_session(
-                        account_id=module.get_target_account_id(),  # type: ignore
-                        region_name=module.target_region,  # type: ignore
-                    )
-                ),
-            )
-            for group in dep_manifest.groups
-            for module in group.modules
-        }
+        all_metadata_json = {}
+        for group in dep_manifest.groups:
+            group_dict = {}
+            for module in group.modules:
+                group_dict[module.name] = mi.get_module_metadata(
+                    deployment=deployment,
+                    group=group.name,
+                    module=module.name,
+                    session=(
+                        session.get_deployment_session(
+                            account_id=module.get_target_account_id(),  # type: ignore
+                            region_name=module.target_region,  # type: ignore
+                        )
+                    ),
+                )
+            all_metadata_json[group.name] = group_dict if group_dict else None
         sys.stdout.write(json.dumps(all_metadata_json))
     except Exception:
         _error_messaging(deployment)

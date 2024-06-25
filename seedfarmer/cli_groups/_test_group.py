@@ -13,9 +13,7 @@
 #    limitations under the License.
 
 
-import json
 import logging
-import os
 from typing import List, Optional
 
 import click
@@ -92,15 +90,6 @@ def test() -> None:
     multiple=True,
     required=False,
 )
-@click.option(
-    "--metadata-path",
-    "-mp",
-    default=None,
-    help="""The relative path (to seedfarmer.yaml) of the JSON document that represents
-     the module metadata to ber used in deploying.
-    """,
-    required=False,
-)
 def module_deploy(
     manifest_path: str,
     group: str,
@@ -108,7 +97,6 @@ def module_deploy(
     env_files: List[str],
     debug: bool,
     deployment_name_prefix: Optional[str],
-    metadata_path: Optional[str],
     profile: Optional[str],
     region: Optional[str],
 ) -> None:
@@ -116,17 +104,11 @@ def module_deploy(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
     load_dotenv_files(config.OPS_ROOT, env_files)
-    metadata_doc = {}
-    if metadata_path:
-        with open(os.path.join(config.OPS_ROOT, metadata_path), "r") as f:
-            metadata_doc = json.load(f)
-
     single_module_deploy(
         manifest_path=manifest_path,
         group_name=group,
         module_name=module,
         test_deployment_name_prefix=deployment_name_prefix,
-        module_metadata=metadata_doc,
         profile=profile,
         region_name=region,
     )
@@ -206,7 +188,6 @@ def module_destroy(
         group_name=group,
         module_name=module,
         test_deployment_name_prefix=deployment_name_prefix,
-        module_metadata=None,
         destroy=True,
         profile=profile,
         region_name=region,

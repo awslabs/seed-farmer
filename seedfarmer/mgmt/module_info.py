@@ -62,7 +62,7 @@ def get_parameter_data_cache(deployment: str, session: Session) -> Dict[str, Any
 def get_all_deployments(session: Optional[Session] = None) -> List[str]:
     """
     get_all_deployments
-        Get all names of currently deployments
+        Get all names of curently deployments
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     session: Session, optional
@@ -173,7 +173,7 @@ def get_module_md5(
     module : str
         The name of the module
     type : ModuleConst
-        An enumeration value of the md5 of the module you want
+        An emumeration value of the md5 of the module you want
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
 
@@ -214,41 +214,9 @@ def get_module_metadata(
     Returns
     -------
     Optional[Dict[str, Any]]
-        A dict containing the metadata of the module requested
+        A dict containg the metadata of the module requested
     """
     return _fetch_helper(_metadata_key(deployment, group, module), params_cache, session=session)
-
-
-def get_module_testmetadatainput(
-    deployment: str,
-    group: str,
-    module: str,
-    params_cache: Optional[Dict[str, Any]] = None,
-    session: Optional[Session] = None,
-) -> Optional[Dict[str, Any]]:
-    """
-    get_module_metadata
-        Get the testing metadata stored for a deployed testing module
-
-    Parameters
-    ----------
-    deployment : str
-        The name of the deployment
-    group : str
-        The name of the group
-    module : str
-        The name of the module
-    params_cache : Dict[str,Any], optional
-        A populated dict with the key  of the parameter stored and its value
-    session: Session, optional
-        The boto3.Session to use to for SSM Parameter queries, default None
-
-    Returns
-    -------
-    Optional[Dict[str, Any]]
-        A dict containing the metadata used by the test module
-    """
-    return _fetch_helper(_testmetadatainput_key(deployment, group, module), params_cache, session=session)
 
 
 def get_module_manifest(
@@ -278,7 +246,7 @@ def get_module_manifest(
     Returns
     -------
     Optional[Dict[str, Any]]
-        A dict containing the manifest of the module requested
+        A dict containg the manifest of the module requested
     """
     return _fetch_helper(_manifest_key(deployment, group, module), params_cache, session=session)
 
@@ -310,7 +278,7 @@ def get_deployspec(
     Returns
     -------
     Optional[Dict[str, Any]]
-        A dict containing the deployspec of the module requested
+        A dict containg the deployspec of the module requested
     """
     return _fetch_helper(_deployspec_key(deployment, group, module), params_cache, session=session)
 
@@ -447,7 +415,7 @@ def does_md5_match(
 ) -> bool:
     """
     does_md5_match
-        Check if a generated md5 hash matches what is currently deployed for a module
+        Check if a gneerated md5 hash matches what is currently deployed for a module
 
     Parameters
     ----------
@@ -458,9 +426,9 @@ def does_md5_match(
     module : str
         The name of the module
     hash : str
-        The generated md5 has you want to compare to what is currently deployed
+        The generated md5 has you want to compare to what is currently dpeloyed
     type : ModuleConst
-        An enumeration value of the md5 of the module you want
+        An emumeration value of the md5 of the module you want
     params_cache : Dict[str,Any], optional
         A populated dict with the key  of the parameter stored and its value
     session: Session, optional
@@ -515,7 +483,7 @@ def write_metadata(
 ) -> None:
     """
     write_metadata
-        Persists the metadata of a deployed module
+        Persists the medadata of a deployed module
 
     Parameters
     ----------
@@ -533,29 +501,6 @@ def write_metadata(
     ssm.put_parameter(name=_metadata_key(deployment, group, module), obj=data, session=session)
 
 
-def write_testmetadatainput(
-    deployment: str, group: str, module: str, data: Dict[str, Any], session: Optional[Session] = None
-) -> None:
-    """
-    write_metadata
-        Persists the testing metadata INPUT of a deployed module
-
-    Parameters
-    ----------
-    deployment : str
-        The name of the deployment
-    group : str
-        The name of the group
-    module : str
-        The name of the module
-    data : Dict[str, Any]
-        The test metadata passed to the module
-    session: Session, optional
-        The boto3.Session to use to for SSM Parameter queries, default None
-    """
-    ssm.put_parameter(name=_testmetadatainput_key(deployment, group, module), obj=data, session=session)
-
-
 def write_group_manifest(deployment: str, group: str, data: Dict[str, Any], session: Optional[Session] = None) -> None:
     """
     write_group_manifest
@@ -568,7 +513,7 @@ def write_group_manifest(deployment: str, group: str, data: Dict[str, Any], sess
     group : str
         The name of the group
     data : Dict[str, Any]
-        The metadata of the module
+        The metadat of the module
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
@@ -651,7 +596,7 @@ def write_module_md5(
     hash : str
         The md5 has of the data
     type : ModuleConst
-        An enumeration value of the md5 of the module this is
+        An emumeration value of the md5 of the module this is
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
@@ -755,7 +700,7 @@ def remove_module_md5(
     module : str
         The name of the module
     type : ModuleConst
-        An enumeration value of the md5 you want to delete
+        An emumeration value of the md5 you want to delete
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
@@ -792,31 +737,8 @@ def remove_deployed_deployment_manifest(deployment: str, session: Optional[Sessi
     ssm.delete_parameters(parameters=[_deployed_deployment_manifest_key(deployment)], session=session)
 
 
-def remove_testmetatainput(deployment: str, group: str, module: str, session: Optional[Session] = None) -> None:
-    """
-    remove_module_info
-        Delete the test metadata passed in to a module
-
-    Parameters
-    ----------
-    deployment : str
-        The name of the deployment
-    group : str
-        The name of the group
-    module : str
-        The name of the module
-    session: Session, optional
-        The boto3.Session to use to for SSM Parameter queries, default None
-    """
-    ssm.delete_parameters(parameters=[_testmetadatainput_key(deployment, group, module)], session=session)
-
-
 def _metadata_key(deployment: str, group: str, module: str) -> str:
     return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
-
-
-def _testmetadatainput_key(deployment: str, group: str, module: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{module}/testinput{ModuleConst.METADATA.value}"
 
 
 def _md5_module_key(deployment: str, group: str, module: str, type: ModuleConst) -> str:

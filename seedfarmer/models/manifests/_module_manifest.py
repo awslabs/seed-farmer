@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from pydantic import PrivateAttr, model_validator
 from pydantic.json_schema import SkipJsonSchema
@@ -101,7 +101,6 @@ class ModuleManifest(CamelModel):
     pypi_mirror_secret: Optional[str] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)
     _local_path: Optional[str] = PrivateAttr(default=None)
-    _test_module_metadata: Optional[Dict[str, Any]] = PrivateAttr(default_factory=dict)
 
     def __init__(self, **kwargs: Any) -> None:
         from seedfarmer.utils import batch_replace_env
@@ -121,9 +120,3 @@ class ModuleManifest(CamelModel):
 
     def get_local_path(self) -> Optional[str]:
         return self._local_path
-
-    def set_test_metadata(self, test_metadata: Dict[str, Any]) -> None:
-        self._test_module_metadata = test_metadata
-
-    def get_test_metadata(self) -> Optional[Dict[str, Any]]:
-        return self._test_module_metadata

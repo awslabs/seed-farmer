@@ -219,7 +219,7 @@ def get_module_metadata(
     return _fetch_helper(_metadata_key(deployment, group, module), params_cache, session=session)
 
 
-def get_module_testmetadatainput(
+def get_test_metadata_input(
     deployment: str,
     group: str,
     module: str,
@@ -227,7 +227,7 @@ def get_module_testmetadatainput(
     session: Optional[Session] = None,
 ) -> Optional[Dict[str, Any]]:
     """
-    get_module_metadata
+    get_test_metadata_input
         Get the testing metadata stored for a deployed testing module
 
     Parameters
@@ -248,7 +248,7 @@ def get_module_testmetadatainput(
     Optional[Dict[str, Any]]
         A dict containing the metadata used by the test module
     """
-    return _fetch_helper(_testmetadatainput_key(deployment, group, module), params_cache, session=session)
+    return _fetch_helper(_test_metadata_input_key(deployment, group, module), params_cache, session=session)
 
 
 def get_module_manifest(
@@ -533,11 +533,11 @@ def write_metadata(
     ssm.put_parameter(name=_metadata_key(deployment, group, module), obj=data, session=session)
 
 
-def write_testmetadatainput(
+def write_test_metadata_input(
     deployment: str, group: str, module: str, data: Dict[str, Any], session: Optional[Session] = None
 ) -> None:
     """
-    write_metadata
+    write_test_metadata_input
         Persists the testing metadata INPUT of a deployed module
 
     Parameters
@@ -553,7 +553,7 @@ def write_testmetadatainput(
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    ssm.put_parameter(name=_testmetadatainput_key(deployment, group, module), obj=data, session=session)
+    ssm.put_parameter(name=_test_metadata_input_key(deployment, group, module), obj=data, session=session)
 
 
 def write_group_manifest(deployment: str, group: str, data: Dict[str, Any], session: Optional[Session] = None) -> None:
@@ -792,9 +792,9 @@ def remove_deployed_deployment_manifest(deployment: str, session: Optional[Sessi
     ssm.delete_parameters(parameters=[_deployed_deployment_manifest_key(deployment)], session=session)
 
 
-def remove_testmetatainput(deployment: str, group: str, module: str, session: Optional[Session] = None) -> None:
+def remove_test_metadata_input(deployment: str, group: str, module: str, session: Optional[Session] = None) -> None:
     """
-    remove_module_info
+    remove_test_metadata_input
         Delete the test metadata passed in to a module
 
     Parameters
@@ -808,14 +808,14 @@ def remove_testmetatainput(deployment: str, group: str, module: str, session: Op
     session: Session, optional
         The boto3.Session to use to for SSM Parameter queries, default None
     """
-    ssm.delete_parameters(parameters=[_testmetadatainput_key(deployment, group, module)], session=session)
+    ssm.delete_parameters(parameters=[_test_metadata_input_key(deployment, group, module)], session=session)
 
 
 def _metadata_key(deployment: str, group: str, module: str) -> str:
     return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
 
 
-def _testmetadatainput_key(deployment: str, group: str, module: str) -> str:
+def _test_metadata_input_key(deployment: str, group: str, module: str) -> str:
     return f"/{config.PROJECT}/{deployment}/{group}/{module}/testinput{ModuleConst.METADATA.value}"
 
 

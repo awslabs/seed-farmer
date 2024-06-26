@@ -97,7 +97,7 @@ def test() -> None:
     "-mp",
     default=None,
     help="""The relative path (to seedfarmer.yaml) of the JSON document that represents
-     the module metadata to ber used in deploying.
+     the module metadata to be used in deploying.
     """,
     required=False,
 )

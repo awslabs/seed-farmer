@@ -24,10 +24,10 @@ import seedfarmer.mgmt.deploy_utils as du
 from seedfarmer import config
 from seedfarmer.commands import deploy_deployment, destroy_deployment, prime_target_accounts
 from seedfarmer.mgmt.module_info import (
-    get_module_testmetadatainput,
-    remove_testmetatainput,
+    get_test_metadata_input,
+    remove_test_metadata_input,
     write_deployment_manifest,
-    write_testmetadatainput,
+    write_test_metadata_input,
 )
 from seedfarmer.models.manifests import (
     DeploymentManifest,
@@ -128,7 +128,7 @@ def single_module_deploy(
                     region_name=active_module.target_region,  # type: ignore
                 )
             )
-            testmetadata = get_module_testmetadatainput(
+            testmetadata = get_test_metadata_input(
                 deployment=deployment_manifest.name,
                 group=deployment_manifest.groups[0].name,
                 module=active_module.name,
@@ -156,7 +156,7 @@ def single_module_deploy(
                     region_name=active_module.target_region,  # type: ignore
                 )
             )
-            remove_testmetatainput(
+            remove_test_metadata_input(
                 deployment=deployment_manifest.name,
                 group=deployment_manifest.groups[0].name,
                 module=active_module.name,
@@ -188,7 +188,7 @@ def single_module_deploy(
                     region_name=active_module.target_region,  # type: ignore
                 )
             )
-            write_testmetadatainput(
+            write_test_metadata_input(
                 deployment=deployment_manifest.name,
                 group=deployment_manifest.groups[0].name,
                 module=active_module.name,

@@ -89,9 +89,9 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via jaraco-classes
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.9
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.10
     # via -r requirements-dev.in
-mypy==1.10.0
+mypy==1.10.1
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via
@@ -177,7 +177,7 @@ rich==13.7.1
     #   twine
 rsa==4.7.2
     # via awscli
-ruff==0.4.10
+ruff==0.5.0
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
@@ -200,13 +200,13 @@ tomli==2.0.1
     #   pytest
 trove-classifiers==2024.2.22
     # via pyroma
-twine==5.1.0
+twine==5.1.1
     # via -r requirements-dev.in
 types-pyyaml==6.0.12.20240311
     # via
     #   -r requirements-dev.in
     #   responses
-types-setuptools==70.0.0.20240524
+types-setuptools==70.1.0.20240627
     # via -r requirements-dev.in
 typing-extensions==4.12.2
     # via

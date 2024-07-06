@@ -58,7 +58,7 @@ setup(
         "gitignore-parser~=0.1.2",
         "pyyaml~=6.0.1",
         "urllib3~=1.26.17",
-        "certifi>=2023.7.22,<2024.7.0",
+        "certifi>=2024.7.4,<2024.8.0",
         "packaging>=23.2,<25.0",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},

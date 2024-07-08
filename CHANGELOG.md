@@ -8,6 +8,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+
+### Fixes
+
+## v4.0.2 (2024-07-08
+)
+### New
+
+### Changes
 - adding support for module manifest schema generation
 - updates to dependency libraries (from dependabot):
   - certifi~=2024.7.4

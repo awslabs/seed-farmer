@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - adding support for module manifest schema generation
+- updates to dependency libraries (from dependabot):
+  - certifi~=2024.7.4
+  - boto3~=1.34.140
+  - botocore~=1.34.140
+  - pydantic~=2.8.2
+  - pydantic-core~=2.20.1
 
 ### Fixes
 

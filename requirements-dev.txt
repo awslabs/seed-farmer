@@ -21,7 +21,7 @@ build==1.2.1
     #   check-manifest
     #   pip-tools
     #   pyroma
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r requirements-dev.in
     #   requests

@@ -11,6 +11,21 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v4.0.2 (2024-07-08
+)
+### New
+
+### Changes
+- adding support for module manifest schema generation
+- updates to dependency libraries (from dependabot):
+  - certifi~=2024.7.4
+  - boto3~=1.34.140
+  - botocore~=1.34.140
+  - pydantic~=2.8.2
+  - pydantic-core~=2.20.1
+
+### Fixes
+
 
 ## v4.0.1 (2024-06-10)
 
@@ -36,6 +51,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
   - this is already being done, but moving closer to last line of output
 - updating idna>=3.7 everywhere
 ### Fixes
+
+## v3.5.2 (2024-06-10)
+
+### New
+
+### Changes
+
+### Fixes
+- correcting how SeedFarmer stores deployed manifests of previously deployed modules in SSM
+  - this is corrected in later releases, but need to support in case not everyone has upgraded
+
 
 ## v3.5.1 (2024-05-21)
 

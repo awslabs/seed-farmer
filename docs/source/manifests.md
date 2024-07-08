@@ -389,7 +389,7 @@ There are three (3) places to configure a custom build image:
 
 (mirroroverride)=
 ## Mirror Overrides
- `seed-farmer`  is python based and uses Pypi for code distribution.  Also, NPM is heavily used.  By default, `seed-farmer` uses the default configuration for these repositories.  In some cases, you may want to override the default mirror / registry that `seed-farmer` uses to pull in supporting artifacts like `AWS-CodeSeeder` and AWS-CLI for NPM.  For example, when running in the China partition, a mirror is very helpful. `seed-farmer` supports mirror configuration.  Like the codebuild image, there is a level of logic that is followed:
+ `seed-farmer`  is python based and uses Pypi for code distribution.  In some cases, you may want to override the default mirror / registry that `seed-farmer` uses to pull in supporting artifacts like `AWS-CodeSeeder` and AWS-CLI for NPM.  For example, when running in the China partition, a mirror is very helpful. `seed-farmer` supports mirror configuration.  Like the codebuild image, there is a level of logic that is followed:
 1. if a mirror is defined at the module level --- USE IT... ELSE
 2. if a mirror is defined at the account/region level --- USE IT... ELSE
 3. if a mirror is defined at the account level --- USE IT... ELSE

@@ -48,7 +48,7 @@ setup(
         "aws-codeseeder~=1.0.0",
         "cookiecutter>=2.1,<2.7",
         "pyhumps>=3.5,<3.9",
-        "pydantic>=2.5.3,<2.8.0",
+        "pydantic>=2.8.2,<2.9.0",
         "executor~=23.2",
         "typing-extensions>=4.6.3",
         "rich>=12.4,<13.8",

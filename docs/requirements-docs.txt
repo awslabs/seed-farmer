@@ -10,7 +10,7 @@ astroid==2.15.5
     # via sphinx-autoapi
 babel==2.12.1
     # via sphinx
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r docs/requirements-docs.in
     #   requests

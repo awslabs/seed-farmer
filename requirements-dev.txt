@@ -4,13 +4,13 @@
 #
 #    pip-compile --constraint=requirements.txt --output-file=requirements-dev.txt requirements-dev.in
 #
-awscli==1.33.18
+awscli==1.33.22
     # via -r requirements-dev.in
 bleach==6.0.0
     # via readme-renderer
 boto3==1.34.136
     # via moto
-botocore==1.34.136
+botocore==1.34.140
     # via
     #   awscli
     #   boto3
@@ -81,7 +81,7 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==9.1.0
     # via jaraco-classes
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.10
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.11
     # via -r requirements-dev.in
 mypy==1.10.1
     # via -r requirements-dev.in
@@ -160,7 +160,7 @@ rich==13.7.1
     # via twine
 rsa==4.7.2
     # via awscli
-ruff==0.5.0
+ruff==0.5.1
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
@@ -189,7 +189,7 @@ types-pyyaml==6.0.12.20240311
     # via
     #   -r requirements-dev.in
     #   responses
-types-setuptools==70.1.0.20240627
+types-setuptools==70.2.0.20240704
     # via -r requirements-dev.in
 typing-extensions==4.12.2
     # via

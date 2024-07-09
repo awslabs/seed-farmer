@@ -214,7 +214,7 @@ wheel==0.43.0
     #   pip-tools
 xmltodict==0.13.0
     # via moto
-zipp==3.15.0
+zipp==3.19.1
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:

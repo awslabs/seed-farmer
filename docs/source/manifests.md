@@ -116,10 +116,10 @@ targetAccountMappings:
         - This is a NAMED PARAMETER...in that `dockerCredentialsSecret` is recognized by `seed-farmer`
       - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
         - This is a NAMED PARAMETER...in that `permissionsBoundaryName` is recognized by `seed-farmer`
-      - Any other parameter in this list is NOT a NAMED PARAMETER (ex. `vpcId`,`privateSubnetIds`,`publicSubnetIds`, etc,) and is soley for the use of lookup in:
+      - Any other parameter in this list is NOT a NAMED PARAMETER (ex. `vpcId`,`privateSubnetIds`,`publicSubnetIds`, etc,) and is solely for the use of lookup in:
         - module manifests
         - the `network` object in the `regionMappings` (see examples above)
-    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isloated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREE parameters are required!
+    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isolated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREE parameters are required!
       - **vpcId** - the VPC ID the Codebuild Project should be associated to 
       - **privateSubnetIds** - the private subnets the Codebuild Project should be associated to 
       - **securityGroupIds** - the Security Groups the Codebuild Project should be associated to -- a limit of 5 is allowed
@@ -136,7 +136,7 @@ There are a couple of things to be aware of:
 1. The three values (vpcId, privateSubnetIds, securityGroupIds) should be stored as a string (if a vpcId) or stringified JSON lists (if privateSubnetIds or securityGroupIds).  **SeedFarmer predominantly leverages JSON as strings stored in SSM - these values are no different**.
 2. Each value is defined independently - and is in no way linked to the other two.  It is up to you (the end user) to make sure the Subnets / Security Groups are in the proper VPC.  SeedFarmer does NOT validate this prior, and the deployment will error out with an ugly stack trace.
 
-Lets look as some examples
+Let's look as some examples
 #### HardCoded Value Support for Network
   ```yaml
 network: 
@@ -168,9 +168,9 @@ network:
 #### AWS SSM Parameters Support for Network
 This cannot be stressed enough: **the SSM Parameter Name MUST start with the project name**. For example: if the name of your project is `idf` as defined in `seedfarmer.yaml`, then your SSM Parameter name MUST start with `/idf/`.  If you do not leverage this info, then your deployment will NOT have access to the SSM Parameter.
 
-This vale us account/region specific.  In other words, for every target account/region, you MUST populate this SSM Parameter if it is defined the the `deployment manifest`.  This is NOT a global value.
+This value is account/region-specific.  In other words, for every target account/region, you MUST populate this SSM Parameter if it is defined the the `deployment manifest`.  This is NOT a global value.
 
-Here is an example.  Lets assume my project name is `idf`
+Here is an example.  Let's assume my project name is `idf`
 ```yaml
 network: 
   vpcId: 
@@ -224,7 +224,7 @@ We recommend to destroy / deploy / redeploy modules explicitly via the manifests
 
 But, we understand that sometimes when a module changes (is redeployed), the other downstream modules that are dependent on it may want to consume those changes. This flag will tell SeedFarmer to force a redeploy of all modules impacted by the redeploy of another module.  This is an indiscriminant feature in that it is not granular enough to detect WHAT is causing a redeploy, only that one needs to occur.
 
-What does this mean?  Well, lets take the following module deployment order: 
+What does this mean?  Well, let's take the following module deployment order: 
 ```code
  Module-A --> Module-B --> Module-C --> Module-D --> Module-E 
 ```
@@ -234,7 +234,7 @@ What does this mean?  Well, lets take the following module deployment order:
  **This is an important feature to understand: redeployment is not discriminant.**  SeedFarmer does not know how to assess what has changed in a module and its impact on downstream modules.  Nor does it have the ability to know if a module can incur a redeployment (as opposed to a destroy and deploy process).  That is up to you to determine with respect to the modules you are leveraging.  ANY change to the source code (deployspec, modulestack, comments in cdk code, etc.) will indicate to SeedFarmer that the module needs to be redeployed, even if the underlying logic / artifact has not changed.  
 
  Also, it is important to understand that this feature could put your deployment in an unusable state if the shared-responsibility model is not followed.
- For example: lets say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `networking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
+ For example: let's say a deployment has a module (called `networking`) that deploys a VPC with public and private subnets that are restricted to a particular CIDR (as input).  Then, downstream modules reference the metadata of `networking`.  If a user were to change the CIDR references and redeploy the `networking` module, this has the potential to render the deployment in an unusable state: the process to change the CIDR's would trigger a destroy of the existing subnets...which would fail due to resources from other modules leveraging those subnets.  The redeployment would fail, and the user would have to manually correct the state.
 
 (module_manifest)=
 ## Module Manifest
@@ -297,17 +297,17 @@ parameters:
 ```
 
 ### A Word About DataFiles ###
-The **dataFile** support for modules is intended to take a file(s) located outside of the module code and packaged them as if they were apart of the module.  The use case: there are data files that are shared amongst multiple modules, or are dynamic and can change over time.  As you leverage the Git Path functionality (for sourcing modules in manifest), being able to modify these data files would have meant a change to the module code - which is not feasible as it will cause all deployments that leverage the same code to redeploy.
+The **dataFile** support for modules is intended to take a file(s) located outside of the module code and packaged them as if they were a part of the module.  The use case: there are data files that are shared amongst multiple modules, or are dynamic and can change over time.  As you leverage the Git Path functionality (for sourcing modules in manifest), being able to modify these data files would have meant a change to the module code - which is not feasible as it will cause all deployments that leverage the same code to redeploy.
 
-This feature will allow you to stage files locally in your SeedFarmer Project (MUST be located relative to `seedfarmer.yaml`) or are contained in a Git Repository.  These files will be packaged UNDER the module when deploying as if they are apart of the module code.  The relative paths remain intact UNDER the module when packaged.  
+This feature will allow you to stage files locally in your SeedFarmer Project (MUST be located relative to `seedfarmer.yaml`) or are contained in a Git Repository.  These files will be packaged UNDER the module when deploying as if they are part of the module code.  The relative paths remain intact UNDER the module when packaged.  
 
 When using this feature, any change to these file(s) (modifying, add to manifest, removing from manifest) will indicate to SeedFarmer that a redeployment is necessary.
 
-***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everthing so wet??)***
+***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everything so wet??)***
 
 (universaloverride)=
 ## Universal Environment Variable Replacement in Manifests
-As of the release of `seed-farmer==3.5.0`, we have added support for dynamic replacement of values with environment variables in manifests.  This does not replace the any pre-existing functionality.  This also is limited to only manifests (`deployment_manifest` and `module_manifest`).  Things like the `deployspec` and the `modulestack` are NOT included in this functionality.  We strongly recommend using hard-coded values in manifests or leveraging the facilities already in place, but we have added this feature based on feedback from experienced users.
+As of the release of `seed-farmer==3.5.0`, we have added support for dynamic replacement of values with environment variables in manifests.  This does not replace any pre-existing functionality.  This also is limited to only manifests (`deployment_manifest` and `module_manifest`).  Things like the `deployspec` and the `modulestack` are NOT included in this functionality.  We strongly recommend using hard-coded values in manifests or leveraging the facilities already in place, but we have added this feature based on feedback from experienced users.
 
 Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`.   
 
@@ -403,7 +403,7 @@ If using a Pypi-compliant mirror that is not public or needs an authentication s
 4. the name of the AWS SecretsManager adheres to the format defined below
 5. a `pypiMirror` is defined at the SAME LEVEL in the manifest
 
-The `pypiMirrorSecret` feature can support multiple entries for use.  It is NOT apart of the calculation for redeploy (ie. you can change it at will and it will not force a redeploy of any module referencing it - to allow updates and additions over time).  
+The `pypiMirrorSecret` feature can support multiple entries for use.  It is NOT part of the calculation for redeploy (ie. you can change it at will and it will not force a redeploy of any module referencing it - to allow updates and additions over time).  
 
 The AWS SecretManager name must follow the following pattern (NO exceptions):
 ```code
@@ -417,7 +417,7 @@ Here are some names that are in-valid
 - /aws-addfmirror-credentials
 - /something/important/mirror-credentials
 
-The content of the AWS SecretsManager allows multiple entries to support different configuratons.  It MUST be a JSON dict of dict, where each top-level dict is the name of the key-par and its child elements contain `username` and `password` keys.  Lets look at an example of a value payload:
+The content of the AWS SecretsManager allows multiple entries to support different configuratons.  It MUST be a JSON dict of dict, where each top-level dict is the name of the key-par and its child elements contain `username` and `password` keys.  Let's look at an example of a value payload:
 
 ```json
 {
@@ -437,7 +437,7 @@ The content of the AWS SecretsManager allows multiple entries to support differe
 ```
 This example has valid entries.  The default key is `pypi`.  In order to leverage this scheme, a particular pattern MUST be followed in your manifest under the `pypiMirrorSecret` key: `name-of-secret::name-of-key`.  The `::` indicates to `seed-farmer` and `AWS-CodeSeeder` what username/password combination to use.  
 
-Lets walk thru an example.  Assume that the previous example of a secret payload is set and the secret name is `/aws-addf-mirror-credentials`.  I want to use the `artifactory` username/password entry.  My manifest would look like the following:
+Let's walk through an example.  Assume that the previous example of a secret payload is set and the secret name is `/aws-addf-mirror-credentials`.  I want to use the `artifactory` username/password entry.  My manifest would look like the following:
 ```yaml
 ...
 pypiMirror: https://the-mirror-dns/simple/pypi

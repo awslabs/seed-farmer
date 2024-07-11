@@ -10,9 +10,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- when a bundle is available on destroy, ignore the path entirely
 
-## v4.0.2 (2024-07-08
-)
+## v4.0.2 (2024-07-08)
+
 ### New
 
 ### Changes

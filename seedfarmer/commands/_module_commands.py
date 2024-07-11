@@ -283,6 +283,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
     pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
     module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+    prebuilt_bundle = _prebuilt_bundle_check(mdo)
     try:
         resp_dict_str, _ = _execute_module_commands(
             deployment_name=str(mdo.deployment_manifest.name),
@@ -291,7 +292,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             account_id=account_id,
             region=region,
             metadata_env_variable=metadata_env_variable,
-            extra_dirs={"module": module_path},
+            extra_dirs={"module": module_path} if not prebuilt_bundle else None,
             extra_files=extra_files,
             extra_install_commands=["cd module/"] + _phases.install.commands,
             extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
@@ -304,7 +305,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             npm_mirror=npm_mirror,
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
-            prebuilt_bundle=_prebuilt_bundle_check(mdo),
+            prebuilt_bundle=prebuilt_bundle,
         )
         resp = ModuleDeploymentResponse(
             deployment=mdo.deployment_manifest.name,

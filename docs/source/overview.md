@@ -20,7 +20,7 @@ There can be at any time only ONE (1) `toolchain account` with MANY `target acco
 ## Concepts
 All `seedfarmer` deployments leverage a logical separation of artifacts.  A single `Project` can have multiple `Deployments` of `Groups` of `Modules`.
 
-`Project` - a project as a direct one-to-one relationship with the [AWS Codeseeder](https://aws-codeseeder.readthedocs.io/en/latest/) managed CodeBuild project.  You can have multiple projects in an account(s) and they are isloated from one another (no one project can use artifact from another project).
+`Project` - a project as a direct one-to-one relationship with the [AWS Codeseeder](https://aws-codeseeder.readthedocs.io/en/latest/) managed CodeBuild project.  You can have multiple projects in an account(s) and they are isolated from one another (no one project can use artifact from another project).
 
 `Deployment` - a deployment represents all the modules leveraging AWS resources in one or many accounts.  It is metadata that gives isolation from other deployments in the same project.
 

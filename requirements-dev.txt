@@ -6,12 +6,15 @@
 #
 awscli==1.33.26
     # via -r requirements-dev.in
-bleach==6.0.0
-    # via readme-renderer
-boto3==1.34.136
-    # via moto
+backports-tarfile==1.2.0
+    # via jaraco-context
+boto3==1.34.144
+    # via
+    #   -c requirements.txt
+    #   moto
 botocore==1.34.144
     # via
+    #   -c requirements.txt
     #   awscli
     #   boto3
     #   moto
@@ -23,97 +26,116 @@ build==1.2.1
     #   pyroma
 certifi==2024.7.4
     # via
+    #   -c requirements.txt
     #   -r requirements-dev.in
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via cryptography
 charset-normalizer==3.3.2
-    # via requests
+    # via
+    #   -c requirements.txt
+    #   requests
 check-manifest==0.49
     # via -r requirements-dev.in
 click==8.1.7
-    # via pip-tools
-colorama==0.4.4
-    # via awscli
-coverage[toml]==7.2.7
-    # via pytest-cov
-cryptography==42.0.4
     # via
-    #   moto
-    #   secretstorage
+    #   -c requirements.txt
+    #   pip-tools
+colorama==0.4.6
+    # via awscli
+coverage[toml]==7.6.0
+    # via pytest-cov
+cryptography==42.0.8
+    # via moto
 docutils==0.16
     # via
     #   awscli
     #   pyroma
     #   readme-renderer
-exceptiongroup==1.2.1
+exceptiongroup==1.2.2
     # via pytest
 idna==3.7
-    # via requests
-importlib-metadata==7.1.0
+    # via
+    #   -c requirements.txt
+    #   requests
+importlib-metadata==8.0.0
     # via
     #   build
     #   keyring
     #   twine
+importlib-resources==6.4.0
+    # via keyring
 iniconfig==2.0.0
     # via pytest
-jaraco-classes==3.2.3
+jaraco-classes==3.4.0
     # via keyring
-jeepney==0.8.0
-    # via
-    #   keyring
-    #   secretstorage
+jaraco-context==5.3.0
+    # via keyring
+jaraco-functools==4.0.1
+    # via keyring
 jinja2==3.1.4
-    # via moto
+    # via
+    #   -c requirements.txt
+    #   moto
 jmespath==1.0.1
     # via
+    #   -c requirements.txt
     #   boto3
     #   botocore
-keyring==23.9.3
+keyring==25.2.1
     # via twine
-markdown-it-py==2.2.0
+markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.5
     # via
+    #   -c requirements.txt
     #   jinja2
     #   werkzeug
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==9.1.0
-    # via jaraco-classes
+more-itertools==10.3.0
+    # via
+    #   jaraco-classes
+    #   jaraco-functools
 moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.11
     # via -r requirements-dev.in
 mypy==1.10.1
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
-    # via mypy
+    # via
+    #   -c requirements.txt
+    #   mypy
+nh3==0.2.18
+    # via readme-renderer
 packaging==24.1
     # via
+    #   -c requirements.txt
     #   build
     #   pyroma
     #   pytest
 pip-tools==7.4.1
     # via -r requirements-dev.in
-pkginfo==1.9.6
+pkginfo==1.10.0
     # via twine
 pluggy==1.5.0
     # via pytest
 py-partiql-parser==0.5.5
     # via moto
-pyasn1==0.5.1
+pyasn1==0.6.0
     # via rsa
-pycparser==2.21
+pycparser==2.22
     # via cffi
 pydot==2.0.0
     # via -r requirements-dev.in
 pygments==2.18.0
     # via
+    #   -c requirements.txt
     #   pyroma
     #   readme-renderer
     #   rich
-pyparsing==3.1.1
+pyparsing==3.1.2
     # via pydot
-pyproject-hooks==1.0.0
+pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
@@ -133,17 +155,20 @@ pytest-ordering==0.6
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
+    #   -c requirements.txt
     #   botocore
     #   moto
 pyyaml==6.0.1
     # via
+    #   -c requirements.txt
     #   awscli
     #   moto
     #   responses
-readme-renderer==37.3
+readme-renderer==43.0
     # via twine
 requests==2.32.3
     # via
+    #   -c requirements.txt
     #   -r requirements-dev.in
     #   moto
     #   pyroma
@@ -152,25 +177,26 @@ requests==2.32.3
     #   twine
 requests-toolbelt==1.0.0
     # via twine
-responses==0.23.3
+responses==0.25.3
     # via moto
 rfc3986==2.0.0
     # via twine
 rich==13.7.1
-    # via twine
+    # via
+    #   -c requirements.txt
+    #   twine
 rsa==4.7.2
     # via awscli
 ruff==0.5.2
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
+    #   -c requirements.txt
     #   awscli
     #   boto3
-secretstorage==3.3.3
-    # via keyring
 six==1.16.0
     # via
-    #   bleach
+    #   -c requirements.txt
     #   python-dateutil
 tomli==2.0.1
     # via
@@ -179,31 +205,28 @@ tomli==2.0.1
     #   coverage
     #   mypy
     #   pip-tools
-    #   pyproject-hooks
     #   pytest
-trove-classifiers==2024.2.22
+trove-classifiers==2024.7.2
     # via pyroma
 twine==5.1.1
     # via -r requirements-dev.in
 types-pyyaml==6.0.12.20240311
-    # via
-    #   -r requirements-dev.in
-    #   responses
+    # via -r requirements-dev.in
 types-setuptools==70.3.0.20240710
     # via -r requirements-dev.in
 typing-extensions==4.12.2
     # via
+    #   -c requirements.txt
     #   mypy
     #   rich
 urllib3==1.26.19
     # via
+    #   -c requirements.txt
     #   -r requirements-dev.in
     #   botocore
     #   requests
     #   responses
     #   twine
-webencodings==0.5.1
-    # via bleach
 werkzeug==3.0.3
     # via
     #   -r requirements-dev.in
@@ -214,8 +237,10 @@ wheel==0.43.0
     #   pip-tools
 xmltodict==0.13.0
     # via moto
-zipp==3.19.1
-    # via importlib-metadata
+zipp==3.19.2
+    # via
+    #   importlib-metadata
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

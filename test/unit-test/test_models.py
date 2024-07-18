@@ -573,9 +573,13 @@ parameters:
 """
     )
 
-    with mock.patch.dict(os.environ, {
-        "GIT_URL": "https://github.com/awslabs/module-repo.git",
-        "GIT_BRANCH": "main",
-    }, clear=True):
+    with mock.patch.dict(
+        os.environ,
+        {
+            "GIT_URL": "https://github.com/awslabs/module-repo.git",
+            "GIT_BRANCH": "main",
+        },
+        clear=True,
+    ):
         module = ModuleManifest(**module_yaml)
         assert module.path == "git::https://github.com/awslabs/module-repo.git//modules/module-name/?ref=main"

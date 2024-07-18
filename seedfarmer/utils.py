@@ -203,7 +203,7 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
         matches = re.findall(pattern, value)
         for match in matches:
             try:
-                return value.replace("${" + match + "}", os.environ[match.strip()])
+                value = value.replace("${" + match + "}", os.environ[match.strip()])
             except KeyError:
                 raise seedfarmer.errors.InvalidManifestError(
                     f"The environment variable ({match.strip()}) is not available"

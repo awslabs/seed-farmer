@@ -583,3 +583,29 @@ parameters:
     ):
         module = ModuleManifest(**module_yaml)
         assert module.path == "git::https://github.com/awslabs/module-repo.git//modules/module-name/?ref=main"
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_env_var_resolution_in_path_error():
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: "git::${GIT_URL}//modules/module-name/?ref=${GIT_BRANCH}"
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value: value1
+"""
+    )
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            "GIT_BRANCH": "main",
+        },
+        clear=True,
+    ):
+        with pytest.raises(InvalidManifestError, match="The environment variable is not available: 'GIT_URL'"):
+            ModuleManifest(**module_yaml)

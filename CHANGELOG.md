@@ -3,7 +3,6 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
-
 ## Unreleased
 
 ### New
@@ -11,6 +10,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v4.0.4 (2024-07-19)
+
+### New
+
+### Changes
+
+### Fixes
+
+- value replacement from environment variables was only working for the first value
 
 
 ## v4.0.3 (2024-07-11)

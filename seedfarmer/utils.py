@@ -200,15 +200,14 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
     pattern = r"\${(.*?)}"
 
     def replace_str(value: str) -> str:
-        matches = re.findall(pattern, value)
-        for match in matches:
-            try:
-                return value.replace("${" + match + "}", os.environ[match.strip()])
-            except KeyError:
-                raise seedfarmer.errors.InvalidManifestError(
-                    f"The environment variable ({match.strip()}) is not available"
-                )
-        return value
+        try:
+            return re.sub(
+                pattern=pattern,
+                repl=lambda m: os.environ[m.group(1).strip()],
+                string=value,
+            )
+        except KeyError as e:
+            raise seedfarmer.errors.InvalidManifestError(f"The environment variable is not available: {e}")
 
     def recurse_list(working_list: List[Any]) -> List[Any]:
         for key, value in enumerate(working_list):

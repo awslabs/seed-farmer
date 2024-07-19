@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+- value replacement from environment variables was only working for the first value
+
 
 ## v4.0.3 (2024-07-11)
 

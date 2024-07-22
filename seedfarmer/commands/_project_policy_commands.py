@@ -21,4 +21,4 @@ from seedfarmer import CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH
 
 def get_default_project_policy() -> None:
     with open(os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH), "rb") as f:
-        shutil.copyfileobj(f, sys.stdout.buffer)  # type: ignore[misc]
+        shutil.copyfileobj(f, sys.stdout.buffer)

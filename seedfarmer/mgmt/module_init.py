@@ -25,7 +25,11 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def create_module_dir(
-    module_name: str, group_name: Optional[str], module_type: Optional[str], template_url: Optional[str]
+    module_name: str,
+    group_name: Optional[str],
+    module_type: Optional[str],
+    template_url: Optional[str],
+    template_branch: Optional[str] = "main",
 ) -> None:
     """Initializes a directory for a new module.
 
@@ -34,18 +38,21 @@ def create_module_dir(
     Parameters
     ----------
     group_name : Optional[str],
-        Nmae of the group where the module will reside. If group is a nested dir, use `/` as a delimiter
+        Name of the group where the module will reside. If group is a nested dir, use `/` as a delimiter
     module_name : str
         Name of the module. The initialization will include project files pulled from the template_url
     module_type: Optional[str]
         They type of code the module deploys with, adding more boilerplate code
         -- only cdkv2 is supported here
     template_url : Optional[List[str]]
-        A URL, for example a Github repo, that is or contains templating for the initialization
+        A URL, for example a Github repo, that is or contains the template for the for the initialization
+    template_branch : Optional[str]
+        The Branch on the template repository. If not specified, the default template branch is `main`
     """
     module_root = os.path.join(config.OPS_ROOT, "modules")
     module_path = os.path.join(module_root, module_name)
     output_dir = module_root
+    checkout_branch = template_branch
 
     if group_name:
         module_path = os.path.join(module_root, group_name, module_name)
@@ -71,7 +78,7 @@ def create_module_dir(
     )
 
 
-def create_project(template_url: Optional[str]) -> None:
+def create_project(template_url: Optional[str], template_branch: Optional[str] = "main") -> None:
     """Initializes a new project directory.
 
     Creates a new directory that contains files that will aid in setting up a development environment
@@ -80,11 +87,16 @@ def create_project(template_url: Optional[str]) -> None:
     ----------
     project_name : str
         Name of the project. The initialization will include project files pulled from the template_url
+        using the template_branch as reference
     template_url : Optional[List[str]]
-        A URL, for example a Github repo, that is or contains templating for the initialization
+        A URL, for example a Github repo, that is or contains the template for the initialization
+    template_branch : Optional[str]
+        The Branch on the template repository. If not specified, the default template branch is `main`
     """
 
-    checkout_branch = "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else None
+    checkout_branch = (
+        "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else template_branch
+    )
     _logger.info(" New project will be created in the following dir: %s", os.path.join(config.OPS_ROOT, config.PROJECT))
     cookiecutter(
         template=template_url,

@@ -19,9 +19,14 @@ from typing import Any, Dict, Optional, Tuple, cast
 import boto3
 import botocore.exceptions
 from boto3 import Session
+from botocore.credentials import Credentials
 
 import seedfarmer
 import seedfarmer.errors
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
+
+
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -129,3 +134,19 @@ def get_sts_identity_info(session: Optional[Session] = None, profile: Optional[s
     return cast(
         Tuple[str, str, str], (sts_info.get("Account"), sts_info.get("Arn"), str(sts_info.get("Arn")).split(":")[1])
     )
+    
+    
+def create_signed_request(endpoint:str,
+                          session: Session,
+                          credentials: Credentials,
+                          service: str = "s3",
+                          region: str = None, 
+                          method: Optional[str]='GET',
+                          params: Optional[Dict[str,Any]]=None) -> AWSRequest:
+    region = get_region(session) if not region else region
+    auth = SigV4Auth(credentials, service, region)
+    request = AWSRequest(method=method, url=endpoint, data=None, headers=None)
+    if params:
+        request.params = params
+    auth.add_auth(request)
+    return request

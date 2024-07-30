@@ -16,6 +16,7 @@ class ModuleDeployObject(CamelModel):
     module_role_name: Optional[str] = None
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
+    npm_mirror_secret: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
     seedfarmer_bucket: Optional[str] = None
@@ -52,12 +53,16 @@ class ModuleDeployObject(CamelModel):
             account_alias=_module.target_account, region=_module.target_region
         )
 
+        npm_mirror_secret = self.deployment_manifest.get_region_mirror_secret(
+            account_alias=_module.target_account, region=_module.target_region, mirror_type="npm"
+        )
+
         pypi_mirror = self.deployment_manifest.get_region_pypi_mirror(
             account_alias=_module.target_account, region=_module.target_region
         )
 
-        pypi_mirror_secret = self.deployment_manifest.get_region_pypi_mirror_secret(
-            account_alias=_module.target_account, region=_module.target_region
+        pypi_mirror_secret = self.deployment_manifest.get_region_mirror_secret(
+            account_alias=_module.target_account, region=_module.target_region, mirror_type="pypi"
         )
 
         sf_bucket = self.deployment_manifest.get_region_seedfarmer_bucket(
@@ -68,6 +73,7 @@ class ModuleDeployObject(CamelModel):
         self.codebuild_image = codebuild_image if codebuild_image is not None else None
         self.docker_credentials_secret = dcs if dcs else None
         self.npm_mirror = npm_mirror if npm_mirror is not None else None
+        self.npm_mirror_secret = npm_mirror_secret if npm_mirror_secret is not None else None
         self.pypi_mirror = pypi_mirror if pypi_mirror is not None else None
         self.pypi_mirror_secret = pypi_mirror_secret if pypi_mirror_secret is not None else None
         self.seedfarmer_bucket = sf_bucket if sf_bucket is not None else None

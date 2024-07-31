@@ -139,7 +139,7 @@ def create_signed_request(
     session: Session,
     credentials: Credentials,
     service: str = "s3",
-    region: str = None,
+    region: Optional[str] = None,
     method: Optional[str] = "GET",
     params: Optional[Dict[str, Any]] = None,
 ) -> AWSRequest:

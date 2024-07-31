@@ -4,15 +4,15 @@
 #
 #    pip-compile --constraint=requirements.txt --output-file=requirements-dev.txt requirements-dev.in
 #
-awscli==1.33.27
+awscli==1.33.31
     # via -r requirements-dev.in
 backports-tarfile==1.2.0
     # via jaraco-context
-boto3==1.34.145
+boto3==1.34.149
     # via
     #   -c requirements.txt
     #   moto
-botocore==1.34.145
+botocore==1.34.149
     # via
     #   -c requirements.txt
     #   awscli

@@ -30,74 +30,80 @@ _logger: logging.Logger = logging.getLogger(__name__)
 parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
-def _process_tar(archive_name: str, response: Response, extracted_dir: str) -> str:
-    pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
-    with open(archive_name, "wb") as z_file:
-        z_file.write(response.content)
-    tar = tarfile.open(archive_name, "r:gz")
-    embedded_dir = os.path.commonprefix(tar.getnames())
-    tar.extractall(parent_dir)
-    tar.close()
-    os.rename(os.path.join(parent_dir, embedded_dir), os.path.join(parent_dir, extracted_dir))
-    os.remove(archive_name)
-    return os.path.join(parent_dir, extracted_dir)
+def _download_archive(archive_url: str) -> Response:
+    # TODO: add a check here for an S3 HTTPS DNS, and if so, add the SigV4 Auth to the url
+
+    if "s3.amazonaws" in archive_url:
+        pass
+        ## TODO - add Sigv4Auth here
+        # session = SessionManager().get_or_create().toolchain_session
+        # credentials = SessionManager().get_or_create().get_toolchain_credentials()
+        # # GOTTA use the toolchain role - so get the toolchain session
+        # active_url = create_signed_request(endpoint=active_url, session=session, credentials=credentials)
+        # z = requests.get(active_url.url, headers=active_url.headers,allow_redirects=True)
+    else:
+        resp = requests.get(archive_url, allow_redirects=True)
+
+    return resp
 
 
-def _process_zip(archive_name: str, response: Response, extracted_dir: str) -> str:
+def _extract_archive(archive_name: str) -> str:
+    if archive_name.endswith(".tar.gz"):
+        with tarfile.open(archive_name, "r:gz") as tar_file:
+            embedded_dir = os.path.commonprefix(tar_file.getnames())
+            tar_file.extractall(parent_dir)
+    else:
+        with ZipFile(archive_name, "r") as zip_file:
+            embedded_dir = zip_file.namelist()[0]
+            zip_file.extractall(parent_dir)
+
+    return embedded_dir
+
+
+def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
     pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
-    with open(archive_name, "wb") as z_file:
-        z_file.write(response.content)
-    with ZipFile(archive_name, "r") as zp:
-        embedded_dir = zp.namelist()[0]
-        zp.extractall(parent_dir)
+
+    with open(archive_name, "wb") as archive_file:
+        archive_file.write(response.content)
+
+    embedded_dir = _extract_archive(archive_name)
+
     os.rename(os.path.join(parent_dir, embedded_dir), os.path.join(parent_dir, extracted_dir))
     os.remove(archive_name)
+
     return os.path.join(parent_dir, extracted_dir)
 
 
 def _get_release_with_link(archive_url: str) -> Tuple[str, str]:
-    r = urlparse(archive_url)
-    query_params = parse_qs(r.query)
-    p = r.path
+    parsed_url = urlparse(archive_url)
 
-    if not r.scheme == "https":
+    if not parsed_url.scheme == "https":
         raise InvalidConfigurationError("This url must be via https: %s", archive_url)
 
+    query_params = parse_qs(parsed_url.query)
     if not query_params.get("module"):
         raise InvalidConfigurationError("module query param required : %s", archive_url)
-    module = query_params["module"][0]
 
-    archive_name = p.replace("/", "_")
-    extracted_dir = p.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
+    module = query_params["module"][0]
+    archive_name = parsed_url.path.replace("/", "_")
+    extracted_dir = parsed_url.path.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
 
     if os.path.isdir(os.path.join(parent_dir, extracted_dir)):
         return os.path.join(parent_dir, extracted_dir), module
     else:
-        # TODO: add a check here for an S3 HTTPS DNS, and if so, add the SigV4 Auth to the url
-        active_url = r._replace(fragment="").geturl()
-        if "s3.amazonaws" in active_url:
-            pass
-            ## TODO - add Sigv4Auth here
-            # session = SessionManager().get_or_create().toolchain_session
-            # credentials = SessionManager().get_or_create().get_toolchain_credentials()
-            # # GOTTA use the toolchain role - so get the toolchain session
-            # active_url = create_signed_request(endpoint=active_url, session=session, credentials=credentials)
-            # z = requests.get(active_url.url, headers=active_url.headers,allow_redirects=True)
-        else:
-            z = requests.get(active_url, allow_redirects=True)
-        if z.status_code == 200:
-            return (
-                (_process_tar(archive_name, z, extracted_dir), module)
-                if archive_name.endswith(".tar.gz")
-                else (_process_zip(archive_name, z, extracted_dir), module)
-            )
-        elif z.status_code in [400, 403, 401, 302, 404]:
+        resp = _download_archive(parsed_url._replace(fragment="").geturl())
+
+        if resp.status_code == 200:
+            return _process_archive(archive_name, resp, extracted_dir), module
+
+        elif resp.status_code in [400, 403, 401, 302, 404]:
             _logger.error(f"Cannot find that archive at {archive_url}")
             raise InvalidConfigurationError("Cannot find archive with the url: %s", archive_url)
+
         else:
-            _logger.error(f"Error fetching archive at {archive_url} with status code {z.status_code}")
+            _logger.error(f"Error fetching archive at {archive_url} with status code {resp.status_code}")
             raise InvalidConfigurationError(
-                "Error fetching archive with the url (error code %s): %s", str(z.status_code), archive_url
+                "Error fetching archive with the url (error code %s): %s", str(resp.status_code), archive_url
             )
 
 

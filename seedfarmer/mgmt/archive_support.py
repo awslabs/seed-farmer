@@ -59,11 +59,14 @@ def _get_release_with_link(archive_url: str) -> Tuple[str, str]:
     r = urlparse(archive_url)
     query_params = parse_qs(r.query)
     p = r.path
+
     if not r.scheme == "https":
         raise InvalidConfigurationError("This url must be via https: %s", archive_url)
+
     if not query_params.get("module"):
         raise InvalidConfigurationError("module query param required : %s", archive_url)
-    module = query_params.get("module")[0]
+    module = query_params["module"][0]
+
     archive_name = p.replace("/", "_")
     extracted_dir = p.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
 

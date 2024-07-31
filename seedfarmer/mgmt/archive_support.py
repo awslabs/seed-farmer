@@ -91,9 +91,14 @@ def _get_release_with_link(archive_url: str) -> Tuple[str, str]:
                 if archive_name.endswith(".tar.gz")
                 else (_process_zip(archive_name, z, extracted_dir), module)
             )
-        if z.status_code in [400, 403, 401, 302, 404]:
+        elif z.status_code in [400, 403, 401, 302, 404]:
             _logger.error(f"Cannot find that archive at {archive_url}")
             raise InvalidConfigurationError("Cannot find archive with the url: %s", archive_url)
+        else:
+            _logger.error(f"Error fetching archive at {archive_url} with status code {z.status_code}")
+            raise InvalidConfigurationError(
+                "Error fetching archive with the url (error code %s): %s", str(z.status_code), archive_url
+            )
 
 
 def fetch_module_repo(release_path: str) -> Tuple[str, str]:

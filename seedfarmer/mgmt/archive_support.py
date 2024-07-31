@@ -16,19 +16,15 @@ import logging
 import os.path
 import pathlib
 import tarfile
-from typing import Tuple, Optional
-from urllib.parse import parse_qs
-from urllib.parse import urlparse
+from typing import Tuple
+from urllib.parse import parse_qs, urlparse
 from zipfile import ZipFile
-from seedfarmer.services.session_manager import SessionManager
 
 import requests
 from requests.models import Response
 
 from seedfarmer import config
 from seedfarmer.errors import InvalidConfigurationError
-from seedfarmer.services._service_utils import create_signed_request
-from boto3 import Session
 
 _logger: logging.Logger = logging.getLogger(__name__)
 parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
@@ -60,16 +56,16 @@ def _process_zip(archive_name: str, response: Response, extracted_dir: str) -> s
 
 
 def _get_release_with_link(archive_url: str) -> Tuple[str, str]:
-    r=urlparse(archive_url)
+    r = urlparse(archive_url)
     query_params = parse_qs(r.query)
     p = r.path
-    if not r.scheme=="https":
+    if not r.scheme == "https":
         raise InvalidConfigurationError("This url must be via https: %s", archive_url)
     if not query_params.get("module"):
         raise InvalidConfigurationError("module query param required : %s", archive_url)
     module = query_params.get("module")[0]
-    archive_name = p.replace("/","_")
-    extracted_dir = p.replace(".tar.gz", "").replace(".zip", "").replace("/","_")
+    archive_name = p.replace("/", "_")
+    extracted_dir = p.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
 
     if os.path.isdir(os.path.join(parent_dir, extracted_dir)):
         return os.path.join(parent_dir, extracted_dir), module
@@ -85,7 +81,7 @@ def _get_release_with_link(archive_url: str) -> Tuple[str, str]:
             # active_url = create_signed_request(endpoint=active_url, session=session, credentials=credentials)
             # z = requests.get(active_url.url, headers=active_url.headers,allow_redirects=True)
         else:
-            z = requests.get(active_url,allow_redirects=True)
+            z = requests.get(active_url, allow_redirects=True)
         if z.status_code == 200:
             return (
                 (_process_tar(archive_name, z, extracted_dir), module)

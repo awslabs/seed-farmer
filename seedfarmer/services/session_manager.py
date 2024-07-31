@@ -6,8 +6,8 @@ from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
-from botocore.credentials import Credentials
 from boto3 import Session
+from botocore.credentials import Credentials
 
 import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_sts_identity_info
@@ -124,7 +124,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             raise seedfarmer.errors.InvalidConfigurationError(
                 "The SessionManager object was never properly created...)"
             )
-        
+
         toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
         creds = Credentials(
             access_key=toolchain_role["Credentials"]["AccessKeyId"],

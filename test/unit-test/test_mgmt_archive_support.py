@@ -14,6 +14,7 @@
 
 import logging
 import os
+import shutil
 
 import pytest
 from moto import mock_aws
@@ -21,8 +22,6 @@ from moto import mock_aws
 import seedfarmer.mgmt.archive_support as archive
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
-import shutil
-
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -55,45 +54,51 @@ def session_manager(sts_client):
     )
 
 
-
-
-
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path(mocker):
     shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-    archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
+    archive_path_test = (
+        "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
+    )
 
     archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
     # test it again...we shouldn't be re-downloading
     archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path_zip(mocker):
     shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-    archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.zip?module=modules/dummy/blank"
+    archive_path_test = (
+        "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.zip?module=modules/dummy/blank"
+    )
     archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
     # test it again...we shouldn't be re-downloading
     archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
-
 
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path_missing_module(mocker):
     from seedfarmer.errors import InvalidConfigurationError
+
     shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz"
     with pytest.raises(InvalidConfigurationError):
         archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
-        
+
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path_missing_https(mocker):
     from seedfarmer.errors import InvalidConfigurationError
+
     shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-    archive_path_test = "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
+    archive_path_test = (
+        "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
+    )
     with pytest.raises(InvalidConfigurationError):
         archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
 
@@ -102,8 +107,10 @@ def test_fetch_module_repo_dns_path_missing_https(mocker):
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path_missing_archive(mocker):
     from seedfarmer.errors import InvalidConfigurationError
+
     shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-    archive_path_test = "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.1.tar.gz?module=modules/dummy/blank"
+    archive_path_test = (
+        "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.1.tar.gz?module=modules/dummy/blank"
+    )
     with pytest.raises(InvalidConfigurationError):
         archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
-        

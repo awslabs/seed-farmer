@@ -104,6 +104,11 @@ def _prebuilt_bundle_check(mdo: ModuleDeployObject) -> Optional[str]:
     else:
         return None
 
+def _get_codebuild_fleet_arn(deployment_manifest, region, account_id):
+    for tam in deployment_manifest.target_account_mappings:
+        if tam.codebuild_fleet:
+            return f"arn:aws:codebuild:{region}:{account_id}:fleet/{tam.codebuild_fleet}"
+    return None
 
 def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
@@ -173,6 +178,9 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     active_codebuild_image = (
         module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
     )
+
+    codebuild_fleet_arn = _get_codebuild_fleet_arn(mdo.deployment_manifest, region, account_id)
+
     npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
     pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
     try:
@@ -200,6 +208,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=mdo.module_role_name,
             codebuild_image=active_codebuild_image,
+            codebuild_fleet_arn=codebuild_fleet_arn,
             npm_mirror=npm_mirror,
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
@@ -280,6 +289,9 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     active_codebuild_image = (
         module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
     )
+
+    codebuild_fleet_arn = _get_codebuild_fleet_arn(mdo.deployment_manifest, region, account_id)
+
     npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
     pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
     module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
@@ -301,6 +313,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             codebuild_compute_type=module_manifest.deploy_spec.build_type,
             codebuild_role_name=mdo.module_role_name,
             codebuild_image=active_codebuild_image,
+            codebuild_fleet_arn=codebuild_fleet_arn,
             npm_mirror=npm_mirror,
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
@@ -342,6 +355,7 @@ def _execute_module_commands(
     extra_env_vars: Optional[Dict[str, Any]] = None,
     codebuild_compute_type: Optional[str] = None,
     codebuild_role_name: Optional[str] = None,
+    codebuild_fleet_arn: Optional[str] = None,
     codebuild_image: Optional[str] = None,
     npm_mirror: Optional[str] = None,
     pypi_mirror: Optional[str] = None,
@@ -372,6 +386,7 @@ def _execute_module_commands(
         extra_exported_env_vars=[metadata_env_variable],
         codebuild_role=codebuild_role_name,
         codebuild_image=codebuild_image,
+        codebuild_fleet_arn=codebuild_fleet_arn,
         npm_mirror=npm_mirror,
         pypi_mirror=pypi_mirror,
         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",

@@ -76,6 +76,7 @@ class TargetAccountMapping(CamelModel):
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
     codebuild_image: Optional[str] = None
+    codebuild_fleet: Optional[str] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None

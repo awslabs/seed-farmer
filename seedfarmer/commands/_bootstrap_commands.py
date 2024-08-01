@@ -15,6 +15,7 @@
 import json
 import logging
 import os
+import re
 import sys
 from typing import Any, Dict, List, Optional, Tuple, cast
 
@@ -95,6 +96,10 @@ def bootstrap_toolchain_account(
 ) -> Optional[Dict[Any, Any]]:
     if qualifier and not valid_qualifier(qualifier):
         raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
+
+    for arn in principal_arns:
+        if not re.match(r"arn:aws:(sts|iam)::(\d{12}|\*):.*$", arn):
+            raise seedfarmer.errors.InvalidConfigurationError(f"Trusted principal: {arn} is not a valid principal arn")
 
     role_stack_name = get_toolchain_role_name(project_name=project_name, qualifier=cast(str, qualifier))
     template = get_toolchain_template(

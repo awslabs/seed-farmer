@@ -190,6 +190,24 @@ def test_bootstrap_toolchain_account_synth_with_qualifier_fail(mocker, session):
 @pytest.mark.commands
 @pytest.mark.commands_bootstrap
 @pytest.mark.parametrize("session", [boto3.Session()])
+def test_bootstrap_toolchain_account_synth_with_invalid_principal(mocker, session):
+    mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+
+    with pytest.raises(seedfarmer.errors.InvalidConfigurationError):
+        bc.bootstrap_toolchain_account(
+            project_name="testing",
+            principal_arns=["arn:aws:iam::foobar:role/AdminRole"],
+            permissions_boundary_arn=None,
+            region_name="us-east-1",
+            qualifier="asdfghdd",
+            synthesize=True,
+            as_target=False,
+        )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+@pytest.mark.parametrize("session", [boto3.Session()])
 def test_bootstrap_toolchain_account_with_policies(mocker, session):
     mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
     mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")

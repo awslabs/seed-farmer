@@ -12,7 +12,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import json
 import logging
 import os.path
 import pathlib
@@ -28,17 +27,15 @@ from requests.models import Response
 
 from seedfarmer import config
 from seedfarmer.errors import InvalidConfigurationError
+from seedfarmer.services._secrets_manager import get_secrets_manager_value
 
 _logger: logging.Logger = logging.getLogger(__name__)
 parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
-def _download_archive(archive_url: str, secret_arn: Optional[str]) -> Response:
-    if secret_arn:
-        region = "us-west-2"  # TODO: get toolchain region
-        sm_client = boto3.client("secretsmanager", region)
-
-        credentials = json.loads(sm_client.get_secret_value(SecretId=secret_arn)["SecretString"])
+def _download_archive(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> Response:
+    if secret_name:
+        credentials = get_secrets_manager_value("secretsmanager", session)
 
     # TODO: add a check here for an S3 HTTPS DNS, and if so, add the SigV4 Auth to the url
 
@@ -88,7 +85,7 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
     return os.path.join(parent_dir, extracted_dir)
 
 
-def _get_release_with_link(archive_url: str, secret_arn: Optional[str]) -> str:
+def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> str:
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":
@@ -100,7 +97,11 @@ def _get_release_with_link(archive_url: str, secret_arn: Optional[str]) -> str:
     if os.path.isdir(os.path.join(parent_dir, extracted_dir)):
         return os.path.join(parent_dir, extracted_dir)
     else:
-        resp = _download_archive(parsed_url._replace(fragment="").geturl(), secret_arn)
+        resp = _download_archive(
+            archive_url=parsed_url._replace(fragment="").geturl(),
+            session=session,
+            secret_name=secret_name,
+        )
 
         if resp.status_code == 200:
             return _process_archive(archive_name, resp, extracted_dir)
@@ -116,7 +117,7 @@ def _get_release_with_link(archive_url: str, secret_arn: Optional[str]) -> str:
             )
 
 
-def fetch_module_repo(release_path: str, secret_arn: Optional[str] = None) -> str:
+def fetch_module_repo(release_path: str, session: boto3.Session, secret_name: Optional[str] = None) -> str:
     """
     fetch_module_repo _summary_
 
@@ -131,4 +132,4 @@ def fetch_module_repo(release_path: str, secret_arn: Optional[str] = None) -> st
     str:
         the full path of the seedfarmer.archive where the repo was cloned to
     """
-    return _get_release_with_link(release_path.replace("archive::", ""), secret_arn)
+    return _get_release_with_link(release_path.replace("archive::", ""), session=session, secret_name=secret_name)

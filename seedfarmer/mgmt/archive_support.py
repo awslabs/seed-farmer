@@ -16,7 +16,7 @@ import logging
 import os.path
 import pathlib
 import tarfile
-from typing import Optional
+from typing import Optional, Tuple
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
@@ -71,7 +71,7 @@ def _extract_archive(archive_name: str) -> str:
     return embedded_dir
 
 
-def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
+def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> Tuple[str, str]:
     pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
 
     with open(archive_name, "wb") as archive_file:
@@ -82,10 +82,10 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
     os.rename(os.path.join(parent_dir, embedded_dir), os.path.join(parent_dir, extracted_dir))
     os.remove(archive_name)
 
-    return os.path.join(parent_dir, extracted_dir)
+    return parent_dir, extracted_dir
 
 
-def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> str:
+def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> Tuple[str, str]:
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":
@@ -95,7 +95,7 @@ def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name
     extracted_dir = parsed_url.path.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
 
     if os.path.isdir(os.path.join(parent_dir, extracted_dir)):
-        return os.path.join(parent_dir, extracted_dir)
+        return parent_dir, extracted_dir
     else:
         resp = _download_archive(
             archive_url=parsed_url._replace(fragment="").geturl(),
@@ -117,19 +117,32 @@ def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name
             )
 
 
-def fetch_module_repo(release_path: str, session: boto3.Session, secret_name: Optional[str] = None) -> str:
+def fetch_archived_module(
+    release_path: str, session: boto3.Session, secret_name: Optional[str] = None
+) -> Tuple[str, str]:
     """
-    fetch_module_repo _summary_
+    Fetch an archived module from a release path. This can be a private HTTPS link.
+
+    This function will clone the repo to the seedfarmer.archive directory
+    and return the path to the cloned repo and the relative path to the module code.
 
     Parameters
     ----------
-    release_path : str
+    release_path: str
         The path passed in to fetch. If using a ProServe provided repo, this should look like
         archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.10.0.zip?module=modules/dummy/dummy
+    session: boto3.Session
+        The boto3 session to use to fetch the module repo.
+        Only used if the ``release_path`` is a private HTTPS link.
+    secret_name: str | None
+        The name of the secret to use to fetch the module repo.
+        Only used if the ``release_path`` is a private HTTPS link.
 
     Returns
     -------
-    str:
-        the full path of the seedfarmer.archive where the repo was cloned to
+    Tuple[str,str]
+        Returns a tuple that contains (in order):
+            - the full path of the seedfarmer.archive where the repo was cloned to
+            - the relative path to seedfarmer.gitmodules of the module code
     """
     return _get_release_with_link(release_path.replace("archive::", ""), session=session, secret_name=secret_name)

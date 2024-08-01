@@ -18,7 +18,6 @@ class ModuleDeployObject(CamelModel):
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
-    archive_secret: Optional[str] = None
     seedfarmer_bucket: Optional[str] = None
 
     def _render_permissions_boundary_arn(

@@ -20,11 +20,13 @@ import os
 import threading
 from typing import Any, Dict, List, Optional, cast
 
+import boto3
 import yaml
 
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
 import seedfarmer.messages as messages
+import seedfarmer.mgmt.archive_support as sf_archive
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
@@ -56,21 +58,39 @@ from seedfarmer.services.session_manager import SessionManager
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _process_module_path(module: ModuleManifest) -> None:
+def _process_git_module_path(module: ModuleManifest) -> None:
     working_dir, module_directory, commit_hash = sf_git.clone_module_repo(module.path)
     module.set_local_path(os.path.join(working_dir, module_directory))
     module.commit_hash = commit_hash if commit_hash else None
 
 
-def _process_data_files(data_files: List[DataFile], module_name: str, group_name: str) -> None:
+def _process_archive_path(module: ModuleManifest, session: boto3.Session, secret_name: Optional[str] = None) -> None:
+    working_dir, module_directory = sf_archive.fetch_archived_module(module.path, session, secret_name)
+    module.set_local_path(os.path.join(working_dir, module_directory))
+
+
+def _process_data_files(
+    data_files: List[DataFile],
+    module_name: str,
+    group_name: str,
+    session: boto3.Session,
+    secret_name: Optional[str] = None,
+) -> None:
     for data_file in data_files:
         if data_file.file_path.startswith("git::"):
             working_dir, module_directory, commit_hash = sf_git.clone_module_repo(data_file.file_path)
             data_file.set_local_file_path(os.path.join(working_dir, module_directory))
             data_file.set_bundle_path(module_directory)
             data_file.commit_hash = commit_hash if commit_hash else None
+
+        elif data_file.file_path.startswith("archive::"):
+            working_dir, module_directory = sf_archive.fetch_archived_module(data_file.file_path, session, secret_name)
+            data_file.set_local_file_path(os.path.join(working_dir, module_directory))
+            data_file.set_bundle_path(module_directory)
+
         else:
             data_file.set_local_file_path(os.path.join(config.OPS_ROOT, data_file.file_path))
+
     missing_files = du.validate_data_files(data_files)
     if len(missing_files) > 0:
         print(f"The following data files cannot be fetched for module {group_name}-{module_name}:")
@@ -338,6 +358,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
 
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
+    session: boto3.Session,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
@@ -397,14 +418,24 @@ def destroy_deployment(
 
                     mdos = []
                     for _module in _group.modules:
-                        _process_module_path(module=_module) if _module.path.startswith("git::") else None
-                        (
-                            _process_data_files(
-                                data_files=_module.data_files, module_name=_module.name, group_name=_group.name
+                        if _module.path.startswith("git::"):
+                            _process_git_module_path(module=_module)
+                        elif _module.path.startswith("archive::"):
+                            _process_archive_path(
+                                module=_module,
+                                session=session,
+                                secret_name=destroy_manifest.archive_secret,
                             )
-                            if _module.data_files is not None
-                            else None
-                        )
+
+                        if _module.data_files is not None:
+                            _process_data_files(
+                                data_files=_module.data_files,
+                                module_name=_module.name,
+                                group_name=_group.name,
+                                session=session,
+                                secret_name=destroy_manifest.archive_secret,
+                            )
+
                         if _module and _module.deploy_spec:
                             mdo = ModuleDeployObject(
                                 deployment_manifest=destroy_manifest, group_name=_group.name, module_name=_module.name
@@ -441,6 +472,7 @@ def deploy_deployment(
     deployment_manifest: DeploymentManifest,
     module_info_index: du.ModuleInfoIndex,
     module_upstream_dep: Dict[str, List[str]],
+    session: boto3.Session,
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
@@ -493,13 +525,23 @@ def deploy_deployment(
             if not module.path:
                 raise seedfarmer.errors.InvalidManifestError("Unable to parse module manifest, `path` not specified")
 
-            _process_module_path(module=module) if module.path.startswith("git::") else None
+            if module.path.startswith("git::"):
+                _process_git_module_path(module=module)
+            elif module.path.startswith("archive::"):
+                _process_archive_path(
+                    module=module,
+                    session=session,
+                    secret_name=deployment_manifest.archive_secret,
+                )
 
-            (
-                _process_data_files(data_files=module.data_files, module_name=module.name, group_name=group.name)
-                if module.data_files is not None
-                else None
-            )
+            if module.data_files is not None:
+                _process_data_files(
+                    data_files=module.data_files,
+                    module_name=module.name,
+                    group_name=group.name,
+                    session=session,
+                    secret_name=deployment_manifest.archive_secret,
+                )
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:
@@ -705,6 +747,7 @@ def apply(
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,
+        session=session_manager.toolchain_session,
         remove_deploy_manifest=False,
         dryrun=dryrun,
         show_manifest=show_manifest,
@@ -713,6 +756,7 @@ def apply(
         deployment_manifest=deployment_manifest,
         module_info_index=module_info_index,
         module_upstream_dep=module_depends_on_dict,
+        session=session_manager.toolchain_session,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )
@@ -788,6 +832,7 @@ def destroy(
         destroy_manifest.validate_and_set_module_defaults()
         destroy_deployment(
             destroy_manifest,
+            session=session_manager.toolchain_session,
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,

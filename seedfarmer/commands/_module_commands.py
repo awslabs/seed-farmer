@@ -31,7 +31,7 @@ import seedfarmer.mgmt.bundle_support as bs
 from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
-from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
+from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import generate_session_hash
@@ -104,11 +104,13 @@ def _prebuilt_bundle_check(mdo: ModuleDeployObject) -> Optional[str]:
     else:
         return None
 
-def _get_codebuild_fleet_arn(deployment_manifest, region, account_id):
+
+def _get_codebuild_fleet_arn(deployment_manifest: DeploymentManifest, region: str, account_id: str) -> Optional[str]:
     for tam in deployment_manifest.target_account_mappings:
         if tam.codebuild_fleet:
             return f"arn:aws:codebuild:{region}:{account_id}:fleet/{tam.codebuild_fleet}"
     return None
+
 
 def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))

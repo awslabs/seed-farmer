@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 - Added `-b/--template-branch` parameter to `seedfarmer init project` and `seedfarmer init module` so it permits to use multiple branches from a single repository.
+- Added codebuild fleet support so jobs can run on reserved fleet
 
 ### Changes
 

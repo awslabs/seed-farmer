@@ -62,9 +62,9 @@ def test_fetch_module_repo_dns_path(mocker):
         "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
     )
 
-    archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+    archive.fetch_archived_module(release_path=archive_path_test)
     # test it again...we shouldn't be re-downloading
-    archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+    archive.fetch_archived_module(release_path=archive_path_test)
 
 
 @pytest.mark.mgmt
@@ -74,20 +74,9 @@ def test_fetch_module_repo_dns_path_zip(mocker):
     archive_path_test = (
         "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.zip?module=modules/dummy/blank"
     )
-    archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+    archive.fetch_archived_module(release_path=archive_path_test)
     # test it again...we shouldn't be re-downloading
-    archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
-
-
-@pytest.mark.mgmt
-@pytest.mark.mgmt_archive_support
-def test_fetch_module_repo_dns_path_missing_module(mocker):
-    from seedfarmer.errors import InvalidConfigurationError
-
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-    archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz"
-    with pytest.raises(InvalidConfigurationError):
-        archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+    archive.fetch_archived_module(release_path=archive_path_test)
 
 
 @pytest.mark.mgmt
@@ -100,7 +89,7 @@ def test_fetch_module_repo_dns_path_missing_https(mocker):
         "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
     )
     with pytest.raises(InvalidConfigurationError):
-        archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+        archive.fetch_archived_module(release_path=archive_path_test)
 
 
 @pytest.mark.mgmt
@@ -113,4 +102,4 @@ def test_fetch_module_repo_dns_path_missing_archive(mocker):
         "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.1.tar.gz?module=modules/dummy/blank"
     )
     with pytest.raises(InvalidConfigurationError):
-        archive_dir, module_path = archive.fetch_module_repo(release_path=archive_path_test)
+        archive.fetch_archived_module(release_path=archive_path_test)

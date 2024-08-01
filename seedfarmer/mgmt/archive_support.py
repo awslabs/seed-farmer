@@ -33,9 +33,8 @@ _logger: logging.Logger = logging.getLogger(__name__)
 parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
-def _download_archive(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> Response:
-    if secret_name:
-        credentials = get_secrets_manager_value("secretsmanager", session)
+def _download_archive(archive_url: str, session: Optional[boto3.Session], secret_name: Optional[str]) -> Response:
+    credentials = get_secrets_manager_value("secretsmanager", session) if secret_name else None
 
     # TODO: add a check here for an S3 HTTPS DNS, and if so, add the SigV4 Auth to the url
 
@@ -48,12 +47,11 @@ def _download_archive(archive_url: str, session: boto3.Session, secret_name: Opt
         # active_url = create_signed_request(endpoint=active_url, session=session, credentials=credentials)
         # z = requests.get(active_url.url, headers=active_url.headers,allow_redirects=True)
     else:
-        if credentials:
-            auth = HTTPBasicAuth(credentials["user"], credentials["password"])
-        else:
-            auth = None
-
-        resp = requests.get(archive_url, auth=auth, allow_redirects=True)
+        resp = requests.get(
+            archive_url,
+            allow_redirects=True,
+            auth=HTTPBasicAuth(credentials["user"], credentials["password"]) if credentials else None,
+        )
 
     return resp
 
@@ -85,7 +83,7 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
     return parent_dir, extracted_dir
 
 
-def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name: Optional[str]) -> Tuple[str, str]:
+def _get_release_with_link(archive_url: str, session: Optional[boto3.Session], secret_name: Optional[str]) -> Tuple[str, str]:
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":
@@ -118,7 +116,7 @@ def _get_release_with_link(archive_url: str, session: boto3.Session, secret_name
 
 
 def fetch_archived_module(
-    release_path: str, session: boto3.Session, secret_name: Optional[str] = None
+    release_path: str, session: Optional[boto3.Session] = None, secret_name: Optional[str] = None
 ) -> Tuple[str, str]:
     """
     Fetch an archived module from a release path. This can be a private HTTPS link.
@@ -131,7 +129,7 @@ def fetch_archived_module(
     release_path: str
         The path passed in to fetch. If using a ProServe provided repo, this should look like
         archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.10.0.zip?module=modules/dummy/dummy
-    session: boto3.Session
+    session: boto3.Session | None
         The boto3 session to use to fetch the module repo.
         Only used if the ``release_path`` is a private HTTPS link.
     secret_name: str | None

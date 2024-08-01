@@ -7,7 +7,45 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 
+- Added `-b/--template-branch` parameter to `seedfarmer init project` and `seedfarmer init module` so it permits to use multiple branches from a single repository.
+
 ### Changes
+
+### Fixes
+
+
+## v4.0.4 (2024-07-19)
+
+### New
+
+### Changes
+
+### Fixes
+
+- value replacement from environment variables was only working for the first value
+
+
+## v4.0.3 (2024-07-11)
+
+### New
+
+### Changes
+
+### Fixes
+- when a bundle is available on destroy, ignore the path entirely
+
+## v4.0.2 (2024-07-08)
+
+### New
+
+### Changes
+- adding support for module manifest schema generation
+- updates to dependency libraries (from dependabot):
+  - certifi~=2024.7.4
+  - boto3~=1.34.140
+  - botocore~=1.34.140
+  - pydantic~=2.8.2
+  - pydantic-core~=2.20.1
 
 ### Fixes
 

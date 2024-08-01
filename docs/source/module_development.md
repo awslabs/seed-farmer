@@ -21,14 +21,14 @@ The [CLI](cli_commands.md) provides an `init` method to create your skeleton mod
 > seedfarmer init module -g mygroup -m mymodule
 > cd modules/mygroup/mymodule
 ```
-The strucuture for your module is in place.  Edit the `deploysepc.yaml` as needed.  We provide a `modulestack.template` file that can be edited for additional permissions, and that file needs to be renamed to `modulestack.yaml` in order to be used.  
+The strucuture for your module is in place.  Edit the `deployspec.yaml` as needed.  We provide a `modulestack.template` file that can be edited for additional permissions, and that file needs to be renamed to `modulestack.yaml` in order to be used.  
 
 For a deep-dive on the module creation command, see [HERE](indepth_module_creation).
 
 (deployspec)=
 ## Deployspec
 
-Each Module must contain a `deployspec.yaml` file. This file defines deployment instructions read by seedfarmer. These instructions include the external module metadata required, libraries/utilities to be installed, and deployment commands. The deployspec.yaml is very similar to the AWS CodeBuild [buildspec.yaml](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html) implementing the phases structure and adding a module_dependencies section for declaring other modules whose metadata should be made to the module on deployment.
+Each Module must contain a `deployspec.yaml` file. This file defines deployment instructions read by seedfarmer. These instructions include the external module metadata required, libraries/utilities to be installed, and deployment commands. The deployspec.yaml is very similar to the AWS CodeBuild [buildspec.yaml](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html) implementing the phases structure and adding a module_dependencies section for declaring other modules whose metadata should be made available to the module on deployment.
 
 ### Structure
 Below is a sample manifest that just 'echo' data to the environment runtime:
@@ -84,7 +84,7 @@ The currently supported values are:
 - BUILD_GENERAL1_2XLARGE
 ```
 
-TThe parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specif modules (ex ADDF).  This parameter defaults to `false` implying the prefix of the project to the pertient environment parameters in the codeubuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
+The parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specific modules (ex ADDF).  This parameter defaults to `false` implying the prefix of the project to the pertient environment parameters in the codebuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
 
 [This Pull Request goes into detail ...please read](https://github.com/awslabs/seed-farmer/pull/249).  Here is an exerpt:
 
@@ -234,7 +234,7 @@ deploy:
 (module_readme)=
 ## Module ReadMe
 
-As part of the process to promote reusability and sharabiltiy of the modules, each module is required to have a README.md that talks directly to end users and describes:
+As part of the process to promote reusability and sharability of the modules, each module is required to have a README.md that talks directly to end users and describes:
 
 - the description of the module
 - the inputs - parameter names
@@ -294,9 +294,9 @@ This module creates an OpenSearch cluster
 (modulestack)=
 ## ModuleStack
 
-The modulestack (`modulestack.yaml`) is an optional AWS Cloudformation file that contains the granular permissions that AWS Codeseeder will need to deploy your module.  It is recommended to use a least-privelege policy to promote security best practices.
+The modulestack (`modulestack.yaml`) is an optional AWS Cloudformation file that contains the granular permissions that AWS Codeseeder will need to deploy your module.  It is recommended to use a least-privilege policy to promote security best practices.
 
-By default, the CLI uses AWS CDKv2, which assumes a role that has the permissions to deploy via CloudFormation and is the recommended practice.  You have the ability to use the `modulestack.yaml` to give additial permissions to `AWS CodeSeeder` on your behalf.  
+By default, the CLI uses AWS CDKv2, which assumes a role that has the permissions to deploy via CloudFormation and is the recommended practice.  You have the ability to use the `modulestack.yaml` to give additional permissions to `AWS CodeSeeder` on your behalf.  
 
 Typical cases when you would use a `modulestack.yaml`:
 - any time you are invoking AWS CLI in the deployspec (not in the scope of the CDK) - for example: copying files to S3
@@ -307,7 +307,7 @@ Typical cases when you would use a `modulestack.yaml`:
 
 Below is a sample template that is provoded by the [CLI](cli_commands.md).  The `Parameters` section is populated with the input provided from the CLI when deploying.  
 
-*** It DOES have a policy definiton that is wide open - you SHOULD CHANGE THIS - it is only a template!
+*** It DOES have a policy definition that is wide-open - you SHOULD CHANGE THIS - it is only a template!
 
 ```yaml
 AWSTemplateFormatVersion: 2010-09-09
@@ -338,7 +338,7 @@ Resources:
       Roles: [!Ref RoleName]
 ```
 ### Parameters
-As mentioned above, we strongly recommend a least-priviledge policy to promote security best practices. The `modulestack.yaml` automatically has access to the parameters that were defined in your manifest file. Those passed parameters can help make your policy more explicit by using parameter names to limit permissions to a resource.
+As mentioned above, we strongly recommend a least-privilege policy to promote security best practices. The `modulestack.yaml` automatically has access to the parameters that were defined in your manifest file. Those passed parameters can help make your policy more explicit by using parameter names to limit permissions to a resource.
 
 Below is an example of how to make use of this functionality.
 

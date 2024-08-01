@@ -17,6 +17,7 @@ The project for a `seedfarmer` compliant deployment is as follows:
         -- <module>(dir)
         -- <module>(dir)
         -- <module>(dir)
+- resources (dir)
 - seedfarmer.yaml
 ```
 The `modules`, `manifests`, and `resources` directories are at the same level. 
@@ -71,12 +72,12 @@ seedfarmer init project
 ```
 Your project is created and configured to use the `seedfarmer` CLI.
 
-`seedfarmer` uses [CookieCutter](cookiecutter.md)for templating.
+`seedfarmer` uses [CookieCutter](cookiecutter.md) for templating.
 If you want to use a different project template, you can override the default template url. For example:
 ```
 seedfarmer init project -t https://github.com/briggySmalls/cookiecutter-pypackage
 ```
-NOTE: your project template for a new `seedfarmer` project must contain at least the required project sturcture.
+NOTE: your project template for a new `seedfarmer` project must contain at least the required project structure.
 
 
 

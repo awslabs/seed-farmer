@@ -95,6 +95,36 @@ def test_module_init_cdkv2():
 
 
 @pytest.mark.mgmt
+def test_module_init_branch():
+    setup_mod_dir = os.path.join(pathlib.Path(os.getcwd()), "modules")
+
+    if os.path.isdir(setup_mod_dir):
+        shutil.rmtree(setup_mod_dir)
+    import seedfarmer.mgmt.module_init as mi
+
+    mi.create_module_dir(
+        module_name="mytestmodule",
+        group_name="mygroup",
+        module_type="NOT_NEEDED",
+        template_url="https://github.com/briggySmalls/cookiecutter-pypackage.git",
+        template_branch="master",
+    )
+
+    with pytest.raises(Exception) as e:
+        mi.create_module_dir(
+            module_name="mytestmodule",
+            group_name="mygroup",
+            module_type="NOT_NEEDED",
+            template_url="https://github.com/briggySmalls/cookiecutter-pypackage.git",
+            template_branch="master",
+        )
+
+    assert "module mytestmodule already exists" in str(e)
+
+    shutil.rmtree(setup_mod_dir)
+
+
+@pytest.mark.mgmt
 def test_project_init():
     setup_project_dir = os.path.join(pathlib.Path(os.getcwd()), "myapp")
 

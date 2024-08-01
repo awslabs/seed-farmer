@@ -779,8 +779,18 @@ def list_build_env_params(
 @list.command(
     name="schema",
     help="""Generate the schema that SeedFarmer uses for manifest objects.
+             Either the deployment manifest or module manifest schema
+             can be requested.
              This will return a formatted string of the schema that can
              be piped to a file. """,
 )
-def list_manifest_schema() -> None:
-    print(json.dumps(bi.get_manifest_schema(), indent=2))
+@click.option(
+    "--type",
+    "-t",
+    type=click.Choice(["deployment", "module"], case_sensitive=True),
+    help="Either 'deployment' or 'module' can be used, default is `deployment`",
+    required=False,
+    default="deployment",
+)
+def list_manifest_schema(type: str) -> None:
+    print(json.dumps(bi.get_manifest_schema(type=type), indent=2))

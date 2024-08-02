@@ -20,7 +20,6 @@ import os
 import threading
 from typing import Any, Dict, List, Optional, cast
 
-import boto3
 import yaml
 
 import seedfarmer.checksum as checksum
@@ -64,8 +63,8 @@ def _process_git_module_path(module: ModuleManifest) -> None:
     module.commit_hash = commit_hash if commit_hash else None
 
 
-def _process_archive_path(module: ModuleManifest, session: boto3.Session, secret_name: Optional[str] = None) -> None:
-    working_dir, module_directory = sf_archive.fetch_archived_module(module.path, session, secret_name)
+def _process_archive_path(module: ModuleManifest, secret_name: Optional[str] = None) -> None:
+    working_dir, module_directory = sf_archive.fetch_archived_module(module.path, secret_name)
     module.set_local_path(os.path.join(working_dir, module_directory))
 
 
@@ -73,7 +72,6 @@ def _process_data_files(
     data_files: List[DataFile],
     module_name: str,
     group_name: str,
-    session: boto3.Session,
     secret_name: Optional[str] = None,
 ) -> None:
     for data_file in data_files:
@@ -84,7 +82,7 @@ def _process_data_files(
             data_file.commit_hash = commit_hash if commit_hash else None
 
         elif data_file.file_path.startswith("archive::"):
-            working_dir, module_directory = sf_archive.fetch_archived_module(data_file.file_path, session, secret_name)
+            working_dir, module_directory = sf_archive.fetch_archived_module(data_file.file_path, secret_name)
             data_file.set_local_file_path(os.path.join(working_dir, module_directory))
             data_file.set_bundle_path(module_directory)
 
@@ -358,7 +356,6 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
 
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
-    session: boto3.Session,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
@@ -423,7 +420,6 @@ def destroy_deployment(
                         elif _module.path.startswith("archive::"):
                             _process_archive_path(
                                 module=_module,
-                                session=session,
                                 secret_name=destroy_manifest.archive_secret,
                             )
 
@@ -432,7 +428,6 @@ def destroy_deployment(
                                 data_files=_module.data_files,
                                 module_name=_module.name,
                                 group_name=_group.name,
-                                session=session,
                                 secret_name=destroy_manifest.archive_secret,
                             )
 
@@ -472,7 +467,6 @@ def deploy_deployment(
     deployment_manifest: DeploymentManifest,
     module_info_index: du.ModuleInfoIndex,
     module_upstream_dep: Dict[str, List[str]],
-    session: boto3.Session,
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
@@ -530,7 +524,6 @@ def deploy_deployment(
             elif module.path.startswith("archive::"):
                 _process_archive_path(
                     module=module,
-                    session=session,
                     secret_name=deployment_manifest.archive_secret,
                 )
 
@@ -539,7 +532,6 @@ def deploy_deployment(
                     data_files=module.data_files,
                     module_name=module.name,
                     group_name=group.name,
-                    session=session,
                     secret_name=deployment_manifest.archive_secret,
                 )
 
@@ -747,7 +739,6 @@ def apply(
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,
-        session=session_manager.toolchain_session,
         remove_deploy_manifest=False,
         dryrun=dryrun,
         show_manifest=show_manifest,
@@ -756,7 +747,6 @@ def apply(
         deployment_manifest=deployment_manifest,
         module_info_index=module_info_index,
         module_upstream_dep=module_depends_on_dict,
-        session=session_manager.toolchain_session,
         dryrun=dryrun,
         show_manifest=show_manifest,
     )
@@ -832,7 +822,6 @@ def destroy(
         destroy_manifest.validate_and_set_module_defaults()
         destroy_deployment(
             destroy_manifest,
-            session=session_manager.toolchain_session,
             remove_deploy_manifest=True,
             dryrun=dryrun,
             show_manifest=show_manifest,

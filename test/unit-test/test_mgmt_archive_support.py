@@ -15,6 +15,7 @@
 import logging
 import os
 import shutil
+from unittest.mock import patch
 
 import pytest
 from moto import mock_aws
@@ -28,13 +29,16 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="function")
 def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-    os.environ["MOTO_ACCOUNT_ID"] = "123456789012"
+    with patch.dict(clear=True):
+        """Mocked AWS Credentials for moto."""
+        os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+        os.environ["AWS_SECURITY_TOKEN"] = "testing"
+        os.environ["AWS_SESSION_TOKEN"] = "testing"
+        os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+        os.environ["MOTO_ACCOUNT_ID"] = "123456789012"
+
+        yield None
 
 
 @pytest.fixture(scope="function")
@@ -88,6 +92,17 @@ def test_fetch_module_repo_dns_path_missing_https(mocker):
     archive_path_test = (
         "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
     )
+    with pytest.raises(InvalidConfigurationError):
+        archive.fetch_archived_module(release_path=archive_path_test)
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_archive_support
+def test_fetch_module_repo_dns_path_missing_module(mocker):
+    from seedfarmer.errors import InvalidConfigurationError
+
+    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
+    archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz"
     with pytest.raises(InvalidConfigurationError):
         archive.fetch_archived_module(release_path=archive_path_test)
 

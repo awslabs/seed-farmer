@@ -17,7 +17,7 @@ import os.path
 import pathlib
 import tarfile
 from typing import Optional, Tuple
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 from zipfile import ZipFile
 
 import boto3
@@ -69,7 +69,7 @@ def _extract_archive(archive_name: str) -> str:
     return embedded_dir
 
 
-def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> Tuple[str, str]:
+def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
     pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
 
     with open(archive_name, "wb") as archive_file:
@@ -80,20 +80,27 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
     os.rename(os.path.join(parent_dir, embedded_dir), os.path.join(parent_dir, extracted_dir))
     os.remove(archive_name)
 
-    return parent_dir, extracted_dir
+    return os.path.join(parent_dir, extracted_dir)
 
 
-def _get_release_with_link(archive_url: str, session: Optional[boto3.Session], secret_name: Optional[str]) -> Tuple[str, str]:
+def _get_release_with_link(
+    archive_url: str, session: Optional[boto3.Session], secret_name: Optional[str]
+) -> Tuple[str, str]:
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":
         raise InvalidConfigurationError("This url must be via https: %s", archive_url)
 
+    query_params = parse_qs(parsed_url.query)
+    if not query_params.get("module"):
+        raise InvalidConfigurationError("module query param required : %s", archive_url)
+    module = query_params["module"][0]
+
     archive_name = parsed_url.path.replace("/", "_")
     extracted_dir = parsed_url.path.replace(".tar.gz", "").replace(".zip", "").replace("/", "_")
 
     if os.path.isdir(os.path.join(parent_dir, extracted_dir)):
-        return parent_dir, extracted_dir
+        return os.path.join(parent_dir, extracted_dir), module
     else:
         resp = _download_archive(
             archive_url=parsed_url._replace(fragment="").geturl(),
@@ -102,7 +109,7 @@ def _get_release_with_link(archive_url: str, session: Optional[boto3.Session], s
         )
 
         if resp.status_code == 200:
-            return _process_archive(archive_name, resp, extracted_dir)
+            return _process_archive(archive_name, resp, extracted_dir), module
 
         elif resp.status_code in [400, 403, 401, 302, 404]:
             _logger.error(f"Cannot find that archive at {archive_url}")

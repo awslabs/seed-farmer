@@ -12,9 +12,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import hashlib
 import logging
 import os.path
 import pathlib
+import re
 import tarfile
 from typing import Optional, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -22,12 +24,14 @@ from zipfile import ZipFile
 
 import boto3
 import requests
+from botocore.credentials import Credentials
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
 
 from seedfarmer import config
 from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.services._secrets_manager import get_secrets_manager_value
+from seedfarmer.services._service_utils import create_signed_request
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -35,30 +39,30 @@ parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
 def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
-    if secret_name:
+    if re.findall(r"s3\.([^\.]+\.)?amazonaws", archive_url):
         session: boto3.Session = SessionManager().get_or_create().toolchain_session
-        credentials = get_secrets_manager_value(secret_name, session)
-    else:
-        credentials = None
+        credentials: Credentials = SessionManager().get_or_create().get_toolchain_credentials()
 
-    # TODO: add a check here for an S3 HTTPS DNS, and if so, add the SigV4 Auth to the url
-
-    if "s3.amazonaws" in archive_url:
-        pass
-        ## TODO - add Sigv4Auth here
-        # session = SessionManager().get_or_create().toolchain_session
-        # credentials = SessionManager().get_or_create().get_toolchain_credentials()
-        # # GOTTA use the toolchain role - so get the toolchain session
-        # active_url = create_signed_request(endpoint=active_url, session=session, credentials=credentials)
-        # z = requests.get(active_url.url, headers=active_url.headers,allow_redirects=True)
-    else:
-        resp = requests.get(
-            archive_url,
-            allow_redirects=True,
-            auth=HTTPBasicAuth(credentials["user"], credentials["password"]) if credentials else None,
+        signed_request = create_signed_request(
+            endpoint=archive_url,
+            session=session,
+            credentials=credentials,
+            headers={"x-amz-content-sha256": hashlib.sha256("".encode("utf-8")).hexdigest()},
         )
+        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)
 
-    return resp
+    if secret_name:
+        session: boto3.Session = SessionManager().get_or_create().toolchain_session  # type: ignore[no-redef]
+        secret_value = get_secrets_manager_value(secret_name, session)
+        auth = HTTPBasicAuth(secret_value["user"], secret_value["password"])
+    else:
+        auth = None
+
+    return requests.get(
+        url=archive_url,
+        allow_redirects=True,
+        auth=auth,
+    )
 
 
 def _extract_archive(archive_name: str) -> str:
@@ -106,21 +110,17 @@ def _get_release_with_link(archive_url: str, secret_name: Optional[str]) -> Tupl
         return os.path.join(parent_dir, extracted_dir), module
     else:
         resp = _download_archive(
-            archive_url=parsed_url._replace(fragment="").geturl(),
+            archive_url=parsed_url._replace(fragment="", query="").geturl(),
             secret_name=secret_name,
         )
 
         if resp.status_code == 200:
             return _process_archive(archive_name, resp, extracted_dir), module
 
-        elif resp.status_code in [400, 403, 401, 302, 404]:
-            _logger.error(f"Cannot find that archive at {archive_url}")
-            raise InvalidConfigurationError("Cannot find archive with the url: %s", archive_url)
-
         else:
-            _logger.error(f"Error fetching archive at {archive_url} with status code {resp.status_code}")
+            _logger.error(f"Error fetching archive at {archive_url}: {resp.status_code} {resp.reason}")
             raise InvalidConfigurationError(
-                "Error fetching archive with the url (error code %s): %s", str(resp.status_code), archive_url
+                f"Error fetching archive at {archive_url}: {resp.status_code} {resp.reason}"
             )
 
 

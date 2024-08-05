@@ -142,11 +142,12 @@ def create_signed_request(
     region: Optional[str] = None,
     method: Optional[str] = "GET",
     params: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, Any]] = None,
 ) -> AWSRequest:
     region = get_region(session) if not region else region
     auth = SigV4Auth(credentials, service, region)
-    request = AWSRequest(method=method, url=endpoint, data=None, headers=None)
-    if params:
-        request.params = params
+
+    request = AWSRequest(method=method, url=endpoint, params=params, data=None, headers=headers)
     auth.add_auth(request)
+
     return request

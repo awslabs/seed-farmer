@@ -43,6 +43,13 @@ Resources:
               Effect: Allow
               Resource:
                 Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:*"
+            - Effect: Allow
+              Sid: ToolChainSecretsManager
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource:
+                - Fn::Sub: "arn:${AWS::Partition}:secretsmanager:*:${AWS::AccountId}:secret:*-archive-credentials-*"
       RoleName: "{{ role_name }}"
       Tags:
         - Key: "SeedFarmer"

@@ -12,7 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-
+- Adds validation for trusted principal arns in `seedfarmer bootstrap toolchain`
 
 ## v4.0.4 (2024-07-19)
 

@@ -57,8 +57,7 @@ def bootstrap() -> None:
     help="""ARN of Principals trusted to assume the Toolchain Role.
     This can be used multiple times to create a list.""",
     multiple=True,
-    required=False,
-    default=[],
+    required=True,
 )
 @click.option(
     "--permissions-boundary",

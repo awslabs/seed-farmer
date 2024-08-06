@@ -16,6 +16,7 @@ nameGenerator:
         envVariable: SUFFIX_ENV_VARIABLE
 toolchainRegion: us-west-2
 forceDependencyRedeploy: False
+archiveSecret: example-archive-credentials-modules
 groups:
   - name: optionals
     path: manifests-multi/examples/optional-modules.yaml
@@ -88,6 +89,9 @@ targetAccountMappings:
   - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
+- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
+  - secret name must follow the `*-archive-credentials-*` naming pattern
+  - the secret value must be a JSON with the `user` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
   - **path**- the relative path to the [module manifest](module_manifest)

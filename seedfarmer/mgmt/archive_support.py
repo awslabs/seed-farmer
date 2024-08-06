@@ -65,17 +65,13 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
     )
 
 
-def _extract_archive(archive_name: str) -> str:
+def _extract_archive(archive_name: str, extracted_dir: str) -> None:
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_name, "r:gz") as tar_file:
-            embedded_dir = os.path.commonprefix(tar_file.getnames())
-            tar_file.extractall(parent_dir)
+            tar_file.extractall(extracted_dir)
     else:
         with ZipFile(archive_name, "r") as zip_file:
-            embedded_dir = zip_file.namelist()[0]
-            zip_file.extractall(parent_dir)
-
-    return embedded_dir
+            zip_file.extractall(extracted_dir)
 
 
 def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
@@ -84,12 +80,12 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
     with open(archive_name, "wb") as archive_file:
         archive_file.write(response.content)
 
-    embedded_dir = _extract_archive(archive_name)
+    extracted_dir_path = os.path.join(parent_dir, extracted_dir)
+    _extract_archive(archive_name, extracted_dir_path)
 
-    os.rename(os.path.join(parent_dir, embedded_dir), os.path.join(parent_dir, extracted_dir))
     os.remove(archive_name)
 
-    return os.path.join(parent_dir, extracted_dir)
+    return extracted_dir_path
 
 
 def _get_release_with_link(archive_url: str, secret_name: Optional[str]) -> Tuple[str, str]:
@@ -145,6 +141,6 @@ def fetch_archived_module(release_path: str, secret_name: Optional[str] = None) 
     Tuple[str,str]
         Returns a tuple that contains (in order):
             - the full path of the seedfarmer.archive where the repo was cloned to
-            - the relative path to seedfarmer.gitmodules of the module code
+            - the relative path to seedfarmer.archive of the module code
     """
     return _get_release_with_link(release_path.replace("archive::", ""), secret_name=secret_name)

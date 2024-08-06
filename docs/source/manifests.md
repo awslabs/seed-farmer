@@ -269,13 +269,14 @@ dataFiles:
   - filePath: data/test2.txt
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
-  - filePath: archive::https://www.myprivatearchives.com/api/archive-1.0.0.zip?module=modules/storage/buckets/deployspec.yaml
+  - filePath: archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/storage/buckets/deployspec.yaml
 ```
 - **name** - the name of the module
   - this name must be unique in the group of the deployment
 - **path** - this element supports two sources of code:
   - the relative path to the module code in the project if deploying code from the local filesystem
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
+  - a release archive to download over HTTPS 
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
@@ -291,6 +292,16 @@ Here is a sample manifest referencing a git repo:
 ```yaml
 name: networking
 path: git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk?ref=release/1.0.0&depth=1
+targetAccount: secondary
+parameters:
+  - name: internet-accessible
+    value: true
+```
+
+Here is a sample manifest referencing an archive over HTTPS:
+```yaml
+name: networking
+path: archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/network/basic-cdk
 targetAccount: secondary
 parameters:
   - name: internet-accessible

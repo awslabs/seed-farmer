@@ -71,13 +71,21 @@ def session_manager(sts_client):
     )
 
 
+example_archive_files = [
+    ("modules/test-module/modulestack.yaml", io.BytesIO(b"111")),
+    ("modules/test-module/pyproject.toml", io.BytesIO(b"222")),
+    ("README.md", io.BytesIO(b"333")),
+    ("LICENSE", io.BytesIO(b"444")),
+]
+
+
 @pytest.fixture(scope="function")
 def zip_file_data() -> Tuple[bytes, str]:
     zip_buffer = io.BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
-        for file_name, data in [("modulestack.yaml", io.BytesIO(b"111")), ("pyproject.toml", io.BytesIO(b"222"))]:
-            zip_file.writestr(f"modules/test-module/{file_name}", data.getvalue())
+        for file_name, data in example_archive_files:
+            zip_file.writestr(file_name, data.getvalue())
 
     return zip_buffer.getvalue(), "zip"
 
@@ -87,8 +95,8 @@ def tar_file_data() -> Tuple[bytes, str]:
     tar_buffer = io.BytesIO()
 
     with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar_file:
-        for file_name, data in [("modulestack.yaml", io.BytesIO(b"111")), ("pyproject.toml", io.BytesIO(b"222"))]:
-            tar_file.addfile(tarfile.TarInfo(name=f"modules/test-module/{file_name}"), fileobj=data)
+        for file_name, data in example_archive_files:
+            tar_file.addfile(tarfile.TarInfo(name=file_name), fileobj=data)
 
     return tar_buffer.getvalue(), "tar.gz"
 

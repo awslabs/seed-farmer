@@ -269,6 +269,7 @@ dataFiles:
   - filePath: data/test2.txt
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
+  - filePath: archive::https://www.myprivatearchives.com/api/archive-1.0.0.zip?module=modules/storage/buckets/deployspec.yaml
 ```
 - **name** - the name of the module
   - this name must be unique in the group of the deployment

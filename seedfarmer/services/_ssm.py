@@ -15,7 +15,7 @@
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 from boto3 import Session
 
@@ -45,7 +45,7 @@ def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = N
                 time.sleep(2 ** (4 - retries))
 
             if retries == 0:
-                raise seedfarmer.errors.SeedFarmerException(err)
+                raise seedfarmer.errors.SeedFarmerException(err)  # type: ignore[arg-type]
 
 
 def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
@@ -93,7 +93,7 @@ def list_parameters(prefix: str, session: Optional[Session] = None) -> List[str]
     )
     ret: List[str] = []
     for page in response_iterator:
-        for par in page.get("Parameters"):
+        for par in page["Parameters"]:
             ret.append(par["Name"])
     return ret
 
@@ -116,13 +116,15 @@ def list_parameters_with_filter(prefix: str, contains_string: str, session: Opti
     )
     ret: List[str] = []
     for page in response_iterator:
-        for par in page.get("Parameters"):
+        for par in page["Parameters"]:
             if str(par["Name"]).startswith(f"{prefix}"):
                 ret.append(par["Name"])
     return ret
 
 
-def get_all_parameter_data_by_path(prefix: str, session: Optional[Session] = None) -> Dict[str, Any]:
+def get_all_parameter_data_by_path(
+    prefix: str, session: Optional[Session] = None
+) -> Dict[str, Union[str, Dict[str, Any]]]:
     client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("get_parameters_by_path")
     response_iterator = paginator.paginate(
@@ -138,9 +140,9 @@ def get_all_parameter_data_by_path(prefix: str, session: Optional[Session] = Non
             },
         ],
     )
-    ret: Dict[str, Dict[str, Any]] = {}
+    ret: Dict[str, Union[str, Dict[str, Any]]] = {}
     for page in response_iterator:
-        for par in page.get("Parameters"):
+        for par in page["Parameters"]:
             try:
                 ret[par["Name"]] = json.loads(par["Value"])
             except json.decoder.JSONDecodeError:

@@ -14,14 +14,25 @@
 
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Tuple, cast, overload
 
 import boto3
+import botocore.config
 import botocore.exceptions
 from boto3 import Session
 
 import seedfarmer
 import seedfarmer.errors
+
+if TYPE_CHECKING:
+    from boto3.resources.base import ServiceResource
+    from botocore.client import BaseClient
+    from mypy_boto3_codebuild import CodeBuildClient
+    from mypy_boto3_iam import IAMClient, IAMServiceResource
+    from mypy_boto3_s3 import S3Client, S3ServiceResource
+    from mypy_boto3_secretsmanager import SecretsManagerClient
+    from mypy_boto3_ssm import SSMClient
+    from mypy_boto3_sts.client import STSClient
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -40,7 +51,7 @@ def get_botocore_config() -> botocore.config.Config:
         connect_timeout=10,
         max_pool_connections=10,
         user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
-        proxies=setup_proxies(),
+        proxies=setup_proxies(),  # type: ignore[arg-type]
     )
 
 
@@ -59,6 +70,90 @@ def create_new_session_with_creds(
     )
 
 
+@overload
+def boto3_client(
+    service_name: Literal["codebuild"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "CodeBuildClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["iam"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "IAMClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["s3"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "S3Client": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["secretsmanager"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "SecretsManagerClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["ssm"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "SSMClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["sts"],
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "STSClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: str,
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "BaseClient": ...
+
+
 def boto3_client(
     service_name: str,
     session: Optional[Session] = None,
@@ -67,31 +162,62 @@ def boto3_client(
     aws_access_key_id: Optional[str] = None,
     aws_secret_access_key: Optional[str] = None,
     aws_session_token: Optional[str] = None,
-) -> boto3.client:
+) -> "BaseClient":
     if aws_access_key_id and aws_secret_access_key and aws_session_token:
-        return create_new_session_with_creds(
+        return create_new_session_with_creds(  # type: ignore[call-overload,no-any-return]
             aws_access_key_id, aws_secret_access_key, aws_session_token, region_name
         ).client(service_name=service_name, use_ssl=True, config=get_botocore_config())
     elif not session:
-        return create_new_session(region_name, profile).client(
+        return create_new_session(region_name, profile).client(  # type: ignore[call-overload,no-any-return]
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )
     else:
-        return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())  # type: ignore[call-overload,no-any-return]
 
 
+@overload
 def boto3_resource(
+    service_name: Literal["iam"],
+    ssession: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+) -> "IAMServiceResource": ...
+
+
+@overload
+def boto3_resource(
+    service_name: Literal["s3"],
+    ssession: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+) -> "S3ServiceResource": ...
+
+
+@overload
+def boto3_resource(
+    service_name: str,
+    session: Optional[Session] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+) -> "ServiceResource": ...
+
+
+def boto3_resource(  # type: ignore[misc]
     service_name: str,
     session: Optional[Session] = None,
     region_name: Optional[str] = None,
     profile: Optional[str] = None,
-) -> boto3.client:
+) -> "ServiceResource":
     if not session:
-        return create_new_session(region_name=region_name, profile=profile).resource(
+        return create_new_session(region_name=region_name, profile=profile).resource(  # type: ignore
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )
     else:
-        return session.resource(service_name=service_name, use_ssl=True, config=get_botocore_config())
+        return session.resource(  # type: ignore[no-any-return]
+            service_name=service_name,
+            use_ssl=True,
+            config=get_botocore_config(),
+        )  # type: ignore[call-overload]
 
 
 def get_region(session: Optional[Session] = None, profile: Optional[str] = None) -> str:

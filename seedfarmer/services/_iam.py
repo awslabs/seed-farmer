@@ -48,7 +48,7 @@ def create_check_iam_role(
     try:
         iam_client.get_role(RoleName=role_name)
     except iam_client.exceptions.NoSuchEntityException:
-        args = {
+        args: Dict[str, Any] = {
             "RoleName": role_name,
             "AssumeRolePolicyDocument": json.dumps(trust_policy),
             "Description": f"deployment-role for {role_name}",
@@ -116,7 +116,7 @@ def delete_role(role_name: str, session: Optional[Session] = None) -> None:
 
 
 def detach_inline_policy_from_role(role_name: str, policy_name: str, session: Optional[Session] = None) -> None:
-    iam_resource = boto3_resource("iam", session=session)
+    iam_resource = boto3_resource("iam", session)
     try:
         iam_resource.RolePolicy(role_name, policy_name).delete()
     except Exception as e:

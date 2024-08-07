@@ -91,7 +91,7 @@ targetAccountMappings:
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
   - secret name must follow the `*-archive-credentials-*` naming pattern
-  - the secret value must be a JSON with the `user` and `password` values
+  - the secret value must be a JSON with the `username` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
   - **path**- the relative path to the [module manifest](module_manifest)

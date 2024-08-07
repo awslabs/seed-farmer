@@ -55,7 +55,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
     if secret_name:
         session: boto3.Session = SessionManager().get_or_create().toolchain_session  # type: ignore[no-redef]
         secret_value = get_secrets_manager_value(secret_name, session)
-        auth = HTTPBasicAuth(secret_value["user"], secret_value["password"])
+        auth = HTTPBasicAuth(secret_value["username"], secret_value["password"])
     else:
         auth = None
 

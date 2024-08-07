@@ -248,7 +248,7 @@ def test_fetch_module_repo_from_https_with_secret(
         Name=secret_name,
         SecretString=json.dumps(
             {
-                "user": username,
+                "username": username,
                 "password": password,
             },
         ),

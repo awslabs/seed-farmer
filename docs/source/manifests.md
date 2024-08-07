@@ -90,7 +90,7 @@ targetAccountMappings:
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
 - **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
-  - secret name must follow the `*-archive-credentials-*` naming pattern
+  - secret name must follow the `*-archive-credentials*` naming pattern
   - the secret value must be a JSON with the `username` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
@@ -481,7 +481,36 @@ This would result in the creation of the url `https://derekpypi:thepasswordpypi@
 pip config set global.index-url https://derekpypi:thepasswordpypi@the-mirror-dns/simple/pypi
 ```
 
+### Archive Secret
 
+If using an archive store that is not public or needs an authentication scheme, the `archiveSecret` provides a means to set a username / password, so that the archived modules can be downloaded.
+
+To use this feature, you MUST adhere to the following:
+1. Be sure to have `seed-farmer` version >= 5.0.0 and have properly updated if migrating from an older version
+2. have an AWS SecretsManager secret in the tool chain account and region (the user MUST set this up prior to using)
+3. the content of the AWS SecretsManager adheres to the format defined below
+4. the name of the AWS SecretsManager adheres to the format defined below
+
+The AWS SecretManager name must follow the following pattern (NO exceptions):
+```code
+*-archive-credentials*
+```
+Here are some examples of valid names:
+- `/aws-addf-archive-credentials`
+- `/something/important/hey-archive-credentials`
+
+Here are some names that are in-valid
+- `/aws-addfarchive-credentials`
+- `/something/important/archive-credentials`
+
+The content of the AWS SecretsManager secret must be a JSON containing two values: `username` and `password`.  Let's look at an example of a value payload:
+
+```json
+{
+  "username": "archive-user", 
+  "password": "archive-password" 
+},
+```
 
 (parameters)=
 ## Parameters

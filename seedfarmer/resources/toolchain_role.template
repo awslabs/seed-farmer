@@ -49,7 +49,7 @@ Resources:
                 - secretsmanager:GetSecretValue
                 - secretsmanager:DescribeSecret
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:secretsmanager:*:${AWS::AccountId}:secret:*-archive-credentials-*"
+                - Fn::Sub: "arn:${AWS::Partition}:secretsmanager:*:${AWS::AccountId}:secret:*-archive-credentials*"
             - Effect: Allow
               Sid: ToolChainS3
               Action:

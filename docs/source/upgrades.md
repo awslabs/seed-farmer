@@ -58,7 +58,6 @@ Your existing deployment is unaffected after this change, and `seed-farmer` will
 
 
 ## Upgrading to 5.0.0  
-This is a **BREAKING CHANGE !!!**
 
 `seed-farmer` 5.0.0 introduces support for downloading modules from HTTPS archives.
 This includes support for both secure HTTPS URLs which require authentication, as well as support for S3 HTTPS downloads.

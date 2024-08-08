@@ -97,6 +97,7 @@ class ModuleManifest(CamelModel):
     data_files: Optional[List[DataFile]] = None
     commit_hash: SkipJsonSchema[Optional[str]] = None
     npm_mirror: Optional[str] = None
+    npm_mirror_secret: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
     _target_account_id: Optional[str] = PrivateAttr(default=None)

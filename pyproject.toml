@@ -70,6 +70,7 @@ markers = [
     "mgmt_metadata_support: marks all `mgmt_metadata_support` tests",
     "mgmt_build_info: marks all `mgmt_build_info` tests",
     "mgmt_git_support: marks all `mgmt_git_support` tests",
+    "mgmt_archive_support: marks all `mgmt_archive_support` tests",
     "service: marks all `services` tests",
     "projectpolicy: marks all `projectpolicy` tests",
     "metadata: marks all `metadata` tests",

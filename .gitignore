@@ -381,6 +381,7 @@ cdk.json
 codeseeder.out
 
 seedfarmer.gitmodules
+seedfarmer.archive
 archive/
 _build/
 

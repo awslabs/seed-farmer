@@ -90,89 +90,36 @@ def _get_project_managed_policy_arn(session: boto3.Session) -> str:
         return project_managed_policy_arn
 
 
-def _attach_module_deployment_role_policies(
-    role_name: str,
-    docker_credentials_secret: Optional[str] = None,
-    session: Optional[boto3.Session] = None,
-) -> None:
+def _get_seedkit_resources_policy_arn(session: boto3.Session) -> Optional[str]:
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(
         seedkit_name=config.PROJECT, session=session
     )
-    seedkit_managed_policy_arn = None
     if seedkit_stack_exists:
-        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
-        seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
+        return cast(str, stack_outputs.get("SeedkitResourcesPolicyArn"))
+    return None
 
-    project_managed_policy_arn = _get_project_managed_policy_arn(session)
-    policies = [x for x in [seedkit_managed_policy_arn, project_managed_policy_arn] if x is not None]
-    policies_attached = iam.attach_policy_to_role(role_name, policies, session=session)
-    if policies.sort() == policies_attached.sort():
-        _logger.info("Delaying deployment to allow %s IAM Role and Policies to take effect", role_name)
-        time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
 
+def _get_docker_secret_inline_policy(docker_credentials_secret: str, session: boto3.Session) -> str:
     account_id, region, partition = get_sts_identity_info(session=session)
-
-    if docker_credentials_secret:
-        # Attaching Docker Credentials Secret Optionally
-        policy_body = json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "secretsmanager:GetSecretValue",
-                            "secretsmanager:DescribeSecret",
-                            "secretsmanager:ListSecretVersionIds",
-                        ],
-                        "Resource": (
-                            f"arn:{partition}:secretsmanager:{region}:{account_id}"
-                            f":secret:{docker_credentials_secret}*"
-                        ),
-                    },
-                    {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},
-                ],
-            }
-        )
-        iam.attach_inline_policy(
-            role_name=role_name, policy_body=policy_body, policy_name=docker_credentials_secret, session=session
-        )
-
-
-def _detach_module_deployment_role_policies(
-    role_name: str,
-    docker_credentials_secret: Optional[str] = None,
-    session: Optional[boto3.Session] = None,
-) -> None:
-    # Detach the Project Policy
-    seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(
-        seedkit_name=config.PROJECT, session=session
+    return json.dumps(
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "secretsmanager:GetSecretValue",
+                        "secretsmanager:DescribeSecret",
+                        "secretsmanager:ListSecretVersionIds",
+                    ],
+                    "Resource": (
+                        f"arn:{partition}:secretsmanager:{region}:{account_id}" f":secret:{docker_credentials_secret}*"
+                    ),
+                },
+                {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},
+            ],
+        }
     )
-
-    policies_arn = []
-    if seedkit_stack_exists:
-        _logger.debug("Seedkit stack exists - %s", seedkit_stack_name)
-        seedkit_managed_policy_arn = stack_outputs.get("SeedkitResourcesPolicyArn")
-        policies_arn.append(seedkit_managed_policy_arn)
-
-    # Extract Project Managed policy name
-    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
-        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
-    )
-    if project_managed_policy_stack_exists:
-        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
-        policies_arn.append(project_managed_policy_arn)
-
-    _logger.debug(
-        f"seedkit_managed_policy {seedkit_managed_policy_arn}  project_managed_policy {project_managed_policy_arn}"
-    )
-    _logger.debug("module_role_name %s", role_name)
-
-    for policy_arn in policies_arn:
-        iam.detach_policy_from_role(role_name=role_name, policy_arn=policy_arn, session=session)
-
-    if docker_credentials_secret:
-        iam.detach_inline_policy_from_role(role_name=role_name, policy_name=docker_credentials_secret, session=session)
 
 
 def create_module_deployment_role(
@@ -199,11 +146,31 @@ def create_module_deployment_role(
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
     )
-    _attach_module_deployment_role_policies(
-        role_name=role_name,
-        docker_credentials_secret=docker_credentials_secret,
-        session=session,
+
+    policies = []
+    seedkit_resources_policy_arn = _get_seedkit_resources_policy_arn(session=session)
+    if seedkit_resources_policy_arn:
+        policies.append(seedkit_resources_policy_arn)
+
+    project_managed_policy_arn = _get_project_managed_policy_arn(session=session)
+    policies.append(project_managed_policy_arn)
+
+    _logger.debug(
+        f"seedkit_resources_policy {seedkit_resources_policy_arn}  project_managed_policy {project_managed_policy_arn}"
     )
+
+    policies_attached = iam.attach_policy_to_role(role_name, policies, session=session)
+    if policies.sort() == policies_attached.sort():
+        _logger.info("Delaying deployment to allow %s IAM Role and Policies to take effect", role_name)
+        time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
+
+    if docker_credentials_secret:
+        policy_body = _get_docker_secret_inline_policy(
+            docker_credentials_secret=docker_credentials_secret, session=session
+        )
+        iam.attach_inline_policy(
+            role_name=role_name, policy_body=policy_body, policy_name=docker_credentials_secret, session=session
+        )
 
 
 def destroy_module_deployment_role(
@@ -211,11 +178,30 @@ def destroy_module_deployment_role(
     docker_credentials_secret: Optional[str] = None,
     session: Optional[boto3.Session] = None,
 ) -> None:
-    _detach_module_deployment_role_policies(
-        role_name=role_name,
-        docker_credentials_secret=docker_credentials_secret,
-        session=session,
+    policies = []
+    seedkit_resources_policy_arn = _get_seedkit_resources_policy_arn(session=session)
+    if seedkit_resources_policy_arn:
+        policies.append(seedkit_resources_policy_arn)
+
+    # Extract Project Managed policy name
+    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
+        stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
+    if project_managed_policy_stack_exists:
+        project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
+        policies.append(project_managed_policy_arn)
+
+    _logger.debug(
+        f"seedkit_resources_policy {seedkit_resources_policy_arn}  project_managed_policy {project_managed_policy_arn}"
+    )
+
+    for policy_arn in policies:
+        iam.detach_policy_from_role(role_name=role_name, policy_arn=policy_arn, session=session)
+
+    # Detach Docker secret policy
+    if docker_credentials_secret:
+        iam.detach_inline_policy_from_role(role_name=role_name, policy_name=docker_credentials_secret, session=session)
+
     iam.delete_role(role_name=role_name, session=session)
 
 
@@ -447,7 +433,6 @@ def destroy_module_stack(
 def deploy_module_stack(
     module_stack_path: str,
     deployment_name: str,
-    deployment_partition: str,
     group_name: str,
     module_name: str,
     account_id: str,
@@ -499,6 +484,8 @@ def deploy_module_stack(
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
     )
+
+    _logger.debug("module_role_name %s", module_role_name)
 
     with open(module_stack_path, "r") as file:
         template_parameters = load_yaml(file).get("Parameters", {})

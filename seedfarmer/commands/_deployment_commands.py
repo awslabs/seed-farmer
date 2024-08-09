@@ -109,20 +109,18 @@ def create_generic_module_deployment_role(
         region=region,
         qualifier=cast(str, qualifier),
     )
-    permissions_boundary_arn = deployment_manifest.get_permission_boundary_arn(
-        target_account=account_id,
-        target_region=region,
-    )
-    docker_credentials_secret = deployment_manifest.get_parameter_value(
-        "dockerCredentialsSecret",
-        account_alias=account_id,
-        region=region,
-    )
     create_module_deployment_role(
         role_name=role_name,
         deployment_name=cast(str, deployment_manifest.name),
-        docker_credentials_secret=docker_credentials_secret,
-        permissions_boundary_arn=permissions_boundary_arn,
+        permissions_boundary_arn=deployment_manifest.get_permission_boundary_arn(
+            target_account=account_id,
+            target_region=region,
+        ),
+        docker_credentials_secret=deployment_manifest.get_parameter_value(
+            "dockerCredentialsSecret",
+            account_alias=account_id,
+            region=region,
+        ),
         session=session,
     )
     return role_name
@@ -149,14 +147,13 @@ def destroy_generic_module_deployment_role(
         region=region,
         qualifier=cast(str, qualifier),
     )
-    docker_credentials_secret = deployment_manifest.get_parameter_value(
-        "dockerCredentialsSecret",
-        account_alias=account_id,
-        region=region,
-    )
     destroy_module_deployment_role(
         role_name=generic_deployment_role_name,
-        docker_credentials_secret=docker_credentials_secret,
+        docker_credentials_secret=deployment_manifest.get_parameter_value(
+            "dockerCredentialsSecret",
+            account_alias=account_id,
+            region=region,
+        ),
         session=session,
     )
 
@@ -181,7 +178,6 @@ def _execute_deploy(
         _, module_role_name = commands.deploy_module_stack(
             module_stack_path=module_stack_path,
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            deployment_partition=cast(str, mdo.deployment_manifest._partition),
             group_name=mdo.group_name,
             module_name=mdo.module_name,
             account_id=account_id,

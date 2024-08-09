@@ -153,7 +153,6 @@ def test_deploy_module_stack(session_manager, mocker):
     sc.deploy_module_stack(
         module_stack_path="test/unit-test/mock_data/modules/module-test/modulestack.yaml",
         deployment_name="myapp",
-        deployment_partition="aws",
         group_name="group",
         module_name="module",
         account_id="123456789012",

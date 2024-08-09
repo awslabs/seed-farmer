@@ -223,7 +223,7 @@ def test_execute_destroy(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
     mocker.patch(
         "seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
-        return_value=("stack_name", "role_name"),
+        return_value=("stack_name", "role_name", True),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module", return_value=mod_resp)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack", return_value=None)

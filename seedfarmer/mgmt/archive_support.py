@@ -57,7 +57,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
         secret_value = get_secrets_manager_value(secret_name, session)
 
         if "username" not in secret_value or "password" not in secret_value:
-            raise InvalidConfigurationError("username and password required in secret %s", secret_name)
+            raise InvalidConfigurationError(f"username and password required in secret {secret_name}")
 
         auth = HTTPBasicAuth(secret_value["username"], secret_value["password"])
     else:
@@ -108,11 +108,11 @@ def _get_release_with_link(archive_url: str, secret_name: Optional[str]) -> Tupl
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":
-        raise InvalidConfigurationError("This url must be via https: %s", archive_url)
+        raise InvalidConfigurationError(f"This url must be via https: {archive_url}")
 
     query_params = parse_qs(parsed_url.query)
     if not query_params.get("module"):
-        raise InvalidConfigurationError("module query param required : %s", archive_url)
+        raise InvalidConfigurationError(f"module query param required : {archive_url}")
     module = query_params["module"][0]
 
     archive_name = parsed_url.path.replace("/", "_")

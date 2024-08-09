@@ -29,6 +29,7 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
+from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -80,6 +81,86 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
         raise seedfarmer.errors.InvalidPathError("Missing DataFiles - cannot process")
 
 
+def _get_generic_module_deployment_role_name(
+    project_name: str, deployment_name: str, account_id: str, region: str, qualifier: Optional[str] = None
+) -> str:
+    name = f"{project_name}-{deployment_name}-{account_id}-{region}-deployment-role"
+    return f"{name}-{qualifier}" if qualifier else name
+
+
+def create_generic_module_deployment_role(
+    account_id: str,
+    region: str,
+    deployment_manifest: DeploymentManifest,
+    qualifier: Optional[str] = None,
+) -> str:
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=account_id,
+            region_name=region,
+        )
+    )
+    role_name = _get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, deployment_manifest.name),
+        account_id=account_id,
+        region=region,
+        qualifier=cast(str, qualifier),
+    )
+    permissions_boundary_arn = deployment_manifest.get_permission_boundary_arn(
+        target_account=account_id,
+        target_region=region,
+    )
+    docker_credentials_secret = deployment_manifest.get_parameter_value(
+        "dockerCredentialsSecret",
+        account_alias=account_id,
+        region=region,
+    )
+    create_module_deployment_role(
+        role_name=role_name,
+        deployment_name=cast(str, deployment_manifest.name),
+        docker_credentials_secret=docker_credentials_secret,
+        permissions_boundary_arn=permissions_boundary_arn,
+        session=session,
+    )
+    return role_name
+
+
+def destroy_generic_module_deployment_role(
+    account_id: str,
+    region: str,
+    deployment_manifest: DeploymentManifest,
+    qualifier: Optional[str] = None,
+) -> None:
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=account_id,
+            region_name=region,
+        )
+    )
+    generic_deployment_role_name = _get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, deployment_manifest.name),
+        account_id=account_id,
+        region=region,
+        qualifier=cast(str, qualifier),
+    )
+    docker_credentials_secret = deployment_manifest.get_parameter_value(
+        "dockerCredentialsSecret",
+        account_alias=account_id,
+        region=region,
+    )
+    destroy_module_deployment_role(
+        role_name=generic_deployment_role_name,
+        docker_credentials_secret=docker_credentials_secret,
+        session=session,
+    )
+
+
 def _execute_deploy(
     mdo: ModuleDeployObject,
 ) -> ModuleDeploymentResponse:
@@ -94,22 +175,32 @@ def _execute_deploy(
         target_account=account_id,
         target_region=region,
     )
+    module_stack_path = get_modulestack_path(str(module_manifest.get_local_path()))
 
-    module_stack_name, module_role_name = commands.deploy_module_stack(
-        module_stack_path=get_modulestack_path(str(module_manifest.get_local_path())),
-        deployment_name=cast(str, mdo.deployment_manifest.name),
-        deployment_partition=cast(str, mdo.deployment_manifest._partition),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
-        account_id=account_id,
-        region=region,
-        parameters=mdo.parameters,
-        docker_credentials_secret=mdo.docker_credentials_secret,
-        permissions_boundary_arn=mdo.permissions_boundary_arn,
-    )
+    if module_stack_path:
+        _, module_role_name = commands.deploy_module_stack(
+            module_stack_path=module_stack_path,
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            deployment_partition=cast(str, mdo.deployment_manifest._partition),
+            group_name=mdo.group_name,
+            module_name=mdo.module_name,
+            account_id=account_id,
+            region=region,
+            parameters=mdo.parameters,
+            docker_credentials_secret=mdo.docker_credentials_secret,
+            permissions_boundary_arn=mdo.permissions_boundary_arn,
+        )
+    else:
+        module_role_name = _get_generic_module_deployment_role_name(
+            project_name=config.PROJECT,
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            account_id=account_id,
+            region=region,
+        )
+
     mdo.module_role_name = module_role_name
 
-    #   Get the current module's SSM if it was alreadly loaded...
+    # Get the current module's SSM if it was already loaded...
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     mdo.module_metadata = json.dumps(
         get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
@@ -136,7 +227,7 @@ def _execute_deploy(
     return commands.deploy_module(mdo)
 
 
-def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
+def _execute_destroy(mdo: ModuleDeployObject, qualifier: Optional[str] = None) -> Optional[ModuleDeploymentResponse]:
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
     if module_manifest.deploy_spec is None:
         raise seedfarmer.errors.InvalidManifestError(
@@ -158,26 +249,36 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         target_account=target_account_id,
         target_region=target_region,
     )
-    module_stack_name, module_role_name = commands.get_module_stack_info(
+    module_stack_name, module_role_name, module_stack_exists = commands.get_module_stack_info(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         group_name=mdo.group_name,
         module_name=mdo.module_name,
         account_id=target_account_id,
         region=target_region,
     )
+
+    if module_stack_exists:
+        commands.force_manage_policy_attach(
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            group_name=mdo.group_name,
+            module_name=mdo.module_name,
+            account_id=target_account_id,
+            region=target_region,
+            module_role_name=mdo.module_role_name,
+        )
+    else:
+        module_role_name = _get_generic_module_deployment_role_name(
+            project_name=config.PROJECT,
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            account_id=target_account_id,
+            region=target_region,
+            qualifier=cast(str, qualifier),
+        )
 
     mdo.module_role_name = module_role_name
-
-    commands.force_manage_policy_attach(
-        deployment_name=cast(str, mdo.deployment_manifest.name),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
-        account_id=target_account_id,
-        region=target_region,
-        module_role_name=mdo.module_role_name,
-    )
     resp = commands.destroy_module(mdo)
-    if resp.status == StatusType.SUCCESS.value:
+
+    if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
             cast(str, mdo.deployment_manifest.name),
             mdo.group_name,
@@ -264,7 +365,10 @@ def _deploy_validated_deployment(
 
 
 def prime_target_accounts(
-    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
+    deployment_manifest: DeploymentManifest,
+    update_seedkit: bool = False,
+    update_project_policy: bool = False,
+    qualifier: Optional[str] = None,
 ) -> None:
     _logger.info("Priming Accounts")
 
@@ -273,15 +377,27 @@ def prime_target_accounts(
     ) as workers:
 
         def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
+            target_account_id = args["account_id"]
+            target_region = args["region"]
+
             threading.current_thread().name = (
-                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+                f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
-            _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Priming Acccount %s in %s", target_account_id, target_region)
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             seedfarmer_bucket = commands.deploy_bucket_storage_stack(**args)
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
-            return [args["account_id"], args["region"], seedkit_stack_outputs]
+
+            deployment_role_name = create_generic_module_deployment_role(
+                account_id=target_account_id,
+                region=target_region,
+                deployment_manifest=deployment_manifest,
+                qualifier=qualifier,
+            )
+
+            seedkit_stack_outputs["DeploymentRoleName"] = deployment_role_name
+            return [target_account_id, target_region, seedkit_stack_outputs]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -311,20 +427,34 @@ def prime_target_accounts(
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
+def tear_down_target_accounts(
+    deployment_manifest: DeploymentManifest, remove_seedkit: bool = False, qualifier: Optional[str] = None
+) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
+
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Teardown-Accounts"
     ) as workers:
 
         def _teardown_accounts(args: Dict[str, Any]) -> None:
+            target_account_id = args["account_id"]
+            target_region = args["region"]
             threading.current_thread().name = (
-                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+                f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
-            _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Tearing Down Acccount %s in %s", target_account_id, target_region)
             commands.destroy_managed_policy_stack(**args)
             commands.destroy_bucket_storage_stack(**args)
+
+            # Destroy generic module deployment role
+            destroy_generic_module_deployment_role(
+                account_id=target_account_id,
+                region=target_region,
+                deployment_manifest=deployment_manifest,
+                qualifier=qualifier,
+            )
+
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
@@ -342,6 +472,7 @@ def destroy_deployment(
     dryrun: bool = False,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
+    qualifier: Optional[str] = None,
 ) -> None:
     """
     destroy_deployment
@@ -393,7 +524,7 @@ def destroy_deployment(
                         threading.current_thread().name = (
                             f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
                         ).replace("_", "-")
-                        return _execute_destroy(mdo)
+                        return _execute_destroy(mdo, qualifier=qualifier)
 
                     mdos = []
                     for _module in _group.modules:
@@ -432,7 +563,9 @@ def destroy_deployment(
             session = SessionManager().get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
+            tear_down_target_accounts(
+                deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit, qualifier=qualifier
+            )
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -687,6 +820,7 @@ def apply(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
+        qualifier=qualifier,
     )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
@@ -792,6 +926,7 @@ def destroy(
             dryrun=dryrun,
             show_manifest=show_manifest,
             remove_seedkit=remove_seedkit,
+            qualifier=qualifier,
         )
     else:
         account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)

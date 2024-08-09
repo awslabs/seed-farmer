@@ -270,3 +270,41 @@ def test_deploy_deployment(session_manager, mocker):
     dc.deploy_deployment(
         deployment_manifest=dep, module_info_index=module_info_index, module_upstream_dep=module_upstream_dep
     )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_create_module_deployment_role(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands._get_generic_module_deployment_role_name",
+        return_value="generic-module-deployment-role",
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.create_module_deployment_role", return_value=None)
+
+    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep.validate_and_set_module_defaults()
+
+    dc.create_generic_module_deployment_role(
+        account_id="123456789012",
+        region="us-east-1",
+        deployment_manifest=dep,
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_destroy_generic_module_deployment_role(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands._get_generic_module_deployment_role_name",
+        return_value="generic-module-deployment-role",
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.destroy_module_deployment_role", return_value=None)
+
+    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep.validate_and_set_module_defaults()
+
+    dc.destroy_generic_module_deployment_role(
+        account_id="123456789012",
+        region="us-east-1",
+        deployment_manifest=dep,
+    )

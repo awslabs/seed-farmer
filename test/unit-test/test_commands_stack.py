@@ -113,10 +113,8 @@ def test_destroy_managed_policy_stack(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_stack
 def test_destroy_module_stack(session_manager, mocker):
-    mocker.patch("seedfarmer.commands._stack_commands.services.cfn.does_stack_exist", return_value=[True, {}])
     mocker.patch("seedfarmer.commands._stack_commands.services.cfn.destroy_stack", return_value=None)
-    mocker.patch("seedfarmer.commands._stack_commands.iam.delete_role", return_value=None)
-    mocker.patch("seedfarmer.commands._stack_commands.iam.detach_inline_policy_from_role", return_value=None)
+    mocker.patch("seedfarmer.commands._stack_commands.destroy_module_deployment_role", return_value=None)
     sc.destroy_module_stack(
         deployment_name="myapp",
         group_name="group",
@@ -130,21 +128,8 @@ def test_destroy_module_stack(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_stack
 def test_deploy_module_stack(session_manager, mocker):
-    mocker.patch(
-        "seedfarmer.commands._stack_commands.services.cfn.does_stack_exist",
-        return_value=(True, {"ProjectPolicyARN": "arn"}),
-    )
-    mocker.patch("seedfarmer.commands._stack_commands.iam.create_check_iam_role", return_value=None)
     mocker.patch("seedfarmer.commands._stack_commands.services.cfn.deploy_template", return_value=None)
-    mocker.patch(
-        "seedfarmer.commands._stack_commands.commands.seedkit_deployed",
-        return_value=(True, "stackname", {"SeedkitResourcesPolicyArn": "arn"}),
-    )
-    mocker.patch(
-        "seedfarmer.commands._stack_commands.iam.attach_policy_to_role",
-        return_value=["arn:aws:iam::aws:policy/AdministratorAccess", "arn:aws:iam::aws:policy/AdministratorAccess2"],
-    )
-    mocker.patch("seedfarmer.commands._stack_commands.iam.attach_inline_policy", return_value=None)
+    mocker.patch("seedfarmer.commands._stack_commands.create_module_deployment_role", return_value=None)
 
     import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
 
@@ -158,6 +143,45 @@ def test_deploy_module_stack(session_manager, mocker):
         account_id="123456789012",
         region="us-east-1",
         parameters=dep.groups[1].modules[1].parameters,
+        docker_credentials_secret="fsfasdfsad",
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_stack
+def test_create_module_deployment_role(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._stack_commands.services.cfn.does_stack_exist",
+        return_value=(True, {"ProjectPolicyARN": "arn"}),
+    )
+    mocker.patch("seedfarmer.commands._stack_commands.iam.create_check_iam_role", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._stack_commands.commands.seedkit_deployed",
+        return_value=(True, "stackname", {"SeedkitResourcesPolicyArn": "arn"}),
+    )
+    mocker.patch(
+        "seedfarmer.commands._stack_commands.iam.attach_policy_to_role",
+        return_value=["arn:aws:iam::aws:policy/AdministratorAccess", "arn:aws:iam::aws:policy/AdministratorAccess2"],
+    )
+    mocker.patch("seedfarmer.commands._stack_commands.iam.attach_inline_policy", return_value=None)
+
+    sc.create_module_deployment_role(
+        role_name="module-deployment-role",
+        deployment_name="myapp",
+        group_name="group",
+        module_name="module",
+        docker_credentials_secret="fsfasdfsad",
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_stack
+def test_destroy_module_deployment_role(session_manager, mocker):
+    mocker.patch("seedfarmer.commands._stack_commands.services.cfn.does_stack_exist", return_value=[True, {}])
+    mocker.patch("seedfarmer.commands._stack_commands.iam.delete_role", return_value=None)
+    mocker.patch("seedfarmer.commands._stack_commands.iam.detach_inline_policy_from_role", return_value=None)
+    sc.destroy_module_deployment_role(
+        role_name="module-deployment-role",
         docker_credentials_secret="fsfasdfsad",
     )
 

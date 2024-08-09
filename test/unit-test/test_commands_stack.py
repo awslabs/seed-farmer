@@ -213,6 +213,7 @@ def test_get_module_stack_info(session_manager, mocker):
     mocker.patch(
         "seedfarmer.commands._stack_commands.get_module_stack_names", return_value=("TheStackname", "TheRoleName")
     )
+    mocker.patch("aws_codeseeder.services.cfn.does_stack_exist", return_value=(True, {}))
     sc.get_module_stack_info(
         deployment_name="myapp", group_name="group", module_name="module", account_id="123456789012", region="us-east-1"
     )

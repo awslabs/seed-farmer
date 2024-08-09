@@ -430,6 +430,18 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
+    def get_permission_boundary_arn(self, target_account: str, target_region: str) -> Optional[str]:
+        permissions_boundary_name = self.get_parameter_value(
+            "permissionsBoundaryName",
+            account_alias=target_account,
+            region=target_region,
+        )
+        return (
+            f"arn:{self._partition}:iam::{target_account}:policy/{permissions_boundary_name}"
+            if permissions_boundary_name is not None
+            else None
+        )
+
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:
             for module in group.modules:

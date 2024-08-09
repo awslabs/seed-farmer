@@ -20,25 +20,13 @@ class ModuleDeployObject(CamelModel):
     pypi_mirror_secret: Optional[str] = None
     seedfarmer_bucket: Optional[str] = None
 
-    def _render_permissions_boundary_arn(
-        self, account_id: Optional[str], partition: Optional[str], permissions_boundary_name: Optional[str]
-    ) -> Optional[str]:
-        return (
-            f"arn:{partition}:iam::{account_id}:policy/{permissions_boundary_name}"
-            if permissions_boundary_name is not None
-            else None
-        )
-
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         _module = cast(ModuleManifest, self.deployment_manifest.get_module(self.group_name, self.module_name))
 
-        pba = self._render_permissions_boundary_arn(
-            account_id=str(_module.get_target_account_id()),
-            partition=self.deployment_manifest._partition,
-            permissions_boundary_name=self.deployment_manifest.get_parameter_value(
-                "permissionsBoundaryName", account_alias=_module.target_account, region=_module.target_region
-            ),
+        pba = self.deployment_manifest.get_permission_boundary_arn(
+            target_account=cast(str, _module.target_account),
+            target_region=cast(str, _module.target_region),
         )
         codebuild_image = self.deployment_manifest.get_region_codebuild_image(
             account_alias=_module.target_account, region=_module.target_region

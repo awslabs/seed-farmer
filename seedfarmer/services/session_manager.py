@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from boto3 import Session
-from botocore.credentials import Credentials
 
 import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_sts_identity_info
@@ -56,9 +55,6 @@ class ISessionManager(object):
 
     @abstractmethod
     def get_deployment_session(self, account_id: str, region_name: str) -> Session: ...
-
-    @abstractmethod
-    def get_toolchain_credentials(self) -> Credentials: ...
 
 
 class SessionManager(ISessionManager, metaclass=SingletonMeta):
@@ -119,20 +115,6 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         self._check_for_toolchain()
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
 
-    def get_toolchain_credentials(self) -> Credentials:
-        if not self.created:
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "The SessionManager object was never properly created...)"
-            )
-
-        toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
-        creds = Credentials(
-            access_key=toolchain_role["Credentials"]["AccessKeyId"],
-            secret_key=toolchain_role["Credentials"]["SecretAccessKey"],
-            token=toolchain_role["Credentials"]["SessionToken"],
-        )
-        return creds
-
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
@@ -149,6 +131,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 aws_access_key_id=toolchain_role["Credentials"]["AccessKeyId"],
                 aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=toolchain_role["Credentials"]["SessionToken"],
+                region_name=region_name if region_name in ["cn-north-1", "cn-northwest-1"] else None,
             )
             partition = sts_toolchain_client.get_caller_identity().get("Arn").split(":")[1]
             deployment_role_arn = get_deployment_role_arn(

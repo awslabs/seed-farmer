@@ -141,7 +141,6 @@ def destroy_generic_module_deployment_role(
     account_id: str,
     region: str,
     deployment_manifest: DeploymentManifest,
-    qualifier: Optional[str] = None,
 ) -> None:
     session = (
         SessionManager()
@@ -151,21 +150,20 @@ def destroy_generic_module_deployment_role(
             region_name=region,
         )
     )
-    generic_deployment_role_name = get_generic_module_deployment_role_name(
-        project_name=config.PROJECT,
-        deployment_name=cast(str, deployment_manifest.name),
+    generic_deployment_role_name = deployment_manifest.get_generic_module_deployment_role_name(
+        account_id=account_id,
         region=region,
-        qualifier=cast(str, qualifier),
     )
-    destroy_module_deployment_role(
-        role_name=generic_deployment_role_name,
-        docker_credentials_secret=deployment_manifest.get_parameter_value(
-            "dockerCredentialsSecret",
-            account_alias=account_id,
-            region=region,
-        ),
-        session=session,
-    )
+    if generic_deployment_role_name:
+        destroy_module_deployment_role(
+            role_name=generic_deployment_role_name,
+            docker_credentials_secret=deployment_manifest.get_parameter_value(
+                "dockerCredentialsSecret",
+                account_alias=account_id,
+                region=region,
+            ),
+            session=session,
+        )
 
 
 def _execute_deploy(
@@ -430,9 +428,7 @@ def prime_target_accounts(
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(
-    deployment_manifest: DeploymentManifest, remove_seedkit: bool = False, qualifier: Optional[str] = None
-) -> None:
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
 
@@ -455,7 +451,6 @@ def tear_down_target_accounts(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
-                qualifier=qualifier,
             )
 
             if remove_seedkit:

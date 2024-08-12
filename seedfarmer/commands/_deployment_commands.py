@@ -82,10 +82,16 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
 
 
 def _get_generic_module_deployment_role_name(
-    project_name: str, deployment_name: str, account_id: str, region: str, qualifier: Optional[str] = None
+    project_name: str, deployment_name: str, region: str, qualifier: Optional[str] = None
 ) -> str:
-    name = f"{project_name}-{deployment_name}-{account_id}-{region}-deployment-role"
-    return f"{name}-{qualifier}" if qualifier else name
+    name = f"{project_name}-{deployment_name}-{region}-deployment-role"
+    if qualifier:
+        name = f"{name}-{qualifier}"
+    if len(name) > 64:
+        raise seedfarmer.errors.InvalidConfigurationError(
+            f"Module deployment role name {name} is too long. Must be 64 characters or less."
+        )
+    return name
 
 
 def create_generic_module_deployment_role(
@@ -105,7 +111,6 @@ def create_generic_module_deployment_role(
     role_name = _get_generic_module_deployment_role_name(
         project_name=config.PROJECT,
         deployment_name=cast(str, deployment_manifest.name),
-        account_id=account_id,
         region=region,
         qualifier=cast(str, qualifier),
     )
@@ -143,7 +148,6 @@ def destroy_generic_module_deployment_role(
     generic_deployment_role_name = _get_generic_module_deployment_role_name(
         project_name=config.PROJECT,
         deployment_name=cast(str, deployment_manifest.name),
-        account_id=account_id,
         region=region,
         qualifier=cast(str, qualifier),
     )
@@ -190,7 +194,6 @@ def _execute_deploy(
         module_role_name = _get_generic_module_deployment_role_name(
             project_name=config.PROJECT,
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            account_id=account_id,
             region=region,
         )
 
@@ -266,7 +269,6 @@ def _execute_destroy(mdo: ModuleDeployObject, qualifier: Optional[str] = None) -
         module_role_name = _get_generic_module_deployment_role_name(
             project_name=config.PROJECT,
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            account_id=target_account_id,
             region=target_region,
             qualifier=cast(str, qualifier),
         )
@@ -385,14 +387,13 @@ def prime_target_accounts(
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-            deployment_role_name = create_generic_module_deployment_role(
+            create_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
                 qualifier=qualifier,
             )
 
-            seedkit_stack_outputs["DeploymentRoleName"] = deployment_role_name
             return [target_account_id, target_region, seedkit_stack_outputs]
 
         params = []

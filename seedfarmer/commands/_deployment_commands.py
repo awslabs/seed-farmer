@@ -261,7 +261,9 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     generic_module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
         account_id=target_account_id, region=target_region
     )
-    mdo.module_role_name = generic_module_role_name if generic_module_role_name else module_role_name
+    mdo.module_role_name = (
+        generic_module_role_name if generic_module_role_name and not module_stack_exists else module_role_name
+    )
 
     if module_stack_exists:
         commands.force_manage_policy_attach(

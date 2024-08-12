@@ -78,6 +78,20 @@ def test_deployment_manifest_with_custom_mirrors():
 
 @pytest.mark.models
 @pytest.mark.models_deployment_manifest
+def test_get_region_mirror_secret():
+    secret_name = "user-mirror-credentials"
+    deployment_yaml["targetAccountMappings"][0]["npmMirror"] = "https://mynpmmirror.com/here"
+    deployment_yaml["targetAccountMappings"][0]["npmMirrorSecret"] = secret_name
+    deployment_yaml["targetAccountMappings"][0]["pypiMirror"] = "https://mypypimirror.com/here"
+    deployment_yaml["targetAccountMappings"][0]["pypiMirrorSecret"] = secret_name
+    manifest = DeploymentManifest(**deployment_yaml)
+    assert manifest.get_region_mirror_secret() == secret_name
+    assert manifest.get_region_npm_mirror() == "https://mynpmmirror.com/here"
+    assert manifest.get_region_pypi_mirror() == "https://mypypimirror.com/here"
+
+
+@pytest.mark.models
+@pytest.mark.models_deployment_manifest
 def test_deployment_manifest_get_parameter_with_defaults():
     manifest = DeploymentManifest(**deployment_yaml)
 

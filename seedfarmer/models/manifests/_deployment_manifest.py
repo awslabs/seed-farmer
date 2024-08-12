@@ -174,6 +174,7 @@ class DeploymentManifest(CamelModel):
     description: Optional[str] = None
     target_account_mappings: List[TargetAccountMapping] = []
     force_dependency_redeploy: Optional[bool] = False
+    archive_secret: Optional[str] = None
     _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)
     _account_alias_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)

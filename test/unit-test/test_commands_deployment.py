@@ -123,15 +123,29 @@ def test_destroy_not_found(session_manager, mocker):
 @pytest.mark.commands_deployment
 def test_process_data_files(mocker):
     mocker.patch(
-        "seedfarmer.commands._deployment_commands.sf_git.clone_module_repo", return_value=("git", "path", "sdfasfas")
+        "seedfarmer.commands._deployment_commands.sf_git.clone_module_repo",
+        return_value=("git_path", "module_name", "commit_hash"),
+    )
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.sf_archive.fetch_archived_module",
+        return_value=("archive_path", "module_name2"),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_data_files", return_value=[])
+
     git_path_test = "git::https://github.com/awslabs/idf-modules.git//modules/dummy/blank?ref=release/1.0.0&depth=1"
-    datafile_list = []
-    datafile_list.append(DataFile(file_path=git_path_test))
-    datafile_list.append(DataFile(file_path=""))
+    archive_path_test = (
+        "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.zip?module=modules/dummy/blank"
+    )
+
+    datafile_list = [DataFile(file_path=git_path_test), DataFile(file_path=archive_path_test), DataFile(file_path="")]
 
     dc._process_data_files(data_files=datafile_list, module_name="test", group_name="test")
+
+    assert datafile_list[0].get_local_file_path() == "git_path/module_name"
+    assert datafile_list[0].get_bundle_path() == "module_name"
+
+    assert datafile_list[1].get_local_file_path() == "archive_path/module_name2"
+    assert datafile_list[1].get_bundle_path() == "module_name2"
 
 
 @pytest.mark.commands

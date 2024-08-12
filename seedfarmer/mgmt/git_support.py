@@ -37,7 +37,7 @@ def clone_module_repo(git_path: str) -> Tuple[str, str, Optional[str]]:
     Returns
     -------
     Tuple[str,str]
-        Returns a tuple that contains (in 0rder):
+        Returns a tuple that contains (in order):
         - the full path of the seedfarmer.gitmodules where the repo was cloned to
         - the relative path to seedfarmer.gitmodules of the module code
         - the commit hash associated wtih this code

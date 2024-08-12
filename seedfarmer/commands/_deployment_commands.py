@@ -388,14 +388,14 @@ def prime_target_accounts(
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-            module_deployment_role_name = create_generic_module_deployment_role(
+            generic_module_deployment_role_name = create_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
                 qualifier=qualifier,
             )
 
-            return [target_account_id, target_region, seedkit_stack_outputs, module_deployment_role_name]
+            return [target_account_id, target_region, seedkit_stack_outputs, generic_module_deployment_role_name]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -422,7 +422,10 @@ def prime_target_accounts(
         # add these to the region mappings for reference
         for out_s in output_seedkit:
             deployment_manifest.populate_metadata(
-                account_id=out_s[0], region=out_s[1], seedkit_dict=out_s[2], module_deployment_role_name=out_s[3]
+                account_id=out_s[0],
+                region=out_s[1],
+                seedkit_dict=out_s[2],
+                generic_module_deployment_role_name=out_s[3],
             )
         _logger.debug(deployment_manifest.model_dump())
 

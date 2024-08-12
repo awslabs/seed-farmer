@@ -62,7 +62,7 @@ class RegionMapping(CamelModel):
     pypi_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
     seedfarmer_artifact_bucket: Optional[str] = None
-    module_deployment_role_name: Optional[str] = None
+    generic_module_deployment_role_name: Optional[str] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -451,7 +451,7 @@ class DeploymentManifest(CamelModel):
             ):
                 for region_mapping in target_account.region_mappings:
                     if region == region_mapping.region or (use_default_region and region_mapping.default):
-                        return region_mapping.module_deployment_role_name
+                        return region_mapping.generic_module_deployment_role_name
         else:
             return None
 
@@ -501,12 +501,12 @@ class DeploymentManifest(CamelModel):
         return self._module_index.get((group, module), None)
 
     def populate_metadata(
-        self, account_id: str, region: str, seedkit_dict: Dict[str, Any], module_deployment_role_name: str
+        self, account_id: str, region: str, seedkit_dict: Dict[str, Any], generic_module_deployment_role_name: str
     ) -> None:
         for target_account in self.target_account_mappings:
             for region_mapping in target_account.region_mappings:
                 if target_account.actual_account_id == account_id and region_mapping.region == region:
-                    region_mapping.module_deployment_role_name = module_deployment_role_name
+                    region_mapping.generic_module_deployment_role_name = generic_module_deployment_role_name
                     region_mapping.seedkit_metadata = seedkit_dict
                     region_mapping.seedfarmer_artifact_bucket = (
                         seedkit_dict.get("SeedfarmerArtifactBucket")

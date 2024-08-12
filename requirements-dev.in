@@ -1,4 +1,4 @@
-awscli~=1.33.36
+awscli~=1.33.40
 certifi~=2024.7.4
 check-manifest~=0.48
 mypy~=1.11
@@ -9,7 +9,7 @@ pytest~=8.3.2
 pytest-cov~=5.0.0
 pytest-mock~=3.14.0
 pytest-ordering~=0.6
-ruff~=0.5.6
+ruff~=0.5.7
 twine~=5.1.1
 types-PyYAML~=6.0.12
 types-requests~=2.31.0.6

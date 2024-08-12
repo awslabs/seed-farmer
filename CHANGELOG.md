@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - Adds validation for trusted principal arns in `seedfarmer bootstrap toolchain`
+- Add region to sts boto client if using aws-cn partition
 
 ## v4.0.4 (2024-07-19)
 

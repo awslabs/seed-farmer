@@ -160,6 +160,19 @@ def get_deployment_role_arn(
     return f"arn:{partition}:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name, qualifier)}"
 
 
+def get_generic_module_deployment_role_name(
+    project_name: str, deployment_name: str, region: str, qualifier: Optional[str] = None
+) -> str:
+    name = f"{project_name}-{deployment_name}-{region}-deployment-role"
+    if qualifier:
+        name = f"{name}-{qualifier}"
+    if len(name) > 64:
+        raise seedfarmer.errors.InvalidConfigurationError(
+            f"Module deployment role name {name} is too long. Must be 64 characters or less."
+        )
+    return name
+
+
 def valid_qualifier(qualifer: str) -> bool:
     return True if ((len(qualifer) <= 6) and qualifer.isalnum()) else False
 

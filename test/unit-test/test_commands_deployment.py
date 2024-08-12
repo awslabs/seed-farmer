@@ -276,7 +276,7 @@ def test_deploy_deployment(session_manager, mocker):
 @pytest.mark.commands_deployment
 def test_create_module_deployment_role(session_manager, mocker):
     mocker.patch(
-        "seedfarmer.commands._deployment_commands._get_generic_module_deployment_role_name",
+        "seedfarmer.commands._deployment_commands.get_generic_module_deployment_role_name",
         return_value="generic-module-deployment-role",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.create_module_deployment_role", return_value=None)
@@ -295,7 +295,7 @@ def test_create_module_deployment_role(session_manager, mocker):
 @pytest.mark.commands_deployment
 def test_destroy_generic_module_deployment_role(session_manager, mocker):
     mocker.patch(
-        "seedfarmer.commands._deployment_commands._get_generic_module_deployment_role_name",
+        "seedfarmer.commands._deployment_commands.get_generic_module_deployment_role_name",
         return_value="generic-module-deployment-role",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_module_deployment_role", return_value=None)

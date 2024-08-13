@@ -80,9 +80,9 @@ def _env_vars(
     if permissions_boundary_arn:
         env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
     if pypi_mirror_secret is not None:
-        env_vars["AWS_CODESEEDER_MIRROR_SECRET"] = pypi_mirror_secret
+        env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret
     if npm_mirror_secret is not None:
-        env_vars["AWS_CODESEEDER_MIRROR_SECRET"] = npm_mirror_secret
+        env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret
     # Add the partition to env for ease of fetching
     env_vars["AWS_PARTITION"] = deployment_partition
     env_vars["AWS_CODESEEDER_VERSION"] = aws_codeseeder.__version__

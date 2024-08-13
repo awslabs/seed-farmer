@@ -104,7 +104,6 @@ def create_generic_module_deployment_role(
     account_id: str,
     region: str,
     deployment_manifest: DeploymentManifest,
-    qualifier: Optional[str] = None,
 ) -> str:
     session = (
         SessionManager()
@@ -118,7 +117,6 @@ def create_generic_module_deployment_role(
         project_name=config.PROJECT,
         deployment_name=cast(str, deployment_manifest.name),
         region=region,
-        qualifier=cast(str, qualifier),
     )
     create_module_deployment_role(
         role_name=role_name,
@@ -367,7 +365,6 @@ def prime_target_accounts(
     deployment_manifest: DeploymentManifest,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
-    qualifier: Optional[str] = None,
 ) -> None:
     _logger.info("Priming Accounts")
 
@@ -392,7 +389,6 @@ def prime_target_accounts(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
-                qualifier=qualifier,
             )
 
             return [target_account_id, target_region, seedkit_stack_outputs, generic_module_deployment_role_name]
@@ -833,7 +829,6 @@ def apply(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
-        qualifier=qualifier,
     )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)

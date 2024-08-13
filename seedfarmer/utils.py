@@ -161,16 +161,20 @@ def get_deployment_role_arn(
 
 
 def get_generic_module_deployment_role_name(
-    project_name: str, deployment_name: str, region: str, qualifier: Optional[str] = None
+    project_name: str,
+    deployment_name: str,
+    region: str,
 ) -> str:
-    name = f"{project_name}-{deployment_name}-{region}-deployment-role"
-    if qualifier:
-        name = f"{name}-{qualifier}"
-    if len(name) > 64:
-        raise seedfarmer.errors.InvalidConfigurationError(
-            f"Module deployment role name {name} is too long. Must be 64 characters or less."
-        )
-    return name
+    resource_name = f"{project_name}-{deployment_name}-{region}"
+    resource_hash = generate_hash(string=resource_name, length=4)
+
+    # Max length of IAM role name is 64 chars, "-deployment-role" is 16 chars, resource_hash plus "-" is 5 chars.
+    # If the resource_name, and "-deployment-role" is too long, truncate and use resource_hash for uniqueness.
+    return (
+        f"{resource_name[:64 - 16 - 5]}-deployment-role-{resource_hash}"
+        if len(resource_name) > (64 - 16)
+        else f"{resource_name}-deployment-role"
+    )
 
 
 def valid_qualifier(qualifer: str) -> bool:

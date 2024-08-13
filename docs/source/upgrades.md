@@ -78,11 +78,12 @@ To upgrade:
 `seed-farmer` 5.0.0 also introduces the use of `npmMirrorSecret` to support configuring a npm mirror with credentials (see [Manifests - Mirrors](./manifests.md#mirroroverride)).
 
 **The following upgrade is optional**
+
 Seedkits must be upgraded if **both** of the following is true.
 - Both `npmMirrorSecret` & `pypiMirrorSecret` are set.
 - Mirror secrets are using explicit paths. I.e. (`my-mirror-credentials::npm` && `my-mirror-credentials::pypi`). 
 
-**Note: You can still use this feature by specifying your secret name `my-mirror-credentials` without a path `::pypi` for both secrets.
+**Note: You can still use this feature by specifying your secret name `my-mirror-credentials` without a path `::pypi` for both secrets.**
 
 To upgrade:
 1. Update your version of `aws-codeseeder` via

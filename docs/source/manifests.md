@@ -31,8 +31,9 @@ targetAccountMappings:
     default: true
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
     npmMirror: https://registry.npmjs.org/
+    npmMirrorSecret: /something/aws-addf-mirror-credentials
     pypiMirror: https://pypi.python.org/simple
-    pypiMirrorSecret: /something/aws-addf-mirror-secret
+    pypiMirrorSecret: /something/aws-addf-mirror-mirror-credentials
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
@@ -41,8 +42,9 @@ targetAccountMappings:
         default: true
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
         npmMirror: https://registry.npmjs.org/
+        npmMirrorSecret: /something/aws-addf-mirror-credentials
         pypiMirror: https://pypi.python.org/simple
-        pypiMirrorSecret: /something/aws-addf-mirror-secret
+        pypiMirrorSecret: /something/aws-addf-mirror-credentials
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
@@ -103,6 +105,7 @@ targetAccountMappings:
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
   - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
   - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+  - **npmMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
   - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
@@ -258,8 +261,9 @@ targetAccount: secondary
 targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
 npmMirror: https://registry.npmjs.org/
+npmMirrorSecret: /something/aws-addf-mirror-credentials
 pypiMirror: https://pypi.python.org/simple
-pypiMirrorSecret: /something/aws-addf-mirror-secret
+pypiMirrorSecret: /something/aws-addf-mirror-credentials
 parameters:
   - name: encryption-type
     value: SSE
@@ -285,6 +289,7 @@ dataFiles:
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
 - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+- **npmMirrorSecret** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
@@ -480,6 +485,46 @@ This would result in the creation of the url `https://derekpypi:thepasswordpypi@
 ```code
 pip config set global.index-url https://derekpypi:thepasswordpypi@the-mirror-dns/simple/pypi
 ```
+
+#### NPM Mirror
+NPM mirror authentication is also supported via a registry url and ssl token. This can be added to the above mirror credentials secret. For example:
+```json
+{
+  "npm" : {
+    "ssl_token": "mybase64encodedssltoken"
+  },
+  "pypi": { 
+    "username": "derekpypi", 
+    "password": "thepasswordpypi" 
+  },
+  "artifactory": {
+    "username": "myuser@amazon.com",
+    "password": "agobbleygookofahexcodehere"
+  },
+  "pypi2": { 
+    "username": "hey", 
+    "password": "yooooo" 
+  },
+}
+```
+
+The secret for npm and the url of the npm registry would then need to be referenced in the manifest.
+
+```yaml
+...
+npmMirror: https://the-mirror-dns/npm/
+npmMirrorSecret: /aws-addf-mirror-credentials::npm
+...
+
+```
+This would result in the creation of an `_auth` entry in npm config (`.npmrc`) with the following convention:
+```
+//the-mirror-dns/npm/:_auth="mybase64encodedssltoken" and the global config in the runtime will be set via:
+
+```bash
+npm config set //the-mirror-dns/npm/:_auth="mybase64encodedssltoken"
+```
+
 
 ### Archive Secret
 

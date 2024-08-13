@@ -21,6 +21,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New
 
 ### Changes
+- adds support for npm mirrors to be set 
 
 ### Fixes
 

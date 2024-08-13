@@ -62,6 +62,7 @@ This is a **BREAKING CHANGE !!!**
 
 `seed-farmer` 5.0.0 introduces support for downloading modules from HTTPS archives.
 This includes support for both secure HTTPS URLs which require authentication, as well as support for S3 HTTPS downloads.
+
 In order to able to use secure HTTPS URLs or S3 HTTPS, you must upgrade the toolchain role permissions.
 
 To upgrade:
@@ -72,4 +73,24 @@ To upgrade:
 2. Run the bootstrap toolchain command via
     ```bash
     seedfarmer bootstrap toolchain <--as-target> --trusted-principal <trusted-principal-arn>
+    ```
+
+`seed-farmer` 5.0.0 also introduces the use of `npmMirrorSecret` to support configuring a npm mirror with credentials (see [Manifests - Mirrors](./manifests.md#mirroroverride)).
+
+**The following upgrade is optional**
+
+Seedkits must be upgraded if **both** of the following is true.
+- Both `npmMirrorSecret` & `pypiMirrorSecret` are set.
+- Mirror secrets are using explicit paths. I.e. (`my-mirror-credentials::npm` && `my-mirror-credentials::pypi`). 
+
+**Note: You can still use this feature by specifying your secret name `my-mirror-credentials` without a path `::pypi` for both secrets.**
+
+To upgrade:
+1. Update your version of `aws-codeseeder` via
+    ```bash
+    pip install --upgrade codeseeder==1.1.0
+     ```
+2. Run seedfarmer with the `--update-seedkit` flag set
+    ```bash
+    seedfarmer apply my/manifest/path --update-seedkit
     ```

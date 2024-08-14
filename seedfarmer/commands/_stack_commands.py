@@ -440,7 +440,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
-) -> Tuple[str, Optional[str]]:
+) -> Tuple[str, str]:
     """
     deploy_module_stack
         This function deploys the module stack (modulestack.yaml) to support the module

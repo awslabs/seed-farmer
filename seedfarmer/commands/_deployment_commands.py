@@ -148,8 +148,9 @@ def destroy_generic_module_deployment_role(
             region_name=region,
         )
     )
-    generic_deployment_role_name = deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=account_id,
+    generic_deployment_role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, deployment_manifest.name),
         region=region,
     )
     if generic_deployment_role_name:
@@ -180,8 +181,9 @@ def _execute_deploy(
     )
     module_stack_path = get_modulestack_path(str(module_manifest.get_local_path()))
 
-    module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=account_id,
+    module_role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
         region=region,
     )
 
@@ -256,8 +258,10 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         account_id=target_account_id,
         region=target_region,
     )
-    generic_module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=target_account_id, region=target_region
+    generic_module_role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
+        region=target_region,
     )
     mdo.module_role_name = (
         generic_module_role_name if generic_module_role_name and not module_stack_exists else module_role_name
@@ -385,13 +389,13 @@ def prime_target_accounts(
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-            generic_module_deployment_role_name = create_generic_module_deployment_role(
+            create_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
             )
 
-            return [target_account_id, target_region, seedkit_stack_outputs, generic_module_deployment_role_name]
+            return [target_account_id, target_region, seedkit_stack_outputs]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -421,7 +425,6 @@ def prime_target_accounts(
                 account_id=out_s[0],
                 region=out_s[1],
                 seedkit_dict=out_s[2],
-                generic_module_deployment_role_name=out_s[3],
             )
         _logger.debug(deployment_manifest.model_dump())
 

@@ -63,7 +63,6 @@ class RegionMapping(CamelModel):
     npm_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
     seedfarmer_artifact_bucket: Optional[str] = None
-    generic_module_deployment_role_name: Optional[str] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -446,29 +445,6 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
-    def get_generic_module_deployment_role_name(
-        self,
-        account_alias: Optional[str] = None,
-        account_id: Optional[str] = None,
-        region: Optional[str] = None,
-    ) -> Optional[str]:
-        if account_alias is not None and account_id is not None:
-            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
-
-        use_default_account = account_alias is None and account_id is None
-        use_default_region = region is None
-        for target_account in self.target_account_mappings:
-            if (
-                account_alias == target_account.alias
-                or account_id == target_account.actual_account_id
-                or (use_default_account and target_account.default)
-            ):
-                for region_mapping in target_account.region_mappings:
-                    if region == region_mapping.region or (use_default_region and region_mapping.default):
-                        return region_mapping.generic_module_deployment_role_name
-        else:
-            return None
-
     def get_permission_boundary_arn(self, target_account: str, target_region: str) -> Optional[str]:
         permissions_boundary_name = self.get_parameter_value(
             "permissionsBoundaryName",
@@ -514,13 +490,10 @@ class DeploymentManifest(CamelModel):
     def get_module(self, group: str, module: str) -> Optional[ModuleManifest]:
         return self._module_index.get((group, module), None)
 
-    def populate_metadata(
-        self, account_id: str, region: str, seedkit_dict: Dict[str, Any], generic_module_deployment_role_name: str
-    ) -> None:
+    def populate_metadata(self, account_id: str, region: str, seedkit_dict: Dict[str, Any]) -> None:
         for target_account in self.target_account_mappings:
             for region_mapping in target_account.region_mappings:
                 if target_account.actual_account_id == account_id and region_mapping.region == region:
-                    region_mapping.generic_module_deployment_role_name = generic_module_deployment_role_name
                     region_mapping.seedkit_metadata = seedkit_dict
                     region_mapping.seedfarmer_artifact_bucket = (
                         seedkit_dict.get("SeedfarmerArtifactBucket")

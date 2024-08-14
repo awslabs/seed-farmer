@@ -25,10 +25,12 @@ import yaml
 import seedfarmer.checksum as checksum
 import seedfarmer.errors
 import seedfarmer.messages as messages
+import seedfarmer.mgmt.archive_support as sf_archive
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
+from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -52,25 +54,43 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _process_module_path(module: ModuleManifest) -> None:
+def _process_git_module_path(module: ModuleManifest) -> None:
     working_dir, module_directory, commit_hash = sf_git.clone_module_repo(module.path)
     module.set_local_path(os.path.join(working_dir, module_directory))
     module.commit_hash = commit_hash if commit_hash else None
 
 
-def _process_data_files(data_files: List[DataFile], module_name: str, group_name: str) -> None:
+def _process_archive_path(module: ModuleManifest, secret_name: Optional[str] = None) -> None:
+    working_dir, module_directory = sf_archive.fetch_archived_module(module.path, secret_name)
+    module.set_local_path(os.path.join(working_dir, module_directory))
+
+
+def _process_data_files(
+    data_files: List[DataFile],
+    module_name: str,
+    group_name: str,
+    secret_name: Optional[str] = None,
+) -> None:
     for data_file in data_files:
         if data_file.file_path.startswith("git::"):
             working_dir, module_directory, commit_hash = sf_git.clone_module_repo(data_file.file_path)
             data_file.set_local_file_path(os.path.join(working_dir, module_directory))
             data_file.set_bundle_path(module_directory)
             data_file.commit_hash = commit_hash if commit_hash else None
+
+        elif data_file.file_path.startswith("archive::"):
+            working_dir, module_directory = sf_archive.fetch_archived_module(data_file.file_path, secret_name)
+            data_file.set_local_file_path(os.path.join(working_dir, module_directory))
+            data_file.set_bundle_path(module_directory)
+
         else:
             data_file.set_local_file_path(os.path.join(config.OPS_ROOT, data_file.file_path))
+
     missing_files = du.validate_data_files(data_files)
     if len(missing_files) > 0:
         print(f"The following data files cannot be fetched for module {group_name}-{module_name}:")
@@ -78,6 +98,70 @@ def _process_data_files(data_files: List[DataFile], module_name: str, group_name
             print(f"  {missing_file}")
         print_bolded(message="Exiting Deployment", color="red")
         raise seedfarmer.errors.InvalidPathError("Missing DataFiles - cannot process")
+
+
+def create_generic_module_deployment_role(
+    account_id: str,
+    region: str,
+    deployment_manifest: DeploymentManifest,
+) -> str:
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=account_id,
+            region_name=region,
+        )
+    )
+    role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, deployment_manifest.name),
+        region=region,
+    )
+    create_module_deployment_role(
+        role_name=role_name,
+        deployment_name=cast(str, deployment_manifest.name),
+        permissions_boundary_arn=deployment_manifest.get_permission_boundary_arn(
+            target_account=account_id,
+            target_region=region,
+        ),
+        docker_credentials_secret=deployment_manifest.get_parameter_value(
+            "dockerCredentialsSecret",
+            account_alias=account_id,
+            region=region,
+        ),
+        session=session,
+    )
+    return role_name
+
+
+def destroy_generic_module_deployment_role(
+    account_id: str,
+    region: str,
+    deployment_manifest: DeploymentManifest,
+) -> None:
+    session = (
+        SessionManager()
+        .get_or_create()
+        .get_deployment_session(
+            account_id=account_id,
+            region_name=region,
+        )
+    )
+    generic_deployment_role_name = deployment_manifest.get_generic_module_deployment_role_name(
+        account_id=account_id,
+        region=region,
+    )
+    if generic_deployment_role_name:
+        destroy_module_deployment_role(
+            role_name=generic_deployment_role_name,
+            docker_credentials_secret=deployment_manifest.get_parameter_value(
+                "dockerCredentialsSecret",
+                account_alias=account_id,
+                region=region,
+            ),
+            session=session,
+        )
 
 
 def _execute_deploy(
@@ -94,22 +178,29 @@ def _execute_deploy(
         target_account=account_id,
         target_region=region,
     )
+    module_stack_path = get_modulestack_path(str(module_manifest.get_local_path()))
 
-    module_stack_name, module_role_name = commands.deploy_module_stack(
-        module_stack_path=get_modulestack_path(str(module_manifest.get_local_path())),
-        deployment_name=cast(str, mdo.deployment_manifest.name),
-        deployment_partition=cast(str, mdo.deployment_manifest._partition),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
+    module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
         account_id=account_id,
         region=region,
-        parameters=mdo.parameters,
-        docker_credentials_secret=mdo.docker_credentials_secret,
-        permissions_boundary_arn=mdo.permissions_boundary_arn,
     )
+
+    if module_stack_path:
+        _, module_role_name = commands.deploy_module_stack(
+            module_stack_path=module_stack_path,
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            group_name=mdo.group_name,
+            module_name=mdo.module_name,
+            account_id=account_id,
+            region=region,
+            parameters=mdo.parameters,
+            docker_credentials_secret=mdo.docker_credentials_secret,
+            permissions_boundary_arn=mdo.permissions_boundary_arn,
+        )
+
     mdo.module_role_name = module_role_name
 
-    #   Get the current module's SSM if it was alreadly loaded...
+    # Get the current module's SSM if it was already loaded...
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     mdo.module_metadata = json.dumps(
         get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
@@ -158,26 +249,33 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         target_account=target_account_id,
         target_region=target_region,
     )
-    module_stack_name, module_role_name = commands.get_module_stack_info(
+    module_stack_name, module_role_name, module_stack_exists = commands.get_module_stack_info(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         group_name=mdo.group_name,
         module_name=mdo.module_name,
         account_id=target_account_id,
         region=target_region,
     )
-
-    mdo.module_role_name = module_role_name
-
-    commands.force_manage_policy_attach(
-        deployment_name=cast(str, mdo.deployment_manifest.name),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
-        account_id=target_account_id,
-        region=target_region,
-        module_role_name=mdo.module_role_name,
+    generic_module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
+        account_id=target_account_id, region=target_region
     )
+    mdo.module_role_name = (
+        generic_module_role_name if generic_module_role_name and not module_stack_exists else module_role_name
+    )
+
+    if module_stack_exists:
+        commands.force_manage_policy_attach(
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            group_name=mdo.group_name,
+            module_name=mdo.module_name,
+            account_id=target_account_id,
+            region=target_region,
+            module_role_name=mdo.module_role_name,
+        )
+
     resp = commands.destroy_module(mdo)
-    if resp.status == StatusType.SUCCESS.value:
+
+    if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
             cast(str, mdo.deployment_manifest.name),
             mdo.group_name,
@@ -264,7 +362,9 @@ def _deploy_validated_deployment(
 
 
 def prime_target_accounts(
-    deployment_manifest: DeploymentManifest, update_seedkit: bool = False, update_project_policy: bool = False
+    deployment_manifest: DeploymentManifest,
+    update_seedkit: bool = False,
+    update_project_policy: bool = False,
 ) -> None:
     _logger.info("Priming Accounts")
 
@@ -273,15 +373,25 @@ def prime_target_accounts(
     ) as workers:
 
         def _prime_accounts(args: Dict[str, Any]) -> List[Any]:
+            target_account_id = args["account_id"]
+            target_region = args["region"]
+
             threading.current_thread().name = (
-                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+                f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
-            _logger.info("Priming Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Priming Acccount %s in %s", target_account_id, target_region)
             seedkit_stack_outputs = commands.deploy_seedkit(**args)
             seedfarmer_bucket = commands.deploy_bucket_storage_stack(**args)
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
-            return [args["account_id"], args["region"], seedkit_stack_outputs]
+
+            generic_module_deployment_role_name = create_generic_module_deployment_role(
+                account_id=target_account_id,
+                region=target_region,
+                deployment_manifest=deployment_manifest,
+            )
+
+            return [target_account_id, target_region, seedkit_stack_outputs, generic_module_deployment_role_name]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -307,24 +417,40 @@ def prime_target_accounts(
         output_seedkit = list(workers.map(_prime_accounts, params))
         # add these to the region mappings for reference
         for out_s in output_seedkit:
-            deployment_manifest.populate_seedkit_metadata(account_id=out_s[0], region=out_s[1], seedkit_dict=out_s[2])
+            deployment_manifest.populate_metadata(
+                account_id=out_s[0],
+                region=out_s[1],
+                seedkit_dict=out_s[2],
+                generic_module_deployment_role_name=out_s[3],
+            )
         _logger.debug(deployment_manifest.model_dump())
 
 
 def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
+
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=len(deployment_manifest.target_accounts_regions), thread_name_prefix="Teardown-Accounts"
     ) as workers:
 
         def _teardown_accounts(args: Dict[str, Any]) -> None:
+            target_account_id = args["account_id"]
+            target_region = args["region"]
             threading.current_thread().name = (
-                f"{threading.current_thread().name}-{args['account_id']}_{args['region']}"
+                f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
-            _logger.info("Tearing Down Acccount %s in %s", args["account_id"], args["region"])
+            _logger.info("Tearing Down Acccount %s in %s", target_account_id, target_region)
             commands.destroy_managed_policy_stack(**args)
             commands.destroy_bucket_storage_stack(**args)
+
+            # Destroy generic module deployment role
+            destroy_generic_module_deployment_role(
+                account_id=target_account_id,
+                region=target_region,
+                deployment_manifest=deployment_manifest,
+            )
+
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)
                 commands.destroy_seedkit(**args)
@@ -397,14 +523,22 @@ def destroy_deployment(
 
                     mdos = []
                     for _module in _group.modules:
-                        _process_module_path(module=_module) if _module.path.startswith("git::") else None
-                        (
-                            _process_data_files(
-                                data_files=_module.data_files, module_name=_module.name, group_name=_group.name
+                        if _module.path.startswith("git::"):
+                            _process_git_module_path(module=_module)
+                        elif _module.path.startswith("archive::"):
+                            _process_archive_path(
+                                module=_module,
+                                secret_name=destroy_manifest.archive_secret,
                             )
-                            if _module.data_files is not None
-                            else None
-                        )
+
+                        if _module.data_files is not None:
+                            _process_data_files(
+                                data_files=_module.data_files,
+                                module_name=_module.name,
+                                group_name=_group.name,
+                                secret_name=destroy_manifest.archive_secret,
+                            )
+
                         if _module and _module.deploy_spec:
                             mdo = ModuleDeployObject(
                                 deployment_manifest=destroy_manifest, group_name=_group.name, module_name=_module.name
@@ -493,13 +627,21 @@ def deploy_deployment(
             if not module.path:
                 raise seedfarmer.errors.InvalidManifestError("Unable to parse module manifest, `path` not specified")
 
-            _process_module_path(module=module) if module.path.startswith("git::") else None
+            if module.path.startswith("git::"):
+                _process_git_module_path(module=module)
+            elif module.path.startswith("archive::"):
+                _process_archive_path(
+                    module=module,
+                    secret_name=deployment_manifest.archive_secret,
+                )
 
-            (
-                _process_data_files(data_files=module.data_files, module_name=module.name, group_name=group.name)
-                if module.data_files is not None
-                else None
-            )
+            if module.data_files is not None:
+                _process_data_files(
+                    data_files=module.data_files,
+                    module_name=module.name,
+                    group_name=group.name,
+                    secret_name=deployment_manifest.archive_secret,
+                )
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
             with open(deployspec_path) as module_spec_file:

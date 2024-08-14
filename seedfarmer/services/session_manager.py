@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from boto3 import Session
+from botocore.credentials import Credentials
 
 import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_sts_identity_info
@@ -58,6 +59,9 @@ class ISessionManager(object):
 
     @abstractmethod
     def get_deployment_session(self, account_id: str, region_name: str) -> Session: ...
+
+    @abstractmethod
+    def get_toolchain_credentials(self) -> Credentials: ...
 
 
 class SessionManager(ISessionManager, metaclass=SingletonMeta):
@@ -117,6 +121,20 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             )
         self._check_for_toolchain()
         return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]  # type: ignore[no-any-return]
+
+    def get_toolchain_credentials(self) -> Credentials:
+        if not self.created:
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "The SessionManager object was never properly created...)"
+            )
+
+        toolchain_role = self.sessions[self.TOOLCHAIN_KEY][self.ROLE]
+        creds = Credentials(
+            access_key=toolchain_role["Credentials"]["AccessKeyId"],
+            secret_key=toolchain_role["Credentials"]["SecretAccessKey"],
+            token=toolchain_role["Credentials"]["SessionToken"],
+        )
+        return creds
 
     def get_deployment_session(self, account_id: str, region_name: str) -> Session:
         session_key = f"{account_id}-{region_name}"

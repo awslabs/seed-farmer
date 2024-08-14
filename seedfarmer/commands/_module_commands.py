@@ -56,6 +56,7 @@ def _env_vars(
     session: Optional[Session] = None,
     use_project_prefix: Optional[bool] = True,
     pypi_mirror_secret: Optional[str] = None,
+    npm_mirror_secret: Optional[str] = None,
 ) -> Dict[str, str]:
     env_vars = (
         {
@@ -79,7 +80,9 @@ def _env_vars(
     if permissions_boundary_arn:
         env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
     if pypi_mirror_secret is not None:
-        env_vars["AWS_CODESEEDER_MIRROR_SECRET"] = pypi_mirror_secret
+        env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret
+    if npm_mirror_secret is not None:
+        env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret
     # Add the partition to env for ease of fetching
     env_vars["AWS_PARTITION"] = deployment_partition
     env_vars["AWS_CODESEEDER_VERSION"] = aws_codeseeder.__version__
@@ -126,6 +129,9 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         use_project_prefix=use_project_prefix,
         pypi_mirror_secret=(
             module_manifest.pypi_mirror_secret if module_manifest.pypi_mirror_secret else mdo.pypi_mirror_secret
+        ),
+        npm_mirror_secret=(
+            module_manifest.npm_mirror_secret if module_manifest.npm_mirror_secret else mdo.npm_mirror_secret
         ),
     )
     env_vars[_param("MODULE_MD5", use_project_prefix)] = (
@@ -247,6 +253,9 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         use_project_prefix=use_project_prefix,
         pypi_mirror_secret=(
             module_manifest.pypi_mirror_secret if module_manifest.pypi_mirror_secret else mdo.pypi_mirror_secret
+        ),
+        npm_mirror_secret=(
+            module_manifest.npm_mirror_secret if module_manifest.npm_mirror_secret else mdo.npm_mirror_secret
         ),
     )
 

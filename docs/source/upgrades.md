@@ -55,3 +55,42 @@ To upgrade:
   ** *please update ${ProjectName} accordingly -- this is for you to manage*
 
 Your existing deployment is unaffected after this change, and `seed-farmer` will continue to destroy as it previously did UNTIL the module you are looking to destroy has been sucessfully deployed with this version.  In other words, your modules WILL NOT benefit from the persisted bundle feature UNTIL they are deployed successfully with this new `seed-farmer` version.  In that regard, `seed-farmer` will continue to delete modules they way it always has (is backward compatible).
+
+
+## Upgrading to 5.0.0  
+This is a **BREAKING CHANGE !!!**
+
+`seed-farmer` 5.0.0 introduces support for downloading modules from HTTPS archives.
+This includes support for both secure HTTPS URLs which require authentication, as well as support for S3 HTTPS downloads.
+
+In order to able to use secure HTTPS URLs or S3 HTTPS, you must upgrade the toolchain role permissions.
+
+To upgrade:
+1. Update your version of `seed-farmer` via
+    ```bash
+    pip install --upgrade seed-farmer==5.0.0
+     ```
+2. Run the bootstrap toolchain command via
+    ```bash
+    seedfarmer bootstrap toolchain <--as-target> --trusted-principal <trusted-principal-arn>
+    ```
+
+`seed-farmer` 5.0.0 also introduces the use of `npmMirrorSecret` to support configuring a npm mirror with credentials (see [Manifests - Mirrors](./manifests.md#mirroroverride)).
+
+**The following upgrade is optional**
+
+Seedkits must be upgraded if **both** of the following is true.
+- Both `npmMirrorSecret` & `pypiMirrorSecret` are set.
+- Mirror secrets are using explicit paths. I.e. (`my-mirror-credentials::npm` && `my-mirror-credentials::pypi`). 
+
+**Note: You can still use this feature by specifying your secret name `my-mirror-credentials` without a path `::pypi` for both secrets.**
+
+To upgrade:
+1. Update your version of `aws-codeseeder` via
+    ```bash
+    pip install --upgrade codeseeder==1.1.0
+     ```
+2. Run seedfarmer with the `--update-seedkit` flag set
+    ```bash
+    seedfarmer apply my/manifest/path --update-seedkit
+    ```

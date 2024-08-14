@@ -160,6 +160,23 @@ def get_deployment_role_arn(
     return f"arn:{partition}:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name, qualifier)}"
 
 
+def get_generic_module_deployment_role_name(
+    project_name: str,
+    deployment_name: str,
+    region: str,
+) -> str:
+    resource_name = f"{project_name}-{deployment_name}-{region}"
+    resource_hash = generate_hash(string=resource_name, length=4)
+
+    # Max length of IAM role name is 64 chars, "-deployment-role" is 16 chars, resource_hash plus "-" is 5 chars.
+    # If the resource_name, and "-deployment-role" is too long, truncate and use resource_hash for uniqueness.
+    return (
+        f"{resource_name[:64 - 16 - 5]}-deployment-role-{resource_hash}"
+        if len(resource_name) > (64 - 16)
+        else f"{resource_name}-deployment-role"
+    )
+
+
 def valid_qualifier(qualifer: str) -> bool:
     return True if ((len(qualifer) <= 6) and qualifer.isalnum()) else False
 

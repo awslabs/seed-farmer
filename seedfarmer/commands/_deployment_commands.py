@@ -53,6 +53,7 @@ from seedfarmer.output_utils import (
     print_modules_build_info,
 )
 from seedfarmer.services import get_sts_identity_info
+from seedfarmer.services._iam import get_role
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
@@ -264,7 +265,9 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         region=target_region,
     )
     mdo.module_role_name = (
-        generic_module_role_name if generic_module_role_name and not module_stack_exists else module_role_name
+        generic_module_role_name
+        if get_role(role_name=generic_module_role_name, session=session) and not module_stack_exists
+        else module_role_name
     )
 
     if module_stack_exists:

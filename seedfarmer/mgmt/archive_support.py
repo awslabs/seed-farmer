@@ -50,7 +50,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
             credentials=credentials,
             headers={"x-amz-content-sha256": hashlib.sha256("".encode("utf-8")).hexdigest()},
         )
-        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)
+        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)  # type: ignore[arg-type]
 
     if secret_name:
         session: boto3.Session = SessionManager().get_or_create().toolchain_session  # type: ignore[no-redef]

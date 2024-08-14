@@ -59,7 +59,7 @@ def create_check_iam_role(
             ],
         }
         if group_name and module_name:
-            args["Tags"].append({"Key": "SeedFarmerModule", "Value": f"{group_name}-{module_name}"})  # type: ignore[attr-defined]
+            args["Tags"].append({"Key": "SeedFarmerModule", "Value": f"{group_name}-{module_name}"})
         if permissions_boundary_arn:
             args["PermissionsBoundary"] = permissions_boundary_arn
         iam_client.create_role(**args)

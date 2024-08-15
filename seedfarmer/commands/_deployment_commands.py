@@ -441,15 +441,14 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
                 f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", target_account_id, target_region)
-            commands.destroy_managed_policy_stack(**args)
-            commands.destroy_bucket_storage_stack(**args)
-
-            # Destroy generic module deployment role
+            # Detach policies and destroy generic module deployment role
             destroy_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
             )
+            commands.destroy_managed_policy_stack(**args)
+            commands.destroy_bucket_storage_stack(**args)
 
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)

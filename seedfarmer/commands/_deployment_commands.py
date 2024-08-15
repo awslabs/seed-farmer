@@ -53,7 +53,6 @@ from seedfarmer.output_utils import (
     print_modules_build_info,
 )
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services._iam import get_role
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
@@ -261,7 +260,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     # Use module deployment role from the metadata if it is available, otherwise fall back to default module role
     mdo.module_role_name = (
         module_metadata.get("ModuleDeploymentRoleName")
-        if module_metadata.get("ModuleDeploymentRoleName")
+        if module_metadata and module_metadata.get("ModuleDeploymentRoleName")
         else module_role_name
     )
 

@@ -1,5 +1,9 @@
 # Seed-Farmer
 
+[![PyPi](https://img.shields.io/pypi/v/seed-farmer)](https://pypi.org/project/seed-farmer/)
+[![Python Version](https://img.shields.io/pypi/pyversions/seed-farmer.svg)](https://pypi.org/project/seed-farmer/)
+[![License](https://img.shields.io/pypi/l/seed-farmer)](https://github.com/awslabs/seed-farmer/blob/main/LICENSE)
+
 Seed-Farmer (seedfarmer) is an opensource orchestration tool that works with AWS CodeSeeder (see [github](https://github.com/awslabs/aws-codeseeder) or [docs](https://aws-codeseeder.readthedocs.io/en/latest/)) and acts as an orchestration tool modeled after [GitOps deployments](https://www.gitops.tech/).  It has a CommandLine Interface (CLI) based in Python. 
 
 Please see our [SeedFarmer Documentation](https://seed-farmer.readthedocs.io/en/latest/).

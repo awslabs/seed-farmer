@@ -242,9 +242,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     session = (
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
-    mdo.module_metadata = json.dumps(
-        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
-    )
+    module_metadata = get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
+    mdo.module_metadata = json.dumps(module_metadata)
     mdo.parameters = load_parameter_values(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         parameters=module_manifest.parameters,
@@ -259,14 +258,10 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         account_id=target_account_id,
         region=target_region,
     )
-    generic_module_role_name = get_generic_module_deployment_role_name(
-        project_name=config.PROJECT,
-        deployment_name=cast(str, mdo.deployment_manifest.name),
-        region=target_region,
-    )
+    # Use module deployment role from the metadata if it is available, otherwise fall back to default module role
     mdo.module_role_name = (
-        generic_module_role_name
-        if get_role(role_name=generic_module_role_name, session=session) and not module_stack_exists
+        module_metadata.get("ModuleDeploymentRoleName")
+        if module_metadata.get("ModuleDeploymentRoleName")
         else module_role_name
     )
 

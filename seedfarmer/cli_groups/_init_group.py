@@ -22,7 +22,7 @@ from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-@click.group(name="init", help="Initiaize a project or module")
+@click.group(name="init", help="Initialize a project or module")
 def init() -> None:
     """Initialize a project or module"""
     pass
@@ -39,8 +39,15 @@ def init() -> None:
     help="The template URL. If not specified, the default template repo is `https://github.com/awslabs/seed-farmer`",
     required=False,
 )
-def init_project(template_url: str) -> None:
-    minit.create_project(template_url=template_url)
+@click.option(
+    "--template-branch",
+    "-b",
+    default="main",
+    help="The Branch on the template repository. If not specified, the default template branch is `main`",
+    required=False,
+)
+def init_project(template_url: str, template_branch: str) -> None:
+    minit.create_project(template_url=template_url, template_branch=template_branch)
 
 
 @init.command(name="module", help="Initialize a new module")
@@ -70,8 +77,17 @@ def init_project(template_url: str) -> None:
     ),
     required=False,
 )
+@click.option(
+    "--template-branch",
+    "-b",
+    default="main",
+    help="The Branch on the template repository. If not specified, the default template branch is `main`",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
-def init_module(group_name: str, module_name: str, module_type: str, template_url: str, debug: bool) -> None:
+def init_module(
+    group_name: str, module_name: str, module_type: str, template_url: str, template_branch: str, debug: bool
+) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Initializing module %s", module_name)
@@ -81,4 +97,5 @@ def init_module(group_name: str, module_name: str, module_type: str, template_ur
         module_name=module_name,
         module_type=module_type,
         template_url=template_url,
+        template_branch=template_branch,
     )

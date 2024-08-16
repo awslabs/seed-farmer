@@ -60,6 +60,7 @@ class RegionMapping(CamelModel):
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
+    npm_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
     seedfarmer_artifact_bucket: Optional[str] = None
 
@@ -77,6 +78,7 @@ class TargetAccountMapping(CamelModel):
     region_mappings: List[RegionMapping] = []
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
+    npm_mirror_secret: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
@@ -172,6 +174,7 @@ class DeploymentManifest(CamelModel):
     description: Optional[str] = None
     target_account_mappings: List[TargetAccountMapping] = []
     force_dependency_redeploy: Optional[bool] = False
+    archive_secret: Optional[str] = None
     _default_account: Optional[TargetAccountMapping] = PrivateAttr(default=None)
     _account_alias_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
     _account_id_index: Dict[str, TargetAccountMapping] = PrivateAttr(default_factory=dict)
@@ -371,15 +374,19 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
-    def get_region_pypi_mirror_secret(
+    def get_region_mirror_secret(
         self,
         *,
+        mirror_type: Optional[str] = "pypi",
         account_alias: Optional[str] = None,
         account_id: Optional[str] = None,
         region: Optional[str] = None,
     ) -> Optional[str]:
         if account_alias is not None and account_id is not None:
             raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        if mirror_type not in ["pypi", "npm"]:
+            raise seedfarmer.errors.InvalidManifestError("Mirror type must be of type 'npm' or 'pypi'")
 
         use_default_account = account_alias is None and account_id is None
         use_default_region = region is None
@@ -389,15 +396,23 @@ class DeploymentManifest(CamelModel):
                 or account_id == target_account.actual_account_id
                 or (use_default_account and target_account.default)
             ):
-                # Search the region_mappings for the region, if the pypi_mirror_secret is in region
+                # Search the region_mappings for the region, if the [pypi|npm]_mirror_secret is in region
                 for region_mapping in target_account.region_mappings:
                     if region == region_mapping.region or (use_default_region and region_mapping.default):
-                        pypi_mirror_secret = (
-                            region_mapping.pypi_mirror_secret
-                            if region_mapping.pypi_mirror_secret is not None
-                            else target_account.pypi_mirror_secret
-                        )
-                        return pypi_mirror_secret
+                        if mirror_type == "pypi":
+                            pypi_mirror_secret = (
+                                region_mapping.pypi_mirror_secret
+                                if region_mapping.pypi_mirror_secret is not None
+                                else target_account.pypi_mirror_secret
+                            )
+                            return pypi_mirror_secret
+                        elif mirror_type == "npm":
+                            npm_mirror_secret = (
+                                region_mapping.npm_mirror_secret
+                                if region_mapping.npm_mirror_secret is not None
+                                else target_account.npm_mirror_secret
+                            )
+                            return npm_mirror_secret
         else:
             return None
 
@@ -429,6 +444,18 @@ class DeploymentManifest(CamelModel):
                         return sf_bucket
         else:
             return None
+
+    def get_permission_boundary_arn(self, target_account: str, target_region: str) -> Optional[str]:
+        permissions_boundary_name = self.get_parameter_value(
+            "permissionsBoundaryName",
+            account_alias=target_account,
+            region=target_region,
+        )
+        return (
+            f"arn:{self._partition}:iam::{target_account}:policy/{permissions_boundary_name}"
+            if permissions_boundary_name is not None
+            else None
+        )
 
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:
@@ -463,7 +490,7 @@ class DeploymentManifest(CamelModel):
     def get_module(self, group: str, module: str) -> Optional[ModuleManifest]:
         return self._module_index.get((group, module), None)
 
-    def populate_seedkit_metadata(self, account_id: str, region: str, seedkit_dict: Dict[str, Any]) -> None:
+    def populate_metadata(self, account_id: str, region: str, seedkit_dict: Dict[str, Any]) -> None:
         for target_account in self.target_account_mappings:
             for region_mapping in target_account.region_mappings:
                 if target_account.actual_account_id == account_id and region_mapping.region == region:

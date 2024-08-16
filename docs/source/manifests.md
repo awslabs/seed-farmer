@@ -16,6 +16,7 @@ nameGenerator:
         envVariable: SUFFIX_ENV_VARIABLE
 toolchainRegion: us-west-2
 forceDependencyRedeploy: False
+archiveSecret: example-archive-credentials-modules
 groups:
   - name: optionals
     path: manifests-multi/examples/optional-modules.yaml
@@ -30,8 +31,9 @@ targetAccountMappings:
     default: true
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
     npmMirror: https://registry.npmjs.org/
+    npmMirrorSecret: /something/aws-addf-mirror-credentials
     pypiMirror: https://pypi.python.org/simple
-    pypiMirrorSecret: /something/aws-addf-mirror-secret
+    pypiMirrorSecret: /something/aws-addf-mirror-mirror-credentials
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
@@ -40,8 +42,9 @@ targetAccountMappings:
         default: true
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
         npmMirror: https://registry.npmjs.org/
+        npmMirrorSecret: /something/aws-addf-mirror-credentials
         pypiMirror: https://pypi.python.org/simple
-        pypiMirrorSecret: /something/aws-addf-mirror-secret
+        pypiMirrorSecret: /something/aws-addf-mirror-credentials
         parametersRegional:
           dockerCredentialsSecret: nameofsecret
           permissionsBoundaryName: policyname
@@ -88,6 +91,9 @@ targetAccountMappings:
   - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
+- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
+  - secret name must follow the `*-archive-credentials*` naming pattern
+  - the secret value must be a JSON with the `username` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
   - **name** - the name of the group
   - **path**- the relative path to the [module manifest](module_manifest)
@@ -99,6 +105,7 @@ targetAccountMappings:
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
   - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
   - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+  - **npmMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
   - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
@@ -254,8 +261,9 @@ targetAccount: secondary
 targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
 npmMirror: https://registry.npmjs.org/
+npmMirrorSecret: /something/aws-addf-mirror-credentials
 pypiMirror: https://pypi.python.org/simple
-pypiMirrorSecret: /something/aws-addf-mirror-secret
+pypiMirrorSecret: /something/aws-addf-mirror-credentials
 parameters:
   - name: encryption-type
     value: SSE
@@ -269,16 +277,19 @@ dataFiles:
   - filePath: data/test2.txt
   - filePath: test1.txt
   - filePath: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/deployspec.yaml?ref=release/1.0.0&depth=1
+  - filePath: archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/storage/buckets/deployspec.yaml
 ```
 - **name** - the name of the module
   - this name must be unique in the group of the deployment
 - **path** - this element supports two sources of code:
   - the relative path to the module code in the project if deploying code from the local filesystem
   - a public Git Repository, leveraging the Terraform semantic as denoted [HERE](https://www.terraform.io/language/modules/sources#generic-git-repository)
+  - a release archive to download over HTTPS 
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
 - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
+- **npmMirrorSecret** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
 - **parameters** - the parameters section .... see [Parameters](parameters)
@@ -290,6 +301,16 @@ Here is a sample manifest referencing a git repo:
 ```yaml
 name: networking
 path: git::https://github.com/awslabs/idf-modules.git//modules/network/basic-cdk?ref=release/1.0.0&depth=1
+targetAccount: secondary
+parameters:
+  - name: internet-accessible
+    value: true
+```
+
+Here is a sample manifest referencing an archive over HTTPS:
+```yaml
+name: networking
+path: archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/network/basic-cdk
 targetAccount: secondary
 parameters:
   - name: internet-accessible
@@ -465,7 +486,76 @@ This would result in the creation of the url `https://derekpypi:thepasswordpypi@
 pip config set global.index-url https://derekpypi:thepasswordpypi@the-mirror-dns/simple/pypi
 ```
 
+#### NPM Mirror
+NPM mirror authentication is also supported via a registry url and ssl token. This can be added to the above mirror credentials secret. For example:
+```json
+{
+  "npm" : {
+    "ssl_token": "mybase64encodedssltoken"
+  },
+  "pypi": { 
+    "username": "derekpypi", 
+    "password": "thepasswordpypi" 
+  },
+  "artifactory": {
+    "username": "myuser@amazon.com",
+    "password": "agobbleygookofahexcodehere"
+  },
+  "pypi2": { 
+    "username": "hey", 
+    "password": "yooooo" 
+  },
+}
+```
 
+The secret for npm and the url of the npm registry would then need to be referenced in the manifest.
+
+```yaml
+...
+npmMirror: https://the-mirror-dns/npm/
+npmMirrorSecret: /aws-addf-mirror-credentials::npm
+...
+
+```
+This would result in the creation of an `_auth` entry in npm config (`.npmrc`) with the following convention:
+```
+//the-mirror-dns/npm/:_auth="mybase64encodedssltoken" and the global config in the runtime will be set via:
+
+```bash
+npm config set //the-mirror-dns/npm/:_auth="mybase64encodedssltoken"
+```
+
+
+### Archive Secret
+
+If using an archive store that is not public or needs an authentication scheme, the `archiveSecret` provides a means to set a username / password, so that the archived modules can be downloaded.
+
+To use this feature, you MUST adhere to the following:
+1. Be sure to have `seed-farmer` version >= 5.0.0 and have properly updated if migrating from an older version
+2. have an AWS SecretsManager secret in the tool chain account and region (the user MUST set this up prior to using)
+3. the content of the AWS SecretsManager adheres to the format defined below
+4. the name of the AWS SecretsManager adheres to the format defined below
+
+The AWS SecretManager name must follow the following pattern (NO exceptions):
+```code
+*-archive-credentials*
+```
+Here are some examples of valid names:
+- `/aws-addf-archive-credentials`
+- `/something/important/hey-archive-credentials`
+
+Here are some names that are in-valid
+- `/aws-addfarchive-credentials`
+- `/something/important/archive-credentials`
+
+The content of the AWS SecretsManager secret must be a JSON containing two values: `username` and `password`.  Let's look at an example of a value payload:
+
+```json
+{
+  "username": "archive-user", 
+  "password": "archive-password" 
+},
+```
 
 (parameters)=
 ## Parameters

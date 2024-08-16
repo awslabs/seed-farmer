@@ -182,6 +182,10 @@ def test_deploy_modules(session_manager, mocker):
     mdo.permissions_boundary_arn = ("arn:aws:iam::123456789012:policy/boundary",)
     mdo.module_role_name = ("mlops-optionals-efs",)
     mdo.docker_credentials_secret = ("aws-addf-docker-credentials",)
+    mdo.pypi_mirror = "https://mypypimirror.com/here"
+    mdo.pypi_mirror_secret = "user-mirror-credentials"
+    mdo.npm_mirror = "https://mynpmmirror.com/here"
+    mdo.npm_mirror_secret = "user-mirror-credentials"
     mdo.module_metadata = (json.dumps(dummy_list_params),)
     mc.deploy_module(mdo)
 

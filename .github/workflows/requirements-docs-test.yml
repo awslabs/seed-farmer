@@ -19,18 +19,25 @@ on:
       - ".github/workflows/requirements-docs-test.yml"
 
 jobs:
-  install:
-    name: Install Requirements
+  build:
+    name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Install yq
+        run: sudo apt install yq -y
+      - name: Get Python Version
+        id: get-py-version
+        run: |
+            python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")`
+            echo "version=$(python_version)\n" >> $GITHUB_OUTPUT
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: get-py-version.version
       - name: Update pip
         run: pip install --upgrade pip
       - name: Install Airflow and Dependencies

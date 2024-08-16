@@ -8,7 +8,7 @@ on:
       - "docs/**"
       - ".readthedocs.yaml"
       - "setup.py"
-      - ".github/workflows/requirements-docs-test.yml"
+      - ".github/workflows/check-documentation-build.yml"
 
   pull_request:
     branches:
@@ -18,7 +18,7 @@ on:
       - "docs/**"
       - ".readthedocs.yaml"
       - "setup.py"
-      - ".github/workflows/requirements-docs-test.yml"
+      - ".github/workflows/check-documentation-build.yml"
 
 jobs:
   build:

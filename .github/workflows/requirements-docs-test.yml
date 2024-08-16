@@ -1,4 +1,4 @@
-name: Check Documentation Dependencies
+name: Documentation Check
 
 on:
   push:

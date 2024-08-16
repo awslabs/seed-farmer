@@ -30,14 +30,14 @@ jobs:
       - name: Install yq
         run: sudo snap install yq
       - name: Get Python Version
-        id: get-py-version
+        id: get-version
         run: |
             python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
-            echo version=$python_version >> $GITHUB_OUTPUT
+            echo python-version=$python_version >> $GITHUB_OUTPUT
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: get-py-version.version
+          python-version: '${{ steps.get-version.python-version }}'
       - name: Update pip
         run: pip install --upgrade pip
       - name: Install Airflow and Dependencies

@@ -34,6 +34,8 @@ jobs:
         run: |
             python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
             echo python-version=$python_version >> $GITHUB_OUTPUT
+      - name: Check Python Version
+        run: echo '${{ steps.get-version.python-version }}'
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

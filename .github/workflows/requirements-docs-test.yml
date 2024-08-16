@@ -5,8 +5,9 @@ on:
     branches: 
       - "main"
     paths:
-      - "docs/requirements-docs.txt"
-      - ".readthedocs"
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "setup.py"
       - ".github/workflows/requirements-docs-test.yml"
 
   pull_request:
@@ -14,8 +15,9 @@ on:
       - "main"
       - "stable"
     paths:
-      - "docs/requirements-docs.txt"
-      - ".readthedocs"
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "setup.py"
       - ".github/workflows/requirements-docs-test.yml"
 
 jobs:
@@ -34,8 +36,6 @@ jobs:
         run: |
             python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
             echo python-version=$python_version >> $GITHUB_OUTPUT
-      - name: Check Python Version
-        run: echo '${{ steps.get-version.outputs.python-version }}'
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -44,3 +44,8 @@ jobs:
         run: pip install --upgrade pip
       - name: Install Airflow and Dependencies
         run: pip install -r docs/requirements-docs.txt
+      - name: Install SeedFarmer
+        run: pip install -e .
+      - name: Sphinx Build
+        working-directory: ./docs/
+        run: make html

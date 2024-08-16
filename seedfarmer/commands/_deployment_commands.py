@@ -262,10 +262,11 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     )
 
     # Use module deployment role from the metadata if it is available, otherwise fall back to default module role
-    module_role_name = (
+    module_role_name = cast(
+        str,
         module_metadata.get("ModuleDeploymentRoleName")
         if module_metadata and module_metadata.get("ModuleDeploymentRoleName")
-        else module_role_name
+        else module_role_name,
     )
 
     if get_role(role_name=module_role_name, session=session):

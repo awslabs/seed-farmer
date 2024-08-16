@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install yq
-        run: sudo apt install yq -y
+        run: snap install yq
       - name: Get Python Version
         id: get-py-version
         run: |

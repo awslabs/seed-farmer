@@ -32,8 +32,8 @@ jobs:
       - name: Get Python Version
         id: get-py-version
         run: |
-            python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")`
-            echo "version=$(python_version)\n" >> $GITHUB_OUTPUT
+            python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
+            echo version=$python_version >> $GITHUB_OUTPUT
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

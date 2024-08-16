@@ -53,6 +53,7 @@ from seedfarmer.output_utils import (
     print_modules_build_info,
 )
 from seedfarmer.services import get_sts_identity_info
+from seedfarmer.services._iam import get_role
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
@@ -148,8 +149,9 @@ def destroy_generic_module_deployment_role(
             region_name=region,
         )
     )
-    generic_deployment_role_name = deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=account_id,
+    generic_deployment_role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, deployment_manifest.name),
         region=region,
     )
     if generic_deployment_role_name:
@@ -180,8 +182,9 @@ def _execute_deploy(
     )
     module_stack_path = get_modulestack_path(str(module_manifest.get_local_path()))
 
-    module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=account_id,
+    module_role_name = get_generic_module_deployment_role_name(
+        project_name=config.PROJECT,
+        deployment_name=cast(str, mdo.deployment_manifest.name),
         region=region,
     )
 
@@ -239,9 +242,10 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     session = (
         SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
-    mdo.module_metadata = json.dumps(
-        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
+    module_metadata = get_module_metadata(
+        cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session
     )
+    mdo.module_metadata = json.dumps(module_metadata)
     mdo.parameters = load_parameter_values(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         parameters=module_manifest.parameters,
@@ -256,12 +260,23 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         account_id=target_account_id,
         region=target_region,
     )
-    generic_module_role_name = mdo.deployment_manifest.get_generic_module_deployment_role_name(
-        account_id=target_account_id, region=target_region
+
+    # Use module deployment role from the metadata if it is available, otherwise fall back to default module role
+    module_role_name = cast(
+        str,
+        module_metadata.get("ModuleDeploymentRoleName")
+        if module_metadata and module_metadata.get("ModuleDeploymentRoleName")
+        else module_role_name,
     )
-    mdo.module_role_name = (
-        generic_module_role_name if generic_module_role_name and not module_stack_exists else module_role_name
-    )
+
+    if get_role(role_name=module_role_name, session=session):
+        mdo.module_role_name = module_role_name
+    else:
+        mdo.module_role_name = get_generic_module_deployment_role_name(
+            project_name=config.PROJECT,
+            deployment_name=cast(str, mdo.deployment_manifest.name),
+            region=target_region,
+        )
 
     if module_stack_exists:
         commands.force_manage_policy_attach(
@@ -385,13 +400,13 @@ def prime_target_accounts(
             seedkit_stack_outputs["SeedfarmerArtifactBucket"] = seedfarmer_bucket
             commands.deploy_managed_policy_stack(deployment_manifest=deployment_manifest, **args)
 
-            generic_module_deployment_role_name = create_generic_module_deployment_role(
+            create_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
             )
 
-            return [target_account_id, target_region, seedkit_stack_outputs, generic_module_deployment_role_name]
+            return [target_account_id, target_region, seedkit_stack_outputs]
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
@@ -421,7 +436,6 @@ def prime_target_accounts(
                 account_id=out_s[0],
                 region=out_s[1],
                 seedkit_dict=out_s[2],
-                generic_module_deployment_role_name=out_s[3],
             )
         _logger.debug(deployment_manifest.model_dump())
 
@@ -441,15 +455,14 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
                 f"{threading.current_thread().name}-{target_account_id}_{target_region}"
             ).replace("_", "-")
             _logger.info("Tearing Down Acccount %s in %s", target_account_id, target_region)
-            commands.destroy_managed_policy_stack(**args)
-            commands.destroy_bucket_storage_stack(**args)
-
-            # Destroy generic module deployment role
+            # Detach policies and destroy generic module deployment role
             destroy_generic_module_deployment_role(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
             )
+            commands.destroy_managed_policy_stack(**args)
+            commands.destroy_bucket_storage_stack(**args)
 
             if remove_seedkit:
                 _logger.info("Removing the seedkit tied to project %s", config.PROJECT)

@@ -24,7 +24,7 @@ Below is a flow of `seedfarmer` deployment of a single module in a single accoun
 
 1. Invoke **seedfarmer** CLI
 2. **seedfarmer** reads/writes deployment metadata with AWS Systems Manager
-3. **seedfarmer** invokes AWS IAM to create module-specific roles, attaching the proper least-privilege policies
+3. **seedfarmer** invokes AWS IAM to create module-specific roles, attaching the proper least-privilege policies. If no module policies exist, generic deployment role for each account & region pair is used.
 4. **seedfarmer** leverages **AWS CodeSeeder** for remote deployment on AWS CodeBuild
 5. **AWS CodeSeeder** prepares AWS CodeBuild 
 6. AWS CodeBuild via **AWS CodeSeeder** inspects and fetches data from AWS SecretsManager (if necessary)

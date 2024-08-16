@@ -147,6 +147,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
     sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v {aws_codeseeder.__version__} || true"]
     cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
+    module_role_name_add = [f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {mdo.module_role_name} || true"]
     githash_add = (
         [f"seedfarmer metadata add -k SeedFarmerModuleCommitHash -v {module_manifest.commit_hash} || true"]
         if module_manifest.commit_hash
@@ -199,6 +200,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             + md5_put
             + sf_version__add
             + cs_version_add
+            + module_role_name_add
             + githash_add
             + metadata_put
             + store_sf_bundle,

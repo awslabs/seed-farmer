@@ -58,7 +58,11 @@ Your existing deployment is unaffected after this change, and `seed-farmer` will
 
 
 ## Upgrading to 5.0.0  
+
 This is a **BREAKING CHANGE !!!**
+
+NOTE: When upgrading, it is highly recommended to enforce minimum required `seed-farmer` version to `5.0.0` for your projects 
+using `seedfarmer_version` in ```seedfarmer.yaml```. Please refer to [Project Development](project_development.md) for instructions.
 
 `seed-farmer` 5.0.0 introduces support for downloading modules from HTTPS archives.
 This includes support for both secure HTTPS URLs which require authentication, as well as support for S3 HTTPS downloads.

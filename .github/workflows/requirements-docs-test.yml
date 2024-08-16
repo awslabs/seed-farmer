@@ -35,11 +35,11 @@ jobs:
             python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
             echo python-version=$python_version >> $GITHUB_OUTPUT
       - name: Check Python Version
-        run: echo '${{ steps.get-version.python-version }}'
+        run: echo '${{ steps.get-version.outputs.python-version }}'
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '${{ steps.get-version.python-version }}'
+          python-version: '${{ steps.get-version.outputs.python-version }}'
       - name: Update pip
         run: pip install --upgrade pip
       - name: Install Airflow and Dependencies

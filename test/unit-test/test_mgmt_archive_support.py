@@ -27,6 +27,7 @@ import pytest
 from moto import mock_aws
 
 import seedfarmer.mgmt.archive_support as archive
+from seedfarmer import config
 from seedfarmer.errors.seedfarmer_errors import InvalidConfigurationError
 from seedfarmer.services._service_utils import boto3_client
 from seedfarmer.services.session_manager import SessionManager
@@ -71,6 +72,13 @@ def session_manager(sts_client):
     )
 
 
+@pytest.fixture(scope="function", autouse=True)
+def parent_dir_prepare():
+    parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
+    if os.path.exists(parent_dir):
+        shutil.rmtree(parent_dir)
+
+
 example_archive_files = [
     ("modules/test-module/modulestack.yaml", io.BytesIO(b"111")),
     ("modules/test-module/pyproject.toml", io.BytesIO(b"222")),
@@ -111,7 +119,6 @@ def archive_file_data(
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path():
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = (
         "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
     )
@@ -124,7 +131,6 @@ def test_fetch_module_repo_dns_path():
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 def test_fetch_module_repo_dns_path_zip():
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = (
         "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.zip?module=modules/dummy/blank"
     )
@@ -138,7 +144,6 @@ def test_fetch_module_repo_dns_path_zip():
 def test_fetch_module_repo_dns_path_missing_https():
     from seedfarmer.errors import InvalidConfigurationError
 
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = (
         "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz?module=modules/dummy/blank"
     )
@@ -151,7 +156,6 @@ def test_fetch_module_repo_dns_path_missing_https():
 def test_fetch_module_repo_dns_path_missing_module():
     from seedfarmer.errors import InvalidConfigurationError
 
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = "archive::https://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.0.tar.gz"
     with pytest.raises(InvalidConfigurationError):
         archive.fetch_archived_module(release_path=archive_path_test)
@@ -162,7 +166,6 @@ def test_fetch_module_repo_dns_path_missing_module():
 def test_fetch_module_repo_dns_path_missing_archive():
     from seedfarmer.errors import InvalidConfigurationError
 
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
     archive_path_test = (
         "archive::http://github.com/awslabs/idf-modules/archive/refs/tags/v1.6.1.tar.gz?module=modules/dummy/blank"
     )
@@ -178,8 +181,6 @@ def test_fetch_module_repo_dns_path_missing_archive():
 def test_fetch_module_repo_from_s3(
     session_manager: None, archive_file_data: Tuple[bytes, str], s3_bucket_http_url: str
 ) -> None:
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-
     archive_bytes, archive_extension = archive_file_data
 
     response_mock = MagicMock()
@@ -215,8 +216,6 @@ def test_fetch_module_repo_from_s3(
 def test_fetch_module_repo_from_s3_with_error(
     session_manager: None, archive_file_data: Tuple[bytes, str], s3_bucket_http_url: str
 ) -> None:
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-
     _, archive_extension = archive_file_data
 
     response_mock = MagicMock()
@@ -239,8 +238,6 @@ def test_fetch_module_repo_from_s3_with_error(
 def test_fetch_module_repo_from_https_with_secret(
     session_manager: None, archive_file_data: Tuple[bytes, str], secretsmanager_client: boto3.client
 ) -> None:
-    shutil.rmtree(archive.parent_dir) if os.path.exists(archive.parent_dir) else None
-
     secret_name = "testing-archive-credentials-modules"
     username = "test-user"
     password = "test-password"

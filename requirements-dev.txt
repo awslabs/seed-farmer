@@ -95,7 +95,7 @@ more-itertools==10.3.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.12
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.13
     # via -r requirements-dev.in
 mypy==1.11.1
     # via -r requirements-dev.in
@@ -185,7 +185,7 @@ rich==13.7.1
     #   twine
 rsa==4.7.2
     # via awscli
-ruff==0.5.7
+ruff==0.6.1
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
@@ -212,7 +212,7 @@ types-pyyaml==6.0.12.20240808
     # via -r requirements-dev.in
 types-requests==2.31.0.6
     # via -r requirements-dev.in
-types-setuptools==71.1.0.20240806
+types-setuptools==71.1.0.20240818
     # via -r requirements-dev.in
 types-urllib3==1.26.25.14
     # via types-requests

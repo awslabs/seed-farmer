@@ -8,6 +8,7 @@ on:
       - "docs/**"
       - ".readthedocs.yaml"
       - "setup.py"
+      - "VERSION"
       - ".github/workflows/check-documentation-build.yml"
 
   pull_request:
@@ -18,6 +19,7 @@ on:
       - "docs/**"
       - ".readthedocs.yaml"
       - "setup.py"
+      - "VERSION"
       - ".github/workflows/check-documentation-build.yml"
 
 jobs:

@@ -21,6 +21,9 @@ on:
       - "setup.py"
       - "VERSION"
       - ".github/workflows/check-documentation-build.yml"
+  
+  # Allows this workflow to be run manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:

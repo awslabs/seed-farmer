@@ -1,0 +1,56 @@
+name: Documentation Check
+
+on:
+  push:
+    branches: 
+      - "main"
+    paths:
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "setup.py"
+      - "VERSION"
+      - ".github/workflows/check-documentation-build.yml"
+
+  pull_request:
+    branches:
+      - "main"
+      - "stable"
+    paths:
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "setup.py"
+      - "VERSION"
+      - ".github/workflows/check-documentation-build.yml"
+  
+  # Allows this workflow to be run manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install yq
+        run: sudo snap install yq
+      - name: Get Python Version
+        id: get-version
+        run: |
+            python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
+            echo python-version=$python_version >> $GITHUB_OUTPUT
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '${{ steps.get-version.outputs.python-version }}'
+      - name: Update pip
+        run: pip install --upgrade pip
+      - name: Install Requirements for building docs
+        run: pip install -r docs/requirements-docs.txt
+      - name: Install SeedFarmer
+        run: pip install -e .
+      - name: Sphinx Build
+        working-directory: ./docs/
+        run: make html

@@ -91,7 +91,7 @@ targetAccountMappings:
   - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
-- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
+- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules  (see [Archive Secret](archivesecret))
   - secret name must follow the `*-archive-credentials*` naming pattern
   - the secret value must be a JSON with the `username` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
@@ -525,7 +525,7 @@ This would result in the creation of an `_auth` entry in npm config (`.npmrc`) w
 npm config set //the-mirror-dns/npm/:_auth="mybase64encodedssltoken"
 ```
 
-
+(archivesecret)=
 ### Archive Secret
 
 If using an archive store that is not public or needs an authentication scheme, the `archiveSecret` provides a means to set a username / password, so that the archived modules can be downloaded.

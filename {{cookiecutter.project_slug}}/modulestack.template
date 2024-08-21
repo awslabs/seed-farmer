@@ -14,13 +14,14 @@ Parameters:
 
 Resources:
   Policy:
-    Type: 'AWS::IAM::Policy'
+    Type: "AWS::IAM::Policy"
     Properties:
+      Roles:
+        - !Ref RoleName
+      PolicyName: "{{ cookiecutter.project_name }}-modulespecific-policy"
       PolicyDocument:
+        Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Action: '*'
-            Resource: '*'
-        Version: 2012-10-17
-      PolicyName: "{{ cookiecutter.project_name }}-modulespecific-policy"
-      Roles: [!Ref RoleName]
+            Action: "*"
+            Resource: "*"

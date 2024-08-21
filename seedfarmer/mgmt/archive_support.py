@@ -36,7 +36,6 @@ from seedfarmer.services._service_utils import create_signed_request
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
-parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
 def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
@@ -84,6 +83,7 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
 
 
 def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
+    parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
     pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
 
     with open(archive_name, "wb") as archive_file:
@@ -105,6 +105,7 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
 
 
 def _get_release_with_link(archive_url: str, secret_name: Optional[str]) -> Tuple[str, str]:
+    parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":

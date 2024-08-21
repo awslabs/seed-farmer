@@ -557,6 +557,14 @@ The content of the AWS SecretsManager secret must be a JSON containing two value
 },
 ```
 
+The archive secret would then need to be referenced in the deployment manifest:
+
+```yaml
+...
+archiveSecret: example-archive-credentials-modules
+...
+```
+
 (parameters)=
 ## Parameters
 

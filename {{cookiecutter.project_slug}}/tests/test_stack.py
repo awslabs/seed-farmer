@@ -38,7 +38,7 @@ def stack(stack_defaults) -> aws_cdk.Stack:
     return stack.TemplateStack(
         app,
         app_prefix,
-        stack_description="Stack Description",
+        # TODO: add props
     )
 
 
@@ -46,7 +46,7 @@ def test_synthesize_stack(stack: aws_cdk.Stack) -> None:
     Template.from_stack(stack)
 
 
-def test_no_cdk_nag_errors(stack: aws_cdk.Stack, use_rds: bool) -> None:
+def test_no_cdk_nag_errors(stack: aws_cdk.Stack) -> None:
     aws_cdk.Aspects.of(stack).add(cdk_nag.AwsSolutionsChecks())
 
     nag_errors = Annotations.from_stack(stack).find_error(

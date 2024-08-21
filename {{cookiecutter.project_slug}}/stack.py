@@ -21,6 +21,5 @@ class TemplateStack(aws_cdk.Stack):
         # ...
 
         # TODO define your nag suppressions if necessary here
-        cdk_nag.NagSuppressions.add_resource_suppressions(
-            # ...
-        )
+        # cdk_nag.NagSuppressions.add_resource_suppressions(
+        # )

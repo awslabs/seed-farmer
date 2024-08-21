@@ -212,9 +212,9 @@ def boto3_resource(  # type: ignore[misc]
     profile: Optional[str] = None,
 ) -> "ServiceResource":
     if not session:
-        return create_new_session(region_name=region_name, profile=profile).resource(  # type: ignore
+        return create_new_session(region_name=region_name, profile=profile).resource(  # type: ignore[no-any-return]
             service_name=service_name, use_ssl=True, config=get_botocore_config()
-        )
+        )  # type: ignore[call-overload]
     else:
         return session.resource(  # type: ignore[no-any-return]
             service_name=service_name,

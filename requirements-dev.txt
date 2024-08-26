@@ -101,7 +101,7 @@ more-itertools==10.3.0
     #   jaraco-functools
 moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.13
     # via -r requirements-dev.in
-mypy==1.11.1
+mypy==1.11.2
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via
@@ -189,7 +189,7 @@ rich==13.7.1
     #   twine
 rsa==4.7.2
     # via awscli
-ruff==0.6.1
+ruff==0.6.2
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
@@ -216,7 +216,7 @@ types-pyyaml==6.0.12.20240808
     # via -r requirements-dev.in
 types-requests==2.31.0.6
     # via -r requirements-dev.in
-types-setuptools==71.1.0.20240818
+types-setuptools==73.0.0.20240822
     # via -r requirements-dev.in
 types-urllib3==1.26.25.14
     # via types-requests
@@ -231,7 +231,7 @@ urllib3==1.26.19
     #   requests
     #   responses
     #   twine
-werkzeug==3.0.3
+werkzeug==3.0.4
     # via
     #   -r requirements-dev.in
     #   moto

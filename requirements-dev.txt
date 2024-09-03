@@ -24,7 +24,7 @@ build==1.2.1
     #   check-manifest
     #   pip-tools
     #   pyroma
-certifi==2024.7.4
+certifi==2024.8.30
     # via
     #   -c requirements.txt
     #   -r requirements-dev.in
@@ -183,7 +183,7 @@ responses==0.25.3
     # via moto
 rfc3986==2.0.0
     # via twine
-rich==13.7.1
+rich==13.8.0
     # via
     #   -c requirements.txt
     #   twine

@@ -1,4 +1,4 @@
-sphinx-autoapi==3.2.1
+sphinx-autoapi==3.3.1
 sphinx-rtd-theme==2.0.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-devhelp==2.0.0
@@ -14,4 +14,4 @@ PyYAML==6.0.2
 urllib3~=1.26.19
 wheel==0.44.0
 typing-extensions==4.12.2
-certifi~=2024.7.4
+certifi~=2024.8.30

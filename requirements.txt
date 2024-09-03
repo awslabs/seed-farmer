@@ -75,7 +75,7 @@ property-manager==3.0
     # via executor
 pydantic==2.8.2
     # via seed-farmer (setup.py)
-pydantic-core==2.23.1
+pydantic-core==2.20.1
     # via pydantic
 pygments==2.18.0
     # via rich

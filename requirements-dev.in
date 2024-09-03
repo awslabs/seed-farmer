@@ -1,5 +1,5 @@
 awscli~=1.34.10
-certifi~=2024.7.4
+certifi~=2024.8.30
 check-manifest~=0.48
 mypy~=1.11
 pip-tools~=7.4.1

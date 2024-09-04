@@ -9,11 +9,14 @@ awscli==1.34.10
 backports-tarfile==1.2.0
     # via jaraco-context
 boto3==1.35.10
-    # via moto
+    # via
+    #   -c requirements.txt
+    #   moto
 boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]==1.35.2
     # via -r requirements-dev.in
 botocore==1.35.10
     # via
+    #   -c requirements.txt
     #   awscli
     #   boto3
     #   moto
@@ -27,24 +30,27 @@ build==1.2.1
     #   pyroma
 certifi==2024.8.30
     # via
+    #   -c requirements.txt
     #   -r requirements-dev.in
     #   requests
 cffi==1.16.0
     # via cryptography
 charset-normalizer==3.3.2
-    # via requests
+    # via
+    #   -c requirements.txt
+    #   requests
 check-manifest==0.49
     # via -r requirements-dev.in
 click==8.1.7
-    # via pip-tools
+    # via
+    #   -c requirements.txt
+    #   pip-tools
 colorama==0.4.6
     # via awscli
 coverage[toml]==7.6.0
     # via pytest-cov
 cryptography==43.0.1
-    # via
-    #   moto
-    #   secretstorage
+    # via moto
 docutils==0.16
     # via
     #   awscli
@@ -53,7 +59,9 @@ docutils==0.16
 exceptiongroup==1.2.2
     # via pytest
 idna==3.8
-    # via requests
+    # via
+    #   -c requirements.txt
+    #   requests
 importlib-metadata==8.0.0
     # via
     #   build
@@ -67,26 +75,30 @@ jaraco-context==5.3.0
     # via keyring
 jaraco-functools==4.0.1
     # via keyring
-jeepney==0.8.0
-    # via
-    #   keyring
-    #   secretstorage
 jinja2==3.1.4
-    # via moto
+    # via
+    #   -c requirements.txt
+    #   moto
 jmespath==1.0.1
     # via
+    #   -c requirements.txt
     #   boto3
     #   botocore
 keyring==25.2.1
     # via twine
 markdown-it-py==3.0.0
-    # via rich
+    # via
+    #   -c requirements.txt
+    #   rich
 markupsafe==2.1.5
     # via
+    #   -c requirements.txt
     #   jinja2
     #   werkzeug
 mdurl==0.1.2
-    # via markdown-it-py
+    # via
+    #   -c requirements.txt
+    #   markdown-it-py
 more-itertools==10.3.0
     # via
     #   jaraco-classes
@@ -108,11 +120,14 @@ mypy-boto3-ssm==1.35.0
 mypy-boto3-sts==1.35.0
     # via boto3-stubs
 mypy-extensions==1.0.0
-    # via mypy
+    # via
+    #   -c requirements.txt
+    #   mypy
 nh3==0.2.18
     # via readme-renderer
 packaging==24.1
     # via
+    #   -c requirements.txt
     #   build
     #   pyroma
     #   pytest
@@ -132,6 +147,7 @@ pydot==3.0.1
     # via -r requirements-dev.in
 pygments==2.18.0
     # via
+    #   -c requirements.txt
     #   pyroma
     #   readme-renderer
     #   rich
@@ -157,10 +173,12 @@ pytest-ordering==0.6
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
+    #   -c requirements.txt
     #   botocore
     #   moto
 pyyaml==6.0.2
     # via
+    #   -c requirements.txt
     #   awscli
     #   moto
     #   responses
@@ -168,6 +186,7 @@ readme-renderer==43.0
     # via twine
 requests==2.32.3
     # via
+    #   -c requirements.txt
     #   -r requirements-dev.in
     #   moto
     #   pyroma
@@ -181,19 +200,22 @@ responses==0.25.3
 rfc3986==2.0.0
     # via twine
 rich==13.8.0
-    # via twine
+    # via
+    #   -c requirements.txt
+    #   twine
 rsa==4.7.2
     # via awscli
 ruff==0.6.3
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
+    #   -c requirements.txt
     #   awscli
     #   boto3
-secretstorage==3.3.3
-    # via keyring
 six==1.16.0
-    # via python-dateutil
+    # via
+    #   -c requirements.txt
+    #   python-dateutil
 tomli==2.0.1
     # via
     #   build
@@ -220,6 +242,7 @@ types-urllib3==1.26.25.14
     # via types-requests
 typing-extensions==4.12.2
     # via
+    #   -c requirements.txt
     #   boto3-stubs
     #   mypy
     #   mypy-boto3-codebuild
@@ -230,6 +253,7 @@ typing-extensions==4.12.2
     #   mypy-boto3-sts
 urllib3==1.26.19
     # via
+    #   -c requirements.txt
     #   botocore
     #   requests
     #   responses

@@ -24,7 +24,7 @@ def get_secrets_manager_value(name: str, session: Optional[Session] = None) -> D
     account_id, _, partition = get_sts_identity_info(session=session)
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:{partition}:secretsmanager:{get_region(session=session)}:{account_id}:secret:{name}"
-    json_str: str = client.get_secret_value(SecretId=secret_arn).get("SecretString")
+    json_str: str = client.get_secret_value(SecretId=secret_arn)["SecretString"]
     return cast(Dict[str, Any], json.loads(json_str))
 
 

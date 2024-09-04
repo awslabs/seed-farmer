@@ -15,6 +15,7 @@ types-PyYAML~=6.0.12
 types-requests~=2.31.0.6
 types-setuptools~=74.0.0
 wheel~=0.44.0
+boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]~=1.35.2
 moto[s3,sts,iam,codebuild,secretsmanager,ssm]~=5.0.13
 requests~=2.32.3
 werkzeug~=3.0.4

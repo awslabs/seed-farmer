@@ -3,7 +3,7 @@ import threading
 from abc import abstractmethod, abstractproperty
 from threading import Thread
 from time import sleep
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from boto3 import Session
@@ -12,6 +12,9 @@ from botocore.credentials import Credentials
 import seedfarmer.errors
 from seedfarmer.services import boto3_client, create_new_session, create_new_session_with_creds, get_sts_identity_info
 from seedfarmer.utils import get_deployment_role_arn, get_toolchain_role_arn, get_toolchain_role_name
+
+if TYPE_CHECKING:
+    from mypy_boto3_sts.type_defs import AssumeRoleResponseTypeDef
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -65,7 +68,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
     TOOLCHAIN_KEY: str = "toolchain"
     SESSION: str = "session"
     ROLE: str = "role"
-    sessions: Dict[Any, Any] = {}
+    sessions: Dict[str, Dict[str, Any]] = {}
 
     config: Dict[Any, Any] = {}
     created: bool = False
@@ -117,7 +120,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 "The SessionManager object was never properly created...)"
             )
         self._check_for_toolchain()
-        return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]
+        return self.sessions[self.TOOLCHAIN_KEY][self.SESSION]  # type: ignore[no-any-return]
 
     def get_toolchain_credentials(self) -> Credentials:
         if not self.created:
@@ -150,7 +153,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 aws_secret_access_key=toolchain_role["Credentials"]["SecretAccessKey"],
                 aws_session_token=toolchain_role["Credentials"]["SessionToken"],
             )
-            partition = sts_toolchain_client.get_caller_identity().get("Arn").split(":")[1]
+            partition = sts_toolchain_client.get_caller_identity()["Arn"].split(":")[1]
             deployment_role_arn = get_deployment_role_arn(
                 partition=partition,
                 deployment_account_id=account_id,
@@ -187,7 +190,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.sessions[session_key] = {self.SESSION: deployment_session, self.ROLE: deployment_role}
             return deployment_session
         else:
-            return self.sessions[session_key][self.SESSION]
+            return self.sessions[session_key][self.SESSION]  # type: ignore[no-any-return]
 
     # These methods below should not be called outside of this class
 
@@ -197,7 +200,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             session, role = self._get_toolchain()
             self.sessions = {self.TOOLCHAIN_KEY: {self.SESSION: session, self.ROLE: role}}
 
-    def _get_toolchain(self) -> Tuple[Session, Dict[Any, Any]]:
+    def _get_toolchain(self) -> Tuple[Session, "AssumeRoleResponseTypeDef"]:
         region_name = self.config.get("region_name")
         profile_name = self.config.get("profile")
         project_name = self.config.get("project_name")

@@ -17,6 +17,7 @@ import logging
 import sys
 from typing import List, Optional
 
+import boto3
 import click
 
 import seedfarmer.messages as messages
@@ -32,7 +33,7 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
 )
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import ISessionManager, SessionManager
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -255,7 +256,7 @@ def list_deployspec(
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
-    session = SessionManager().get_or_create(
+    session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -266,7 +267,7 @@ def list_deployspec(
 
     dep_manifest.validate_and_set_module_defaults()
     try:
-        session = session.get_deployment_session(
+        session = session_manager.get_deployment_session(
             account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
             region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
         )
@@ -370,7 +371,7 @@ def list_module_metadata(
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
-    session = SessionManager().get_or_create(
+    session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -381,7 +382,7 @@ def list_module_metadata(
 
     dep_manifest.validate_and_set_module_defaults()
     try:
-        session = session.get_deployment_session(
+        session = session_manager.get_deployment_session(
             account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
             region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
         )
@@ -742,7 +743,7 @@ def list_build_env_params(
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
-    session = SessionManager().get_or_create(
+    session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
     dep_manifest = du.generate_deployed_manifest(
@@ -755,7 +756,7 @@ def list_build_env_params(
 
     dep_manifest.validate_and_set_module_defaults()
     try:
-        session = session.get_deployment_session(
+        session: boto3.Session = session_manager.get_deployment_session(
             account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
             region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore
         )

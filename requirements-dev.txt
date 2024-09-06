@@ -49,7 +49,7 @@ colorama==0.4.6
     # via awscli
 coverage[toml]==7.6.0
     # via pytest-cov
-cryptography==42.0.8
+cryptography==43.0.1
     # via moto
 docutils==0.16
     # via

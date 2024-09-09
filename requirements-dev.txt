@@ -4,17 +4,17 @@
 #
 #    pip-compile --constraint=requirements.txt --output-file=requirements-dev.txt requirements-dev.in
 #
-awscli==1.34.10
+awscli==1.34.14
     # via -r requirements-dev.in
 backports-tarfile==1.2.0
     # via jaraco-context
-boto3==1.35.10
+boto3==1.35.14
     # via
     #   -c requirements.txt
     #   moto
-boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]==1.35.2
+boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]==1.35.14
     # via -r requirements-dev.in
-botocore==1.35.10
+botocore==1.35.14
     # via
     #   -c requirements.txt
     #   awscli
@@ -103,7 +103,7 @@ more-itertools==10.3.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.13
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.14
     # via -r requirements-dev.in
 mypy==1.11.2
     # via -r requirements-dev.in
@@ -137,7 +137,7 @@ pkginfo==1.10.0
     # via twine
 pluggy==1.5.0
     # via pytest
-py-partiql-parser==0.5.5
+py-partiql-parser==0.5.6
     # via moto
 pyasn1==0.6.0
     # via rsa
@@ -205,7 +205,7 @@ rich==13.8.0
     #   twine
 rsa==4.7.2
     # via awscli
-ruff==0.6.3
+ruff==0.6.4
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via
@@ -236,7 +236,7 @@ types-requests==2.31.0.6
     # via -r requirements-dev.in
 types-s3transfer==0.10.1
     # via boto3-stubs
-types-setuptools==74.0.0.20240831
+types-setuptools==74.1.0.20240907
     # via -r requirements-dev.in
 types-urllib3==1.26.25.14
     # via types-requests

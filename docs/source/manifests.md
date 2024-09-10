@@ -391,6 +391,12 @@ There are multiple [build images and available runtimes](https://docs.aws.amazon
 |aws/codebuild/standard:7.0|nodejs:18|
 ||python:3.11|
 ||java:corretto21|
+|aws/codebuild/amazonlinux2-x86_64-standard:4.0|nodejs:16|
+||python:3.9|
+||java:corretto17|
+|aws/codebuild/amazonlinux2-x86_64-standard:5.0|nodejs:18|
+||python:3.11|
+||java:corretto21|
 
 #### Custom Build Images
 If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).  It is up to the module developer to verify all proper libraries are installed and available.

@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New 
+- add AWS-curated Amazon Linux codebuild images to image override with opinionated runtimes
 
 ### Changes
 

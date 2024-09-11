@@ -33,7 +33,7 @@ class CuratedBuildImages:
 def get_runtimes(codebuild_image: Optional[str]) -> Optional[Dict[str, str]]:
     image_vals = [cbi.value for cbi in CuratedBuildImages.ImageEnums]
     if codebuild_image in image_vals:
-        cir_d = {cir.name: cir.value for cir in CuratedBuildImages.ImageRuntimes}
+        cir_d = {cir: runtime.value for cir, runtime in CuratedBuildImages.ImageRuntimes.__members__.items()}
         k = CuratedBuildImages.ImageEnums(codebuild_image).name
         return cir_d[k]
     else:

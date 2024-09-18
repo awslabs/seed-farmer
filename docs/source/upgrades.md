@@ -92,7 +92,7 @@ Seedkits must be upgraded if **both** of the following is true.
 To upgrade:
 1. Update your version of `aws-codeseeder` via
     ```bash
-    pip install --upgrade codeseeder==1.1.0
+    pip install --upgrade aws-codeseeder==1.1.0
      ```
 2. Run seedfarmer with the `--update-seedkit` flag set
     ```bash

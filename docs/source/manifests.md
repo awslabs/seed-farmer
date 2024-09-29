@@ -330,7 +330,7 @@ When using this feature, any change to these file(s) (modifying, add to manifest
 ## Universal Environment Variable Replacement in Manifests
 As of the release of `seed-farmer==3.5.0`, we have added support for dynamic replacement of values with environment variables in manifests.  This does not replace any pre-existing functionality.  This also is limited to only manifests (`deployment_manifest` and `module_manifest`).  Things like the `deployspec` and the `modulestack` are NOT included in this functionality.  We strongly recommend using hard-coded values in manifests or leveraging the facilities already in place, but we have added this feature based on feedback from experienced users.
 
-Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`.   
+Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`. Additionally, it is possible to disable environment variable replacement in module input parameters using `disableEnvVarResolution: True` for cases such as when input parameter is a script.
 
 The following is a valid manifest:
 
@@ -356,6 +356,12 @@ parameters:
   - name: vpc-id
     valueFrom:
       secretsManager: ${SOMEKEY}
+  - name: param-no-env-resolution
+    disableEnvVarResolution: True
+    value:
+      - |
+        export VAR=test
+        echo "${VAR}"
 ```
 This can be applied to all values in the manifest.  We do not recommend using this in the `name` field of manifests as any value that is referenced by downstream manifests MUST align.  For example, in the following:
 

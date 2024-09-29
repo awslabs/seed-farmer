@@ -677,13 +677,13 @@ targetAccount: primary
 targetRegion: us-west-2
 parameters:
   - name: param1
-    disable_env_var_resolution: True
+    disableEnvVarResolution: True
     value:
       - |
         export VAR=test
         echo "${VAR}"
   - name: param2_nested
-    disable_env_var_resolution: True
+    disableEnvVarResolution: True
     value:
         nested_value:
           - |

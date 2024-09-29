@@ -237,7 +237,7 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
         return working_list
 
     def recurse_dict(working_element: Dict[str, Any]) -> Dict[str, Any]:
-        if not working_element.get("disable_env_var_resolution"):
+        if not working_element.get("disableEnvVarResolution"):
             for key, value in working_element.items():
                 if isinstance(value, str):
                     working_element[key] = replace_str(value)

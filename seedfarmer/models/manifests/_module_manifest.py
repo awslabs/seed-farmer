@@ -29,7 +29,7 @@ class ModuleParameter(ValueFromRef):
     name: str
     value: Optional[Any] = None
     version: Optional[Any] = None
-    disable_env_var_resolution: Optional[bool] = None
+    disableEnvVarResolution: Optional[bool] = None
     resolved_value: Optional[Any] = None
 
     def __init__(self, **data: Any) -> None:

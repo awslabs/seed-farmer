@@ -12,9 +12,9 @@ aws-codeseeder==1.1.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
-boto3==1.35.24
+boto3==1.35.29
     # via aws-codeseeder
-botocore==1.35.24
+botocore==1.35.29
     # via
     #   boto3
     #   s3transfer

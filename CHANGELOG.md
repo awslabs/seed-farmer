@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 
+- Added ability to disable env replacement in module parameters
+
 ### Fixes
 
 ## v5.0.0 (2024-08-16)

@@ -637,3 +637,78 @@ parameters:
     ):
         with pytest.raises(InvalidManifestError, match="The environment variable is not available: 'GIT_URL'"):
             ModuleManifest(**module_yaml)
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_env_var_resolution_in_script():
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value:
+      - |
+        echo "${VAR}"
+"""
+    )
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            "VAR": "test",
+        },
+        clear=True,
+    ):
+        ModuleManifest(**module_yaml)
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_env_var_resolution_in_script_disabled():
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    disableEnvVarResolution: True
+    value:
+      - |
+        export VAR=test
+        echo "${VAR}"
+  - name: param2_nested
+    disableEnvVarResolution: True
+    value:
+        nested_value:
+          - |
+            export VAR=test
+            echo "${VAR}"
+"""
+    )
+    ModuleManifest(**module_yaml)
+
+
+@pytest.mark.models
+@pytest.mark.models_module_manifest
+def test_module_manifest_with_env_var_resolution_in_script_error():
+    module_yaml = yaml.safe_load(
+        """
+name: test-module-1
+path: modules/test-module
+targetAccount: primary
+targetRegion: us-west-2
+parameters:
+  - name: param1
+    value:
+      - |
+        echo "${VAR}"
+"""
+    )
+    with pytest.raises(InvalidManifestError, match="The environment variable is not available: 'VAR'"):
+        ModuleManifest(**module_yaml)

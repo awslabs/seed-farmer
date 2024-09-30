@@ -237,13 +237,14 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
         return working_list
 
     def recurse_dict(working_element: Dict[str, Any]) -> Dict[str, Any]:
-        for key, value in working_element.items():
-            if isinstance(value, str):
-                working_element[key] = replace_str(value)
-            elif isinstance(value, list):
-                recurse_list(value)
-            elif isinstance(value, dict) and key not in ["deploy_spec"]:
-                recurse_dict(value)
+        if not working_element.get("disableEnvVarResolution"):
+            for key, value in working_element.items():
+                if isinstance(value, str):
+                    working_element[key] = replace_str(value)
+                elif isinstance(value, list):
+                    recurse_list(value)
+                elif isinstance(value, dict) and key not in ["deploy_spec"]:
+                    recurse_dict(value)
         return working_element
 
     payload = recurse_dict(payload)

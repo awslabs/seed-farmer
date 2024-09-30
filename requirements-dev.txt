@@ -12,7 +12,7 @@ boto3==1.35.24
     # via
     #   -c requirements.txt
     #   moto
-boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]==1.35.24
+boto3-stubs[codebuild,iam,s3,secretsmanager,ssm,sts]==1.35.29
     # via -r requirements-dev.in
 botocore==1.35.24
     # via
@@ -109,7 +109,7 @@ more-itertools==10.3.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.15
+moto[codebuild,iam,s3,secretsmanager,ssm,sts]==5.0.16
     # via -r requirements-dev.in
 mypy==1.11.2
     # via -r requirements-dev.in
@@ -149,7 +149,7 @@ pyasn1==0.6.0
     # via rsa
 pycparser==2.22
     # via cffi
-pydot==3.0.1
+pydot==3.0.2
     # via -r requirements-dev.in
 pygments==2.18.0
     # via
@@ -211,7 +211,7 @@ rich==13.8.1
     #   twine
 rsa==4.7.2
     # via awscli
-ruff==0.6.7
+ruff==0.6.8
     # via -r requirements-dev.in
 s3transfer==0.10.2
     # via

@@ -20,16 +20,20 @@ class CuratedBuildImages:
     class ImageEnums(Enum):
         UBUNTU_STANDARD_6 = "aws/codebuild/standard:6.0"
         UBUNTU_STANDARD_7 = "aws/codebuild/standard:7.0"
+        AL2_STANDARD_4 = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+        AL2_STANDARD_5 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
 
     class ImageRuntimes(Enum):
         UBUNTU_STANDARD_6 = {"nodejs": "16", "python": "3.10", "java": "corretto17"}
         UBUNTU_STANDARD_7 = {"nodejs": "18", "python": "3.11", "java": "corretto21"}
+        AL2_STANDARD_4 = {"nodejs": "16", "python": "3.9", "java": "corretto17"}
+        AL2_STANDARD_5 = {"nodejs": "18", "python": "3.11", "java": "corretto21"}
 
 
 def get_runtimes(codebuild_image: Optional[str]) -> Optional[Dict[str, str]]:
     image_vals = [cbi.value for cbi in CuratedBuildImages.ImageEnums]
     if codebuild_image in image_vals:
-        cir_d = {cir.name: cir.value for cir in CuratedBuildImages.ImageRuntimes}
+        cir_d = {cir: runtime.value for cir, runtime in CuratedBuildImages.ImageRuntimes.__members__.items()}
         k = CuratedBuildImages.ImageEnums(codebuild_image).name
         return cir_d[k]
     else:

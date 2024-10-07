@@ -51,7 +51,7 @@ setup(
         "pydantic>=2.8.2,<2.10.0",
         "executor~=23.2",
         "typing-extensions>=4.6.3",
-        "rich>=12.4,<13.9",
+        "rich>=12.4,<13.10",
         "requests>=2.28,<2.33",
         "python-dotenv>=0.21,<1.1",
         "gitpython~=3.1.30",

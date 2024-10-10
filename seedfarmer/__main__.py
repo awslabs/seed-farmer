@@ -28,6 +28,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option(seedfarmer.__version__)
 def cli() -> None:
     """SeedFarmer CLI interface"""
     pass

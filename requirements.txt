@@ -12,9 +12,9 @@ aws-codeseeder==1.1.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
-boto3==1.35.34
+boto3==1.35.39
     # via aws-codeseeder
-botocore==1.35.34
+botocore==1.35.39
     # via
     #   boto3
     #   s3transfer
@@ -27,7 +27,7 @@ cfn-flip==1.3.0
     # via aws-codeseeder
 chardet==5.2.0
     # via binaryornot
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
@@ -63,7 +63,7 @@ jmespath==1.0.1
     #   botocore
 markdown-it-py==3.0.0
     # via rich
-markupsafe==2.1.5
+markupsafe==3.0.1
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
@@ -103,7 +103,7 @@ rich==13.9.2
     # via
     #   cookiecutter
     #   seed-farmer (setup.py)
-s3transfer==0.10.2
+s3transfer==0.10.3
     # via boto3
 six==1.16.0
     # via

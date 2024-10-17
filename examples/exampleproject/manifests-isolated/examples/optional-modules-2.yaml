@@ -12,6 +12,8 @@ targetRegion: us-west-2
 parameters:
   - name: encryption-type
     value: SSE
+  - name: retention-policy
+    value: DESTROY
   - name: vpc-id
     valueFrom:
       parameterValue: vpcId

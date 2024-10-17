@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Adds `seedfarmer --version` to validate package without running explicit command
 - Added ability to disable env replacement in module parameters
 - Updating bootstrap docs with minimum permissions
+- Update manifest example module versions
 
 ### Fixes
 

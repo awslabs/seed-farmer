@@ -12,7 +12,7 @@ targetRegion: us-east-2
 parameters:
   - name: encryption-type
     value: SSE
-  - name: retention-policy
+  - name: retention-type
     value: DESTROY
   - name: some-name
     value: other

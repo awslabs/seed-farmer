@@ -9,5 +9,5 @@ path: git::https://github.com/awslabs/idf-modules.git//modules/storage/buckets/?
 parameters:
   - name: encryption-type
     value: SSE
-  - name: retention-policy
+  - name: retention-type
     value: DESTROY

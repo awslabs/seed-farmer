@@ -1,5 +1,5 @@
-sphinx-autoapi==3.3.2
-sphinx-rtd-theme==3.0.0
+sphinx-autoapi==3.3.3
+sphinx-rtd-theme==3.0.1
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-devhelp==2.0.0
 sphinxcontrib-htmlhelp==2.1.0

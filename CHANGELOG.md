@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Added ability to disable env replacement in module parameters
 - Updating bootstrap docs with minimum permissions
 - Update manifest example module versions
+- Update session manager to pass toolchain role region to sts
 
 ### Fixes
 

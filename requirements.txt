@@ -12,9 +12,9 @@ aws-codeseeder==1.1.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
-boto3==1.35.49
+boto3==1.35.72
     # via aws-codeseeder
-botocore==1.35.49
+botocore==1.35.72
     # via
     #   boto3
     #   s3transfer
@@ -69,13 +69,13 @@ mdurl==0.1.2
     # via markdown-it-py
 mypy-extensions==1.0.0
     # via aws-codeseeder
-packaging==24.1
+packaging==24.2
     # via seed-farmer (setup.py)
 property-manager==3.0
     # via executor
-pydantic==2.9.2
+pydantic==2.10.2
     # via seed-farmer (setup.py)
-pydantic-core~=2.23.0
+pydantic-core~=2.27.1
     # via pydantic
 pygments==2.18.0
     # via rich
@@ -99,11 +99,11 @@ requests==2.32.3
     # via
     #   cookiecutter
     #   seed-farmer (setup.py)
-rich==13.9.3
+rich==13.9.4
     # via
     #   cookiecutter
     #   seed-farmer (setup.py)
-s3transfer==0.10.3
+s3transfer==0.10.4
     # via boto3
 six==1.16.0
     # via

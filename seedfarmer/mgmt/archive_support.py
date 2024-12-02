@@ -17,7 +17,6 @@ import logging
 import os.path
 import pathlib
 import re
-import shutil
 import tarfile
 from typing import Optional, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -36,7 +35,6 @@ from seedfarmer.services._service_utils import create_signed_request
 from seedfarmer.services.session_manager import SessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
-parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
 
 
 def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
@@ -50,7 +48,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
             credentials=credentials,
             headers={"x-amz-content-sha256": hashlib.sha256("".encode("utf-8")).hexdigest()},
         )
-        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)
+        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)  # type: ignore[arg-type]
 
     if secret_name:
         session: boto3.Session = SessionManager().get_or_create().toolchain_session  # type: ignore[no-redef]
@@ -84,27 +82,22 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
 
 
 def _process_archive(archive_name: str, response: Response, extracted_dir: str) -> str:
+    parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
     pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
 
     with open(archive_name, "wb") as archive_file:
         archive_file.write(response.content)
 
     extracted_dir_path = os.path.join(parent_dir, extracted_dir)
-    embedded_dir = _extract_archive(archive_name, extracted_dir_path)
+    _ = _extract_archive(archive_name, extracted_dir_path)
 
     os.remove(archive_name)
-
-    if embedded_dir:
-        file_names = os.listdir(os.path.join(extracted_dir_path, embedded_dir))
-        for file_name in file_names:
-            shutil.move(os.path.join(extracted_dir_path, embedded_dir, file_name), extracted_dir_path)
-
-        os.rmdir(os.path.join(extracted_dir_path, embedded_dir))
 
     return extracted_dir_path
 
 
 def _get_release_with_link(archive_url: str, secret_name: Optional[str]) -> Tuple[str, str]:
+    parent_dir = os.path.join(config.OPS_ROOT, "seedfarmer.archive")
     parsed_url = urlparse(archive_url)
 
     if not parsed_url.scheme == "https":

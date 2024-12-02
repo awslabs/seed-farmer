@@ -59,7 +59,7 @@ class StackInfo(object):
 info = StackInfo()
 
 
-def _get_project_managed_policy_arn(session: boto3.Session) -> str:
+def _get_project_managed_policy_arn(session: Optional[boto3.Session]) -> str:
     def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
         return cast(
             Tuple[bool, Dict[str, str]],
@@ -90,7 +90,7 @@ def _get_project_managed_policy_arn(session: boto3.Session) -> str:
         return project_managed_policy_arn
 
 
-def _get_seedkit_resources_policy_arn(session: boto3.Session) -> Optional[str]:
+def _get_seedkit_resources_policy_arn(session: Optional[boto3.Session]) -> Optional[str]:
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(
         seedkit_name=config.PROJECT, session=session
     )
@@ -99,7 +99,7 @@ def _get_seedkit_resources_policy_arn(session: boto3.Session) -> Optional[str]:
     return None
 
 
-def _get_docker_secret_inline_policy(docker_credentials_secret: str, session: boto3.Session) -> str:
+def _get_docker_secret_inline_policy(docker_credentials_secret: str, session: Optional[boto3.Session]) -> str:
     account_id, region, partition = get_sts_identity_info(session=session)
     return json.dumps(
         {

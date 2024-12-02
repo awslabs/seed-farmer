@@ -86,3 +86,42 @@ The qualifier post-pends a 6 chars alpha-numeric string to the deployment role a
 
 ## Prepping the Account / Region
 `seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in each account/region combination to be used of each target account.
+
+## Minimum Permissions Required for Bootstrap
+The following policy outlines the minimum required IAM permissions in order to execute `seedfarmer bootstrap ..` against a toolchain/target account. **Note**: The project name `exampleproj` is used in this policy as an example. This would need to be changed to the project name in `seedfarmer.yaml`.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:DescribeStacks"
+            ],
+            "Resource": [
+                "arn:aws:iam:::role/seedfarmer-*-toolchain-role",
+                "arn:aws:cloudformation:*:*:stack/seedfarmer-exampleproj-toolchain-role/*",
+                "arn:aws:cloudformation:*:*:stack/seedfarmer-exampleproj-deployment-role/*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:DeleteRolePolicy",
+                "iam:TagRole",
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:PutRolePolicy"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```

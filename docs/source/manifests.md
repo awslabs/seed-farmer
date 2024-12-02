@@ -91,7 +91,7 @@ targetAccountMappings:
   - THIS CANNOT BE USED WITH `name`
 - **toolchainRegion** :the designated region that the `toolchain` is created in
 - **forceDependencyRedeploy**: this is a boolean that tells seedfarmer to redeploy ALL dependency modules (see [Force Dependency Redeploy](force-redeploy)) - Default is `False`
-- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules
+- **archiveSecret**: name of a secret in SecretsManager that contains the credentials to access a private HTTPS archive for the modules  (see [Archive Secret](archivesecret))
   - secret name must follow the `*-archive-credentials*` naming pattern
   - the secret value must be a JSON with the `username` and `password` values
 - **groups** : the relative path to the [`module manifests`](module_manifest) that define each module in the group.  This sequential order is preserved in deployment, and reversed in destroy.
@@ -330,7 +330,7 @@ When using this feature, any change to these file(s) (modifying, add to manifest
 ## Universal Environment Variable Replacement in Manifests
 As of the release of `seed-farmer==3.5.0`, we have added support for dynamic replacement of values with environment variables in manifests.  This does not replace any pre-existing functionality.  This also is limited to only manifests (`deployment_manifest` and `module_manifest`).  Things like the `deployspec` and the `modulestack` are NOT included in this functionality.  We strongly recommend using hard-coded values in manifests or leveraging the facilities already in place, but we have added this feature based on feedback from experienced users.
 
-Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`.   
+Any string within your manifests that has a designated pattern will automatically be resolved.  If you have an environment variable named `SOMEKEY` that is defined, you can reference it in your manifests via wrapping it in `${}` --> for example `${SOMEKEY}`. Additionally, it is possible to disable environment variable replacement in module input parameters using `disableEnvVarResolution: True` for cases such as when input parameter is a script.
 
 The following is a valid manifest:
 
@@ -356,6 +356,12 @@ parameters:
   - name: vpc-id
     valueFrom:
       secretsManager: ${SOMEKEY}
+  - name: param-no-env-resolution
+    disableEnvVarResolution: True
+    value:
+      - |
+        export VAR=test
+        echo "${VAR}"
 ```
 This can be applied to all values in the manifest.  We do not recommend using this in the `name` field of manifests as any value that is referenced by downstream manifests MUST align.  For example, in the following:
 
@@ -525,7 +531,7 @@ This would result in the creation of an `_auth` entry in npm config (`.npmrc`) w
 npm config set //the-mirror-dns/npm/:_auth="mybase64encodedssltoken"
 ```
 
-
+(archivesecret)=
 ### Archive Secret
 
 If using an archive store that is not public or needs an authentication scheme, the `archiveSecret` provides a means to set a username / password, so that the archived modules can be downloaded.
@@ -555,6 +561,14 @@ The content of the AWS SecretsManager secret must be a JSON containing two value
   "username": "archive-user", 
   "password": "archive-password" 
 },
+```
+
+The archive secret would then need to be referenced in the deployment manifest:
+
+```yaml
+...
+archiveSecret: example-archive-credentials-modules
+...
 ```
 
 (parameters)=

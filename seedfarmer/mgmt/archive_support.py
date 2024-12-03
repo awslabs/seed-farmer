@@ -17,6 +17,7 @@ import logging
 import os.path
 import pathlib
 import re
+import shutil
 import tarfile
 from typing import Optional, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -89,9 +90,16 @@ def _process_archive(archive_name: str, response: Response, extracted_dir: str) 
         archive_file.write(response.content)
 
     extracted_dir_path = os.path.join(parent_dir, extracted_dir)
-    _ = _extract_archive(archive_name, extracted_dir_path)
+    embedded_dir = _extract_archive(archive_name, extracted_dir_path)
 
     os.remove(archive_name)
+
+    if embedded_dir:
+        file_names = os.listdir(os.path.join(extracted_dir_path, embedded_dir))
+        for file_name in file_names:
+            shutil.move(os.path.join(extracted_dir_path, embedded_dir, file_name), extracted_dir_path)
+
+        os.rmdir(os.path.join(extracted_dir_path, embedded_dir))
 
     return extracted_dir_path
 

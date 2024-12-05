@@ -74,7 +74,11 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
         with tarfile.open(archive_name, "r:gz") as tar_file:
             all_members = tar_file.getmembers()
             top_level_dirs = set(member.name.split("/")[0] for member in all_members)
-            if len(top_level_dirs) == 1:
+            if len(top_level_dirs) > 1:
+                raise InvalidConfigurationError(
+                    f"the archive {archive_name} can only have one directory at the root and no files"
+                )
+            elif len(top_level_dirs) == 1:
                 embedded_dir = top_level_dirs.pop()
             else:
                 embedded_dir = ""
@@ -83,16 +87,18 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
     else:
         with ZipFile(archive_name, "r") as zip_file:
             all_files = zip_file.namelist()
-            top_level_dirs = set(name.split("/")[0] for name in all_files if name.endswith("/"))
-            if len(top_level_dirs) == 1:
+            top_level_dirs = set(name.split("/")[0] for name in all_files)
+            if len(top_level_dirs) > 1:
+                raise InvalidConfigurationError(
+                    f"the archive {archive_name} can only have one directory at the root and no files"
+                )
+            elif len(top_level_dirs) == 1:
                 embedded_dir = top_level_dirs.pop()
             else:
                 embedded_dir = ""
-            files_to_extract = [f for f in all_files]  # ]
-
+            files_to_extract = [f for f in all_files]
             for file in files_to_extract:
                 zip_file.extract(file, path=extracted_dir_path)
-
     return embedded_dir
 
 

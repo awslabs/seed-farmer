@@ -80,10 +80,27 @@ def parent_dir_prepare():
 
 
 example_archive_files = [
-    ("modules/test-module/modulestack.yaml", io.BytesIO(b"111")),
-    ("modules/test-module/pyproject.toml", io.BytesIO(b"222")),
-    ("README.md", io.BytesIO(b"333")),
-    ("LICENSE", io.BytesIO(b"444")),
+    ("test-project/modules/test-module/modulestack.yaml", io.BytesIO(b"111")),
+    ("test-project/modules/test-module/pyproject.toml", io.BytesIO(b"222")),
+    ("test-project/README.md", io.BytesIO(b"333")),
+    ("test-project/LICENSE", io.BytesIO(b"444")),
+]
+
+example_archive_files_single_module = [
+    ("test-project/modules/test-module/deployspec.yaml", io.BytesIO(b"111")),
+    ("test-project/modules/test-module/something.yaml", io.BytesIO(b"111")),
+]
+
+example_archive_files_no_nesting = [
+    ("test-project/deployspec.yaml", io.BytesIO(b"111")),
+    ("test-project/app.py", io.BytesIO(b"111")),
+    ("test-project/stack.py", io.BytesIO(b"111")),
+]
+
+example_archive_files_bad_structure = [
+    ("deployspec.yaml", io.BytesIO(b"111")),
+    ("app.py", io.BytesIO(b"111")),
+    ("stack.py", io.BytesIO(b"111")),
 ]
 
 
@@ -93,6 +110,39 @@ def zip_file_data() -> Tuple[bytes, str]:
 
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
         for file_name, data in example_archive_files:
+            zip_file.writestr(file_name, data.getvalue())
+
+    return zip_buffer.getvalue(), "zip"
+
+
+@pytest.fixture(scope="function")
+def zip_file_data_not_nested() -> Tuple[bytes, str]:
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, data in example_archive_files_no_nesting:
+            zip_file.writestr(file_name, data.getvalue())
+
+    return zip_buffer.getvalue(), "zip"
+
+
+@pytest.fixture(scope="function")
+def zip_file_data_single_module() -> Tuple[bytes, str]:
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, data in example_archive_files_single_module:
+            zip_file.writestr(file_name, data.getvalue())
+
+    return zip_buffer.getvalue(), "zip"
+
+
+@pytest.fixture(scope="function")
+def zip_file_data_bad_structure() -> Tuple[bytes, str]:
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED) as zip_file:
+        for file_name, data in example_archive_files_bad_structure:
             zip_file.writestr(file_name, data.getvalue())
 
     return zip_buffer.getvalue(), "zip"
@@ -109,9 +159,69 @@ def tar_file_data() -> Tuple[bytes, str]:
     return tar_buffer.getvalue(), "tar.gz"
 
 
+@pytest.fixture(scope="function")
+def tar_file_data_not_nested() -> Tuple[bytes, str]:
+    tar_buffer = io.BytesIO()
+
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar_file:
+        for file_name, data in example_archive_files_no_nesting:
+            tar_file.addfile(tarfile.TarInfo(name=file_name), fileobj=data)
+
+    return tar_buffer.getvalue(), "tar.gz"
+
+
+@pytest.fixture(scope="function")
+def tar_file_data_single_module() -> Tuple[bytes, str]:
+    tar_buffer = io.BytesIO()
+
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar_file:
+        for file_name, data in example_archive_files_single_module:
+            tar_file.addfile(tarfile.TarInfo(name=file_name), fileobj=data)
+
+    return tar_buffer.getvalue(), "tar.gz"
+
+
+@pytest.fixture(scope="function")
+def tar_file_data_bad_structure() -> Tuple[bytes, str]:
+    tar_buffer = io.BytesIO()
+
+    with tarfile.open(fileobj=tar_buffer, mode="w:gz") as tar_file:
+        for file_name, data in example_archive_files_bad_structure:
+            tar_file.addfile(tarfile.TarInfo(name=file_name), fileobj=data)
+
+    return tar_buffer.getvalue(), "tar.gz"
+
+
 @pytest.fixture(params=["zip_file_data", "tar_file_data"])
 def archive_file_data(
     request: pytest.FixtureRequest, zip_file_data: Tuple[bytes, str], tar_file_data: Tuple[bytes, str]
+) -> Tuple[bytes, str]:
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture(params=["zip_file_data_not_nested", "tar_file_data_not_nested"])
+def archive_file_data_not_nested(
+    request: pytest.FixtureRequest,
+    zip_file_data_not_nested: Tuple[bytes, str],
+    tar_file_data_not_nested: Tuple[bytes, str],
+) -> Tuple[bytes, str]:
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture(params=["zip_file_data_single_module", "tar_file_data_single_module"])
+def archive_file_data_single_module(
+    request: pytest.FixtureRequest,
+    zip_file_data_single_module: Tuple[bytes, str],
+    tar_file_data_single_module: Tuple[bytes, str],
+) -> Tuple[bytes, str]:
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture(params=["zip_file_data_bad_structure", "tar_file_data_bad_structure"])
+def archive_file_data_single_bad_structure(
+    request: pytest.FixtureRequest,
+    zip_file_data_bad_structure: Tuple[bytes, str],
+    tar_file_data_bad_structure: Tuple[bytes, str],
 ) -> Tuple[bytes, str]:
     return request.getfixturevalue(request.param)
 
@@ -195,7 +305,6 @@ def test_fetch_module_repo_from_s3(
 
         archive_path, _ = archive.fetch_archived_module(release_path=archive_path_test)
         archive.fetch_archived_module(release_path=archive_path_test)
-
         mock_requests_get.assert_called_once()
 
         assert mock_requests_get.call_args.kwargs["url"] == s3_http_url
@@ -206,6 +315,89 @@ def test_fetch_module_repo_from_s3(
 
         # Check that the module was extracted to the correct location
         assert os.path.exists(os.path.join(archive_path, module_name, "modulestack.yaml"))
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_archive_support
+@pytest.mark.parametrize(
+    "s3_bucket_http_url", ["testing-bucket.s3.amazonaws.com", "testing-bucket.s3.us-west-2.amazonaws.com"]
+)
+def test_fetch_module_repo_from_s3_non_nested(
+    session_manager: None, archive_file_data_not_nested: Tuple[bytes, str], s3_bucket_http_url: str
+) -> None:
+    archive_bytes, archive_extension = archive_file_data_not_nested
+
+    response_mock = MagicMock()
+    response_mock.status_code = 200
+    response_mock.content = archive_bytes
+
+    s3_http_url = f"https://{s3_bucket_http_url}/testing-modules.{archive_extension}"
+    module_name = "./"
+
+    with patch("requests.get", return_value=response_mock) as mock_requests_get:
+        archive_path_test = f"archive::{s3_http_url}?module={module_name}"
+        archive_path, subdir = archive.fetch_archived_module(release_path=archive_path_test)
+        mock_requests_get.assert_called_once()
+
+        assert mock_requests_get.call_args.kwargs["url"] == s3_http_url
+        # check that the sha256 header was added and that the request was signed
+        assert "x-amz-content-sha256" in mock_requests_get.call_args.kwargs["headers"]
+        assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
+
+        assert os.path.exists(os.path.join(archive_path, "deployspec.yaml"))
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_archive_support
+@pytest.mark.parametrize(
+    "s3_bucket_http_url", ["testing-bucket.s3.amazonaws.com", "testing-bucket.s3.us-west-2.amazonaws.com"]
+)
+def test_fetch_module_repo_from_s3_single_module(
+    session_manager: None, archive_file_data_single_module: Tuple[bytes, str], s3_bucket_http_url: str
+) -> None:
+    archive_bytes, archive_extension = archive_file_data_single_module
+
+    response_mock = MagicMock()
+    response_mock.status_code = 200
+    response_mock.content = archive_bytes
+
+    s3_http_url = f"https://{s3_bucket_http_url}/testing-modules.{archive_extension}"
+    module_name = "modules/test-module/"
+
+    with patch("requests.get", return_value=response_mock) as mock_requests_get:
+        archive_path_test = f"archive::{s3_http_url}?module={module_name}"
+        archive_path, subdir = archive.fetch_archived_module(release_path=archive_path_test)
+        mock_requests_get.assert_called_once()
+
+        assert mock_requests_get.call_args.kwargs["url"] == s3_http_url
+        # check that the sha256 header was added and that the request was signed
+        assert "x-amz-content-sha256" in mock_requests_get.call_args.kwargs["headers"]
+        assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
+        assert os.path.exists(os.path.join(archive_path, module_name, "deployspec.yaml"))
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_archive_support
+@pytest.mark.parametrize(
+    "s3_bucket_http_url", ["testing-bucket.s3.amazonaws.com", "testing-bucket.s3.us-west-2.amazonaws.com"]
+)
+def test_fetch_module_repo_bad_archive_structure(
+    session_manager: None, archive_file_data_single_bad_structure: Tuple[bytes, str], s3_bucket_http_url: str
+) -> None:
+    archive_bytes, archive_extension = archive_file_data_single_bad_structure
+
+    response_mock = MagicMock()
+    response_mock.status_code = 200
+    response_mock.content = archive_bytes
+
+    s3_http_url = f"https://{s3_bucket_http_url}/testing-modules.{archive_extension}"
+    module_name = "modules/test-module/"
+
+    with patch("requests.get", return_value=response_mock) as mock_requests_get:
+        archive_path_test = f"archive::{s3_http_url}?module={module_name}"
+        with pytest.raises(InvalidConfigurationError):
+            archive.fetch_archived_module(release_path=archive_path_test)
+            mock_requests_get.assert_called_once()
 
 
 @pytest.mark.mgmt

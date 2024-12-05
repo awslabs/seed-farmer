@@ -84,23 +84,30 @@ example_archive_files = [
     ("test-project/modules/test-module/pyproject.toml", io.BytesIO(b"222")),
     ("test-project/README.md", io.BytesIO(b"333")),
     ("test-project/LICENSE", io.BytesIO(b"444")),
+    (".DS_Store_local", io.BytesIO(b"555")),
 ]
 
 example_archive_files_single_module = [
-    ("test-project/modules/test-module/deployspec.yaml", io.BytesIO(b"111")),
-    ("test-project/modules/test-module/something.yaml", io.BytesIO(b"111")),
+    ("test-project/modules/test-module/deployspec.yaml", io.BytesIO(b"666")),
+    ("test-project/modules/test-module/something.yaml", io.BytesIO(b"777")),
+    (".DS_Store", io.BytesIO(b"888")),
+    ("README.md", io.BytesIO(b"999")),
 ]
 
 example_archive_files_no_nesting = [
-    ("test-project/deployspec.yaml", io.BytesIO(b"111")),
-    ("test-project/app.py", io.BytesIO(b"111")),
-    ("test-project/stack.py", io.BytesIO(b"111")),
+    ("deployspec.yaml", io.BytesIO(b"1010")),
+    ("app.py", io.BytesIO(b"1011")),
+    ("stack.py", io.BytesIO(b"1012")),
+    (".DS_Store", io.BytesIO(b"1013")),
+    ("README.md", io.BytesIO(b"1014")),
 ]
 
 example_archive_files_bad_structure = [
-    ("deployspec.yaml", io.BytesIO(b"111")),
-    ("app.py", io.BytesIO(b"111")),
-    ("stack.py", io.BytesIO(b"111")),
+    ("test-project/deployspec.yaml", io.BytesIO(b"1200")),
+    ("test-project_additional/deployspec.yaml", io.BytesIO(b"1201")),
+    ("deployspec.yaml", io.BytesIO(b"1202")),
+    ("app.py", io.BytesIO(b"1203")),
+    ("stack.py", io.BytesIO(b"1204")),
 ]
 
 
@@ -218,7 +225,7 @@ def archive_file_data_single_module(
 
 
 @pytest.fixture(params=["zip_file_data_bad_structure", "tar_file_data_bad_structure"])
-def archive_file_data_single_bad_structure(
+def archive_file_data_bad_structure(
     request: pytest.FixtureRequest,
     zip_file_data_bad_structure: Tuple[bytes, str],
     tar_file_data_bad_structure: Tuple[bytes, str],
@@ -382,9 +389,9 @@ def test_fetch_module_repo_from_s3_single_module(
     "s3_bucket_http_url", ["testing-bucket.s3.amazonaws.com", "testing-bucket.s3.us-west-2.amazonaws.com"]
 )
 def test_fetch_module_repo_bad_archive_structure(
-    session_manager: None, archive_file_data_single_bad_structure: Tuple[bytes, str], s3_bucket_http_url: str
+    session_manager: None, archive_file_data_bad_structure: Tuple[bytes, str], s3_bucket_http_url: str
 ) -> None:
-    archive_bytes, archive_extension = archive_file_data_single_bad_structure
+    archive_bytes, archive_extension = archive_file_data_bad_structure
 
     response_mock = MagicMock()
     response_mock.status_code = 200

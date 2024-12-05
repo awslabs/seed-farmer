@@ -73,7 +73,7 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_name, "r:gz") as tar_file:
             all_members = tar_file.getmembers()
-            top_level_dirs = set(member.name.split("/")[0] for member in all_members)
+            top_level_dirs = set(member.name.split("/")[0] for member in all_members if "/" in member.name)
             if len(top_level_dirs) > 1:
                 raise InvalidConfigurationError(
                     f"the archive {archive_name} can only have one directory at the root and no files"
@@ -87,7 +87,7 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
     else:
         with ZipFile(archive_name, "r") as zip_file:
             all_files = zip_file.namelist()
-            top_level_dirs = set(name.split("/")[0] for name in all_files)
+            top_level_dirs = set(name.split("/")[0] for name in all_files if "/" in name)
             if len(top_level_dirs) > 1:
                 raise InvalidConfigurationError(
                     f"the archive {archive_name} can only have one directory at the root and no files"

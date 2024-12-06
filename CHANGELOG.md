@@ -11,7 +11,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
-## v5.0.1 (2024-12-02)
+
+## v5.0.2 (2024-12-06)
 
 ### New 
 
@@ -24,7 +25,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Update session manager to pass toolchain role region to sts
 
 ### Fixes
-- allow nested modules in archives pulled over HTTPS (ref issue/749)
+- correct archive extraction when there is only one nested path (issue 749)
 
 ## v5.0.0 (2024-08-16)
 

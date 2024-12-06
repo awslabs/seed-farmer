@@ -353,6 +353,7 @@ def test_fetch_module_repo_from_s3_non_nested(
         assert os.path.exists(os.path.join(archive_path, "deployspec.yaml"))
         assert subdir == "./"
 
+
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
 @pytest.mark.parametrize(
@@ -380,7 +381,7 @@ def test_fetch_module_repo_from_s3_single_module(
         assert "x-amz-content-sha256" in mock_requests_get.call_args.kwargs["headers"]
         assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
         assert os.path.exists(os.path.join(archive_path, module_name, "deployspec.yaml"))
-        assert subdir=="modules/test-module/"
+        assert subdir == "modules/test-module/"
 
 
 @pytest.mark.mgmt

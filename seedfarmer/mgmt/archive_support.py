@@ -82,8 +82,7 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
                 embedded_dir = top_level_dirs.pop()
             else:
                 embedded_dir = ""
-            members_to_extract = [m for m in all_members]
-            tar_file.extractall(extracted_dir_path, members=members_to_extract)
+            tar_file.extractall(extracted_dir_path, members=all_members)
     else:
         with ZipFile(archive_name, "r") as zip_file:
             all_files = zip_file.namelist()
@@ -96,8 +95,7 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
                 embedded_dir = top_level_dirs.pop()
             else:
                 embedded_dir = ""
-            files_to_extract = [f for f in all_files]
-            for file in files_to_extract:
+            for file in all_files:
                 zip_file.extract(file, path=extracted_dir_path)
     return embedded_dir
 

@@ -79,6 +79,9 @@ def parent_dir_prepare():
         shutil.rmtree(parent_dir)
 
 
+# This represents a proper archive with the project (test-project) at the root
+# are are ignoring the hidden file at the root, and the other files
+# under test-project are not used
 example_archive_files = [
     ("test-project/modules/test-module/modulestack.yaml", io.BytesIO(b"111")),
     ("test-project/modules/test-module/pyproject.toml", io.BytesIO(b"222")),
@@ -87,6 +90,8 @@ example_archive_files = [
     (".DS_Store_local", io.BytesIO(b"555")),
 ]
 
+# This represents a proper archive with the project (test-project) at the root
+# are are ignoring the hidden file at the root, and the other file is not used
 example_archive_files_single_module = [
     ("test-project/modules/test-module/deployspec.yaml", io.BytesIO(b"666")),
     ("test-project/modules/test-module/something.yaml", io.BytesIO(b"777")),
@@ -94,6 +99,9 @@ example_archive_files_single_module = [
     ("README.md", io.BytesIO(b"999")),
 ]
 
+# This represents a an archive without a nested dir (project)
+# This is not recommended as it is not a proper SF project,
+# but can support due to customer ask
 example_archive_files_no_nesting = [
     ("deployspec.yaml", io.BytesIO(b"1010")),
     ("app.py", io.BytesIO(b"1011")),
@@ -102,6 +110,8 @@ example_archive_files_no_nesting = [
     ("README.md", io.BytesIO(b"1014")),
 ]
 
+# This is a bad package as there are two dirs at the
+# root level...that is not allowed
 example_archive_files_bad_structure = [
     ("test-project/deployspec.yaml", io.BytesIO(b"1200")),
     ("test-project_additional/deployspec.yaml", io.BytesIO(b"1201")),

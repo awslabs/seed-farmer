@@ -310,8 +310,7 @@ def test_fetch_module_repo_from_s3(
     with patch("requests.get", return_value=response_mock) as mock_requests_get:
         archive_path_test = f"archive::{s3_http_url}?module={module_name}"
 
-        archive_path, _ = archive.fetch_archived_module(release_path=archive_path_test)
-        archive.fetch_archived_module(release_path=archive_path_test)
+        archive_path, subdir = archive.fetch_archived_module(release_path=archive_path_test)
         mock_requests_get.assert_called_once()
 
         assert mock_requests_get.call_args.kwargs["url"] == s3_http_url
@@ -319,9 +318,9 @@ def test_fetch_module_repo_from_s3(
         # check that the sha256 header was added and that the request was signed
         assert "x-amz-content-sha256" in mock_requests_get.call_args.kwargs["headers"]
         assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
-
         # Check that the module was extracted to the correct location
         assert os.path.exists(os.path.join(archive_path, module_name, "modulestack.yaml"))
+        assert subdir == "modules/test-module/"
 
 
 @pytest.mark.mgmt
@@ -352,7 +351,7 @@ def test_fetch_module_repo_from_s3_non_nested(
         assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
 
         assert os.path.exists(os.path.join(archive_path, "deployspec.yaml"))
-
+        assert subdir == "./"
 
 @pytest.mark.mgmt
 @pytest.mark.mgmt_archive_support
@@ -381,6 +380,7 @@ def test_fetch_module_repo_from_s3_single_module(
         assert "x-amz-content-sha256" in mock_requests_get.call_args.kwargs["headers"]
         assert "Authorization" in mock_requests_get.call_args.kwargs["headers"]
         assert os.path.exists(os.path.join(archive_path, module_name, "deployspec.yaml"))
+        assert subdir=="modules/test-module/"
 
 
 @pytest.mark.mgmt

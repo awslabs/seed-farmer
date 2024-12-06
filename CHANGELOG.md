@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - Update session manager to pass toolchain role region to sts
 
 ### Fixes
+- correct archive extraction when there is only one nested path (issue 749)
 
 ## v5.0.0 (2024-08-16)
 

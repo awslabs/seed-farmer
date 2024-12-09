@@ -448,7 +448,7 @@ class DeploymentManifest(CamelModel):
     def get_permission_boundary_arn(self, target_account: str, target_region: str) -> Optional[str]:
         permissions_boundary_name = self.get_parameter_value(
             "permissionsBoundaryName",
-            account_alias=target_account,
+            account_id=target_account,
             region=target_region,
         )
         return (

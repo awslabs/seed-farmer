@@ -121,6 +121,12 @@ def test_deployment_manifest_get_parameter_with_defaults():
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         manifest.get_target_account_mapping()
 
+    assert manifest.get_parameter_value("permissionsBoundaryName") == "policyName"
+    assert (
+        manifest.get_permission_boundary_arn(target_account="000000000000", target_region="us-west-2")
+        == "arn:aws:iam::000000000000:policy/policyName"
+    )
+
 
 @pytest.mark.models
 @pytest.mark.models_deployment_manifest

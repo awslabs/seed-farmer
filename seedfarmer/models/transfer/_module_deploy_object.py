@@ -26,7 +26,7 @@ class ModuleDeployObject(CamelModel):
         _module = cast(ModuleManifest, self.deployment_manifest.get_module(self.group_name, self.module_name))
 
         pba = self.deployment_manifest.get_permission_boundary_arn(
-            target_account=cast(str, _module.target_account),
+            target_account=cast(str, _module.get_target_account_id()),
             target_region=cast(str, _module.target_region),
         )
         codebuild_image = self.deployment_manifest.get_region_codebuild_image(

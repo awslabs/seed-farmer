@@ -1,5 +1,6 @@
 import json
 import os
+from unittest.mock import ANY
 
 import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
@@ -293,7 +294,9 @@ def test_create_module_deployment_role(session_manager, mocker):
         "seedfarmer.commands._deployment_commands.get_generic_module_deployment_role_name",
         return_value="generic-module-deployment-role",
     )
-    mocker.patch("seedfarmer.commands._deployment_commands.create_module_deployment_role", return_value=None)
+    mock_create_module_deployment_role = mocker.patch(
+        "seedfarmer.commands._deployment_commands.create_module_deployment_role", return_value=None
+    )
 
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     dep.validate_and_set_module_defaults()
@@ -302,6 +305,14 @@ def test_create_module_deployment_role(session_manager, mocker):
         account_id="123456789012",
         region="us-east-1",
         deployment_manifest=dep,
+    )
+
+    mock_create_module_deployment_role.assert_called_once_with(
+        role_name="generic-module-deployment-role",
+        deployment_name="mlops",
+        permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
+        docker_credentials_secret=None,
+        session=ANY,
     )
 
 

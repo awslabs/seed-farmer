@@ -17,6 +17,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - correct archive extraction when there is only one nested path (issue 749)
+- force proper resolution of boundary permissions
 
 ## v5.0.0 (2024-08-16)
 

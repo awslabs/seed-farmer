@@ -241,7 +241,10 @@ deployment_manifest = {
             "alias": "primary",
             "account_id": "123456789012",
             "default": True,
-            "parameters_global": {"dockerCredentialsSecret": "aws-addf-docker-credentials"},
+            "parameters_global": {
+                "dockerCredentialsSecret": "aws-addf-docker-credentials",
+                "permissionsBoundaryName": "boundary",
+            },
             "region_mappings": [
                 {
                     "region": "us-east-1",

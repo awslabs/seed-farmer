@@ -55,7 +55,7 @@ humanfriendly==10.0
     #   property-manager
 idna==3.10
     # via requests
-jinja2==3.1.4
+jinja2==3.1.5
     # via cookiecutter
 jmespath==1.0.1
     # via

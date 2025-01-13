@@ -12,9 +12,9 @@ aws-codeseeder==1.1.0
     # via seed-farmer (setup.py)
 binaryornot==0.4.4
     # via cookiecutter
-boto3==1.35.72
+boto3==1.35.97
     # via aws-codeseeder
-botocore==1.35.72
+botocore==1.35.97
     # via
     #   boto3
     #   s3transfer
@@ -27,9 +27,9 @@ cfn-flip==1.3.0
     # via aws-codeseeder
 chardet==5.2.0
     # via binaryornot
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   aws-codeseeder
     #   cfn-flip
@@ -42,11 +42,11 @@ executor==23.2
     # via seed-farmer (setup.py)
 fasteners==0.19
     # via executor
-gitdb==4.0.11
+gitdb==4.0.12
     # via gitpython
 gitignore-parser==0.1.11
     # via seed-farmer (setup.py)
-gitpython==3.1.43
+gitpython==3.1.44
     # via seed-farmer (setup.py)
 humanfriendly==10.0
     # via
@@ -55,7 +55,7 @@ humanfriendly==10.0
     #   property-manager
 idna==3.10
     # via requests
-jinja2==3.1.4
+jinja2==3.1.5
     # via cookiecutter
 jmespath==1.0.1
     # via
@@ -73,11 +73,11 @@ packaging==24.2
     # via seed-farmer (setup.py)
 property-manager==3.0
     # via executor
-pydantic==2.10.2
+pydantic==2.10.5
     # via seed-farmer (setup.py)
-pydantic-core~=2.27.1
+pydantic-core~=2.27.2
     # via pydantic
-pygments==2.18.0
+pygments==2.19.1
     # via rich
 pyhumps==3.8.0
     # via seed-farmer (setup.py)
@@ -105,16 +105,16 @@ rich==13.9.4
     #   seed-farmer (setup.py)
 s3transfer==0.10.4
     # via boto3
-six==1.16.0
+six==1.17.0
     # via
     #   cfn-flip
     #   executor
     #   python-dateutil
-smmap==5.0.1
+smmap==5.0.2
     # via gitdb
 text-unidecode==1.3
     # via python-slugify
-types-python-dateutil==2.9.0.20241003
+types-python-dateutil==2.9.0.20241206
     # via arrow
 typing-extensions==4.12.2
     # via

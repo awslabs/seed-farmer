@@ -43,7 +43,7 @@ setup(
     license=about["__license__"],
     packages=find_packages(include=["seed-farmer", "seedfarmer", "seedfarmer.*", "seed-farmer.*"]),
     keywords=["aws", "cdk"],
-    python_requires=">=3.8,<3.13",
+    python_requires=">=3.9,<3.13",
     install_requires=[
         "aws-codeseeder~=1.2.0",
         "cookiecutter>=2.1,<2.7",
@@ -60,7 +60,6 @@ setup(
         "urllib3~=1.26.17",
         "certifi>=2024.7.4,<2024.9.0",
         "packaging>=23.2,<25.0",
-        "markupsafe~=2.1.3"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[
@@ -69,7 +68,6 @@ setup(
         "Intended Audience :: Information Technology",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

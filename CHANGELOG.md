@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New 
+- adding support for isolation of codeseeder and seedfarmer installations from module libraries
 
 ### Changes
 

@@ -60,6 +60,7 @@ setup(
         "urllib3~=1.26.17",
         "certifi>=2024.7.4,<2024.9.0",
         "packaging>=23.2,<25.0",
+        "markupsafe~=2.1.3"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

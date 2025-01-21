@@ -12,6 +12,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v6.0.0 (2025-01-21)
+
+### New 
+- adding support for isolation of codeseeder and seedfarmer installations from module libraries
+
+### Changes
+- removing support for python 3.8 due to deprecated libraries and inability to accommodate 3.8 through 3.12
+
+### Fixes
+
+
 ## v5.0.2 (2024-12-10)
 
 ### New 

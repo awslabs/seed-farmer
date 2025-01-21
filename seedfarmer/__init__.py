@@ -112,7 +112,7 @@ class Config(object):
                 ),
                 'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
             ]
-            configuration.python_modules = [f"seed-farmer=={__version__}"]
+            configuration.pythonpipx_modules = [f"seed-farmer=={__version__}"]
 
     @property
     def PROJECT(self) -> str:

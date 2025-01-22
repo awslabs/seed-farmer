@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+- add usedforsecurity=False to md5 hash to indicate it is not used in security context
 
 ## v6.0.0 (2025-01-21)
 

@@ -113,7 +113,7 @@ def _get_docker_secret_inline_policy(docker_credentials_secret: str, session: Op
                         "secretsmanager:ListSecretVersionIds",
                     ],
                     "Resource": (
-                        f"arn:{partition}:secretsmanager:{region}:{account_id}" f":secret:{docker_credentials_secret}*"
+                        f"arn:{partition}:secretsmanager:{region}:{account_id}:secret:{docker_credentials_secret}*"
                     ),
                 },
                 {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},

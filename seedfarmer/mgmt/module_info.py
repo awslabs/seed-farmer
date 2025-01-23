@@ -805,7 +805,7 @@ def get_module_stack_names(
     # Max length of a Stack Name is 128 chars, -iam-policy is 11 chars, resource_hash plus "-" is 5 chars
     # If the resource_name and "-iam-policy" is too long, truncate and use a resource_hash for uniqueness
     module_stack_name = (
-        f"{resource_name[:128 - 11 - 5]}-{resource_hash}-iam-policy"
+        f"{resource_name[: 128 - 11 - 5]}-{resource_hash}-iam-policy"
         if len(resource_name) > (128 - 11)
         else f"{resource_name}-iam-policy"
     )
@@ -814,7 +814,7 @@ def get_module_stack_names(
     # If the resource_name and session_hash is too long, truncate and use a resource_hash for uniqueness
     session_hash = generate_session_hash(session=session)
     module_role_name = (
-        f"{resource_name[:64 - 9 - 5]}-{resource_hash}-{session_hash}"
+        f"{resource_name[: 64 - 9 - 5]}-{resource_hash}-{session_hash}"
         if len(resource_name) > (64 - 9)
         else f"{resource_name}-{session_hash}"
     )

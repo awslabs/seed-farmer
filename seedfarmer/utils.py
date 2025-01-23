@@ -171,7 +171,7 @@ def get_generic_module_deployment_role_name(
     # Max length of IAM role name is 64 chars, "-deployment-role" is 16 chars, resource_hash plus "-" is 5 chars.
     # If the resource_name, and "-deployment-role" is too long, truncate and use resource_hash for uniqueness.
     return (
-        f"{resource_name[:64 - 16 - 5]}-deployment-role-{resource_hash}"
+        f"{resource_name[: 64 - 16 - 5]}-deployment-role-{resource_hash}"
         if len(resource_name) > (64 - 16)
         else f"{resource_name}-deployment-role"
     )

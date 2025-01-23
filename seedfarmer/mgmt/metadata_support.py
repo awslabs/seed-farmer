@@ -15,6 +15,7 @@
 import json
 import logging
 import os
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, cast
 
@@ -164,10 +165,9 @@ def convert_cdkexports(
         data = cdk_output[out_key]["metadata"]
     else:
         clean_jq_path = _clean_jq(jq_path)
-        jq_command = f"cat {cdk_output_path} | jq '{clean_jq_path}'"
         _logger.info("Pulling with jq path '%s' from %s file", clean_jq_path, json_file)
-        _logger.debug(f"The entire jq command: {jq_command}")
-        os.system(f"{jq_command} > tmp-metadata")
+        with open(cdk_output_path, "r") as infile, open("tmp-metadata", "w") as outfile:
+            subprocess.run(["jq", clean_jq_path], stdin=infile, stdout=outfile, shell=False)
         data = json.loads(open("tmp-metadata", "r").read())
 
     existing_metadata = _read_metadata_file(mms)

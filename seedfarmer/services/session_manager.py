@@ -163,7 +163,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
                 qualifier=cast(str, qualifier),
             )
             _logger.debug(
-                f"""The assumed toolchain role {toolchain_role['AssumedRoleUser']['Arn']} will
+                f"""The assumed toolchain role {toolchain_role["AssumedRoleUser"]["Arn"]} will
                  try and assume the deployment role: {deployment_role_arn}"""
             )
             try:

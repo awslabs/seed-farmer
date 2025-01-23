@@ -144,7 +144,7 @@ class NameGenerator(CamelModel):
                 env_value = os.getenv(value.value_from.env_variable, None)
                 if env_value is None:
                     raise seedfarmer.errors.InvalidManifestError(
-                        ("Unable to resolve value from Environment Variable:" f" {value.value_from.env_variable}")
+                        (f"Unable to resolve value from Environment Variable: {value.value_from.env_variable}")
                     )
                 return env_value
             else:

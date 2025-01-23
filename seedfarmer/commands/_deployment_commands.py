@@ -680,9 +680,10 @@ def deploy_deployment(
             )
 
             module.manifest_md5 = hashlib.md5(
-                json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
+                json.dumps(module.model_dump(), sort_keys=True).encode("utf-8"),
+                usedforsecurity=False,
             ).hexdigest()
-            module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
+            module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read(), usedforsecurity=False).hexdigest()
 
             _build_module = du.need_to_build(
                 deployment_name=deployment_name,

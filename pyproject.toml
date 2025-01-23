@@ -16,7 +16,7 @@ exclude = [
     "seedfarmer.gitmodules"
 ]
 line-length = 120
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I"]
@@ -28,7 +28,7 @@ fixable = ["ALL"]
 "test/unit-test/mock_data/*" = ["E501"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 strict = true
 ignore_missing_imports = true
 disallow_untyped_decorators = false

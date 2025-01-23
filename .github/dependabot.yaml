@@ -9,6 +9,10 @@ updates:
         dependency-type: "production"
       development-dependencies:
         dependency-type: "development"
+    ignore:
+      - dependency-name: "myst_parser"
+        versions:
+          - "4.0.0"
 
   - package-ecosystem: "github-actions"
     directory: "/"

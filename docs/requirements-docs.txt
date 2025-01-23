@@ -18,7 +18,7 @@ charset-normalizer==3.1.0
     # via requests
 click==8.1.7
     # via sphinx-click
-docutils==0.18.1
+docutils==0.20.1
     # via
     #   -r docs/requirements-docs.in
     #   myst-parser

@@ -1125,7 +1125,7 @@ def test_remove_moduledata(session_manager, mocker):
             "--target-account-id",
             "123456789012",
             "--target-region",
-            "us-east-1" "--debug",
+            "us-east-1--debug",
         ],
         exit_code=0,
     )
@@ -1235,7 +1235,7 @@ def test_store_md5_deployspec():
             "-m",
             "module-name",
             "-t",
-            "spec" "<<< f4k3h4shmd5",
+            "spec<<< f4k3h4shmd5",
         ],
         exit_code=0,
     )
@@ -1256,7 +1256,7 @@ def test_store_md5_bundle():
             "-m",
             "module-name",
             "--type",
-            "bundle" "<<< f4k3h4shbund13",
+            "bundle<<< f4k3h4shbund13",
         ],
         exit_code=0,
     )
@@ -1425,7 +1425,7 @@ def test_store_deployspec_missing_acct():
             "--project",
             "myapp",
             "--path",
-            "module/test/test" "--target_region",
+            "module/test/test--target_region",
             "us-east-1",
             "--debug",
         ],

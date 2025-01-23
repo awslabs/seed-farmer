@@ -18,7 +18,7 @@ charset-normalizer==3.1.0
     # via requests
 click==8.1.7
     # via sphinx-click
-docutils==0.18.1
+docutils==0.20.1
     # via
     #   -r docs/requirements-docs.in
     #   myst-parser
@@ -45,7 +45,7 @@ mdit-py-plugins==0.4.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-myst-parser==3.0.1
+myst-parser==4.0.0
     # via -r docs/requirements-docs.in
 packaging==24.2
     # via sphinx

@@ -45,7 +45,7 @@ mdit-py-plugins==0.4.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-myst-parser==4.0.0
+myst-parser==3.0.1
     # via -r docs/requirements-docs.in
 packaging==24.2
     # via sphinx

@@ -166,9 +166,8 @@ def convert_cdkexports(
     else:
         clean_jq_path = _clean_jq(jq_path)
         _logger.info("Pulling with jq path '%s' from %s file", clean_jq_path, json_file)
-        with open("tmp-metadata", "w") as outfile:
-            cat_process = subprocess.Popen(["cat", cdk_output_path], stdout=subprocess.PIPE, shell=False)
-            subprocess.run(["jq", clean_jq_path], stdin=cat_process.stdout, stdout=outfile, shell=False)
+        with open(cdk_output_path, "r") as infile, open("tmp-metadata", "w") as outfile:
+            subprocess.run(["jq", clean_jq_path], stdin=infile, stdout=outfile, shell=False)
         data = json.loads(open("tmp-metadata", "r").read())
 
     existing_metadata = _read_metadata_file(mms)

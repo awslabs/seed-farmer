@@ -70,7 +70,7 @@ def upper_snake_case(value: str) -> str:
 
 
 def generate_hash(string: str, length: int = 8) -> str:
-    return (hashlib.sha1(string.encode("UTF-8")).hexdigest())[:length]
+    return (hashlib.sha1(string.encode("UTF-8"), usedforsecurity=False).hexdigest())[:length]
 
 
 def generate_session_hash(session: Optional[Session] = None) -> str:

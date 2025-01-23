@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - No longer depends on the `pkg_resources` module being available from the setuptools package.
-- add usedforsecurity=False to md5 hash to indicate it is not used in security context
+- add usedforsecurity=False to md5 and sha1 hashing functions to indicate they are not used in security context
 - fix executing jq via shell
 
 ## v6.0.0 (2025-01-21)

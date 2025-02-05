@@ -4,6 +4,7 @@ from unittest.mock import ANY
 
 import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
+import mock_data.mock_deployment_manifest_with_prefix as mock_deployment_manifest_with_prefix
 import mock_data.mock_deployspec as mock_deployspec
 import mock_data.mock_manifests as mock_manifests
 import mock_data.mock_module_info_huge as mock_module_info_huge
@@ -82,6 +83,24 @@ def test_apply_violations(session_manager, mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_deployment
+def test_apply_with_prefix(session_manager, mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.populate_module_info_index", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.filter_deploy_destroy", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.deploy_deployment", return_value=None)
+    dc.apply(
+        deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-prefix.yaml",
+        role_prefix="/test1/",
+        dryrun=True,
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
 def test_destroy_clean(session_manager, mocker):
     mocker.patch(
         "seedfarmer.commands._deployment_commands.du.generate_deployed_manifest",
@@ -106,6 +125,18 @@ def test_destroy_not_found(session_manager, mocker):
     )
 
     dc.destroy(deployment_name="myapp", dryrun=True, remove_seedkit=False)
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_destroy_with_prefix(session_manager, mocker):
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.du.generate_deployed_manifest",
+        return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+
+    dc.destroy(deployment_name="myapp", role_prefix="/test/", dryrun=True, remove_seedkit=False)
 
 
 # @pytest.mark.commands
@@ -213,6 +244,47 @@ def test_execute_deploy(session_manager, mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_deployment
+def test_execute_deploy_with_prefix(session_manager, mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands.load_parameter_values", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_modulestack_path",
+        return_value="path",
+    )
+    deploy_module_stack_mock = mocker.patch(
+        "seedfarmer.commands._deployment_commands.commands.deploy_module_stack",
+        return_value=("stack_name", "role_name"),
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_role_arn",
+        return_value="role_arn",
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.commands.deploy_module", return_value=None)
+    dep = DeploymentManifest(**mock_deployment_manifest_with_prefix.deployment_manifest)
+    dep.validate_and_set_module_defaults()
+    group = dep.groups[0]
+    module_manifest = group.modules[0]
+    module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
+    dc._execute_deploy(mdo)
+
+    deploy_module_stack_mock.assert_called_with(
+        module_stack_path="path",
+        deployment_name="mlops",
+        group_name="optionals",
+        module_name="networking",
+        account_id="123456789012",
+        region="us-east-1",
+        parameters=None,
+        docker_credentials_secret="aws-addf-docker-credentials",
+        permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
+        role_prefix="/test1/",
+    )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
 def test_execute_destroy_invalid_spec(session_manager, mocker):
     from seedfarmer.models.deploy_responses import ModuleDeploymentResponse
 
@@ -301,7 +373,11 @@ def test_deploy_deployment(session_manager, mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_deployment
-def test_create_module_deployment_role(session_manager, mocker):
+@pytest.mark.parametrize(
+    ("manifest", "expected_role_prefix"),
+    [(mock_deployment_manifest_huge, "/"), (mock_deployment_manifest_with_prefix, "/test1/")],
+)
+def test_create_module_deployment_role(session_manager, mocker, manifest, expected_role_prefix):
     mocker.patch(
         "seedfarmer.commands._deployment_commands.get_generic_module_deployment_role_name",
         return_value="generic-module-deployment-role",
@@ -310,7 +386,7 @@ def test_create_module_deployment_role(session_manager, mocker):
         "seedfarmer.commands._deployment_commands.create_module_deployment_role", return_value=None
     )
 
-    dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
+    dep = DeploymentManifest(**manifest.deployment_manifest)
     dep.validate_and_set_module_defaults()
 
     dc.create_generic_module_deployment_role(
@@ -325,7 +401,7 @@ def test_create_module_deployment_role(session_manager, mocker):
         permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
         docker_credentials_secret=None,
         session=ANY,
-        role_prefix="/",
+        role_prefix=expected_role_prefix,
     )
 
 

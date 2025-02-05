@@ -493,7 +493,12 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
                 commands.destroy_seedkit(**args)
 
         params = [
-            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            {
+                "account_id": target_account_region["account_id"],
+                "region": target_account_region["region"],
+                "role_prefix": target_account_region["role_prefix"],
+                "policy_prefix": target_account_region["policy_prefix"],
+            }
             for target_account_region in deployment_manifest.target_accounts_regions
         ]
         _ = list(workers.map(_teardown_accounts, params))
@@ -785,9 +790,9 @@ def apply(
     qualifier : str, optional
         Any qualifier on the name of toolchain role
         Defaults to None
-    path : str, optional
-        IAM path on the ARN of the toolchain and deployment role
-        Defaults to None
+    role_prefix : str, optional
+        IAM path prefix on the ARN of the toolchain and deployment roles
+        Defaults to '/'
     dryrun : bool, optional
         This flag indicates that the deployment manifest should be consumed and a
         DeploymentManifest object be created (for both apply and destroy) but DOES NOT

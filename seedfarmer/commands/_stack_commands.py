@@ -18,9 +18,11 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+import aws_codeseeder as cs
 import boto3
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
+from packaging import version
 
 import seedfarmer.errors
 import seedfarmer.services._iam as iam
@@ -342,7 +344,7 @@ def destroy_bucket_storage_stack(
             return
 
 
-def destroy_managed_policy_stack(account_id: str, region: str) -> None:
+def destroy_managed_policy_stack(account_id: str, region: str, **kwargs: Any) -> None:
     """
     destroy_managed_policy_stack
         This function destroys the deployment-specific policy.
@@ -471,7 +473,11 @@ def deploy_module_stack(
 
     _logger.debug(module_stack_path)
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = (
+        SessionManager()
+        .get_or_create(role_prefix=role_prefix)
+        .get_deployment_session(account_id=account_id, region_name=region)
+    )
     module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
@@ -583,6 +589,8 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
+    role_prefix: str = "/",
+    policy_prefix: str = "/",
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
@@ -609,6 +617,14 @@ def deploy_seedkit(
         _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:
         _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
+
+        kwargs = {}
+        if version.parse(cs.__version__) >= version.parse("1.3.0"):
+            kwargs = {
+                "role_prefix": role_prefix,
+                "policy_prefix": policy_prefix,
+            }
+
         commands.deploy_seedkit(
             seedkit_name=config.PROJECT,
             deploy_codeartifact=deploy_codeartifact,
@@ -616,6 +632,7 @@ def deploy_seedkit(
             vpc_id=vpc_id,
             subnet_ids=private_subnet_ids,
             security_group_ids=security_group_ids,
+            **kwargs,
         )
         # Go get the outputs and return them
         _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
@@ -632,7 +649,8 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region wher"""
+        The region where the module is deployed
+    """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
     commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)

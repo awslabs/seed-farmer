@@ -102,6 +102,18 @@ def bootstrap() -> None:
     required=False,
 )
 @click.option(
+    "--role-prefix",
+    default="/",
+    help="IAM Role Path prefix.",
+    required=False,
+)
+@click.option(
+    "--policy-prefix",
+    default="/",
+    help="IAM Policy Path prefix.",
+    required=False,
+)
+@click.option(
     "--policy-arn",
     "-pa",
     help="""ARN of existing Policy to attach to Target Role (Deploymenmt Role)
@@ -121,6 +133,8 @@ def bootstrap_toolchain(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: str,
+    policy_prefix: str,
     as_target: bool,
     synth: bool,
     debug: bool,
@@ -140,6 +154,8 @@ def bootstrap_toolchain(
         policy_arns=policy_arn,
         profile=profile,
         qualifier=qualifier,
+        role_prefix=role_prefix,
+        policy_prefix=policy_prefix,
         region_name=region,
         synthesize=synth,
         as_target=as_target,
@@ -198,6 +214,12 @@ def bootstrap_toolchain(
     required=False,
 )
 @click.option(
+    "--role-prefix",
+    default="/",
+    help="IAM Role Path prefix.",
+    required=False,
+)
+@click.option(
     "--policy-arn",
     "-pa",
     help="""ARN of existing Policy to attach to Target Role (Deploymenmt Role)
@@ -215,6 +237,7 @@ def bootstrap_target(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: str,
     synth: bool,
     debug: bool,
 ) -> None:
@@ -229,6 +252,7 @@ def bootstrap_target(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         permissions_boundary_arn=permissions_boundary,
         policy_arns=policy_arn,
         synthesize=synth,

@@ -65,6 +65,13 @@ def version() -> None:
     required=False,
 )
 @click.option(
+    "--role-prefix",
+    default="/",
+    help="""An IAM path prefix to use with the seedfarmer roles.
+    Use only if bootstrapped with this path""",
+    required=False,
+)
+@click.option(
     "--env-file",
     "env_files",
     default=[".env"],
@@ -129,6 +136,7 @@ def apply(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: str,
     env_files: List[str],
     debug: bool,
     dry_run: bool,
@@ -154,6 +162,7 @@ def apply(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
@@ -198,6 +207,13 @@ def apply(
     default=None,
     help="""A qualifier to use with the seedfarmer roles.
     Use only if bootstrapped with this qualifier""",
+    required=False,
+)
+@click.option(
+    "--role-prefix",
+    default="/",
+    help="""An IAM path prefix to use with the seedfarmer roles.
+    Use only if bootstrapped with this path""",
     required=False,
 )
 @click.option(
@@ -248,6 +264,7 @@ def destroy(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: str,
     env_files: List[str],
     debug: bool,
     enable_session_timeout: bool,
@@ -274,6 +291,7 @@ def destroy(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,

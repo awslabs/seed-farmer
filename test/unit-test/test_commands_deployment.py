@@ -173,6 +173,10 @@ def test_execute_deploy_invalid_spec(session_manager, mocker):
         return_value=("stack_name", "role_name"),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_role_arn",
+        return_value="role_arn",
+    )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     dep.validate_and_set_module_defaults()
@@ -192,6 +196,10 @@ def test_execute_deploy(session_manager, mocker):
         return_value=("stack_name", "role_name"),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_role_arn",
+        return_value="role_arn",
+    )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.deploy_module", return_value=None)
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
@@ -239,6 +247,10 @@ def test_execute_destroy(session_manager, mocker):
     mocker.patch(
         "seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
         return_value=("stack_name", "role_name", True),
+    )
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_role_arn",
+        return_value="role_arn",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module", return_value=mod_resp)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack", return_value=None)
@@ -313,6 +325,7 @@ def test_create_module_deployment_role(session_manager, mocker):
         permissions_boundary_arn="arn:aws:iam::123456789012:policy/boundary",
         docker_credentials_secret=None,
         session=ANY,
+        role_prefix="/",
     )
 
 

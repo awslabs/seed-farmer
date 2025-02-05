@@ -144,9 +144,16 @@ def get_toolchain_role_name(project_name: str, qualifier: Optional[str] = None) 
 
 
 def get_toolchain_role_arn(
-    partition: str, toolchain_account_id: str, project_name: str, qualifier: Optional[str] = None
+    partition: str,
+    toolchain_account_id: str,
+    project_name: str,
+    qualifier: Optional[str] = None,
+    role_prefix: str = "/",
 ) -> str:
-    return f"arn:{partition}:iam::{toolchain_account_id}:role/{get_toolchain_role_name(project_name, qualifier)}"
+    return (
+        f"arn:{partition}:iam::{toolchain_account_id}:role{role_prefix}"
+        f"{get_toolchain_role_name(project_name, qualifier)}"
+    )
 
 
 def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
@@ -155,9 +162,16 @@ def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None)
 
 
 def get_deployment_role_arn(
-    partition: str, deployment_account_id: str, project_name: str, qualifier: Optional[str] = None
+    partition: str,
+    deployment_account_id: str,
+    project_name: str,
+    qualifier: Optional[str] = None,
+    role_prefix: str = "/",
 ) -> str:
-    return f"arn:{partition}:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name, qualifier)}"
+    return (
+        f"arn:{partition}:iam::{deployment_account_id}:role{role_prefix}"
+        f"{get_deployment_role_name(project_name, qualifier)}"
+    )
 
 
 def get_generic_module_deployment_role_name(

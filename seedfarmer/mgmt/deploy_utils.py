@@ -113,7 +113,10 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
                 )
 
         params = [
-            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            {
+                "account_id": target_account_region["account_id"],
+                "region": target_account_region["region"],
+            }
             for target_account_region in deployment_manifest.target_accounts_regions
         ]
         _ = list(workers.map(_get_module_info, params))

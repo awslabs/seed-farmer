@@ -130,6 +130,7 @@ def create_module_deployment_role(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     session: Optional[boto3.Session] = None,
+    role_prefix: str = "/",
 ) -> None:
     iam.create_check_iam_role(
         project_name=config.PROJECT,
@@ -145,6 +146,7 @@ def create_module_deployment_role(
         role_name=role_name,
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
+        role_prefix=role_prefix,
     )
 
     policies = []
@@ -219,9 +221,7 @@ def deploy_bucket_storage_stack(
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region
-
-
+        The region where the module is deployed
 
     Returns
     -------
@@ -272,7 +272,7 @@ def deploy_managed_policy_stack(
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region
+        The region where the module is deployed
     update_project_policy: bool
         Force update the project policy if already deployed
     """
@@ -307,7 +307,7 @@ def destroy_bucket_storage_stack(
 ) -> None:
     """
     destroy_bucket_storage_stack
-        This function destroys the buckeet stack for SeedFarmer
+        This function destroys the bucket stack for SeedFarmer
 
     Parameters
     ----------
@@ -352,7 +352,7 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region wher
+        The region where the module is deployed
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
@@ -440,6 +440,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    role_prefix: str = "/",
 ) -> Tuple[str, str]:
     """
     deploy_module_stack
@@ -483,6 +484,7 @@ def deploy_module_stack(
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
+        role_prefix=role_prefix,
     )
 
     _logger.debug("module_role_name %s", module_role_name)

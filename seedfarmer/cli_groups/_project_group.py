@@ -37,11 +37,18 @@ def projectpolicy() -> None:
     name="synth",
     help="Synth a Project Policy from seed-farmer.",
 )
+@click.option(
+    "--policy-prefix",
+    default="/",
+    help="An IAM path prefix to use with the policy.",
+    required=False,
+)
 @click.option("--debug/--no-debug", default=False, help="Enable detail logging", show_default=True)
 def policy_synth(
+    policy_prefix: str,
     debug: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
 
-    get_default_project_policy()
+    get_default_project_policy(policy_prefix=policy_prefix)

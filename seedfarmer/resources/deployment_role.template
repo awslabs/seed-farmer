@@ -14,7 +14,7 @@ Resources:
             Effect: Allow
             Principal:
                 AWS: "{{ toolchain_role_arn }}"
-      Path: /
+      Path: "{{ role_prefix }}"
       Policies:
         - PolicyName: InlineToolchain
           PolicyDocument:
@@ -64,6 +64,10 @@ Resources:
               - iam:List*
               Effect: Allow
               Resource:
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role{{ role_prefix }}{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role{{ role_prefix }}codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy{{ policy_prefix }}{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy{{ policy_prefix }}codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
@@ -116,7 +120,7 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/{{ project_name }}-*"
+              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role{{ role_prefix }}{{ project_name }}-*"
               Sid: DeploymentSTS
             - Action:
               - ssm:Put*

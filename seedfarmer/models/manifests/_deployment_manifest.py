@@ -83,6 +83,8 @@ class TargetAccountMapping(CamelModel):
     pypi_mirror_secret: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
+    role_prefix: Optional[str] = None
+    policy_prefix: Optional[str] = None
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -238,6 +240,8 @@ class DeploymentManifest(CamelModel):
                             "network": region.network,  # type: ignore
                             "parameters_regional": region.parameters_regional,  # type: ignore
                             "codebuild_image": cast(str, region.codebuild_image),
+                            "role_prefix": target_account.role_prefix,  # type: ignore
+                            "policy_prefix": target_account.policy_prefix,  # type: ignore
                         }
                     )
         return self._accounts_regions

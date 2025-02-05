@@ -1471,6 +1471,11 @@ def test_get_projectpolicy_debug():
     _test_command(sub_command=projectpolicy, options=["synth", "--debug"], exit_code=0)
 
 
+@pytest.mark.projectpolicy
+def test_get_projectpolicy_prefix():
+    _test_command(sub_command=projectpolicy, options=["synth", "--policy-prefix", "/test/"], exit_code=0)
+
+
 @pytest.mark.metadata
 def test_metadata_param_value(mocker):
     mocker.patch(

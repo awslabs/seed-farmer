@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, cast
 
 from boto3 import Session
 
+import seedfarmer.errors
 from seedfarmer.services._service_utils import boto3_client, boto3_resource, get_region
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -33,6 +34,15 @@ def get_role(role_name: str, session: Optional[Session] = None) -> Optional[Dict
         return None
 
 
+def get_role_arn(role_name: str, session: Optional[Session] = None) -> str:
+    role = get_role(role_name=role_name, session=session)
+
+    if not role:
+        raise seedfarmer.errors.InvalidConfigurationError(f"Role {role_name} does not exist")
+
+    return cast(str, role["Role"]["Arn"])
+
+
 def create_check_iam_role(
     project_name: str,
     deployment_name: str,
@@ -42,6 +52,7 @@ def create_check_iam_role(
     group_name: Optional[str] = None,
     module_name: Optional[str] = None,
     session: Optional[Session] = None,
+    role_prefix: str = "/",
 ) -> None:
     _logger.debug("Creating IAM Role with name: %s ", role_name)
     iam_client = boto3_client("iam", session=session)
@@ -50,6 +61,7 @@ def create_check_iam_role(
     except iam_client.exceptions.NoSuchEntityException:
         args: Dict[str, Any] = {
             "RoleName": role_name,
+            "Path": role_prefix,
             "AssumeRolePolicyDocument": json.dumps(trust_policy),
             "Description": f"deployment-role for {role_name}",
             "Tags": [

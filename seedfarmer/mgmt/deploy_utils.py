@@ -96,8 +96,10 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
         def _get_module_info(args: Dict[str, Any]) -> None:
+            role_prefix = args.pop("role_prefix", "/")
             session = (
                 SessionManager()
+                .get_or_create(role_prefix=role_prefix)
                 .get_or_create()
                 .get_deployment_session(account_id=args["account_id"], region_name=args["region"])
             )
@@ -116,6 +118,7 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
             {
                 "account_id": target_account_region["account_id"],
                 "region": target_account_region["region"],
+                "role_prefix": target_account_region.get("role_prefix", "/"),
             }
             for target_account_region in deployment_manifest.target_accounts_regions
         ]

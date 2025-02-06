@@ -630,7 +630,7 @@ def deploy_seedkit(
             kwargs = {
                 "role_prefix": role_prefix,
                 "policy_prefix": policy_prefix,
-                "permissions_boundary_arn": permissions_boundary_arn
+                "permissions_boundary_arn": permissions_boundary_arn,
             }
 
         commands.deploy_seedkit(

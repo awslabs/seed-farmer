@@ -34,6 +34,8 @@ targetAccountMappings:
     npmMirrorSecret: /something/aws-addf-mirror-credentials
     pypiMirror: https://pypi.python.org/simple
     pypiMirrorSecret: /something/aws-addf-mirror-mirror-credentials
+    rolePrefix: /
+    policyPrefix: /
     parametersGlobal:
       dockerCredentialsSecret: nameofsecret
       permissionsBoundaryName: policyname
@@ -108,6 +110,8 @@ targetAccountMappings:
   - **npmMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
   - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
+  - **rolePrefix** - IAM path prefix to use with seedfarmer roles (see [IAM Path Prefixes](iamprefixes))
+  - **policyPrefix** - IAM path prefix to use with seedfarmer policies (see [IAM Path Prefixes](iamprefixes))
   - **parametersGlobal** - these are parameters that apply to all region mappings unless otherwise overridden at the region level
     - **dockerCredentialsSecret** - please see [Docker Credentials Secret](dockerCredentialsSecret)
     - **permissionsBoundaryName** - the name of the [permissions boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html) policy to apply to all module-specific roles created
@@ -530,6 +534,12 @@ This would result in the creation of an `_auth` entry in npm config (`.npmrc`) w
 ```bash
 npm config set //the-mirror-dns/npm/:_auth="mybase64encodedssltoken"
 ```
+
+(iamprefixes)=
+## IAM Path Prefixes
+Using IAM Paths you can create groupings and design a logical separation to simplify permissions management. A common example in organizations is using Service Control Policies enforcing logical separation by team e.g. `/legal/` or `/sales/`, or project name.
+
+It is possible to override the default paths of `/` for `seed-farmer` IAM roles and policies using the deployment manifest using `rolePrefix` and `policyPrefix` at the account/region level. IAM Paths must begin and end with a `/`. More information in [IAM identifies](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
 (archivesecret)=
 ### Archive Secret

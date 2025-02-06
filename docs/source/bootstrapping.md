@@ -26,8 +26,10 @@ Options:
   --region TEXT                   AWS region to use
   --qualifier TEXT                A qualifier to append to toolchain role
                                   (alpha-numeric char max length of 6)
-  --role-prefix TEXT              IAM Role Path prefix.
-  --policy-prefix TEXT            IAM Policy Path prefix.
+  --role-prefix TEXT              An IAM path prefix to use with the
+                                  seedfarmer roles.
+  --policy-prefix TEXT            An IAM path prefix to use with the
+                                  seedfarmer policies.
   -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
                                   Role (Deploymenmt Role) This can be use
                                   multiple times, but EACH policy MUST be
@@ -67,7 +69,8 @@ Options:
   --region TEXT                   AWS region to use
   --qualifier TEXT                A qualifier to append to target role (alpha-
                                   numeric char max length of 6)
-  --role-prefix TEXT              IAM Role Path prefix.
+  --role-prefix TEXT              An IAM path prefix to use with the seedfarmer
+                                  roles.
   -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
                                   Role (Deploymenmt Role) This can be use
                                   multiple times to create a list, but EACH

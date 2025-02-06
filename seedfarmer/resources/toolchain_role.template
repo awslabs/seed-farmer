@@ -25,7 +25,8 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role{{ role_prefix }}seedfarmer-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-{{ project_name }}*"
               Sid: ToolChainSTS
             - Action:
               - ssm:Put*

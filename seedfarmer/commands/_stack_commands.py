@@ -625,23 +625,24 @@ def deploy_seedkit(
     else:
         _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
 
-        kwargs = {}
-        if version.parse(cs.__version__) >= version.parse("1.3.0"):
-            kwargs = {
-                "role_prefix": role_prefix,
-                "policy_prefix": policy_prefix,
-                "permissions_boundary_arn": permissions_boundary_arn,
-            }
+        seedkit_args = {
+            "seedkit_name": config.PROJECT,
+            "deploy_codeartifact": deploy_codeartifact,
+            "session": session,
+            "vpc_id": vpc_id,
+            "subnet_ids": private_subnet_ids,
+            "security_group_ids": security_group_ids,
+        }
 
-        commands.deploy_seedkit(
-            seedkit_name=config.PROJECT,
-            deploy_codeartifact=deploy_codeartifact,
-            session=session,
-            vpc_id=vpc_id,
-            subnet_ids=private_subnet_ids,
-            security_group_ids=security_group_ids,
-            **kwargs,
-        )
+        if version.parse(cs.__version__) >= version.parse("1.3.0"):
+            if role_prefix:
+                seedkit_args["role_prefix"] = role_prefix
+            if policy_prefix:
+                seedkit_args["policy_prefix"] = policy_prefix
+            if permissions_boundary_arn:
+                seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
+
+        commands.deploy_seedkit(**seedkit_args)
         # Go get the outputs and return them
         _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     return dict(stack_outputs)

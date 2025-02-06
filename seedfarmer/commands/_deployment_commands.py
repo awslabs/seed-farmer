@@ -119,10 +119,6 @@ def create_generic_module_deployment_role(
         deployment_name=cast(str, deployment_manifest.name),
         region=region,
     )
-    target_account_mapping = deployment_manifest.get_target_account_mapping(account_id=account_id)
-    role_prefix = (
-        target_account_mapping.role_prefix if target_account_mapping and target_account_mapping.role_prefix else "/"
-    )
     create_module_deployment_role(
         role_name=role_name,
         deployment_name=cast(str, deployment_manifest.name),
@@ -136,7 +132,7 @@ def create_generic_module_deployment_role(
             region=region,
         ),
         session=session,
-        role_prefix=role_prefix,
+        role_prefix=deployment_manifest.get_account_region_role_prefix(account_id=account_id, region=region),
     )
     return role_name
 
@@ -192,10 +188,7 @@ def _execute_deploy(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         region=region,
     )
-    target_account_mapping = mdo.deployment_manifest.get_target_account_mapping(account_id=account_id)
-    role_prefix = (
-        target_account_mapping.role_prefix if target_account_mapping and target_account_mapping.role_prefix else "/"
-    )
+    role_prefix = mdo.deployment_manifest.get_account_region_role_prefix(account_id=account_id, region=region)
 
     if module_stack_path:
         _, module_role_name = commands.deploy_module_stack(
@@ -251,9 +244,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
     target_region = cast(str, module_manifest.target_region)
-    target_account_mapping = mdo.deployment_manifest.get_target_account_mapping(account_id=target_account_id)
-    role_prefix = (
-        target_account_mapping.role_prefix if target_account_mapping and target_account_mapping.role_prefix else "/"
+    role_prefix = mdo.deployment_manifest.get_account_region_role_prefix(
+        account_id=target_account_id, region=target_region
     )
     session = (
         SessionManager()

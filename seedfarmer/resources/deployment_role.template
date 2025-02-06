@@ -64,14 +64,14 @@ Resources:
               - iam:List*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role{{ role_prefix }}{{ project_name }}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role{{ role_prefix }}codeseeder-{{ project_name }}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy{{ policy_prefix }}{{ project_name }}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy{{ policy_prefix }}codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/codeseeder-{{ project_name }}-*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
@@ -120,7 +120,8 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role{{ role_prefix }}{{ project_name }}-*"
+              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/{{ project_name }}-*"
+              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/{{ project_name }}-*"
               Sid: DeploymentSTS
             - Action:
               - ssm:Put*

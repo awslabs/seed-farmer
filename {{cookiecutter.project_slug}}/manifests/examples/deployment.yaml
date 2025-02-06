@@ -1,5 +1,6 @@
 name: example
 toolchainRegion: <region name>
+forceDependencyRedeploy: True
 #groups:
 #  - name: optionals
 #    path: manifests/examples/optional-modules.yaml

@@ -104,13 +104,13 @@ def bootstrap() -> None:
 @click.option(
     "--role-prefix",
     default="/",
-    help="IAM Role Path prefix.",
+    help="An IAM path prefix to use with the seedfarmer roles.",
     required=False,
 )
 @click.option(
     "--policy-prefix",
     default="/",
-    help="IAM Policy Path prefix.",
+    help="An IAM path prefix to use with the seedfarmer policies.",
     required=False,
 )
 @click.option(
@@ -216,7 +216,7 @@ def bootstrap_toolchain(
 @click.option(
     "--role-prefix",
     default="/",
-    help="IAM Role Path prefix.",
+    help="An IAM path prefix to use with the seedfarmer roles.",
     required=False,
 )
 @click.option(

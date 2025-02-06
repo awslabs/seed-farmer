@@ -431,13 +431,22 @@ def prime_target_accounts(
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
+            account_id = target_account_region["account_id"]
+            region = target_account_region["region"]
+            role_prefix = target_account_region["role_prefix"]
+            policy_prefix = target_account_region["policy_prefix"]
+            permissions_boundary_arn = deployment_manifest.get_permission_boundary_arn(
+                target_account=account_id,
+                target_region=region,
+            )
             param_d = {
-                "account_id": target_account_region["account_id"],
-                "region": target_account_region["region"],
+                "account_id": account_id,
+                "region": region,
                 "update_seedkit": update_seedkit,
                 "update_project_policy": update_project_policy,
-                "role_prefix": target_account_region["role_prefix"],
-                "policy_prefix": target_account_region["policy_prefix"],
+                "role_prefix": role_prefix,
+                "policy_prefix": policy_prefix,
+                "permissions_boundary_arn": permissions_boundary_arn,
             }
 
             if target_account_region["network"] is not None:

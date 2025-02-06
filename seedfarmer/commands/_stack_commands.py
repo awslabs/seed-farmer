@@ -591,6 +591,7 @@ def deploy_seedkit(
     update_seedkit: Optional[bool] = False,
     role_prefix: str = "/",
     policy_prefix: str = "/",
+    permissions_boundary_arn: Optional[str] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
@@ -609,6 +610,12 @@ def deploy_seedkit(
         The Subnet IDs to associate seedkit with (codebuild)
     security_group_ids: Optional[List[str]]
         The Security Group IDs to associate seedkit with (codebuild)
+    role_prefix: Optional[str]
+        The IAM Path Prefix to use for seedkit role
+    policy_prefix: Optional[str]
+        The IAM Path Prefix to use for seedkit policy
+    permissions_boundary_arn: Optional[str]
+        The ARN of the permissions boundary to attach to seedkit role
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
@@ -623,6 +630,7 @@ def deploy_seedkit(
             kwargs = {
                 "role_prefix": role_prefix,
                 "policy_prefix": policy_prefix,
+                "permissions_boundary_arn": permissions_boundary_arn
             }
 
         commands.deploy_seedkit(

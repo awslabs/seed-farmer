@@ -145,10 +145,10 @@ def taint_module(
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
-    dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
 
-    dep_manifest.validate_and_set_module_defaults()  # type: ignore
     try:
+        dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
+        dep_manifest.validate_and_set_module_defaults()  # type: ignore
         session = session_manager.get_deployment_session(
             account_id=dep_manifest.get_module(group=group, module=module).get_target_account_id(),  # type: ignore
             region_name=dep_manifest.get_module(group=group, module=module).target_region,  # type: ignore

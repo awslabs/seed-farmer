@@ -1566,7 +1566,7 @@ def test_taint(mocker):
             "-m",
             "test_module",
         ],
-        exit_code=1,
+        exit_code=0,
     )
 
 

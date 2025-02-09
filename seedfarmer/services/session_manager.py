@@ -49,7 +49,7 @@ class ISessionManager(object):
         region_name: Optional[str] = None,
         toolchain_region: Optional[str] = None,
         qualifier: Optional[str] = None,
-        role_prefix: str = "/",
+        role_prefix: Optional[str] = None,
         profile: Optional[str] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -87,7 +87,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         profile: Optional[str] = None,
         toolchain_region: Optional[str] = None,
         qualifier: Optional[str] = None,
-        role_prefix: str = "/",
+        role_prefix: Optional[str] = None,
         reaper_interval: Optional[int] = None,
         enable_reaper: bool = False,
         **kwargs: Optional[Any],
@@ -102,7 +102,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.config["profile"] = profile
             self.config["toolchain_region"] = toolchain_region
             self.config["qualifier"] = qualifier if qualifier else None
-            self.config["role_prefix"] = role_prefix
+            self.config["role_prefix"] = role_prefix if role_prefix else "/"
             self.config = {**self.config, **kwargs}
             self.toolchain_role_name = get_toolchain_role_name(project_name, cast(str, qualifier))
 
@@ -143,7 +143,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         session_key = f"{account_id}-{region_name}"
         project_name = self.config["project_name"]
         qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
-        role_prefix = self.config.get("role_prefix", "/")
+        role_prefix = self.config.get("role_prefix")
         toolchain_region = self.config.get("toolchain_region")
         if not self.created:
             raise seedfarmer.errors.InvalidConfigurationError("The SessionManager object was never properly created...")
@@ -212,7 +212,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
         profile_name = self.config.get("profile")
         project_name = self.config.get("project_name")
         qualifier = self.config.get("qualifier") if self.config.get("qualifier") else None
-        role_prefix = self.config.get("role_prefix", "/")
+        role_prefix = self.config.get("role_prefix")
         toolchain_region = self.config.get("toolchain_region")
         _logger.debug(
             f"""Creating a local session with the following info passed in:

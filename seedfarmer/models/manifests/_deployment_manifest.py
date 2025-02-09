@@ -234,6 +234,8 @@ class DeploymentManifest(CamelModel):
             self._accounts_regions = []
             for target_account in self.target_account_mappings:
                 for region in target_account.region_mappings:
+                    role_prefix = region.role_prefix if region.role_prefix else target_account.role_prefix
+                    policy_prefix = region.policy_prefix if region.policy_prefix else target_account.policy_prefix
                     account_region_args = {
                         "alias": target_account.alias,
                         "account_id": target_account.actual_account_id,
@@ -241,15 +243,9 @@ class DeploymentManifest(CamelModel):
                         "network": region.network,
                         "parameters_regional": region.parameters_regional,
                         "codebuild_image": cast(str, region.codebuild_image),
+                        "role_prefix": role_prefix,
+                        "policy_prefix": policy_prefix,
                     }
-                    role_prefix = region.role_prefix if region.role_prefix else target_account.role_prefix
-                    policy_prefix = region.policy_prefix if region.policy_prefix else target_account.policy_prefix
-
-                    if role_prefix:
-                        account_region_args["role_prefix"] = role_prefix
-                    if policy_prefix:
-                        account_region_args["policy_prefix"] = policy_prefix
-
                     self._accounts_regions.append(account_region_args)  # type: ignore
         return self._accounts_regions
 

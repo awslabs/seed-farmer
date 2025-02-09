@@ -132,7 +132,7 @@ def create_module_deployment_role(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     session: Optional[boto3.Session] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
 ) -> None:
     iam.create_check_iam_role(
         project_name=config.PROJECT,
@@ -442,7 +442,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
 ) -> Tuple[str, str]:
     """
     deploy_module_stack
@@ -589,8 +589,8 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
-    role_prefix: str = "/",
-    policy_prefix: str = "/",
+    role_prefix: Optional[str] = None,
+    policy_prefix: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:

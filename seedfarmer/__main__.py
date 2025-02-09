@@ -66,7 +66,7 @@ def version() -> None:
 )
 @click.option(
     "--role-prefix",
-    default="/",
+    default=None,
     help="""An IAM path prefix to use with the seedfarmer roles.
     Use only if bootstrapped with this path""",
     required=False,
@@ -136,7 +136,7 @@ def apply(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    role_prefix: str,
+    role_prefix: Optional[str],
     env_files: List[str],
     debug: bool,
     dry_run: bool,
@@ -211,7 +211,7 @@ def apply(
 )
 @click.option(
     "--role-prefix",
-    default="/",
+    default=None,
     help="""An IAM path prefix to use with the seedfarmer roles.
     Use only if bootstrapped with this path""",
     required=False,
@@ -264,7 +264,7 @@ def destroy(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    role_prefix: str,
+    role_prefix: Optional[str],
     env_files: List[str],
     debug: bool,
     enable_session_timeout: bool,

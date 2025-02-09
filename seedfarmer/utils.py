@@ -148,8 +148,9 @@ def get_toolchain_role_arn(
     toolchain_account_id: str,
     project_name: str,
     qualifier: Optional[str] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
 ) -> str:
+    role_prefix = role_prefix if role_prefix else "/"
     return (
         f"arn:{partition}:iam::{toolchain_account_id}:role{role_prefix}"
         f"{get_toolchain_role_name(project_name, qualifier)}"
@@ -166,8 +167,9 @@ def get_deployment_role_arn(
     deployment_account_id: str,
     project_name: str,
     qualifier: Optional[str] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
 ) -> str:
+    role_prefix = role_prefix if role_prefix else "/"
     return (
         f"arn:{partition}:iam::{deployment_account_id}:role{role_prefix}"
         f"{get_deployment_role_name(project_name, qualifier)}"

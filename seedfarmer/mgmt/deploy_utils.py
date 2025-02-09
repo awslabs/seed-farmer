@@ -118,7 +118,7 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
             {
                 "account_id": target_account_region["account_id"],
                 "region": target_account_region["region"],
-                "role_prefix": target_account_region.get("role_prefix", "/"),
+                "role_prefix": target_account_region["role_prefix"],
             }
             for target_account_region in deployment_manifest.target_accounts_regions
         ]

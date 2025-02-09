@@ -436,11 +436,12 @@ def prime_target_accounts(
                 "region": region,
                 "update_seedkit": update_seedkit,
                 "update_project_policy": update_project_policy,
-                "role_prefix": role_prefix,
-                "policy_prefix": policy_prefix,
                 "permissions_boundary_arn": permissions_boundary_arn,
             }
-
+            if role_prefix:
+                param_d["role_prefix"] = role_prefix
+            if policy_prefix:
+                param_d["policy_prefix"] = policy_prefix
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
                     cast(NetworkMapping, target_account_region["network"]),
@@ -765,7 +766,7 @@ def apply(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     qualifier: Optional[str] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
@@ -914,7 +915,7 @@ def destroy(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     qualifier: Optional[str] = None,
-    role_prefix: str = "/",
+    role_prefix: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
@@ -936,6 +937,9 @@ def destroy(
     qualifier : str, optional
         Any qualifier on the name of toolchain role
         Defaults to None
+    role_prefix : str, optional
+        IAM path prefix on the ARN of the toolchain and deployment roles
+        Defaults to '/'
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.

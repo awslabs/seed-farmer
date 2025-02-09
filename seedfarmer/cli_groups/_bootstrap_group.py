@@ -103,13 +103,13 @@ def bootstrap() -> None:
 )
 @click.option(
     "--role-prefix",
-    default="/",
+    default=None,
     help="An IAM path prefix to use with the seedfarmer roles.",
     required=False,
 )
 @click.option(
     "--policy-prefix",
-    default="/",
+    default=None,
     help="An IAM path prefix to use with the seedfarmer policies.",
     required=False,
 )
@@ -133,8 +133,8 @@ def bootstrap_toolchain(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    role_prefix: str,
-    policy_prefix: str,
+    role_prefix: Optional[str],
+    policy_prefix: Optional[str],
     as_target: bool,
     synth: bool,
     debug: bool,
@@ -215,7 +215,7 @@ def bootstrap_toolchain(
 )
 @click.option(
     "--role-prefix",
-    default="/",
+    default=None,
     help="An IAM path prefix to use with the seedfarmer roles.",
     required=False,
 )
@@ -237,7 +237,7 @@ def bootstrap_target(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
-    role_prefix: str,
+    role_prefix: Optional[str],
     synth: bool,
     debug: bool,
 ) -> None:

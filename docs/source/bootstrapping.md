@@ -26,6 +26,10 @@ Options:
   --region TEXT                   AWS region to use
   --qualifier TEXT                A qualifier to append to toolchain role
                                   (alpha-numeric char max length of 6)
+  --role-prefix TEXT              An IAM path prefix to use with the
+                                  seedfarmer roles.
+  --policy-prefix TEXT            An IAM path prefix to use with the
+                                  seedfarmer policies.
   -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
                                   Role (Deploymenmt Role) This can be use
                                   multiple times, but EACH policy MUST be
@@ -65,6 +69,8 @@ Options:
   --region TEXT                   AWS region to use
   --qualifier TEXT                A qualifier to append to target role (alpha-
                                   numeric char max length of 6)
+  --role-prefix TEXT              An IAM path prefix to use with the seedfarmer
+                                  roles.
   -pa, --policy-arn TEXT          ARN of existing Policy to attach to Target
                                   Role (Deploymenmt Role) This can be use
                                   multiple times to create a list, but EACH
@@ -83,6 +89,11 @@ We have added support for the use of a qualifier for the toolchain role and the 
 
 The qualifier post-pends a 6 chars alpha-numeric string to the deployment role and toolchain role.  The qualifier **MUST BE THE SAME ON THE TOOLCHAIN ROLE AND EACH TARGET ROLE.**
 
+
+## IAM Paths Prefixes for Toolchain, Target Roles, and Policies
+We have added support for the use of a IAM Paths for the toolchain role, target account deployment role(s), and policie(s). Using IAM Paths you can create groupings and design a logical separation to simplify permissions management. A common example in organizations is using Service Control Policies enforcing logical separation by team e.g. `/legal/` or `/sales/`, or project name.
+
+A `--role-prefix` and `--policy-prefix` can be used if you want to provide IAM Paths to the roles and policies created by `seed-farmer`. IAM Paths must begin and end with a `/`. More information in [IAM identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
 ## Prepping the Account / Region
 `seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in each account/region combination to be used of each target account.

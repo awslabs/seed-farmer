@@ -14,6 +14,7 @@ class ModuleDeployObject(CamelModel):
     docker_credentials_secret: Optional[str] = None
     permissions_boundary_arn: Optional[str] = None
     module_role_name: Optional[str] = None
+    module_role_arn: Optional[str] = None
     codebuild_image: Optional[str] = None
     npm_mirror: Optional[str] = None
     npm_mirror_secret: Optional[str] = None

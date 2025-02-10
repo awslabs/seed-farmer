@@ -14,7 +14,7 @@ Resources:
             Effect: Allow
             Principal:
                 AWS: []
-      Path: /
+      Path: "{{ role_prefix }}"
       Policies:
         - PolicyName: InlineToolchain
           PolicyDocument:
@@ -25,7 +25,8 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-{{ project_name }}*"
               Sid: ToolChainSTS
             - Action:
               - ssm:Put*

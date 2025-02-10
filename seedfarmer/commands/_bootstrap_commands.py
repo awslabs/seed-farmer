@@ -39,6 +39,7 @@ def get_toolchain_template(
     principal_arn: List[str],
     role_name: str,
     permissions_boundary_arn: Optional[str] = None,
+    role_prefix: Optional[str] = None,
 ) -> Dict[Any, Any]:
     with open((os.path.join(CLI_ROOT, "resources/toolchain_role.template")), "r") as f:
         role = yaml.safe_load(f)
@@ -48,8 +49,16 @@ def get_toolchain_template(
         ] = principal_arn
     if permissions_boundary_arn:
         role["Resources"]["ToolchainRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
+    role_prefix = role_prefix if role_prefix else "/"
     template = Template(json.dumps(role))
-    t = template.render({"project_name": project_name, "role_name": role_name, "seedfarmer_version": __version__})
+    t = template.render(
+        {
+            "project_name": project_name,
+            "role_name": role_name,
+            "role_prefix": role_prefix,
+            "seedfarmer_version": __version__,
+        }
+    )
     return dict(json.loads(t))
 
 
@@ -59,6 +68,8 @@ def get_deployment_template(
     role_name: str,
     policy_arns: Optional[List[str]],
     permissions_boundary_arn: Optional[str] = None,
+    role_prefix: Optional[str] = None,
+    policy_prefix: Optional[str] = None,
 ) -> Dict[Any, Any]:
     with open((os.path.join(CLI_ROOT, "resources/deployment_role.template")), "r") as f:
         role = yaml.safe_load(f)
@@ -66,12 +77,16 @@ def get_deployment_template(
         role["Resources"]["DeploymentRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
     if policy_arns:
         role["Resources"]["DeploymentRole"]["Properties"]["ManagedPolicyArns"] = policy_arns
+    role_prefix = role_prefix if role_prefix else "/"
+    policy_prefix = policy_prefix if policy_prefix else "/"
     template = Template(json.dumps(role))
     t = template.render(
         {
             "toolchain_role_arn": toolchain_role_arn,
             "project_name": project_name,
             "role_name": role_name,
+            "role_prefix": role_prefix,
+            "policy_prefix": policy_prefix,
             "seedfarmer_version": __version__,
         }
     )
@@ -89,6 +104,8 @@ def bootstrap_toolchain_account(
     permissions_boundary_arn: Optional[str] = None,
     policy_arns: Optional[List[str]] = None,
     qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
+    policy_prefix: Optional[str] = None,
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     synthesize: bool = False,
@@ -107,11 +124,12 @@ def bootstrap_toolchain_account(
         role_name=role_stack_name,
         principal_arn=principal_arns,
         permissions_boundary_arn=permissions_boundary_arn,
+        role_prefix=role_prefix,
     )
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:
         session = create_new_session(profile=profile, region_name=region_name)
-        session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
+        session_account_id, _, _ = get_sts_identity_info(session=session)
         apply_deploy_logic(
             template=template,
             role_name=role_stack_name,
@@ -124,6 +142,8 @@ def bootstrap_toolchain_account(
                 toolchain_account_id=session_account_id,
                 project_name=project_name,
                 qualifier=cast(str, qualifier),
+                role_prefix=role_prefix,
+                policy_prefix=policy_prefix,
                 permissions_boundary_arn=permissions_boundary_arn,
                 profile=profile,
                 region_name=region_name,
@@ -152,6 +172,8 @@ def bootstrap_target_account(
     project_name: str,
     permissions_boundary_arn: Optional[str] = None,
     qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
+    policy_prefix: Optional[str] = None,
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     session: Optional[Session] = None,
@@ -163,7 +185,7 @@ def bootstrap_target_account(
 
     if not session:
         session = create_new_session(profile=profile, region_name=region_name)
-    session_account_id, session_role_arn, partition = get_sts_identity_info(session=session)
+    session_account_id, _, partition = get_sts_identity_info(session=session)
 
     role_stack_name = get_deployment_role_name(project_name=project_name, qualifier=cast(str, qualifier))
     toolchain_role_arn = get_toolchain_role_arn(
@@ -171,6 +193,7 @@ def bootstrap_target_account(
         toolchain_account_id=toolchain_account_id,
         project_name=project_name,
         qualifier=cast(str, qualifier),
+        role_prefix=role_prefix,
     )
 
     template = get_deployment_template(
@@ -179,6 +202,8 @@ def bootstrap_target_account(
         role_name=role_stack_name,
         policy_arns=policy_arns if policy_arns else None,
         permissions_boundary_arn=permissions_boundary_arn,
+        role_prefix=role_prefix,
+        policy_prefix=policy_prefix,
     )
     _logger.debug((json.dumps(template, indent=4)))
     if not synthesize:

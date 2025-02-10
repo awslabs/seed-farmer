@@ -13,6 +13,12 @@ updates:
       - dependency-name: "myst_parser"
         versions:
           - "4.0.0"
+      - dependency-name: "pydantic"
+        versions:
+          - "2.10.5"
+      - dependency-name: "pydantic-core"
+        versions:
+          - "2.27.2"
 
   - package-ecosystem: "github-actions"
     directory: "/"

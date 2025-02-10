@@ -110,7 +110,7 @@ def store() -> None:
 @click.option(
     "--target-account-id",
     default=None,
-    help="""Account Id of the target accout to store deployspec, if specifed --target-region is required
+    help="""Account Id of the target account to store deployspec, if specified --target-region is required
      You SHOULD NOT use this parameter as this command will leverage the SeedFarmer session manager!
      It is meant for development purposes.
     """,
@@ -119,7 +119,7 @@ def store() -> None:
 @click.option(
     "--target-region",
     default=None,
-    help="""Region of the target accout to store deployspec, if specifed --target-account-id is required
+    help="""Region of the target account to store deployspec, if specified --target-account-id is required
      You SHOULD NOT use this parameter as this command will leverage the SeedFarmer session manager!
      It is meant for development purposes.
     """,
@@ -228,13 +228,13 @@ def store_deployspec(
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id of the target accout to store module metadata, if specifed --target-region is required",
+    help="Account Id of the target account to store module metadata, if specified --target-region is required",
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region of the target accout to store module metadata, if specifed --target-account-id is required",
+    help="Region of the target account to store module metadata, if specified --target-account-id is required",
     show_default=True,
 )
 @click.option(
@@ -344,13 +344,13 @@ def store_module_metadata(
 @click.option(
     "--target-account-id",
     default=None,
-    help="Account Id of the target accout to store md5, if specifed --target-region is required",
+    help="Account Id of the target account to store md5, if specified --target-region is required",
     show_default=True,
 )
 @click.option(
     "--target-region",
     default=None,
-    help="Region of the target accout to store md5, if specifed --target-account-id is required",
+    help="Region of the target account to store md5, if specified --target-account-id is required",
     show_default=True,
 )
 @click.option(

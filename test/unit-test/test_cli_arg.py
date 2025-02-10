@@ -21,7 +21,7 @@ from _test_cli_helper_functions import _test_command
 from moto import mock_aws
 
 from seedfarmer import config
-from seedfarmer.__main__ import apply, bootstrap, destroy, init, metadata, projectpolicy, remove, store, version
+from seedfarmer.__main__ import apply, bootstrap, destroy, init, metadata, projectpolicy, remove, store, taint, version
 from seedfarmer.__main__ import list as list
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import DeploymentManifest
@@ -1555,3 +1555,37 @@ def test_metadata_add_kv_missing_value(mocker):
     mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_kv_output", return_value=None)
     mocker.patch("seedfarmer.cli_groups._manage_metadata_group.metadata_support.add_json_output", return_value=None)
     _test_command(sub_command=metadata, options=["add", "--key", "adfdf"], exit_code=1)
+
+
+@pytest.mark.metadata
+def test_taint(mocker):
+    mocker.patch("seedfarmer.cli_groups._taint_group.mi.remove_module_md5", return_value=None)
+    _test_command(
+        sub_command=taint,
+        options=[
+            "module",
+            "-d",
+            "deployment_name",
+            "-g",
+            "test_group",
+            "-m",
+            "test_module",
+        ],
+        exit_code=0,
+    )
+
+
+@pytest.mark.metadata
+def test_taint_missing_param(mocker):
+    mocker.patch("seedfarmer.cli_groups._taint_group.mi.remove_module_md5", return_value=None)
+    _test_command(
+        sub_command=taint,
+        options=[
+            "module",
+            "-d",
+            "deployment-name",
+            "-g",
+            "test-group",
+        ],
+        exit_code=2,
+    )

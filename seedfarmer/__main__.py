@@ -67,7 +67,7 @@ def version() -> None:
 @click.option(
     "--role-prefix",
     default=None,
-    help="""An IAM path prefix of the seedfarmer toolchain and deployment roles.
+    help="""An IAM path prefix of the seedfarmer toolchain and target roles.
     Use only if bootstrapped with this path""",
     required=False,
 )
@@ -212,7 +212,7 @@ def apply(
 @click.option(
     "--role-prefix",
     default=None,
-    help="""An IAM path prefix of the seedfarmer toolchain and deployment roles.
+    help="""An IAM path prefix of the seedfarmer toolchain and target roles.
     Use only if bootstrapped with this path""",
     required=False,
 )

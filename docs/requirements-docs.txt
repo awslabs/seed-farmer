@@ -45,7 +45,7 @@ mdit-py-plugins==0.4.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-myst-parser==3.0.1
+myst-parser==4.0.1
     # via -r docs/requirements-docs.in
 packaging==24.2
     # via sphinx
@@ -67,7 +67,7 @@ sphinx==7.1.2
     #   sphinx-click
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx-autoapi==3.4.0
+sphinx-autoapi==3.5.0
     # via -r docs/requirements-docs.in
 sphinx-click==6.0.0
     # via -r docs/requirements-docs.in

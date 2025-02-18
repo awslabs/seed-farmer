@@ -95,7 +95,7 @@ We have added support for the use of a IAM Paths for the toolchain role, target 
 
 A `--role-prefix` and `--policy-prefix` CLI parameters can be used if you want to provide IAM Paths to the toolchain, target roles, and project policy created by `seed-farmer`. If bootstrapped with prefixes, same prefixes must be provided with `apply` and `destroy` CLI commands so that seedfarmer is able to locate correct toolchain and target deployment roles. IAM Paths must begin and end with a `/`. More information in [IAM identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
-Additionally, seed-farmer creates module deployment roles at `apply`. It is possible to provide prefixes for the module deployment roles using the deployment manifest. See [manifest](manifest.md).
+Additionally, seed-farmer creates module deployment roles at `apply`. It is possible to provide prefixes for the module deployment roles using the deployment manifest. See [manifests](manifests.md).
 
 ## Prepping the Account / Region
 `seedfarmer` leverages the AWS CDKv2.  This must be bootstrapped in each account/region combination to be used of each target account.

@@ -4,11 +4,11 @@
 #
 #    pip-compile docs/requirements-docs.in
 #
-alabaster==0.7.13
+alabaster==1.0.0
     # via sphinx
 astroid==3.3.8
     # via sphinx-autoapi
-babel==2.12.1
+babel==2.17.0
     # via sphinx
 certifi==2024.8.30
     # via
@@ -45,11 +45,11 @@ mdit-py-plugins==0.4.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-myst-parser==3.0.1
+myst-parser==4.0.1
     # via -r docs/requirements-docs.in
 packaging==24.2
     # via sphinx
-pygments==2.15.1
+pygments==2.19.1
     # via sphinx
 pyyaml==6.0.2
     # via
@@ -58,16 +58,18 @@ pyyaml==6.0.2
     #   sphinx-autoapi
 requests==2.32.3
     # via sphinx
+roman-numerals-py==3.1.0
+    # via sphinx
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.1.2
+sphinx==8.2.1
     # via
     #   myst-parser
     #   sphinx-autoapi
     #   sphinx-click
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx-autoapi==3.4.0
+sphinx-autoapi==3.6.0
     # via -r docs/requirements-docs.in
 sphinx-click==6.0.0
     # via -r docs/requirements-docs.in

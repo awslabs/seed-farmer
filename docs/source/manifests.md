@@ -548,8 +548,6 @@ There is a level of logic that is followed:
 2. if a prefix is defined at the account level --- USE IT... ELSE
 4. use default `/` prefix
 
-NOTE: the prefixes provided must match the prefixes provided during bootstrap, unless a custom bootstrap is used.
-
 (archivesecret)=
 ### Archive Secret
 

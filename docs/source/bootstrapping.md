@@ -93,6 +93,27 @@ The qualifier post-pends a 6 chars alpha-numeric string to the deployment role a
 ## IAM Paths Prefixes for Toolchain, Target Roles, and Policies
 We have added support for the use of a IAM Paths for the toolchain role, target account deployment role(s), and policie(s). Using IAM Paths you can create groupings and design a logical separation to simplify permissions management. A common example in organizations is using Service Control Policies enforcing logical separation by team e.g. `/legal/` or `/sales/`, or project name.
 
+## Deployment Role Security Controls
+The deployment role includes explicit deny policies for certain high-risk IAM actions to improve security posture. The following IAM actions are explicitly denied regardless of any allow statements that might exist elsewhere in the policy:
+
+- `iam:CreateAccessKey` - Prevents creation of permanent access keys
+- `iam:CreateLoginProfile` - Prevents creation of console passwords
+- `iam:UpdateLoginProfile` - Prevents modification of console passwords
+- `iam:AddUserToGroup` - Prevents adding users to groups which could escalate privileges
+- `iam:AttachGroupPolicy` - Prevents attaching policies to groups
+- `iam:AttachUserPolicy` - Prevents attaching policies directly to users
+- `iam:CreatePolicyVersion` - Prevents creating new versions of IAM policies
+- `iam:DeleteGroupPolicy` - Prevents deletion of inline policies from groups
+- `iam:DeleteUserPolicy` - Prevents deletion of inline policies from users
+- `iam:DetachGroupPolicy` - Prevents detachment of policies from groups
+- `iam:DetachUserPolicy` - Prevents detachment of policies from users
+- `iam:PutGroupPolicy` - Prevents adding inline policies to groups
+- `iam:PutUserPolicy` - Prevents adding inline policies to users
+- `iam:RemoveUserFromGroup` - Prevents removing users from groups
+- `iam:SetDefaultPolicyVersion` - Prevents changing which version of a policy is active
+
+These restrictions help maintain security by preventing potential privilege escalation paths while still allowing the deployment role to perform its intended functions.
+
 A `--role-prefix` and `--policy-prefix` CLI parameters can be used if you want to provide IAM Paths to the toolchain, target roles, and project policy created by `seed-farmer`. If bootstrapped with prefixes, the same prefixes must be provided with `apply` and `destroy` CLI commands so that seedfarmer is able to locate the correct toolchain and target deployment roles. IAM Paths must begin and end with a `/`. More information in [IAM identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html).
 
 Additionally, seed-farmer creates module deployment roles at `apply`. It is possible to provide prefixes for the module deployment roles using the deployment manifest. See [manifests](manifests.md).

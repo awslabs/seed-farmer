@@ -13,12 +13,18 @@
 #    limitations under the License.
 
 import os
-import shutil
 import sys
+
+import yaml
 
 from seedfarmer import CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH
 
 
-def get_default_project_policy() -> None:
+def get_default_project_policy(policy_prefix: str = "/") -> None:
     with open(os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH), "rb") as f:
-        shutil.copyfileobj(f, sys.stdout.buffer)
+        policy = yaml.safe_load(f)
+
+        if policy_prefix:
+            policy["Resources"]["ProjectPolicy"]["Properties"]["Path"] = policy_prefix
+
+        sys.stdout.write(yaml.dump(policy))

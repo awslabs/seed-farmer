@@ -14,7 +14,7 @@ Resources:
             Effect: Allow
             Principal:
                 AWS: "{{ toolchain_role_arn }}"
-      Path: /
+      Path: "{{ role_prefix }}"
       Policies:
         - PolicyName: InlineToolchain
           PolicyDocument:
@@ -68,6 +68,10 @@ Resources:
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/{{ project_name }}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/codeseeder-{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/{{ project_name }}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/codeseeder-{{ project_name }}-*"
               Sid: DeploymentIAM
             - Action:
               - codebuild:Update*
@@ -117,6 +121,7 @@ Resources:
               Effect: Allow
               Resource:
               - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/{{ project_name }}-*"
+              - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/{{ project_name }}-*"
               Sid: DeploymentSTS
             - Action:
               - ssm:Put*
@@ -153,6 +158,25 @@ Resources:
               Resource:
                 - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-{{ project_name }}"
                 - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-{{ project_name }}*"
+            - Action:
+              - iam:CreateAccessKey
+              - iam:CreateLoginProfile
+              - iam:UpdateLoginProfile
+              - iam:AddUserToGroup
+              - iam:AttachGroupPolicy
+              - iam:AttachUserPolicy
+              - iam:CreatePolicyVersion
+              - iam:DeleteGroupPolicy
+              - iam:DeleteUserPolicy
+              - iam:DetachGroupPolicy
+              - iam:DetachUserPolicy
+              - iam:PutGroupPolicy
+              - iam:PutUserPolicy
+              - iam:RemoveUserFromGroup
+              - iam:SetDefaultPolicyVersion
+              Effect: Deny
+              Resource: '*'
+              Sid: DeploymentIAMDeny
       RoleName: "{{ role_name }}"
       Tags:
         - Key: "SeedFarmer"

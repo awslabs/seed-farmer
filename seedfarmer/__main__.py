@@ -20,7 +20,7 @@ import click
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, store
+from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, store, taint
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.utils import load_dotenv_files
 
@@ -62,6 +62,13 @@ def version() -> None:
     default=None,
     help="""A qualifier to use with the seedfarmer roles.
     Use only if bootstrapped with this qualifier""",
+    required=False,
+)
+@click.option(
+    "--role-prefix",
+    default=None,
+    help="""An IAM path prefix of the seedfarmer toolchain and target roles.
+    Use only if bootstrapped with this path""",
     required=False,
 )
 @click.option(
@@ -129,6 +136,7 @@ def apply(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: Optional[str],
     env_files: List[str],
     debug: bool,
     dry_run: bool,
@@ -154,6 +162,7 @@ def apply(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
@@ -198,6 +207,13 @@ def apply(
     default=None,
     help="""A qualifier to use with the seedfarmer roles.
     Use only if bootstrapped with this qualifier""",
+    required=False,
+)
+@click.option(
+    "--role-prefix",
+    default=None,
+    help="""An IAM path prefix of the seedfarmer toolchain and target roles.
+    Use only if bootstrapped with this path""",
     required=False,
 )
 @click.option(
@@ -248,6 +264,7 @@ def destroy(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    role_prefix: Optional[str],
     env_files: List[str],
     debug: bool,
     enable_session_timeout: bool,
@@ -274,6 +291,7 @@ def destroy(
         profile=profile,
         region_name=region,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         dryrun=dry_run,
         show_manifest=show_manifest,
         enable_session_timeout=enable_session_timeout,
@@ -294,5 +312,6 @@ def main() -> int:
     cli.add_command(projectpolicy)
     cli.add_command(metadata)
     cli.add_command(bundle)
+    cli.add_command(taint)
     cli()
     return 0

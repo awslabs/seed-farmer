@@ -16,9 +16,9 @@
 import logging
 import os
 import pathlib
+from importlib.metadata import distribution
 from typing import Any, Dict, Optional, cast
 
-import pkg_resources
 import yaml
 from aws_codeseeder import LOGGER, codeseeder
 from aws_codeseeder.codeseeder import CodeSeederConfig
@@ -30,7 +30,7 @@ from seedfarmer.models import ProjectSpec
 
 _logger: logging.Logger = logging.getLogger(__name__)
 __all__ = ["__description__", "__license__", "__title__"]
-__version__: str = pkg_resources.get_distribution(__title__).version
+__version__: str = distribution(__title__).version
 
 DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
 INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"

@@ -26,3 +26,28 @@ pip install seed-farmer
 ```
 
 A [project](https://seed-farmer.readthedocs.io/en/latest/project_development.html) is now necessary to begin create modules.  
+
+## Development
+
+To get started with developing you need to setup a virtual environment and install the needed python dependencies
+
+Setup virtual environment and install dependencies:
+
+```bash
+make install
+```
+
+Run unit tests
+```bash
+make test
+```
+
+Validate ruff formatting and mypy
+```bash
+make validate
+```
+
+Fix ruff formatting issues
+```bash
+make format
+```

@@ -18,9 +18,11 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+import aws_codeseeder as cs
 import boto3
 from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
+from packaging import version
 
 import seedfarmer.errors
 import seedfarmer.services._iam as iam
@@ -113,7 +115,7 @@ def _get_docker_secret_inline_policy(docker_credentials_secret: str, session: Op
                         "secretsmanager:ListSecretVersionIds",
                     ],
                     "Resource": (
-                        f"arn:{partition}:secretsmanager:{region}:{account_id}" f":secret:{docker_credentials_secret}*"
+                        f"arn:{partition}:secretsmanager:{region}:{account_id}:secret:{docker_credentials_secret}*"
                     ),
                 },
                 {"Effect": "Allow", "Action": ["secretsmanager:ListSecrets"], "Resource": "*"},
@@ -130,6 +132,7 @@ def create_module_deployment_role(
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
     session: Optional[boto3.Session] = None,
+    role_prefix: Optional[str] = None,
 ) -> None:
     iam.create_check_iam_role(
         project_name=config.PROJECT,
@@ -145,6 +148,7 @@ def create_module_deployment_role(
         role_name=role_name,
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
+        role_prefix=role_prefix,
     )
 
     policies = []
@@ -219,9 +223,7 @@ def deploy_bucket_storage_stack(
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region
-
-
+        The region where the module is deployed
 
     Returns
     -------
@@ -272,7 +274,7 @@ def deploy_managed_policy_stack(
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region
+        The region where the module is deployed
     update_project_policy: bool
         Force update the project policy if already deployed
     """
@@ -307,7 +309,7 @@ def destroy_bucket_storage_stack(
 ) -> None:
     """
     destroy_bucket_storage_stack
-        This function destroys the buckeet stack for SeedFarmer
+        This function destroys the bucket stack for SeedFarmer
 
     Parameters
     ----------
@@ -342,7 +344,7 @@ def destroy_bucket_storage_stack(
             return
 
 
-def destroy_managed_policy_stack(account_id: str, region: str) -> None:
+def destroy_managed_policy_stack(account_id: str, region: str, **kwargs: Any) -> None:
     """
     destroy_managed_policy_stack
         This function destroys the deployment-specific policy.
@@ -352,7 +354,7 @@ def destroy_managed_policy_stack(account_id: str, region: str) -> None:
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region wher
+        The region where the module is deployed
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
@@ -440,6 +442,7 @@ def deploy_module_stack(
     parameters: List[ModuleParameter],
     docker_credentials_secret: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    role_prefix: Optional[str] = None,
 ) -> Tuple[str, str]:
     """
     deploy_module_stack
@@ -470,7 +473,11 @@ def deploy_module_stack(
 
     _logger.debug(module_stack_path)
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = (
+        SessionManager()
+        .get_or_create(role_prefix=role_prefix)
+        .get_deployment_session(account_id=account_id, region_name=region)
+    )
     module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
@@ -483,6 +490,7 @@ def deploy_module_stack(
         docker_credentials_secret=docker_credentials_secret,
         permissions_boundary_arn=permissions_boundary_arn,
         session=session,
+        role_prefix=role_prefix,
     )
 
     _logger.debug("module_role_name %s", module_role_name)
@@ -581,6 +589,9 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
+    role_prefix: Optional[str] = None,
+    policy_prefix: Optional[str] = None,
+    permissions_boundary_arn: Optional[str] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
@@ -599,6 +610,12 @@ def deploy_seedkit(
         The Subnet IDs to associate seedkit with (codebuild)
     security_group_ids: Optional[List[str]]
         The Security Group IDs to associate seedkit with (codebuild)
+    role_prefix: Optional[str]
+        The IAM Path Prefix to use for seedkit role
+    policy_prefix: Optional[str]
+        The IAM Path Prefix to use for seedkit policy
+    permissions_boundary_arn: Optional[str]
+        The ARN of the permissions boundary to attach to seedkit role
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
@@ -607,14 +624,25 @@ def deploy_seedkit(
         _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:
         _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
-        commands.deploy_seedkit(
-            seedkit_name=config.PROJECT,
-            deploy_codeartifact=deploy_codeartifact,
-            session=session,
-            vpc_id=vpc_id,
-            subnet_ids=private_subnet_ids,
-            security_group_ids=security_group_ids,
-        )
+
+        seedkit_args = {
+            "seedkit_name": config.PROJECT,
+            "deploy_codeartifact": deploy_codeartifact,
+            "session": session,
+            "vpc_id": vpc_id,
+            "subnet_ids": private_subnet_ids,
+            "security_group_ids": security_group_ids,
+        }
+
+        if version.parse(cs.__version__) >= version.parse("1.3.0"):
+            if role_prefix:
+                seedkit_args["role_prefix"] = role_prefix
+            if policy_prefix:
+                seedkit_args["policy_prefix"] = policy_prefix
+            if permissions_boundary_arn:
+                seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
+
+        commands.deploy_seedkit(**seedkit_args)
         # Go get the outputs and return them
         _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     return dict(stack_outputs)
@@ -630,7 +658,8 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     account_id: str
         The Account Id where the module is deployed
     region: str
-        The region wher"""
+        The region where the module is deployed
+    """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
     commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)

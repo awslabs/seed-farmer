@@ -63,6 +63,8 @@ class RegionMapping(CamelModel):
     npm_mirror_secret: Optional[str] = None
     seedkit_metadata: Optional[Dict[str, Any]] = None
     seedfarmer_artifact_bucket: Optional[str] = None
+    role_prefix: Optional[str] = None
+    policy_prefix: Optional[str] = None
 
 
 class TargetAccountMapping(CamelModel):
@@ -83,6 +85,8 @@ class TargetAccountMapping(CamelModel):
     pypi_mirror_secret: Optional[str] = None
     _default_region: Optional[RegionMapping] = PrivateAttr(default=None)
     _region_index: Dict[str, RegionMapping] = PrivateAttr(default_factory=dict)
+    role_prefix: Optional[str] = None
+    policy_prefix: Optional[str] = None
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -144,7 +148,7 @@ class NameGenerator(CamelModel):
                 env_value = os.getenv(value.value_from.env_variable, None)
                 if env_value is None:
                     raise seedfarmer.errors.InvalidManifestError(
-                        ("Unable to resolve value from Environment Variable:" f" {value.value_from.env_variable}")
+                        (f"Unable to resolve value from Environment Variable: {value.value_from.env_variable}")
                     )
                 return env_value
             else:
@@ -230,16 +234,19 @@ class DeploymentManifest(CamelModel):
             self._accounts_regions = []
             for target_account in self.target_account_mappings:
                 for region in target_account.region_mappings:
-                    self._accounts_regions.append(
-                        {
-                            "alias": target_account.alias,
-                            "account_id": target_account.actual_account_id,
-                            "region": region.region,
-                            "network": region.network,  # type: ignore
-                            "parameters_regional": region.parameters_regional,  # type: ignore
-                            "codebuild_image": cast(str, region.codebuild_image),
-                        }
-                    )
+                    role_prefix = region.role_prefix if region.role_prefix else target_account.role_prefix
+                    policy_prefix = region.policy_prefix if region.policy_prefix else target_account.policy_prefix
+                    account_region_args = {
+                        "alias": target_account.alias,
+                        "account_id": target_account.actual_account_id,
+                        "region": region.region,
+                        "network": region.network,
+                        "parameters_regional": region.parameters_regional,
+                        "codebuild_image": cast(str, region.codebuild_image),
+                        "role_prefix": role_prefix,
+                        "policy_prefix": policy_prefix,
+                    }
+                    self._accounts_regions.append(account_region_args)  # type: ignore
         return self._accounts_regions
 
     def get_parameter_value(
@@ -444,6 +451,36 @@ class DeploymentManifest(CamelModel):
                         return sf_bucket
         else:
             return None
+
+    def get_account_region_role_prefix(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> str:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        default_prefix = "/"
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        role_prefix = (
+                            region_mapping.role_prefix
+                            if region_mapping.role_prefix is not None
+                            else target_account.role_prefix
+                        )
+                        return role_prefix if role_prefix else default_prefix
+        else:
+            return default_prefix
 
     def get_permission_boundary_arn(self, target_account: str, target_region: str) -> Optional[str]:
         permissions_boundary_name = self.get_parameter_value(

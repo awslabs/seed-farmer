@@ -53,7 +53,7 @@ from seedfarmer.output_utils import (
     print_modules_build_info,
 )
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services._iam import get_role
+from seedfarmer.services._iam import get_role, get_role_arn
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
@@ -132,6 +132,7 @@ def create_generic_module_deployment_role(
             region=region,
         ),
         session=session,
+        role_prefix=deployment_manifest.get_account_region_role_prefix(account_id=account_id, region=region),
     )
     return role_name
 
@@ -187,6 +188,7 @@ def _execute_deploy(
         deployment_name=cast(str, mdo.deployment_manifest.name),
         region=region,
     )
+    role_prefix = mdo.deployment_manifest.get_account_region_role_prefix(account_id=account_id, region=region)
 
     if module_stack_path:
         _, module_role_name = commands.deploy_module_stack(
@@ -199,12 +201,15 @@ def _execute_deploy(
             parameters=mdo.parameters,
             docker_credentials_secret=mdo.docker_credentials_secret,
             permissions_boundary_arn=mdo.permissions_boundary_arn,
+            role_prefix=role_prefix,
         )
-
-    mdo.module_role_name = module_role_name
 
     # Get the current module's SSM if it was already loaded...
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+
+    mdo.module_role_name = module_role_name
+    mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
+
     mdo.module_metadata = json.dumps(
         get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
     )
@@ -239,8 +244,13 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
     target_account_id = cast(str, module_manifest.get_target_account_id())
     target_region = cast(str, module_manifest.target_region)
+    role_prefix = mdo.deployment_manifest.get_account_region_role_prefix(
+        account_id=target_account_id, region=target_region
+    )
     session = (
-        SessionManager().get_or_create().get_deployment_session(account_id=target_account_id, region_name=target_region)
+        SessionManager()
+        .get_or_create(role_prefix=role_prefix)
+        .get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
     module_metadata = get_module_metadata(
         cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session
@@ -287,6 +297,9 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
             region=target_region,
             module_role_name=mdo.module_role_name,
         )
+
+    mdo.module_role_name = module_role_name
+    mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
 
     resp = commands.destroy_module(mdo)
 
@@ -410,12 +423,25 @@ def prime_target_accounts(
 
         params = []
         for target_account_region in deployment_manifest.target_accounts_regions:
+            account_id = target_account_region["account_id"]
+            region = target_account_region["region"]
+            role_prefix = target_account_region["role_prefix"]
+            policy_prefix = target_account_region["policy_prefix"]
+            permissions_boundary_arn = deployment_manifest.get_permission_boundary_arn(
+                target_account=account_id,
+                target_region=region,
+            )
             param_d = {
-                "account_id": target_account_region["account_id"],
-                "region": target_account_region["region"],
+                "account_id": account_id,
+                "region": region,
                 "update_seedkit": update_seedkit,
                 "update_project_policy": update_project_policy,
+                "permissions_boundary_arn": permissions_boundary_arn,
             }
+            if role_prefix:
+                param_d["role_prefix"] = role_prefix
+            if policy_prefix:
+                param_d["policy_prefix"] = policy_prefix
             if target_account_region["network"] is not None:
                 network = commands.load_network_values(
                     cast(NetworkMapping, target_account_region["network"]),
@@ -469,7 +495,12 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
                 commands.destroy_seedkit(**args)
 
         params = [
-            {"account_id": target_account_region["account_id"], "region": target_account_region["region"]}
+            {
+                "account_id": target_account_region["account_id"],
+                "region": target_account_region["region"],
+                "role_prefix": target_account_region["role_prefix"],
+                "policy_prefix": target_account_region["policy_prefix"],
+            }
             for target_account_region in deployment_manifest.target_accounts_regions
         ]
         _ = list(workers.map(_teardown_accounts, params))
@@ -680,9 +711,10 @@ def deploy_deployment(
             )
 
             module.manifest_md5 = hashlib.md5(
-                json.dumps(module.model_dump(), sort_keys=True).encode("utf-8")
+                json.dumps(module.model_dump(), sort_keys=True).encode("utf-8"),
+                usedforsecurity=False,
             ).hexdigest()
-            module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read()).hexdigest()
+            module.deployspec_md5 = hashlib.md5(open(deployspec_path, "rb").read(), usedforsecurity=False).hexdigest()
 
             _build_module = du.need_to_build(
                 deployment_name=deployment_name,
@@ -734,6 +766,7 @@ def apply(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     enable_session_timeout: bool = False,
@@ -759,6 +792,9 @@ def apply(
     qualifier : str, optional
         Any qualifier on the name of toolchain role
         Defaults to None
+    role_prefix : str, optional
+        IAM path prefix on the ARN of the toolchain and deployment roles
+        Defaults to '/'
     dryrun : bool, optional
         This flag indicates that the deployment manifest should be consumed and a
         DeploymentManifest object be created (for both apply and destroy) but DOES NOT
@@ -798,6 +834,7 @@ def apply(
         project_name=config.PROJECT,
         profile=profile,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         toolchain_region=deployment_manifest.toolchain_region,
         region_name=region_name,
         enable_reaper=enable_session_timeout,
@@ -878,6 +915,7 @@ def destroy(
     profile: Optional[str] = None,
     region_name: Optional[str] = None,
     qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
     dryrun: bool = False,
     show_manifest: bool = False,
     remove_seedkit: bool = False,
@@ -899,6 +937,9 @@ def destroy(
     qualifier : str, optional
         Any qualifier on the name of toolchain role
         Defaults to None
+    role_prefix : str, optional
+        IAM path prefix on the ARN of the toolchain and deployment roles
+        Defaults to '/'
     dryrun : bool, optional
         This flag indicates that the deployment WILL NOT
         enact any deployment changes.
@@ -933,6 +974,7 @@ def destroy(
         profile=profile,
         region_name=region_name,
         qualifier=qualifier,
+        role_prefix=role_prefix,
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,
     )

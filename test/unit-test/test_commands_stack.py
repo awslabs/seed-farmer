@@ -1,4 +1,5 @@
 import os
+from unittest.mock import ANY
 
 import pytest
 import yaml
@@ -149,12 +150,15 @@ def test_deploy_module_stack(session_manager, mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_stack
-def test_create_module_deployment_role(session_manager, mocker):
+@pytest.mark.parametrize("role_prefix", [None, "/", "/test/"])
+def test_create_module_deployment_role(session_manager, mocker, role_prefix):
     mocker.patch(
         "seedfarmer.commands._stack_commands.services.cfn.does_stack_exist",
         return_value=(True, {"ProjectPolicyARN": "arn"}),
     )
-    mocker.patch("seedfarmer.commands._stack_commands.iam.create_check_iam_role", return_value=None)
+    create_iam_role_mock = mocker.patch(
+        "seedfarmer.commands._stack_commands.iam.create_check_iam_role", return_value=None
+    )
     mocker.patch(
         "seedfarmer.commands._stack_commands.commands.seedkit_deployed",
         return_value=(True, "stackname", {"SeedkitResourcesPolicyArn": "arn"}),
@@ -171,6 +175,19 @@ def test_create_module_deployment_role(session_manager, mocker):
         group_name="group",
         module_name="module",
         docker_credentials_secret="fsfasdfsad",
+        role_prefix=role_prefix,
+    )
+
+    create_iam_role_mock.assert_called_once_with(
+        project_name="myapp",
+        deployment_name="myapp",
+        group_name="group",
+        module_name="module",
+        trust_policy=ANY,
+        role_name="module-deployment-role",
+        permissions_boundary_arn=None,
+        session=ANY,
+        role_prefix=role_prefix,
     )
 
 

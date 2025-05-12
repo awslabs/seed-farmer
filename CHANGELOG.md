@@ -12,6 +12,21 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v6.1.0 (2025-05-12)
+
+### New 
+
+- adding support for IAM paths
+- adding support to taint modules to force a redeploy
+
+### Changes
+- updated deployment role template to explicit DENY unused permissions
+
+### Fixes
+- No longer depends on the `pkg_resources` module being available from the setuptools package.
+- add usedforsecurity=False to md5 and sha1 hashing functions to indicate they are not used in security context
+- fix executing jq via shell
+
 ## v6.0.0 (2025-01-21)
 
 ### New 

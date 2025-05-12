@@ -70,7 +70,7 @@ def upper_snake_case(value: str) -> str:
 
 
 def generate_hash(string: str, length: int = 8) -> str:
-    return (hashlib.sha1(string.encode("UTF-8")).hexdigest())[:length]
+    return (hashlib.sha1(string.encode("UTF-8"), usedforsecurity=False).hexdigest())[:length]
 
 
 def generate_session_hash(session: Optional[Session] = None) -> str:
@@ -144,9 +144,17 @@ def get_toolchain_role_name(project_name: str, qualifier: Optional[str] = None) 
 
 
 def get_toolchain_role_arn(
-    partition: str, toolchain_account_id: str, project_name: str, qualifier: Optional[str] = None
+    partition: str,
+    toolchain_account_id: str,
+    project_name: str,
+    qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
 ) -> str:
-    return f"arn:{partition}:iam::{toolchain_account_id}:role/{get_toolchain_role_name(project_name, qualifier)}"
+    role_prefix = role_prefix if role_prefix else "/"
+    return (
+        f"arn:{partition}:iam::{toolchain_account_id}:role{role_prefix}"
+        f"{get_toolchain_role_name(project_name, qualifier)}"
+    )
 
 
 def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
@@ -155,9 +163,17 @@ def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None)
 
 
 def get_deployment_role_arn(
-    partition: str, deployment_account_id: str, project_name: str, qualifier: Optional[str] = None
+    partition: str,
+    deployment_account_id: str,
+    project_name: str,
+    qualifier: Optional[str] = None,
+    role_prefix: Optional[str] = None,
 ) -> str:
-    return f"arn:{partition}:iam::{deployment_account_id}:role/{get_deployment_role_name(project_name, qualifier)}"
+    role_prefix = role_prefix if role_prefix else "/"
+    return (
+        f"arn:{partition}:iam::{deployment_account_id}:role{role_prefix}"
+        f"{get_deployment_role_name(project_name, qualifier)}"
+    )
 
 
 def get_generic_module_deployment_role_name(
@@ -171,7 +187,7 @@ def get_generic_module_deployment_role_name(
     # Max length of IAM role name is 64 chars, "-deployment-role" is 16 chars, resource_hash plus "-" is 5 chars.
     # If the resource_name, and "-deployment-role" is too long, truncate and use resource_hash for uniqueness.
     return (
-        f"{resource_name[:64 - 16 - 5]}-deployment-role-{resource_hash}"
+        f"{resource_name[: 64 - 16 - 5]}-deployment-role-{resource_hash}"
         if len(resource_name) > (64 - 16)
         else f"{resource_name}-deployment-role"
     )

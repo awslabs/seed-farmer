@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - adding support to taint modules to force a redeploy
 
 ### Changes
+- updated deployment role template to explicit DENY unused permissions
 
 ### Fixes
 - No longer depends on the `pkg_resources` module being available from the setuptools package.

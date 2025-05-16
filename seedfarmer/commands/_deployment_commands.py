@@ -421,7 +421,7 @@ def prime_target_accounts(
 
             return [target_account_id, target_region, seedkit_stack_outputs]
 
-        params = []
+        params = {}
         for target_account_region in deployment_manifest.target_accounts_regions:
             account_id = target_account_region["account_id"]
             region = target_account_region["region"]
@@ -453,9 +453,21 @@ def prime_target_accounts(
                 param_d["private_subnet_ids"] = network.private_subnet_ids
                 param_d["security_group_ids"] = network.security_group_ids
 
-            params.append(param_d)
+            if (account_id, region) not in params.keys():
+                params[(account_id, region)] = param_d
+            # param_d is a simple non-nested dictionary wtih string values
+            # that is acceptable to compare using equality operator
+            elif params[(account_id, region)] == param_d:
+                _logger.info(
+                    f"Duplicate target account mapping detected for {account_id} account {region} region. Skipping..."
+                )
+            else:
+                raise seedfarmer.errors.InvalidManifestError(
+                    f"Manifest contains dulicate `targetAccountMapings` for account {account_id} region {region}, "
+                    f"with different values."
+                )
 
-        output_seedkit = list(workers.map(_prime_accounts, params))
+        output_seedkit = list(workers.map(_prime_accounts, params.values()))
         # add these to the region mappings for reference
         for out_s in output_seedkit:
             deployment_manifest.populate_metadata(

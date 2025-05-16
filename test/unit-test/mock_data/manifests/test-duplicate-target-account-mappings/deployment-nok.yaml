@@ -1,0 +1,24 @@
+name: test-duplicate-target-account-mappings
+toolchainRegion: us-west-2
+groups:
+  - name: test
+    path: test/unit-test/mock_data/manifests/test-duplicate-target-account-mappings/test-modules.yaml
+targetAccountMappings:
+  - alias: primary
+    accountId: 123456789012
+    default: true
+    regionMappings:
+      - region: us-west-2
+        default: true
+        parametersRegional:
+          someKey: someValue
+  - alias: secondary
+    accountId: 123456789012
+    default: true
+    regionMappings:
+      - region: us-west-2
+        default: true
+        parametersRegional:
+          someKey: someValue
+        network:  # acount mappings are identical except vpc
+          vpcId: vpc-XXXXXXXXX

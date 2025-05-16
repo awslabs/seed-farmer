@@ -421,7 +421,7 @@ def prime_target_accounts(
 
             return [target_account_id, target_region, seedkit_stack_outputs]
 
-        params = {}
+        params: dict[tuple[str, str], Any] = {}
         for target_account_region in deployment_manifest.target_accounts_regions:
             account_id = target_account_region["account_id"]
             region = target_account_region["region"]
@@ -431,7 +431,7 @@ def prime_target_accounts(
                 target_account=account_id,
                 target_region=region,
             )
-            param_d = {
+            param_d: dict[str, Any] = {
                 "account_id": account_id,
                 "region": region,
                 "update_seedkit": update_seedkit,
@@ -455,7 +455,7 @@ def prime_target_accounts(
 
             if (account_id, region) not in params.keys():
                 params[(account_id, region)] = param_d
-            # param_d is a simple non-nested dictionary wtih string values
+            # param_d is a non-nested dictionary with string/bool values
             # that is acceptable to compare using equality operator
             elif params[(account_id, region)] == param_d:
                 _logger.info(

@@ -12,6 +12,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v6.1.1 (2025-05-19)
+
+### New 
+
+### Changes
+- prevent duplicate account/region pair mappings from being deployed 
+
+### Fixes
+
+
 ## v6.1.0 (2025-05-12)
 
 ### New 

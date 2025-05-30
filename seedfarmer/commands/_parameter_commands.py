@@ -17,7 +17,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from aws_codeseeder import EnvVar, EnvVarType
+from seedfarmer.types.codeseeder import EnvVar, EnvVarType
 
 import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi

@@ -19,10 +19,8 @@ import os
 import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
-import aws_codeseeder
 import botocore.exceptions
-from aws_codeseeder import EnvVar, codeseeder
-from aws_codeseeder.errors import CodeSeederRuntimeError
+from seedfarmer.errors import CodeSeederRuntimeError
 from boto3 import Session
 
 import seedfarmer
@@ -85,7 +83,7 @@ def _env_vars(
         env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret
     # Add the partition to env for ease of fetching
     env_vars["AWS_PARTITION"] = deployment_partition
-    env_vars["AWS_CODESEEDER_VERSION"] = aws_codeseeder.__version__
+    #env_vars["AWS_CODESEEDER_VERSION"] = aws_codeseeder.__version__
     env_vars["SEEDFARMER_VERSION"] = seedfarmer.__version__
     return env_vars
 
@@ -106,6 +104,21 @@ def _prebuilt_bundle_check(mdo: ModuleDeployObject) -> Optional[str]:
             return None
     else:
         return None
+
+
+def standard_config_commands()->Tuple[str,str]:
+    pre_build_commands = [
+        (
+            "nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock"
+            " --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &"
+        ),
+        'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
+    ]
+    
+    pythonpipx_modules = [f"seed-farmer=={seedfarmer.__version__}"]
+    
+    return pre_build_commands, pythonpipx_modules
+
 
 
 def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
@@ -144,8 +157,12 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             f"-g {mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
         )
     ]
+    
+    # Moving this from the main file, remove dependency on CodeseederConfig Object
+    pre_build_commands, pythonpipx_modules = standard_config_commands()
+    
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
-    sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v {aws_codeseeder.__version__} || true"]
+    #sf_version__add = [f"seedfarmer metadata add -k AwsCodeSeederDeployed -v {aws_codeseeder.__version__} || true"]
     cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
     module_role_name_add = [f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {mdo.module_role_name} || true"]
     githash_add = (
@@ -193,12 +210,12 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             extra_dirs={"module": module_path},
             extra_files=extra_files,
             extra_install_commands=["cd module/"] + _phases.install.commands,
-            extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands,
+            extra_pre_build_commands= pre_build_commands + ["cd module/"] + _phases.pre_build.commands,
             extra_build_commands=["cd module/"] + _phases.build.commands,
             extra_post_build_commands=["cd module/"]
             + _phases.post_build.commands
             + md5_put
-            + sf_version__add
+            #+ sf_version__add
             + cs_version_add
             + module_role_name_add
             + githash_add
@@ -211,6 +228,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             npm_mirror=npm_mirror,
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
+            pythonpipx_modules = pythonpipx_modules
         )
         _logger.debug("CodeSeeder Metadata response is %s", dict_metadata)
 
@@ -260,6 +278,9 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             module_manifest.npm_mirror_secret if module_manifest.npm_mirror_secret else mdo.npm_mirror_secret
         ),
     )
+    
+    # Moving this from the main file, remove dependency on CodeseederConfig Object
+    pre_build_commands, pythonpipx_modules = standard_config_commands()
 
     remove_ssm = [
         f"seedfarmer remove moduledata -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name}"
@@ -306,7 +327,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             extra_dirs={"module": module_path} if not prebuilt_bundle else None,
             extra_files=extra_files,
             extra_install_commands=["cd module/"] + _phases.install.commands,
-            extra_pre_build_commands=["cd module/"] + _phases.pre_build.commands + export_info,
+            extra_pre_build_commands=pre_build_commands+["cd module/"] + _phases.pre_build.commands + export_info,
             extra_build_commands=["cd module/"] + _phases.build.commands,
             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm + remove_sf_bundle,
             extra_env_vars=env_vars,
@@ -317,6 +338,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             pypi_mirror=pypi_mirror,
             runtime_versions=get_runtimes(active_codebuild_image),
             prebuilt_bundle=prebuilt_bundle,
+            pythonpipx_modules=pythonpipx_modules
         )
         resp = ModuleDeploymentResponse(
             deployment=mdo.deployment_manifest.name,
@@ -359,15 +381,17 @@ def _execute_module_commands(
     pypi_mirror: Optional[str] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
     prebuilt_bundle: Optional[str] = None,
+    pythonpipx_modules : Optional[str] = None,
 ) -> Tuple[str, Optional[Dict[str, str]]]:
     session_getter: Optional[Callable[[], Session]] = None
 
-    if not codeseeder.EXECUTING_REMOTELY:
+    # This was necessary for CodeSeeder from come reason to get a session...
+    # if not codeseeder.EXECUTING_REMOTELY:
 
-        def _session_getter() -> Session:
-            return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    #     def _session_getter() -> Session:
+    #         return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
 
-        session_getter = _session_getter
+    #     session_getter = _session_getter
 
     extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
     if extra_files is not None:
@@ -392,6 +416,7 @@ def _execute_module_commands(
         boto3_session=session_getter,
         runtime_versions=runtime_versions,
         prebuilt_bundle=prebuilt_bundle,
+        pythonpipx_modules = pythonpipx_modules,
     )
     def _execute_module_commands(
         deployment_name: str,
@@ -409,6 +434,7 @@ def _execute_module_commands(
         extra_env_vars: Optional[Dict[str, Any]] = None,
         codebuild_compute_type: Optional[str] = None,
         runtime_versions: Optional[Dict[str, str]] = None,
+        pythonpipx_modules: Optional[str] = None,
     ) -> str:
         deploy_info = {
             "aws_region": os.environ.get("AWS_DEFAULT_REGION"),

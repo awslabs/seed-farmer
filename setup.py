@@ -45,7 +45,6 @@ setup(
     keywords=["aws", "cdk"],
     python_requires=">=3.9,<3.13",
     install_requires=[
-        "aws-codeseeder~=1.3.0",
         "cookiecutter>=2.1,<2.7",
         "pyhumps>=3.5,<3.9",
         "pydantic>=2.8.2,<2.11.0",
@@ -60,6 +59,12 @@ setup(
         "urllib3~=1.26.17",
         "certifi>=2024.7.4,<2024.9.0",
         "packaging>=23.2,<25.0",
+        "mypy_extensions>=1.1.0",
+        "boto3-stubs[cloudformation,cloudwatch,codebuild,iam,logs,s3,sts,ssm,secretsmanager,logs]~=1.38.0",
+        "mypy",
+        "boto3==1.36.4",
+        "botocore==1.36.4",
+        "cfn_flip"
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

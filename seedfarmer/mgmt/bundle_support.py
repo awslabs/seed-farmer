@@ -16,7 +16,7 @@
 import logging
 from typing import Optional
 
-import aws_codeseeder.services as services
+import seedfarmer.services._s3 as s3
 from boto3 import Session
 
 from seedfarmer import config
@@ -52,7 +52,7 @@ def copy_bundle_to_sf(deployment: str, group: str, module: str, bucket: str, bun
         deployment=deployment, group=group, module=module, bucket=bucket, bundle_src_path=bundle_src_path
     )
     try:
-        services.s3.copy_s3_object(
+        s3.copy_s3_object(
             src_bucket=bundle.codeseeder_bucket,
             src_key=bundle.codeseeder_key,
             dest_bucket=bundle.seedfarmer_bucket,
@@ -80,7 +80,7 @@ def delete_bundle_from_sf(
 ) -> None:
     bundle = BundleS3Support(deployment=deployment, group=group, module=module, bucket=bucket)
     try:
-        services.s3.delete_objects(bucket=bundle.seedfarmer_bucket, keys=[bundle.seedfarmer_key])
+        s3.delete_objects(bucket=bundle.seedfarmer_bucket, keys=[bundle.seedfarmer_key])
     except Exception as e:
         _logger.info("Cannot delete the bundle from S3 - %s", e)
 
@@ -95,7 +95,7 @@ def check_bundle_exists_in_sf(
     bundle = BundleS3Support(deployment=deployment, group=group, module=module, bucket=bucket)
     try:
         return bool(
-            services.s3.object_exists(bucket=bundle.seedfarmer_bucket, key=bundle.seedfarmer_key, session=session)
+            s3.object_exists(bucket=bundle.seedfarmer_bucket, key=bundle.seedfarmer_key, session=session)
         )
     except Exception as e:
         _logger.info("Cannot check if the bundle exists in S3 - %s", e)

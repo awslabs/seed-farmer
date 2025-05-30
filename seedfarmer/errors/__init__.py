@@ -22,6 +22,10 @@ from seedfarmer.errors.seedfarmer_errors import (
     SeedFarmerException,
 )
 
+from seedfarmer.errors.codeseeder_errors import(
+    CodeSeederRuntimeError
+)
+
 __all__ = [
     "InvalidPathError",
     "ModuleDeploymentError",
@@ -29,4 +33,5 @@ __all__ = [
     "InvalidConfigurationError",
     "SeedFarmerException",
     "InvalidSessionError",
+    "CodeSeederRuntimeError"
 ]

@@ -15,7 +15,7 @@
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, Callable, cast
 
 from boto3 import Session
 
@@ -25,7 +25,7 @@ from seedfarmer.services._service_utils import boto3_client
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = None) -> None:
+def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     client = boto3_client(service_name="ssm", session=session)
     retries = 3
     while retries > 0:
@@ -48,7 +48,7 @@ def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Session] = N
                 raise seedfarmer.errors.SeedFarmerException(err)  # type: ignore[arg-type]
 
 
-def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any]:
+def get_parameter(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Dict[str, Any]:
     client = boto3_client(service_name="ssm", session=session)
     json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
     try:
@@ -58,7 +58,7 @@ def get_parameter(name: str, session: Optional[Session] = None) -> Dict[str, Any
         return cast(Dict[str, Any], json_str)
 
 
-def get_parameter_if_exists(name: str, session: Optional[Session] = None) -> Optional[Dict[str, Any]]:
+def get_parameter_if_exists(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[Dict[str, Any]]:
     client = boto3_client(service_name="ssm", session=session)
     try:
         json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
@@ -67,7 +67,7 @@ def get_parameter_if_exists(name: str, session: Optional[Session] = None) -> Opt
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def does_parameter_exist(name: str, session: Optional[Session] = None) -> bool:
+def does_parameter_exist(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> bool:
     client = boto3_client(service_name="ssm", session=session)
     try:
         client.get_parameter(Name=name)
@@ -76,7 +76,7 @@ def does_parameter_exist(name: str, session: Optional[Session] = None) -> bool:
         return False
 
 
-def list_parameters(prefix: str, session: Optional[Session] = None) -> List[str]:
+def list_parameters(prefix: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> List[str]:
     client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("describe_parameters")
     response_iterator = paginator.paginate(
@@ -98,7 +98,7 @@ def list_parameters(prefix: str, session: Optional[Session] = None) -> List[str]
     return ret
 
 
-def list_parameters_with_filter(prefix: str, contains_string: str, session: Optional[Session] = None) -> List[str]:
+def list_parameters_with_filter(prefix: str, contains_string: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> List[str]:
     client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("describe_parameters")
 
@@ -123,7 +123,7 @@ def list_parameters_with_filter(prefix: str, contains_string: str, session: Opti
 
 
 def get_all_parameter_data_by_path(
-    prefix: str, session: Optional[Session] = None
+    prefix: str, session: Optional[Union[Callable[[], Session], Session]] = None
 ) -> Dict[str, Union[str, Dict[str, Any]]]:
     client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("get_parameters_by_path")
@@ -151,7 +151,7 @@ def get_all_parameter_data_by_path(
     return ret
 
 
-def delete_parameters(parameters: List[str], session: Optional[Session] = None) -> None:
+def delete_parameters(parameters: List[str], session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     if parameters:
         if len(parameters) < 10:
             _logger.debug("deleting parameters: %s", parameters)
@@ -162,7 +162,7 @@ def delete_parameters(parameters: List[str], session: Optional[Session] = None) 
             delete_parameters(parameters[9:], session=session)
 
 
-def describe_parameter(name: str, session: Optional[Session] = None) -> Optional[Any]:
+def describe_parameter(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[Any]:
     client = boto3_client(service_name="ssm", session=session)
     return client.describe_parameters(
         ParameterFilters=[

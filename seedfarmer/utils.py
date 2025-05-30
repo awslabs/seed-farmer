@@ -17,6 +17,7 @@ import logging
 import os
 import re
 from typing import Any, Dict, List, Optional
+import shutil
 
 import humps
 import yaml
@@ -109,7 +110,7 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str, part
         The standard URL with protocol and query parameters
         ex: https://us-east-1.console.aws.amazon.com/codesuite/codebuild/123456789012/projects/
             codebuild-id/build/codebuild-id:3413241234/?region-us-east-1
-        if in a differeing partion (ex.aws-cn) the url looks like:
+        if in a differing partion (ex.aws-cn) the url looks like:
             https://cn-north-1.console.amazonaws.cn/codesuite/codebuild/123456789012/projects/
             codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1
     """
@@ -265,3 +266,26 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     payload = recurse_dict(payload)
     return payload
+
+
+
+def create_output_dir(name: str) -> str:
+    """Helper function for creating or clearing a codeseeder.out output directory
+
+    Parameters
+    ----------
+    name : str
+        Name of the directory to create in  the codeseeder.out directory
+
+    Returns
+    -------
+    str
+        Full path of the created directory
+    """
+    out_dir = os.path.join(os.getcwd(), "codeseeder.out", name)
+    try:
+        shutil.rmtree(out_dir)
+    except FileNotFoundError:
+        pass
+    os.makedirs(out_dir, exist_ok=True)
+    return out_dir

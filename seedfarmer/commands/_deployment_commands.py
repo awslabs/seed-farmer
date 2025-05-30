@@ -57,6 +57,13 @@ from seedfarmer.services._iam import get_role, get_role_arn
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
+
+
+from seedfarmer.deployment import codebuild_deploy
+
+
+
+
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -231,8 +238,8 @@ def _execute_deploy(
         if mdo.deployment_manifest.name
         else None
     )
-
-    return commands.deploy_module(mdo)
+    return codebuild_deploy.deploy_module(mdo)
+    #return commands.deploy_module(mdo)
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:

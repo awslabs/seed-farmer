@@ -18,10 +18,9 @@ import os
 import pathlib
 from importlib.metadata import distribution
 from typing import Any, Dict, Optional, cast
+import shutil
 
 import yaml
-from aws_codeseeder import LOGGER, codeseeder
-from aws_codeseeder.codeseeder import CodeSeederConfig
 from packaging.version import parse
 
 import seedfarmer.errors
@@ -38,7 +37,8 @@ INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 S3_BUCKET_CFN_PATH = "resources/s3_bucket.yaml"
-
+SEEDKIT_TEMPLATE = "resources/seedkit.template"
+SEEDKIT_YAML_NAME= "seedkit.yaml"
 
 def enable_debug(format: str) -> None:
     logging.basicConfig(level=logging.DEBUG, format=format)
@@ -100,20 +100,6 @@ class Config(object):
                     )
                     raise seedfarmer.errors.SeedFarmerException(msg)
 
-        @codeseeder.configure(self._project_spec.project.lower(), deploy_if_not_exists=True)
-        def configure(configuration: CodeSeederConfig) -> None:
-            LOGGER.debug(f"OPS ROOT (OPS_ROOT) is {self.OPS_ROOT}")
-            configuration.timeout = 120
-            # Below is needed for Docker in Docker scenario on Ubuntu images
-            configuration.pre_build_commands = [
-                (
-                    "nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock"
-                    " --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &"
-                ),
-                'timeout 15 sh -c "until docker info; do echo .; sleep 1; done"',
-            ]
-            configuration.pythonpipx_modules = [f"seed-farmer=={__version__}"]
-
     @property
     def PROJECT(self) -> str:
         if self._project_spec is None:
@@ -149,6 +135,18 @@ class Config(object):
         if self._project_spec is None:
             self._load_config_data()
         return str(os.path.join(CLI_ROOT, S3_BUCKET_CFN_PATH))
+    
+    @property
+    def SEEDKIT_TEMPLATE_PATH(self) -> str:
+        if self._project_spec is None:
+            self._load_config_data()
+        return str(os.path.join(CLI_ROOT, SEEDKIT_TEMPLATE))
 
+    @property
+    def SEEDKIT_YAML_FILENAME(self) -> str:
+        if self._project_spec is None:
+            self._load_config_data()
+        return SEEDKIT_YAML_NAME
+    
 
 config = Config()

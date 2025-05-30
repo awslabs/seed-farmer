@@ -14,7 +14,7 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Callable ,Union, cast
 
 from boto3 import Session
 
@@ -24,7 +24,7 @@ from seedfarmer.services._service_utils import boto3_client, boto3_resource, get
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def get_role(role_name: str, session: Optional[Session] = None) -> Optional[Dict[str, Any]]:
+def get_role(role_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[Dict[str, Any]]:
     _logger.debug("Getting Role: %s", role_name)
 
     iam_client = boto3_client("iam", session=session)
@@ -34,7 +34,7 @@ def get_role(role_name: str, session: Optional[Session] = None) -> Optional[Dict
         return None
 
 
-def get_role_arn(role_name: str, session: Optional[Session] = None) -> str:
+def get_role_arn(role_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> str:
     role = get_role(role_name=role_name, session=session)
 
     if not role:
@@ -51,7 +51,7 @@ def create_check_iam_role(
     permissions_boundary_arn: Optional[str],
     group_name: Optional[str] = None,
     module_name: Optional[str] = None,
-    session: Optional[Session] = None,
+    session: Optional[Union[Callable[[], Session], Session]] = None,
     role_prefix: Optional[str] = None,
 ) -> None:
     _logger.debug("Creating IAM Role with name: %s ", role_name)
@@ -77,7 +77,7 @@ def create_check_iam_role(
         iam_client.create_role(**args)
 
 
-def attach_policy_to_role(role_name: str, policies: List[str], session: Optional[Session] = None) -> List[str]:
+def attach_policy_to_role(role_name: str, policies: List[str], session: Optional[Union[Callable[[], Session], Session]] = None) -> List[str]:
     iam_client = boto3_client("iam", session=session)
     try:
         response = iam_client.list_attached_role_policies(RoleName=role_name)
@@ -99,7 +99,7 @@ def attach_policy_to_role(role_name: str, policies: List[str], session: Optional
         raise e
 
 
-def attach_inline_policy(role_name: str, policy_body: str, policy_name: str, session: Optional[Session] = None) -> None:
+def attach_inline_policy(role_name: str, policy_body: str, policy_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     iam_client = boto3_client("iam", session=session)
     _logger.debug("Attaching the Inline policy %s to the IAM Role: %s", policy_name, role_name)
     try:
@@ -109,7 +109,7 @@ def attach_inline_policy(role_name: str, policy_body: str, policy_name: str, ses
         raise e
 
 
-def detach_policy_from_role(role_name: str, policy_arn: str, session: Optional[Session] = None) -> None:
+def detach_policy_from_role(role_name: str, policy_arn: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     _logger.debug("Detatching policy: %s  from the IAM Role: %s ", policy_arn, role_name)
     iam_client = boto3_client("iam", session=session)
     try:
@@ -119,7 +119,7 @@ def detach_policy_from_role(role_name: str, policy_arn: str, session: Optional[S
         _logger.info("Caught exception: %s ", e)
 
 
-def delete_role(role_name: str, session: Optional[Session] = None) -> None:
+def delete_role(role_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     iam_client = boto3_client("iam", session=session)
     try:
         iam_client.delete_role(RoleName=role_name)
@@ -128,7 +128,7 @@ def delete_role(role_name: str, session: Optional[Session] = None) -> None:
         _logger.info("Caught exception: %s ", e)
 
 
-def detach_inline_policy_from_role(role_name: str, policy_name: str, session: Optional[Session] = None) -> None:
+def detach_inline_policy_from_role(role_name: str, policy_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     iam_resource = boto3_resource("iam", session)
     try:
         iam_resource.RolePolicy(role_name, policy_name).delete()
@@ -136,7 +136,7 @@ def detach_inline_policy_from_role(role_name: str, policy_name: str, session: Op
         raise e
 
 
-def get_policy_info(policy_arn: str, session: Optional[Session] = None) -> Dict[str, Any]:
+def get_policy_info(policy_arn: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Dict[str, Any]:
     iam_client = boto3_client("iam", session=session)
     try:
         return cast(Dict[str, Any], iam_client.get_policy(PolicyArn=policy_arn))

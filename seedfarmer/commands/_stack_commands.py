@@ -168,7 +168,7 @@ def create_module_deployment_role(
     policies_attached = iam.attach_policy_to_role(role_name, policies, session=session)
     if policies.sort() == policies_attached.sort():
         _logger.info("Delaying deployment to allow %s IAM Role and Policies to take effect", role_name)
-        time.sleep(2)  # on first deployment roles and policy attachments need time to take effect
+        time.sleep(8)  ##  DGRABS --- FX THIS BACK TO 10 
 
     if docker_credentials_secret:
         policy_body = _get_docker_secret_inline_policy(

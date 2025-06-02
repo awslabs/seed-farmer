@@ -166,15 +166,7 @@ def _codebuild_install_commands(mdo: ModuleDeployObject,module_manifest: ModuleM
 
     install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
         
-    return install
-
-#def _execute() -> ModuleDeploymentResponse:
-    
-    
-    
-    
-    
-    
+    return install  
 
 def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
     deployment_manifest = cast(DeploymentManifest, mdo.deployment_manifest)
@@ -217,7 +209,6 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         )
     ]
     
-    pre_build_commands = ['cd module/']    
     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
     cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
     module_role_name_add = [f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {mdo.module_role_name} || true"]
@@ -279,21 +270,18 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             +["cd ${CODEBUILD_SRC_DIR}/bundle"]
             +["cd module/"] 
             + _phases.install.commands,
-        cmds_pre=[
-            ". ~/.venv/bin/activate",
-            "cd ${CODEBUILD_SRC_DIR}/bundle",
-        ]
-        + pre_build_commands,
-        cmds_build=[
-            ". ~/.venv/bin/activate",
-            "cd ${CODEBUILD_SRC_DIR}/bundle",
-        ]
-        + ["cd module/"] + _phases.build.commands,
-        cmds_post=[
-            ". ~/.venv/bin/activate",
-            "cd ${CODEBUILD_SRC_DIR}/bundle",
-        ]
-        + ["cd module/"] + _phases.post_build.commands
+        cmds_pre=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            +_phases.pre_build.commands,
+        cmds_build=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            + _phases.build.commands,
+        cmds_post=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            + _phases.post_build.commands
             + md5_put
             + cs_version_add
             + module_role_name_add
@@ -326,8 +314,8 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         overrides["serviceRoleOverride"] = mdo.module_role_arn
     # if codebuild_environment_type:
     #     overrides["environmentTypeOverride"] = codebuild_environment_type
-    # if codebuild_compute_type:
-    #     overrides["computeTypeOverride"] = codebuild_compute_type
+    if module_manifest.deploy_spec.build_type:
+        overrides["computeTypeOverride"] = module_manifest.deploy_spec.build_type
     if env_vars:
         overrides["environmentVariablesOverride"] = [
             {
@@ -369,9 +357,14 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
 
 
 def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+    destroy_manifest = cast(DeploymentManifest, mdo.deployment_manifest)
     module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
     account_id = str(module_manifest.get_target_account_id())
     region = str(module_manifest.target_region)
+    
+    stack_outputs = destroy_manifest.get_region_seedfarmer_metadata(account_id=account_id, region=region)
+
+    
     if module_manifest.deploy_spec is None or module_manifest.deploy_spec.destroy is None:
         raise seedfarmer.errors.InvalidConfigurationError(
             f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml"
@@ -394,191 +387,131 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         ),
     )
     
-#     pre_build_commands, pythonpipx_modules = standard_config_commands()
 
-#     remove_ssm = [
-#         f"seedfarmer remove moduledata -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name}"
-#     ]
+    remove_ssm = [
+        f"seedfarmer remove moduledata -d {mdo.deployment_manifest.name} -g {mdo.group_name} -m {module_manifest.name}"
+    ]
 
-#     remove_sf_bundle = [
-#         (
-#             f"seedfarmer bundle delete -d {mdo.deployment_manifest.name} -g {mdo.group_name} "
-#             f"-m {module_manifest.name} -b {mdo.seedfarmer_bucket} || true"
-#         )
-#     ]
+    remove_sf_bundle = [
+        (
+            f"seedfarmer bundle delete -d {mdo.deployment_manifest.name} -g {mdo.group_name} "
+            f"-m {module_manifest.name} -b {mdo.seedfarmer_bucket} || true"
+        )
+    ]
 
-#     export_info = [
-#         f"export DEPLOYMENT={mdo.deployment_manifest.name}",
-#         f"export GROUP={mdo.group_name}",
-#         f"export MODULE={module_manifest.name}",
-#     ]
+    export_info = [
+        f"export DEPLOYMENT={mdo.deployment_manifest.name}",
+        f"export GROUP={mdo.group_name}",
+        f"export MODULE={module_manifest.name}",
+    ]
 
-#     _phases = module_manifest.deploy_spec.destroy.phases
-#     metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
-
-#     extra_files = {}
-#     if module_manifest.data_files is not None:
-#         extra_files = {
-#             f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
-#             for data_file in module_manifest.data_files
-#         }
-
-#     active_codebuild_image = (
-#         module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
-#     )
-#     npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else mdo.npm_mirror
-#     pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else mdo.pypi_mirror
-#     module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
-#     prebuilt_bundle = _prebuilt_bundle_check(mdo)
-#     try:
-#         resp_dict_str, _ = _execute_module_commands(
-#             deployment_name=str(mdo.deployment_manifest.name),
-#             group_name=mdo.group_name,
-#             module_manifest_name=module_manifest.name,
-#             account_id=account_id,
-#             region=region,
-#             metadata_env_variable=metadata_env_variable,
-#             extra_dirs={"module": module_path} if not prebuilt_bundle else None,
-#             extra_files=extra_files,
-#             extra_install_commands=["cd module/"] + _phases.install.commands,
-#             extra_pre_build_commands=pre_build_commands+["cd module/"] + _phases.pre_build.commands + export_info,
-#             extra_build_commands=["cd module/"] + _phases.build.commands,
-#             extra_post_build_commands=["cd module/"] + _phases.post_build.commands + remove_ssm + remove_sf_bundle,
-#             extra_env_vars=env_vars,
-#             codebuild_compute_type=module_manifest.deploy_spec.build_type,
-#             codebuild_role_name=mdo.module_role_arn,
-#             codebuild_image=active_codebuild_image,
-#             npm_mirror=npm_mirror,
-#             pypi_mirror=pypi_mirror,
-#             runtime_versions=get_runtimes(active_codebuild_image),
-#             prebuilt_bundle=prebuilt_bundle,
-#             pythonpipx_modules=pythonpipx_modules
-#         )
-#         resp = ModuleDeploymentResponse(
-#             deployment=mdo.deployment_manifest.name,
-#             group=mdo.group_name,
-#             module=module_manifest.name,
-#             status=StatusType.SUCCESS.value,
-#             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
-#         )
-#     except CodeSeederRuntimeError as csre:
-#         _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
-#         l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
-#         resp = ModuleDeploymentResponse(
-#             deployment=mdo.deployment_manifest.name,
-#             group=mdo.group_name,
-#             module=module_manifest.name,
-#             status=StatusType.ERROR.value,
-#             codeseeder_metadata=CodeSeederMetadata(**l_case_error),
-#         )
-#     return resp
+    _phases = module_manifest.deploy_spec.destroy.phases
+    metadata_env_variable = _param("MODULE_METADATA", use_project_prefix)
+    bundle_id=f"{mdo.deployment_manifest.name}-{mdo.group_name}-{module_manifest.name}"
+    prebuilt_bundle = _prebuilt_bundle_check(mdo)
+    bundle_zip = None
+    if not prebuilt_bundle:
+        # regenerate everything that is necessary
+        module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+        dirs = {"module": module_path}
+        dirs_tuples = [(v, k) for k, v in dirs.items()]
+        extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
+        extra_files = {}
+        if module_manifest.data_files is not None:
+            extra_files = {
+                f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+                for data_file in module_manifest.data_files
+            }
+        module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+        if extra_files is not None:
+            extra_file_bundle.update(extra_files)
+        files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
+        bundle_zip = bundle.generate_bundle( dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
 
 
-# def _execute_module_commands(
-#     deployment_name: str,
-#     group_name: str,
-#     module_manifest_name: str,
-#     account_id: str,
-#     region: str,
-#     metadata_env_variable: str,
-#     extra_dirs: Optional[Dict[str, Any]] = None,
-#     extra_files: Optional[Dict[str, Any]] = None,
-#     extra_install_commands: Optional[List[str]] = None,
-#     extra_pre_build_commands: Optional[List[str]] = None,
-#     extra_build_commands: Optional[List[str]] = None,
-#     extra_post_build_commands: Optional[List[str]] = None,
-#     extra_env_vars: Optional[Dict[str, Any]] = None,
-#     codebuild_compute_type: Optional[str] = None,
-#     codebuild_role_name: Optional[str] = None,
-#     codebuild_image: Optional[str] = None,
-#     npm_mirror: Optional[str] = None,
-#     pypi_mirror: Optional[str] = None,
-#     runtime_versions: Optional[Dict[str, str]] = None,
-#     prebuilt_bundle: Optional[str] = None,
-#     pythonpipx_modules : Optional[str] = None,
-# ) -> Tuple[str, Optional[Dict[str, str]]]:
-#     session_getter: Optional[Callable[[], Session]] = None
+    codebuild_image = (
+        module_manifest.codebuild_image if module_manifest.codebuild_image is not None else mdo.codebuild_image
+    )
+    
+    cmds_install = _codebuild_install_commands(mdo,module_manifest,stack_outputs)
+    
+    buildspec = codebuild.generate_spec(
+        cmds_install=cmds_install 
+            +["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            +["cd module/"] 
+            + _phases.install.commands,
+        cmds_pre=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            + _phases.pre_build.commands 
+            + export_info,
+        cmds_build=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            + _phases.build.commands,
+        cmds_post=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"] 
+            + _phases.post_build.commands 
+            + remove_ssm 
+            + remove_sf_bundle,
+        abort_phases_on_failure=True,
+        runtime_versions=get_runtimes(codebuild_image)
+    )
+    
+    buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
+    with open(os.path.join(buildspec_dir,"buildspec.yaml"), "w") as file:
+            file.write(yaml.dump(buildspec))
+    
+    overrides = {}
+    if codebuild_image:
+        overrides["imageOverride"] = codebuild_image
+    if mdo.module_role_arn:
+        overrides["serviceRoleOverride"] = mdo.module_role_arn
+    # if codebuild_environment_type:
+    #     overrides["environmentTypeOverride"] = codebuild_environment_type
+    if module_manifest.deploy_spec.build_type:
+        overrides["computeTypeOverride"] = module_manifest.deploy_spec.build_type
+    if env_vars:
+        overrides["environmentVariablesOverride"] = [
+            {
+                "name": k,
+                "value": v.value if isinstance(v, EnvVar) else v,
+                "type": v.type.value if isinstance(v, EnvVar) else "PLAINTEXT",
+            }
+            for k, v in env_vars.items()
+        ]
+        
+    build_info = codebuild_remote.run(
+        stack_outputs=stack_outputs,
+        bundle_path=bundle_zip if bundle_zip else None,
+        buildspec=buildspec,
+        timeout=90,
+        overrides=overrides,
+        codebuild_log_callback=None,
+        session= SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
+        bundle_id=bundle_id,
+        prebuilt_bundle=prebuilt_bundle
+    )
+    
+    bi = cast(codebuild.BuildInfo,build_info)
+    deploy_info = {
+            "aws_region": region,
+            "aws_account_id":account_id,
+            "aws_partition": str(mdo.deployment_manifest._partition),
+            "codebuild_build_id": bi.build_id,
+        }
+    if bi.logs and bi.logs.group_name and  bi.logs.stream_name:  
+        deploy_info["codebuild_log_path"]=f"{bi.logs.group_name}/{bi.logs.stream_name}" 
 
-#     # if not codeseeder.EXECUTING_REMOTELY:
+    return ModuleDeploymentResponse(
+                deployment=mdo.deployment_manifest.name,
+                group=mdo.group_name,
+                module=module_manifest.name,
+                status=StatusType.SUCCESS.value if bi.status.value in["SUCCEEDED"] else StatusType.ERROR.value ,
+                codeseeder_metadata=CodeSeederMetadata(**deploy_info)
+        )
 
-#     #     def _session_getter() -> Session:
-#     #         return SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
 
-#     #     session_getter = _session_getter
 
-#     extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
-#     if extra_files is not None:
-#         extra_file_bundle.update(extra_files)
 
-#     @codeseeder.remote_function(
-#         config.PROJECT.lower(),
-#         extra_dirs=extra_dirs,
-#         extra_install_commands=extra_install_commands,
-#         extra_pre_build_commands=extra_pre_build_commands,
-#         extra_build_commands=extra_build_commands,
-#         extra_post_build_commands=extra_post_build_commands,
-#         extra_env_vars=extra_env_vars,
-#         extra_exported_env_vars=[metadata_env_variable],
-#         codebuild_role=codebuild_role_name,
-#         codebuild_image=codebuild_image,
-#         npm_mirror=npm_mirror,
-#         pypi_mirror=pypi_mirror,
-#         bundle_id=f"{deployment_name}-{group_name}-{module_manifest_name}",
-#         codebuild_compute_type=codebuild_compute_type,
-#         extra_files=extra_file_bundle,
-#         boto3_session=session_getter,
-#         runtime_versions=runtime_versions,
-#         prebuilt_bundle=prebuilt_bundle,
-#         pythonpipx_modules = pythonpipx_modules,
-#     )
-#     def _execute_module_commands(
-#         deployment_name: str,
-#         group_name: str,
-#         module_manifest_name: str,
-#         account_id: str,
-#         region: str,
-#         metadata_env_variable: str,
-#         extra_dirs: Optional[Dict[str, Any]] = None,
-#         extra_files: Optional[Dict[str, Any]] = None,
-#         extra_install_commands: Optional[List[str]] = None,
-#         extra_pre_build_commands: Optional[List[str]] = None,
-#         extra_build_commands: Optional[List[str]] = None,
-#         extra_post_build_commands: Optional[List[str]] = None,
-#         extra_env_vars: Optional[Dict[str, Any]] = None,
-#         codebuild_compute_type: Optional[str] = None,
-#         runtime_versions: Optional[Dict[str, str]] = None,
-#         pythonpipx_modules: Optional[str] = None,
-#     ) -> str:
-#         deploy_info = {
-#             "aws_region": os.environ.get("AWS_DEFAULT_REGION"),
-#             "aws_account_id": os.environ.get("AWS_ACCOUNT_ID"),
-#             "aws_partition": os.environ.get("AWS_PARTITION"),
-#             "codebuild_build_id": os.environ.get("CODEBUILD_BUILD_ID"),
-#             "codebuild_log_path": os.environ.get("CODEBUILD_LOG_PATH"),
-#         }
-#         return json.dumps(deploy_info)
-
-#     count = 0
-#     while True:
-#         try:
-#             count += 1
-#             return cast(
-#                 Tuple[str, Optional[Dict[str, str]]],
-#                 _execute_module_commands(
-#                     deployment_name=deployment_name,
-#                     group_name=group_name,
-#                     module_manifest_name=module_manifest_name,
-#                     account_id=account_id,
-#                     region=region,
-#                     metadata_env_variable=metadata_env_variable,
-#                 ),
-#             )
-#         except botocore.exceptions.ClientError as ex:
-#             if (
-#                 count < 3
-#                 and "CodeBuild is not authorized to perform: sts:AssumeRole on" in ex.response["Error"]["Message"]
-#             ):
-#                 _logger.info("Module IAM Role not yet assumable by CodeBuild, will retry in 5 seconds")
-#                 time.sleep(5)
-#             else:
-#                 raise ex

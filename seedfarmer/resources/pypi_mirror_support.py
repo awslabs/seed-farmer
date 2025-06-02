@@ -43,6 +43,26 @@ def create_url(url: str, username: Optional[str] = None, password: Optional[str]
             return url, url
     return url, url
 
+def setup_pypi(obfusctated_url: str, secured_url: str):
+    logger.info("Calling pip config with %s", obfusctated_url)
+    print(f"pip config being set for : {obfusctated_url}")
+    subprocess.call(["pip", "config", "set", "global.index-url", secured_url])
+    
+def setup_uv(obfusctated_url: str, secured_url: str):
+    logger.info("Setting up uv.config %s", obfusctated_url)
+    print(f"uv configured at  ~/.config/uv/uv.toml : {obfusctated_url}")
+    toml_content = f"""[[index]]
+    name = "internal-proxy"
+    url = "{secured_url}"
+    default = true
+    """
+    uv_config_path = os.path.expanduser("~/.config/uv")
+    os.makedirs(uv_config_path, exist_ok=True)
+
+    # Write to file
+    with open(os.path.join(uv_config_path, "uv.toml"), "w") as f:
+        f.write(toml_content)
+
 
 def main(url: str) -> None:
     secret_name = os.environ.get("AWS_CODESEEDER_PYPI_MIRROR_SECRET", "NO_SECRET")
@@ -60,9 +80,11 @@ def main(url: str) -> None:
             password = creds[key]["password"] if creds[key].get("password") else None
 
     secured_url, obfusctated_url = create_url(url, username, password)
-    logger.info("Calling pip config with %s", obfusctated_url)
-    print(f"pip config being set for : {obfusctated_url}")
-    subprocess.call(["pip", "config", "set", "global.index-url", secured_url])
+    setup_pypi(obfusctated_url=obfusctated_url,
+               secured_url=secured_url)
+    setup_uv(obfusctated_url=obfusctated_url,
+               secured_url=secured_url)
+
 
 
 if __name__ == "__main__":

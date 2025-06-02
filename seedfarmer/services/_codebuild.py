@@ -292,7 +292,6 @@ def wait(build_id: str, session: Optional[Union[Callable[[], Session], Session]]
 
 
 def generate_spec(
-    stack_outputs: Dict[str, str],
     cmds_install: Optional[List[str]] = None,
     cmds_pre: Optional[List[str]] = None,
     cmds_build: Optional[List[str]] = None,
@@ -300,9 +299,7 @@ def generate_spec(
     env_vars: Optional[Dict[str, str]] = None,
     exported_env_vars: Optional[List[str]] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
-    abort_phases_on_failure: bool = True,
-    pypi_mirror: Optional[str] = None,
-    npm_mirror: Optional[str] = None,
+    abort_phases_on_failure: bool = True
 ) -> Dict[str, Any]:
     """Generate a BuildSpec for a CodeBuild execution
 
@@ -338,46 +335,7 @@ def generate_spec(
     variables: Dict[str, str] = {} if env_vars is None else env_vars
     exported_variables: List[str] = [] if exported_env_vars is None else exported_env_vars
     exported_variables.append("AWS_CODESEEDER_OUTPUT")
-    install = [
-        "mkdir -p /var/scripts/",
-        "mv $CODEBUILD_SRC_DIR/bundle/retrieve_docker_creds.py /var/scripts/retrieve_docker_creds.py || true",
-        "/var/scripts/retrieve_docker_creds.py && echo 'Docker logins successful' || echo 'Docker logins failed'",
-    ]
-    if pypi_mirror is not None:
-        install.append("mv $CODEBUILD_SRC_DIR/bundle/pypi_mirror_support.py /var/scripts/pypi_mirror_support.py")
-        install.append(f"/var/scripts/pypi_mirror_support.py {pypi_mirror} && echo 'Pypi Mirror Set'")
 
-    if npm_mirror:
-        install.append("mv $CODEBUILD_SRC_DIR/bundle/npm_mirror_support.py /var/scripts/npm_mirror_support.py")
-        install.append(f"/var/scripts/npm_mirror_support.py {npm_mirror} && echo 'NPM Mirror Set'")
-        
-    install.append(
-        "if curl -s --head https://astral.sh | grep '200' > /dev/null; then\n"
-        "  curl -Ls https://astral.sh/uv/install.sh | sh\n"
-        "else\n"
-        "  pip install uv\n"
-        "fi",
-    )
-    install.append("export PATH=$PATH:/root/.local/bin")
-    install.append("uv venv  ~/.venv --python 3.11")  ## DGRABS - Make this configurable
-    install.append(". ~/.venv/bin/activate")
-        
-    ### uv tool does NOT support aws codeartifact, so if that is being used, need to 
-    ## install with pipx
-    if "CodeArtifactDomain" in stack_outputs and "CodeArtifactRepository" in stack_outputs:
-        install.append(
-            "aws codeartifact login --tool pip "
-            f"--domain {stack_outputs['CodeArtifactDomain']} "
-            f"--repository {stack_outputs['CodeArtifactRepository']}"
-        )
-        install.append("uv pip install pipx~=1.7.1")
-        install.append(f"pipx install seed-farmer=={seedfarmer.__version__}")  ## uv doesn't have support fo code artifact
-    else: 
-        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
-        
-
-    if cmds_install is not None:
-        install += cmds_install
 
     on_failure = "ABORT" if abort_phases_on_failure else "CONTINUE"
     return_spec: Dict[str, Any] = {
@@ -385,7 +343,7 @@ def generate_spec(
         "env": {"shell": "bash", "variables": variables, "exported-variables": exported_variables},
         "phases": {
             "install": {
-                "commands": install,
+                "commands": cmds_install,
                 "on-failure": on_failure,
             },
             "pre_build": {
@@ -405,5 +363,6 @@ def generate_spec(
     if runtime_versions:
         return_spec["phases"]["install"]["runtime-versions"] = runtime_versions
 
+    
     _logger.debug(return_spec)
     return return_spec

@@ -458,7 +458,7 @@ class DeploymentManifest(CamelModel):
         account_alias: Optional[str] = None,
         account_id: Optional[str] = None,
         region: Optional[str] = None,
-    ) -> Optional[str]:
+    ) -> Optional[Dict[str, str]]:
         if account_alias is not None and account_id is not None:
             raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
 

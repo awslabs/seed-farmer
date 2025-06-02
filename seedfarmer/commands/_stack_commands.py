@@ -499,7 +499,8 @@ def deploy_module_stack(
 
     with open(module_stack_path, "r") as file:
         #template_parameters = load_yaml(file).get("Parameters", {})
-        template  = yaml.safe_load(file)
+        #template  = yaml.safe_load(file)
+        template  = yaml.load(file, Loader=yaml.BaseLoader)
         template_parameters = template.get("Parameters", {})
         
     stack_parameters = {}

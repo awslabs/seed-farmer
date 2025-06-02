@@ -502,7 +502,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             "codebuild_build_id": bi.build_id,
         }
     if bi.logs and bi.logs.group_name and  bi.logs.stream_name:  
-        deploy_info["codebuild_log_path"]=f"{bi.logs.group_name}/{bi.logs.stream_name}" 
+        deploy_info["cloudwatch_log_stream"]=f"{bi.logs.group_name}/{bi.logs.stream_name}" 
 
     return ModuleDeploymentResponse(
                 deployment=mdo.deployment_manifest.name,

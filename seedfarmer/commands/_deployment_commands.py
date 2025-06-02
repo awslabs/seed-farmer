@@ -59,7 +59,7 @@ from seedfarmer.utils import get_generic_module_deployment_role_name
 
 
 
-from seedfarmer.deployment import codebuild_deploy
+from seedfarmer.deployment import deploy_remote
 
 
 
@@ -238,7 +238,7 @@ def _execute_deploy(
         if mdo.deployment_manifest.name
         else None
     )
-    return codebuild_deploy.deploy_module(mdo)
+    return deploy_remote.deploy_module(mdo)
     #return commands.deploy_module(mdo)
 
 
@@ -308,7 +308,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     mdo.module_role_name = module_role_name
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
 
-    resp = codebuild_deploy.destroy_module(mdo)
+    resp = deploy_remote.destroy_module(mdo)
     #resp = commands.destroy_module(mdo)
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:

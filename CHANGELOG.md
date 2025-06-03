@@ -6,8 +6,12 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### New 
+- adding in AWS CodeSeeder logic
+- adding uv support
 
 ### Changes
+- removed dependency on CodeSeeder
+- removed `_module_commands`
 
 ### Fixes
 

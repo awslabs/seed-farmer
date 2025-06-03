@@ -35,6 +35,7 @@ from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import generate_hash, upper_snake_case
+from cfn_tools import load_yaml
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ def create_module_deployment_role(
     policies_attached = iam.attach_policy_to_role(role_name, policies, session=session)
     if policies.sort() == policies_attached.sort():
         _logger.info("Delaying deployment to allow %s IAM Role and Policies to take effect", role_name)
-        time.sleep(8)  ##  DGRABS --- FX THIS BACK TO 10 
+        time.sleep(8)
 
     if docker_credentials_secret:
         policy_body = _get_docker_secret_inline_policy(
@@ -498,9 +499,7 @@ def deploy_module_stack(
     _logger.debug("module_role_name %s", module_role_name)
 
     with open(module_stack_path, "r") as file:
-        #template_parameters = load_yaml(file).get("Parameters", {})
-        #template  = yaml.safe_load(file)
-        template  = yaml.load(file, Loader=yaml.BaseLoader)
+        template  = load_yaml(file)
         template_parameters = template.get("Parameters", {})
         
     stack_parameters = {}
@@ -597,6 +596,7 @@ def deploy_seedkit(
     role_prefix: Optional[str] = None,
     policy_prefix: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    deploy_codeartifact: Optional[bool] =  False,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
@@ -624,7 +624,8 @@ def deploy_seedkit(
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
-    deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
+    deploy_codeartifact = bool(stack_outputs.get("CodeArtifactRepository")) or bool(deploy_codeartifact)
+    
     if stack_exists and not update_seedkit:
         _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:

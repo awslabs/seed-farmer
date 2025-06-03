@@ -21,7 +21,7 @@ from seedfarmer.services._service_utils import boto3_client
 import botocore.exceptions
 from boto3 import Session
 import seedfarmer.services._s3 as s3
-import mypy 
+
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

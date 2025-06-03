@@ -64,7 +64,7 @@ setup(
         "mypy",
         "boto3==1.36.4",
         "botocore==1.36.4",
-        "cfn_flip"
+        "cfn-flip>=1.2.3",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

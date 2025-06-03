@@ -5,34 +5,34 @@
 
 .PHONY: install
 install:  ## Install dependencies
+	curl -Ls https://astral.sh/uv/install.sh | sh
 	@echo "Setting up virtual environment..."
-	python3 -m venv .venv
+	uv venv -p3.11 .venv-uvtest
 	@echo "Installing Dev dependencies..."
-	. .venv/bin/activate && \
-	python -m pip install --upgrade pip && \
-	pip install -r requirements.txt && \
-	pip install -r requirements-dev.txt && \
-	pip install -e .
+	. .venv-uvtest/bin/activate && \
+	uv pip install -r requirements.txt && \
+	uv pip install -r requirements-dev.txt && \
+	uv pip install -e .
 
 .PHONY: test
 test:  ## Run unit tests
 	@echo "Running unit tests..."
-	. .venv/bin/activate && ./test/pytest.sh
+	. .venv-uvtest/bin/activate && ./test/pytest.sh
 
 .PHONY: validate
 validate:  ## Run linters and type checkers
 	@echo "Running ruff and type checkers..."
-	. .venv/bin/activate && \
-		pip install ruff && \
-		pip install mypy && \
-		ruff format --check seedfarmer && \
-		python3 -m ruff check --fix seedfarmer && \
-		python3 -m mypy --ignore-missing-imports seedfarmer
+	. .venv-uvtest/bin/activate && \
+		pip install ruff mypy && \
+		ruff format --check seedfarmer --quiet && \
+		python3 -m ruff check --fix seedfarmer --quiet && \
+		python3 -m mypy --pretty --ignore-missing-imports seedfarmer
+
 
 .PHONY: format
 format:  ## Format code with ruff and prettier
 	@echo "Formatting code with ruff and prettier..."
-	. .venv/bin/activate && \
+	. .venv-uvtest/bin/activate && \
 		python -m ruff format seedfarmer && \
 		python -m ruff check --fix seedfarmer && \
 		python -m ruff format test && \
@@ -48,7 +48,7 @@ clean:  ## Remove build artifacts and virtual environment
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info
-	rm -rf .venv/
+	rm -rf .venv-uvtest/
 	rm -rf .pytest_cache/
 	rm -rf .coverage
 	rm -rf htmlcov/

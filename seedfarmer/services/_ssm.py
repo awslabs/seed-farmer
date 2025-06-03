@@ -15,7 +15,7 @@
 import json
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union, Callable, cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 from boto3 import Session
 
@@ -25,7 +25,9 @@ from seedfarmer.services._service_utils import boto3_client
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def put_parameter(name: str, obj: Dict[str, Any], session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
+def put_parameter(
+    name: str, obj: Dict[str, Any], session: Optional[Union[Callable[[], Session], Session]] = None
+) -> None:
     client = boto3_client(service_name="ssm", session=session)
     retries = 3
     while retries > 0:
@@ -58,7 +60,9 @@ def get_parameter(name: str, session: Optional[Union[Callable[[], Session], Sess
         return cast(Dict[str, Any], json_str)
 
 
-def get_parameter_if_exists(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[Dict[str, Any]]:
+def get_parameter_if_exists(
+    name: str, session: Optional[Union[Callable[[], Session], Session]] = None
+) -> Optional[Dict[str, Any]]:
     client = boto3_client(service_name="ssm", session=session)
     try:
         json_str: str = client.get_parameter(Name=name)["Parameter"]["Value"]
@@ -98,7 +102,9 @@ def list_parameters(prefix: str, session: Optional[Union[Callable[[], Session], 
     return ret
 
 
-def list_parameters_with_filter(prefix: str, contains_string: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> List[str]:
+def list_parameters_with_filter(
+    prefix: str, contains_string: str, session: Optional[Union[Callable[[], Session], Session]] = None
+) -> List[str]:
     client = boto3_client(service_name="ssm", session=session)
     paginator = client.get_paginator("describe_parameters")
 

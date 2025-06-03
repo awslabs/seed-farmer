@@ -13,15 +13,16 @@
 #    limitations under the License.
 
 import datetime as dt
+import logging
 import os
 import time
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Union, cast
-import logging
-from seedfarmer.services._service_utils import boto3_client
+
 import botocore.exceptions
 from boto3 import Session
-import seedfarmer.services._s3 as s3
 
+import seedfarmer.services._s3 as s3
+from seedfarmer.services._service_utils import boto3_client
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ CHANGESET_PREFIX = "aws-codeseeder-"
 
 
 def _wait_for_changeset(
-    changeset_id: str, stack_name: str, session: Optional[Union[Callable[[], Session], Session]]= None
+    changeset_id: str, stack_name: str, session: Optional[Union[Callable[[], Session], Session]] = None
 ) -> bool:
     waiter = boto3_client("cloudformation", session=session).get_waiter("change_set_create_complete")
     try:
@@ -59,7 +60,7 @@ def _create_changeset(
     seedkit_tag: Optional[str] = None,
     template_path: str = "",
     parameters: Optional[Dict[str, str]] = None,
-    session: Optional[Union[Callable[[], Session], Session]]= None
+    session: Optional[Union[Callable[[], Session], Session]] = None,
 ) -> Tuple[str, str]:
     now: str = dt.datetime.now(tz=dt.timezone.utc).isoformat()
     description = f"Created by AWS CodeSeeder CLI at {now} UTC"
@@ -87,13 +88,13 @@ def _create_changeset(
 
 
 def _execute_changeset(
-    changeset_id: str, stack_name: str, session: Optional[Union[Callable[[], Session], Session]]= None
+    changeset_id: str, stack_name: str, session: Optional[Union[Callable[[], Session], Session]] = None
 ) -> None:
     boto3_client("cloudformation", session=session).execute_change_set(ChangeSetName=changeset_id, StackName=stack_name)
 
 
 def _wait_for_execute(
-    stack_name: str, changeset_type: str, session: Optional[Union[Callable[[], Session], Session]]= None
+    stack_name: str, changeset_type: str, session: Optional[Union[Callable[[], Session], Session]] = None
 ) -> None:
     waiter: Union["StackCreateCompleteWaiter", "StackUpdateCompleteWaiter"]
     if changeset_type == "CREATE":
@@ -128,7 +129,7 @@ def get_stack_name(seedkit_name: str) -> str:
     return f"aws-codeseeder-{seedkit_name}"
 
 
-def get_stack_status(stack_name: str, session: Optional[ Session] = None) -> str:
+def get_stack_status(stack_name: str, session: Optional[Session] = None) -> str:
     """Retrieve the status of a CloudFormation Stack
 
     Parameters
@@ -160,7 +161,7 @@ def get_stack_status(stack_name: str, session: Optional[ Session] = None) -> str
 
 
 def does_stack_exist(
-    stack_name: str, session: Optional[Union[Callable[[], Session], Session]]= None
+    stack_name: str, session: Optional[Union[Callable[[], Session], Session]] = None
 ) -> Tuple[bool, Dict[str, str]]:
     """Checks for existence of a CloudFormation Stack while also returning Stack Outputs if it does exist
 
@@ -198,7 +199,7 @@ def deploy_template(
     seedkit_tag: Optional[str] = None,
     s3_bucket: Optional[str] = None,
     parameters: Optional[Dict[str, str]] = None,
-    session: Optional[Union[Callable[[], Session], Session]]= None,
+    session: Optional[Union[Callable[[], Session], Session]] = None,
 ) -> None:
     """Deploy a local CloudFormation Template
 
@@ -264,7 +265,7 @@ def deploy_template(
         _wait_for_execute(stack_name=stack_name, changeset_type=changeset_type, session=session)
 
 
-def destroy_stack(stack_name: str, session: Optional[Union[Callable[[], Session], Session]]= None) -> None:
+def destroy_stack(stack_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> None:
     """Destroy the CloudFormation Stack
 
     Parameters

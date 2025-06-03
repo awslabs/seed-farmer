@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Callable, List, NamedTuple, Optional, Union
 
 from boto3 import Session
+
 from seedfarmer.services._service_utils import boto3_client, try_it
 
 

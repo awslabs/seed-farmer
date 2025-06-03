@@ -476,8 +476,6 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
-
-
     def get_account_region_role_prefix(
         self,
         *,

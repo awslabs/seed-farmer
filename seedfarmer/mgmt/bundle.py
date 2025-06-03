@@ -13,16 +13,16 @@
 #    limitations under the License.
 
 import glob
-import json
 import logging
 import os
 import pathlib
 import shutil
 import zipfile
 from pprint import pformat
-from seedfarmer.utils import create_output_dir
-from typing import Any, Dict, List, Optional, Tuple, MutableSet
+from typing import List, MutableSet, Optional, Tuple
+
 from seedfarmer import CLI_ROOT
+from seedfarmer.utils import create_output_dir
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def generate_dir(out_dir: str, dir: str, name: str) -> str:
 
 
 def generate_bundle(
-    #fn_args: Dict[str, Any],
+    # fn_args: Dict[str, Any],
     dirs: Optional[List[Tuple[str, str]]] = None,
     files: Optional[List[Tuple[str, str]]] = None,
     bundle_id: Optional[str] = None,

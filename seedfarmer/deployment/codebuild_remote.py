@@ -12,11 +12,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import logging
 import random
 import string
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
-import logging
+
 from boto3 import Session
 
 import seedfarmer.services._cloudwatch as cloudwatch
@@ -24,6 +25,7 @@ import seedfarmer.services._codebuild as codebuild
 import seedfarmer.services._s3 as s3
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
 
 def _print_codebuild_logs(
     events: List[cloudwatch.CloudWatchEvent],

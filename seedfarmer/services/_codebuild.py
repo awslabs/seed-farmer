@@ -13,19 +13,19 @@
 #    limitations under the License.
 
 import logging
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Union,cast
-from boto3 import Session
-import botocore.exceptions
-import yaml
 import time
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
-from seedfarmer.services._service_utils import boto3_client, get_region, get_sts_identity_info, try_it
+import botocore.exceptions
+import yaml
+from boto3 import Session
+
+from seedfarmer.services._service_utils import boto3_client, try_it
 
 _logger: logging.Logger = logging.getLogger(__name__)
 _BUILD_WAIT_POLLING_DELAY: float = 5  # SECONDS
-
 
 
 class BuildStatus(Enum):
@@ -93,8 +93,9 @@ class BuildInfo(NamedTuple):
     exported_env_vars: Dict[str, str]
 
 
-
-def get_build_data(build_ids: List[str], session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[Dict[str, Any]]:
+def get_build_data(
+    build_ids: List[str], session: Optional[Union[Callable[[], Session], Session]] = None
+) -> Optional[Dict[str, Any]]:
     client = boto3_client(service_name="codebuild", session=session)
 
     try:
@@ -102,6 +103,7 @@ def get_build_data(build_ids: List[str], session: Optional[Union[Callable[[], Se
     except Exception as e:
         _logger.error("An error occurred fetching the build info for %s - %s", build_ids, e)
         return None
+
 
 def start(
     project_name: str,
@@ -265,8 +267,8 @@ def wait(build_id: str, session: Optional[Union[Callable[[], Session], Session]]
             _logger.info("phase: %s %s (%s)", build.current_phase.value, build.build_id, build.status.value)
 
         yield build
-        
-    return build
+
+    yield build
 
 
 def generate_spec(
@@ -277,7 +279,7 @@ def generate_spec(
     env_vars: Optional[Dict[str, str]] = None,
     exported_env_vars: Optional[List[str]] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
-    abort_phases_on_failure: bool = True
+    abort_phases_on_failure: bool = True,
 ) -> Dict[str, Any]:
     """Generate a BuildSpec for a CodeBuild execution
 
@@ -314,7 +316,6 @@ def generate_spec(
     exported_variables: List[str] = [] if exported_env_vars is None else exported_env_vars
     exported_variables.append("AWS_CODESEEDER_OUTPUT")
 
-
     on_failure = "ABORT" if abort_phases_on_failure else "CONTINUE"
     return_spec: Dict[str, Any] = {
         "version": 0.2,
@@ -341,6 +342,5 @@ def generate_spec(
     if runtime_versions:
         return_spec["phases"]["install"]["runtime-versions"] = runtime_versions
 
-    
     _logger.debug(return_spec)
     return return_spec

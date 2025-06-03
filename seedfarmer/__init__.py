@@ -18,7 +18,6 @@ import os
 import pathlib
 from importlib.metadata import distribution
 from typing import Any, Dict, Optional, cast
-import shutil
 
 import yaml
 from packaging.version import parse
@@ -38,7 +37,8 @@ CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
 S3_BUCKET_CFN_PATH = "resources/s3_bucket.yaml"
 SEEDKIT_TEMPLATE = "resources/seedkit.template"
-SEEDKIT_YAML_NAME= "seedkit.yaml"
+SEEDKIT_YAML_NAME = "seedkit.yaml"
+
 
 def enable_debug(format: str) -> None:
     logging.basicConfig(level=logging.DEBUG, format=format)
@@ -135,7 +135,7 @@ class Config(object):
         if self._project_spec is None:
             self._load_config_data()
         return str(os.path.join(CLI_ROOT, S3_BUCKET_CFN_PATH))
-    
+
     @property
     def SEEDKIT_TEMPLATE_PATH(self) -> str:
         if self._project_spec is None:
@@ -147,6 +147,6 @@ class Config(object):
         if self._project_spec is None:
             self._load_config_data()
         return SEEDKIT_YAML_NAME
-    
+
 
 config = Config()

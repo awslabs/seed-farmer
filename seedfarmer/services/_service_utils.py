@@ -14,9 +14,10 @@
 
 import logging
 import os
-import time 
 import random
-from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Callable ,Union, Tuple, cast, overload
+import time
+from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, Union, cast, overload
+
 import boto3
 import botocore.config
 import botocore.exceptions
@@ -31,14 +32,14 @@ import seedfarmer.errors
 if TYPE_CHECKING:
     from boto3.resources.base import ServiceResource
     from botocore.client import BaseClient
+    from mypy_boto3_cloudformation.client import CloudFormationClient
     from mypy_boto3_codebuild import CodeBuildClient
     from mypy_boto3_iam import IAMClient, IAMServiceResource
+    from mypy_boto3_logs.client import CloudWatchLogsClient
     from mypy_boto3_s3 import S3Client, S3ServiceResource
     from mypy_boto3_secretsmanager import SecretsManagerClient
     from mypy_boto3_ssm import SSMClient
     from mypy_boto3_sts.client import STSClient
-    from mypy_boto3_cloudformation.client import CloudFormationClient
-    from mypy_boto3_logs.client import CloudWatchLogsClient
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -147,6 +148,7 @@ def boto3_client(
     aws_session_token: Optional[str] = ...,
 ) -> "STSClient": ...
 
+
 @overload
 def boto3_client(
     service_name: Literal["cloudformation"],
@@ -169,6 +171,7 @@ def boto3_client(
     aws_secret_access_key: Optional[str] = ...,
     aws_session_token: Optional[str] = ...,
 ) -> "CloudWatchLogsClient": ...
+
 
 @overload
 def boto3_client(
@@ -201,10 +204,9 @@ def boto3_client(
         )
     else:
         if isinstance(session, Session):
-            return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())
+            return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())  # type: ignore
         else:
             raise TypeError(f"Expected boto3.Session instance, got {type(session)}")
-        #return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())  # type: ignore[call-overload,no-any-return]
 
 
 @overload
@@ -245,7 +247,7 @@ def boto3_resource(  # type: ignore[misc]
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )  # type: ignore[call-overload]
     else:
-        return session.resource(  # type: ignore[no-any-return]
+        return session.resource(  # type: ignore[no-any-return, union-attr]
             service_name=service_name,
             use_ssl=True,
             config=get_botocore_config(),
@@ -254,14 +256,16 @@ def boto3_resource(  # type: ignore[misc]
 
 def get_region(session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None) -> str:
     sess = session if session else create_new_session(profile=profile)
-    if sess.region_name is None:
+    if sess.region_name is None:  # type: ignore[union-attr]
         raise seedfarmer.errors.InvalidConfigurationError(
             "It is not possible to infer AWS REGION from your environment."
         )
-    return str(sess.region_name)
+    return str(sess.region_name)  # type: ignore[union-attr]
 
 
-def _call_sts(session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None) -> Dict[str, Any]:
+def _call_sts(
+    session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None
+) -> Dict[str, Any]:
     try:
         if not session:
             return cast(Dict[str, Any], boto3_client(service_name="sts", profile=profile).get_caller_identity())
@@ -282,7 +286,9 @@ def _call_sts(session: Optional[Union[Callable[[], Session], Session]] = None, p
         raise e
 
 
-def get_sts_identity_info(session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None) -> Tuple[str, str, str]:
+def get_sts_identity_info(
+    session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None
+) -> Tuple[str, str, str]:
     sts_info = _call_sts(session=session, profile=profile)
     return cast(
         Tuple[str, str, str], (sts_info.get("Account"), sts_info.get("Arn"), str(sts_info.get("Arn")).split(":")[1])

@@ -12,15 +12,17 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import enum
 import dataclasses
+import enum
+
 
 class EnvVarType(str, enum.Enum):
     PLAINTEXT = "PLAINTEXT"
     PARAMETER_STORE = "PARAMETER_STORE"
     SECRETS_MANAGER = "SECRETS_MANAGER"
 
-@dataclasses.dataclass()  
+
+@dataclasses.dataclass()
 class EnvVar:
     """EnvVar dataclass
 

@@ -13,15 +13,16 @@
 #    limitations under the License.
 
 import concurrent.futures
+import logging
 import math
 import random
 import time
-import logging
 from itertools import repeat
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
 from boto3 import Session
 from botocore.exceptions import ClientError
+
 from seedfarmer.services._service_utils import boto3_client, boto3_resource
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -213,7 +214,7 @@ def object_exists(bucket: str, key: str, session: Optional[Union[Callable[[], Se
         Indicator of object existence
     """
     try:
-        boto3_resource("s3", session=session).Object(bucket, key).load()
+        boto3_resource("s3", session=session).Object(bucket, key).load()  # type: ignore [attr-defined]
     except ClientError as e:
         if e.response["Error"]["Code"] == "404":
             return False

@@ -12,20 +12,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import json
+import logging
 import os
 import random
 import string
-import logging
 import sys
-import json
-from string import Template
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import yaml
 from boto3 import Session
+from jinja2 import Template
+
 from seedfarmer import config
 from seedfarmer.utils import create_output_dir
-from jinja2 import Template
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def synth(
     _logger.debug("Reading %s", config.SEEDKIT_TEMPLATE_PATH)
 
     with open(config.SEEDKIT_TEMPLATE_PATH) as f:
-        input_template =  yaml.safe_load(f)
+        input_template = yaml.safe_load(f)
 
     if managed_policy_arns:
         input_template["Resources"]["CodeBuildRole"]["Properties"]["ManagedPolicyArns"] += managed_policy_arns
@@ -76,7 +76,6 @@ def synth(
     role_prefix = kwargs.get("role_prefix", "/")
     policy_prefix = kwargs.get("policy_prefix", "/")
 
-    ## DGRABS -- LOOK AT THIS
     template = Template(json.dumps(input_template))
     t = template.render(
         {
@@ -86,7 +85,7 @@ def synth(
             "policy_prefix": policy_prefix,
         }
     )
-    
+
     final_template = dict(json.loads(t))
     if not synthesize:
         _logger.debug("Writing %s", output_filename)
@@ -97,5 +96,3 @@ def synth(
     else:
         sys.stdout.write(yaml.dump(final_template))
         return None
-    
-    

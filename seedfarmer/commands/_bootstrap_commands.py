@@ -20,16 +20,15 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import yaml
-
 from boto3 import Session
 from botocore.exceptions import WaiterError
 from jinja2 import Template
 
 import seedfarmer.errors
+import seedfarmer.services._cfn as cfn
+import seedfarmer.services._iam as iam
 from seedfarmer import CLI_ROOT, __version__
 from seedfarmer.services import create_new_session, get_region, get_sts_identity_info
-import seedfarmer.services._iam as iam 
-import seedfarmer.services._cfn as cfn
 from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, get_toolchain_role_name, valid_qualifier
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -249,12 +248,8 @@ def deploy_template(template: Dict[Any, Any], stack_name: str, session: Optional
     with open(output, "w") as outfile:
         yaml.dump(template, outfile)
     try:
-        #cs_services.set_boto3_session(session) if session else None
-        cfn.deploy_template(
-            stack_name=stack_name,
-            filename=output,
-            session=session
-        )
+        # cs_services.set_boto3_session(session) if session else None
+        cfn.deploy_template(stack_name=stack_name, filename=output, session=session)
         _logger.info(f"Role for Seed-Farmer deployed in stack {stack_name}")
     except WaiterError as we:
         _logger.error("Could not create the deployment role...make sure the toolchain role exists and check CFN Logs")

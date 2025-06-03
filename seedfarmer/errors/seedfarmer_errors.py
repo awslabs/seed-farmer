@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 
 class InvalidPathError(RuntimeError):
@@ -29,7 +29,8 @@ class ModuleDeploymentError(RuntimeError):
 class SeedFarmerException(Exception):
     def __init__(self, *args: str, error_message: Optional[str] = None):
         super().__init__(*args)
-        
+
+
 class RemoteDeploymentRuntimeError(RuntimeError):
     def __init__(self, *args: str, error_info: Optional[Dict[str, str]] = None):
         super().__init__(*args)

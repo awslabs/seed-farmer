@@ -43,12 +43,14 @@ def create_url(url: str, username: Optional[str] = None, password: Optional[str]
             return url, url
     return url, url
 
-def setup_pypi(obfusctated_url: str, secured_url: str):
+
+def setup_pypi(obfusctated_url: str, secured_url: str) -> None:
     logger.info("Calling pip config with %s", obfusctated_url)
     print(f"pip config being set for : {obfusctated_url}")
     subprocess.call(["pip", "config", "set", "global.index-url", secured_url])
-    
-def setup_uv(obfusctated_url: str, secured_url: str):
+
+
+def setup_uv(obfusctated_url: str, secured_url: str) -> None:
     logger.info("Setting up uv.config %s", obfusctated_url)
     print(f"uv configured at  ~/.config/uv/uv.toml : {obfusctated_url}")
     toml_content = f"""[[index]]
@@ -80,11 +82,8 @@ def main(url: str) -> None:
             password = creds[key]["password"] if creds[key].get("password") else None
 
     secured_url, obfusctated_url = create_url(url, username, password)
-    setup_pypi(obfusctated_url=obfusctated_url,
-               secured_url=secured_url)
-    setup_uv(obfusctated_url=obfusctated_url,
-               secured_url=secured_url)
-
+    setup_pypi(obfusctated_url=obfusctated_url, secured_url=secured_url)
+    setup_uv(obfusctated_url=obfusctated_url, secured_url=secured_url)
 
 
 if __name__ == "__main__":

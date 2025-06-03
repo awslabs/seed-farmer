@@ -13,14 +13,16 @@
 #    limitations under the License.
 
 import json
-from typing import Any, Dict, List, Optional, Callable ,Union,cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 from boto3 import Session
 
 from seedfarmer.services._service_utils import boto3_client, get_region, get_sts_identity_info
 
 
-def get_secrets_manager_value(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Dict[str, Any]:
+def get_secrets_manager_value(
+    name: str, session: Optional[Union[Callable[[], Session], Session]] = None
+) -> Dict[str, Any]:
     account_id, _, partition = get_sts_identity_info(session=session)
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:{partition}:secretsmanager:{get_region(session=session)}:{account_id}:secret:{name}"
@@ -28,7 +30,9 @@ def get_secrets_manager_value(name: str, session: Optional[Union[Callable[[], Se
     return cast(Dict[str, Any], json.loads(json_str))
 
 
-def list_secret_version_ids(name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> Optional[List[Any]]:
+def list_secret_version_ids(
+    name: str, session: Optional[Union[Callable[[], Session], Session]] = None
+) -> Optional[List[Any]]:
     account_id, _, partition = get_sts_identity_info(session=session)
     client = boto3_client(service_name="secretsmanager", session=session)
     secret_arn = f"arn:{partition}:secretsmanager:{get_region(session=session)}:{account_id}:secret:{name}"

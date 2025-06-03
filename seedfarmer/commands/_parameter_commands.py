@@ -17,14 +17,13 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from seedfarmer.types.parameter_types import EnvVar, EnvVarType
-
 import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 from seedfarmer.utils import upper_snake_case
 
 _logger: logging.Logger = logging.getLogger(__name__)

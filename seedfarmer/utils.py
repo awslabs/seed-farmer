@@ -16,8 +16,8 @@ import hashlib
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional
 import shutil
+from typing import Any, Dict, List, Optional
 
 import humps
 import yaml
@@ -266,7 +266,6 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     payload = recurse_dict(payload)
     return payload
-
 
 
 def create_output_dir(name: str) -> str:

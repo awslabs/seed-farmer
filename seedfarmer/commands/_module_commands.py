@@ -20,7 +20,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
-from seedfarmer.errors import CodeSeederRuntimeError
+from seedfarmer.errors import RemoteDeploymentRuntimeError
 from boto3 import Session
 
 import seedfarmer
@@ -240,7 +240,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
             codeseeder_output=dict_metadata,
         )
-    except CodeSeederRuntimeError as csre:
+    except RemoteDeploymentRuntimeError as csre:
         _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
         l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
         resp = ModuleDeploymentResponse(
@@ -347,7 +347,7 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
             status=StatusType.SUCCESS.value,
             codeseeder_metadata=CodeSeederMetadata(**json.loads(resp_dict_str)) if resp_dict_str else None,
         )
-    except CodeSeederRuntimeError as csre:
+    except RemoteDeploymentRuntimeError as csre:
         _logger.error(f"Error Response from CodeSeeder: {csre} - {csre.error_info}")
         l_case_error = {k.lower(): csre.error_info[k] for k in csre.error_info.keys()}
         resp = ModuleDeploymentResponse(

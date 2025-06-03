@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import boto3
 import seedfarmer.services._cfn as cfn
 import seedfarmer.services._s3 as s3
-from seedfarmer.types.codeseeder import EnvVar, EnvVarType
+from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 import yaml
 
 import seedfarmer.commands._seedkit_commands as sk_commands

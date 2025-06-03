@@ -21,9 +21,7 @@ import time
 from datetime import datetime, timezone
 from enum import Enum
 
-import seedfarmer
 from seedfarmer.services._service_utils import boto3_client, get_region, get_sts_identity_info, try_it
-from seedfarmer.errors.codeseeder_errors import CodeSeederRuntimeError
 
 _logger: logging.Logger = logging.getLogger(__name__)
 _BUILD_WAIT_POLLING_DELAY: float = 5  # SECONDS
@@ -254,10 +252,6 @@ def wait(build_id: str, session: Optional[Union[Callable[[], Session], Session]]
     Iterator[Iterable[BuildInfo]]
         Info on the CodeBuild execution
 
-    Raises
-    ------
-    RuntimeError
-        If the CodeBuild doesn't succeed
     """
     build = fetch_build_info(build_id=build_id, session=session)
     while build.status is BuildStatus.in_progress:
@@ -271,24 +265,8 @@ def wait(build_id: str, session: Optional[Union[Callable[[], Session], Session]]
             _logger.info("phase: %s %s (%s)", build.current_phase.value, build.build_id, build.status.value)
 
         yield build
-
-    if build.status is not BuildStatus.succeeded:
-        account_id, _, partition = get_sts_identity_info(session=session)
-        deploy_info = {
-            "AWS_REGION": get_region(session=session),
-            "AWS_ACCOUNT_ID": account_id,
-            "AWS_PARTITION": partition,
-            "CODEBUILD_BUILD_ID": build.build_id,
-        }
-        _logger.debug(f"Deploy Info on error from Codebuild {deploy_info}")
-        raise CodeSeederRuntimeError("Build status was not SUCCEEDED ", error_info=deploy_info)
-
-    _logger.debug(
-        "start: %s | end: %s | elapsed: %s",
-        build.start_time,
-        build.end_time,
-        build.duration_in_seconds,
-    )
+        
+    return build
 
 
 def generate_spec(

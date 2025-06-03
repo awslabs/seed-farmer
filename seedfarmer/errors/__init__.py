@@ -20,10 +20,7 @@ from seedfarmer.errors.seedfarmer_errors import (
     InvalidSessionError,
     ModuleDeploymentError,
     SeedFarmerException,
-)
-
-from seedfarmer.errors.codeseeder_errors import(
-    CodeSeederRuntimeError
+    RemoteDeploymentRuntimeError
 )
 
 __all__ = [
@@ -33,5 +30,5 @@ __all__ = [
     "InvalidConfigurationError",
     "SeedFarmerException",
     "InvalidSessionError",
-    "CodeSeederRuntimeError"
+    "RemoteDeploymentRuntimeError"
 ]

@@ -15,11 +15,6 @@
 import enum
 import dataclasses
 
-# class ModuleImporterEnum(str, enum.Enum):
-#     CODESEEDER_CLI = "codeseeder-cli"
-#     OTHER = "other"
-
-
 class EnvVarType(str, enum.Enum):
     PLAINTEXT = "PLAINTEXT"
     PARAMETER_STORE = "PARAMETER_STORE"

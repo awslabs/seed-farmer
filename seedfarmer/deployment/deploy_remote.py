@@ -16,11 +16,9 @@
 import json
 import logging
 import os
-import time
 import yaml
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, cast
 
-from seedfarmer.errors import CodeSeederRuntimeError
 from seedfarmer.utils import create_output_dir
 from boto3 import Session
 
@@ -35,7 +33,7 @@ from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services.session_manager import SessionManager
 import seedfarmer.services._codebuild as codebuild
 from seedfarmer.utils import generate_session_hash
-from seedfarmer.types.codeseeder import EnvVar
+from seedfarmer.types.parameter_types import EnvVar
 
 import seedfarmer.mgmt.bundle as bundle
 import seedfarmer.deployment.codebuild_remote as codebuild_remote

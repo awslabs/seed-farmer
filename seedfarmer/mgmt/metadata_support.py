@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional, Tuple, cast
 import yaml
 
 from seedfarmer import config
-from seedfarmer.commands._module_commands import _param as param
+from seedfarmer.deployment.deploy_remote import _param as param
 from seedfarmer.mgmt.module_info import get_deployspec_path
 from seedfarmer.models._deploy_spec import DeploySpec
 
@@ -49,19 +49,19 @@ class ModuleMetadataSupport:
         return str(self.ops_root_path)
 
     def metadata_file_name(self) -> str:
-        return param("MODULE_METADATA", self.use_project_prefix)
+        return str(param("MODULE_METADATA", self.use_project_prefix))
 
     def metadata_fullpath(self) -> str:
         return os.path.join(str(self.ops_root_path), "module", self.metadata_file_name())
 
     def project_param_name(self) -> str:
-        return param("PROJECT_NAME", self.use_project_prefix)
+        return str(param("PROJECT_NAME", self.use_project_prefix))
 
     def deployment_param_name(self) -> str:
-        return param("DEPLOYMENT_NAME", self.use_project_prefix)
+        return str(param("DEPLOYMENT_NAME", self.use_project_prefix))
 
     def module_param_name(self) -> str:
-        return param("MODULE_NAME", self.use_project_prefix)
+        return str(param("MODULE_NAME", self.use_project_prefix))
 
 
 def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:

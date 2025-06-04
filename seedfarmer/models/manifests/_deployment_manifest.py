@@ -452,6 +452,30 @@ class DeploymentManifest(CamelModel):
         else:
             return None
 
+    def get_region_seedfarmer_metadata(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[Dict[str, str]]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        return region_mapping.seedkit_metadata if region_mapping.seedkit_metadata else None
+        else:
+            return None
+
     def get_account_region_role_prefix(
         self,
         *,

@@ -278,7 +278,7 @@ def destroy(
     # Load environment variables from .env file if it exists
     load_dotenv_files(config.OPS_ROOT, env_files)
 
-    # MUST use seedfarmer.yaml so we can initialize codeseeder configs
+    # MUST use seedfarmer.yaml so we can initialize configs
     project = config.PROJECT
     _logger.debug("Listing all deployments for Project %s", project)
 

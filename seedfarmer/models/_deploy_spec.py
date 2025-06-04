@@ -28,7 +28,7 @@ class BuildType(Enum):
 class BuildPhase(CamelModel):
     """
     BuildPhase
-    This is a list of strings that are passed to CodeSeeder to be executed
+    This is a list of strings that are passed to be executed
     in their respective phases as commands
     """
 
@@ -61,7 +61,7 @@ class ExecutionType(CamelModel):
 class DeploySpec(CamelModel):
     """
     DeploySpec
-    This represents the commands passed to CodeSeeder that will be executed
+    This represents the commands passed that will be executed
     on behalf of the module to be built.
     The deploy and the destroy objects each have an ExecutionType object.
     """

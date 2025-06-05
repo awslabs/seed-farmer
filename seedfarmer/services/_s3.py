@@ -33,8 +33,8 @@ ChunkifyItemType = TypeVar("ChunkifyItemType")
 def _chunkify(
     lst: List[ChunkifyItemType], num_chunks: int = 1, max_length: Optional[int] = None
 ) -> List[List[ChunkifyItemType]]:
-    num: int = num_chunks if max_length is None else int(math.ceil((float(len(lst)) / float(max_length))))
-    return [lst[i : i + num] for i in range(0, len(lst), num)]  # noqa: E203
+    chunk_size: int = int(math.ceil(float(len(lst)) / float(num_chunks))) if max_length is None else max_length
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
 def _delete_objects(
@@ -98,7 +98,7 @@ def delete_objects(
         Optional Session or function returning a Session to use for all boto3 operations, by default None
     """
     if keys is None:
-        keys_pairs: List[Dict[str, str]] = list_keys(bucket=bucket)
+        keys_pairs: List[Dict[str, str]] = list_keys(bucket=bucket, session=session)
     else:
         keys_pairs = [{"Key": k} for k in keys]
     if keys_pairs:
@@ -125,7 +125,7 @@ def delete_bucket(bucket: str, session: Optional[Union[Callable[[], Session], Se
     client_s3 = boto3_client("s3", session=session)
     try:
         _logger.debug("Cleaning up bucket: %s", bucket)
-        delete_objects(bucket=bucket)
+        delete_objects(bucket=bucket, session=session)
         _logger.debug("Deleting bucket: %s", bucket)
         client_s3.delete_bucket(Bucket=bucket)
     except Exception as ex:
@@ -193,7 +193,7 @@ def delete_bucket_by_prefix(prefix: str, session: Optional[Union[Callable[[], Se
     client_s3 = boto3_client("s3", session=session)
     for bucket in client_s3.list_buckets()["Buckets"]:
         if bucket["Name"].startswith(prefix):
-            delete_bucket(bucket=bucket["Name"])
+            delete_bucket(bucket=bucket["Name"], session=session)
 
 
 def object_exists(bucket: str, key: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> bool:

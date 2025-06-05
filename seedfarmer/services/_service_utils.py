@@ -247,7 +247,9 @@ def boto3_resource(  # type: ignore[misc]
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )  # type: ignore[call-overload]
     else:
-        return session.resource(  # type: ignore[no-any-return, union-attr]
+        if callable(session):
+            session = session()
+        return session.resource(  # type: ignore[no-any-return]
             service_name=service_name,
             use_ssl=True,
             config=get_botocore_config(),
@@ -255,12 +257,12 @@ def boto3_resource(  # type: ignore[misc]
 
 
 def get_region(session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None) -> str:
-    sess = session if session else create_new_session(profile=profile)
-    if sess.region_name is None:  # type: ignore[union-attr]
+    sess = session() if callable(session) else (session or create_new_session(profile=profile))
+    if sess.region_name is None:
         raise seedfarmer.errors.InvalidConfigurationError(
             "It is not possible to infer AWS REGION from your environment."
         )
-    return str(sess.region_name)  # type: ignore[union-attr]
+    return str(sess.region_name)
 
 
 def _call_sts(

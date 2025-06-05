@@ -216,8 +216,7 @@ Resources:
               Service: cloudformation.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - Ref:  
-            SeedkitResourcesPolicy
+        - Ref: SeedkitResourcesPolicy
       Tags:
         - Key: codeseeder-seedkit-name
           Value: codeseeder-{{ seedkit_name }}
@@ -231,7 +230,7 @@ Resources:
       Tags:
         - Key: codeseeder-seedkit-name
           Value: codeseeder-{{ seedkit_name }}
-      Description: AWS CodeSeeder CLI backend.
+      Description: Legacy AWS CodeSeeder CLI backend.
       ServiceRole: 
         Fn::GetAtt: 
           - CodeBuildRole
@@ -256,6 +255,14 @@ Resources:
           - Name: AWS_CODESEEDER_NPM_MIRROR_SECRET
             Value: "NONE"
           - Name: AWS_CODESEEDER_MIRROR_SECRET
+            Value: "NONE"
+          - Name: SEEDFARMER_DOCKER_SECRET
+            Value: "NONE"
+          - Name: SEEDFARMER_PYPI_MIRROR_SECRET
+            Value: "NONE"
+          - Name: SEEDFARMER_NPM_MIRROR_SECRET
+            Value: "NONE"
+          - Name: SEEDFARMER_MIRROR_SECRET
             Value: "NONE"
       Source:
         Type: NO_SOURCE

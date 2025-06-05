@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: "This stack deploys the bucket for seed-farmer projects in each acccount/region"
+Description: "This stack deploys the bucket for seed-farmer projects in each account/region"
 Parameters:
   ProjectName:
     Type: String

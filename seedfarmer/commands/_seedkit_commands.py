@@ -91,6 +91,8 @@ def deploy_seedkit(
     security_group_ids: Optional[List[str]]
         If deploying codebuild in a VPC, a list of Security Group IDs to use
         (must have vpc-id, subnets, and security_group_ids)
+    permissions_boundary_arn: Optional[str]
+        If using a permissions boundary, the arn of that policy to be provided
     synthesize: bool
         Synthesize seedkit template only. Do not deploy. False by default.
     """
@@ -122,7 +124,7 @@ def deploy_seedkit(
         cfn.deploy_template(
             stack_name=stack_name,
             filename=template_filename,
-            seedkit_tag=f"codeseeder-{seedkit_name}",
+            seedkit_tag=f"codeseeder-{seedkit_name}",  # (LEGACY)
             session=session,
         )
         _logger.info("Seedkit Deployed")

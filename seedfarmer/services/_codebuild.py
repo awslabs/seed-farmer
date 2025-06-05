@@ -314,7 +314,6 @@ def generate_spec(
     post: List[str] = [] if cmds_post is None else cmds_post
     variables: Dict[str, str] = {} if env_vars is None else env_vars
     exported_variables: List[str] = [] if exported_env_vars is None else exported_env_vars
-    exported_variables.append("AWS_CODESEEDER_OUTPUT")
 
     on_failure = "ABORT" if abort_phases_on_failure else "CONTINUE"
     return_spec: Dict[str, Any] = {

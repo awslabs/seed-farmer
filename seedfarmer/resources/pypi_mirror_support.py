@@ -67,9 +67,11 @@ def setup_uv(obfusctated_url: str, secured_url: str) -> None:
 
 
 def main(url: str) -> None:
-    secret_name = os.environ.get("AWS_CODESEEDER_PYPI_MIRROR_SECRET", "NO_SECRET")
+    secret_name = os.environ.get("SEEDFARMER_PYPI_MIRROR_SECRET", "NO_SECRET")
     # Backwards Compatibility
     if secret_name == "NO_SECRET":
+        secret_name = os.environ.get("AWS_CODESEEDER_PYPI_MIRROR_SECRET", "NO_SECRET")
+    elif secret_name == "NO_SECRET":
         secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", "NO_SECRET")
     username = None
     password = None

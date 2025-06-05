@@ -28,8 +28,8 @@ BUNDLE_PREFIX = "bundle"
 
 
 class BundleS3Support:
-    codeseeder_bucket: Optional[str] = None
-    codeseeder_key: Optional[str] = None
+    seedkit_bucket: Optional[str] = None  # NEEDED This is for the seedkit along with seedfarmer_bucket
+    seedkit_key: Optional[str] = None  # NEEDED This is for the seedkit along wih seedfarmer_bucket
     seedfarmer_bucket: Optional[str] = None
     seedfarmer_key: Optional[str] = None
 
@@ -43,8 +43,8 @@ class BundleS3Support:
 
         if bundle_src_path is not None:
             o = bundle_src_path.split("/", 1)
-            self.codeseeder_bucket = o[0]
-            self.codeseeder_key = o[1]
+            self.seedkit_bucket = o[0]
+            self.seedkit_key = o[1]
 
 
 def copy_bundle_to_sf(deployment: str, group: str, module: str, bucket: str, bundle_src_path: str) -> None:
@@ -53,8 +53,8 @@ def copy_bundle_to_sf(deployment: str, group: str, module: str, bucket: str, bun
     )
     try:
         s3.copy_s3_object(
-            src_bucket=str(bundle.codeseeder_bucket),
-            src_key=str(bundle.codeseeder_key),
+            src_bucket=str(bundle.seedkit_bucket),
+            src_key=str(bundle.seedkit_key),
             dest_bucket=str(bundle.seedfarmer_bucket),
             dest_key=str(bundle.seedfarmer_key),
         )

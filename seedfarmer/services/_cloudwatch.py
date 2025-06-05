@@ -111,7 +111,7 @@ def get_log_events(
         for event in response.get("events", []):
             events.append(
                 CloudWatchEvent(
-                    timestamp=datetime.fromtimestamp(event["timestamp"] / 1000.0).astimezone(timezone.utc),
+                    timestamp=datetime.fromtimestamp(event["timestamp"] / 1000.0, tz=timezone.utc),
                     message=str(event.get("message", "")),
                 )
             )

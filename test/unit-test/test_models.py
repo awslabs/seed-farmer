@@ -22,7 +22,7 @@ import yaml
 
 import seedfarmer.errors
 from seedfarmer.errors import InvalidManifestError
-from seedfarmer.models.deploy_responses import CodeSeederMetadata
+from seedfarmer.models.deploy_responses import CodeBuildMetadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
@@ -584,7 +584,7 @@ destroy:
 @pytest.mark.models
 @pytest.mark.models_deployresponses
 def test_deployresponses():
-    CodeSeederMetadata(
+    CodeBuildMetadata(
         aws_account_id="123456789012",
         aws_region="us-east-1",
         codebuild_build_id="codebuild:12345",

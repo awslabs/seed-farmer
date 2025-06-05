@@ -36,7 +36,9 @@ format:  ## Format code with ruff and prettier
 		python -m ruff format seedfarmer && \
 		python -m ruff check --fix seedfarmer && \
 		python -m ruff format test && \
-		python -m ruff check --fix test
+		python -m ruff check --fix test && \
+		python -m ruff format setup.py && \
+		python -m ruff check --fix setup.py
 
 .PHONY: help
 help:  ## Show help for each of the Makefile recipes

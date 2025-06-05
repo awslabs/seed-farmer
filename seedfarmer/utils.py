@@ -109,10 +109,10 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str, part
     str
         The standard URL with protocol and query parameters
         ex: https://us-east-1.console.aws.amazon.com/codesuite/codebuild/123456789012/projects/
-            codebuild-id/build/codebuild-id:3413241234/?region-us-east-1
-        if in a differing partion (ex.aws-cn) the url looks like:
+            codebuild-id/build/codebuild-id:3413241234/?region-us-east-1 (LEGACY)
+        if in a differing partition (ex.aws-cn) the url looks like:
             https://cn-north-1.console.amazonaws.cn/codesuite/codebuild/123456789012/projects/
-            codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1
+            codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1 (LEGACY)
     """
     try:
         b_id_enc = codebuild_id.replace(":", "%3A")
@@ -269,19 +269,19 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def create_output_dir(name: str) -> str:
-    """Helper function for creating or clearing a codeseeder.out output directory
+    """Helper function for creating or clearing a .seedfarmer.out output directory
 
     Parameters
     ----------
     name : str
-        Name of the directory to create in  the codeseeder.out directory
+        Name of the directory to create in  the .seedfarmer.out directory
 
     Returns
     -------
     str
         Full path of the created directory
     """
-    out_dir = os.path.join(os.getcwd(), "codeseeder.out", name)
+    out_dir = os.path.join(os.getcwd(), ".seedfarmer.out", name)
     try:
         shutil.rmtree(out_dir)
     except FileNotFoundError:

@@ -29,7 +29,7 @@ import seedfarmer.mgmt.bundle_support as bs
 import seedfarmer.services._codebuild as codebuild
 from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
-from seedfarmer.models.deploy_responses import CodeSeederMetadata, ModuleDeploymentResponse, StatusType
+from seedfarmer.models.deploy_responses import CodeBuildMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest, ModuleParameter
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services.session_manager import SessionManager
@@ -75,14 +75,17 @@ def _env_vars(
     env_vars[_param("MODULE_METADATA", use_project_prefix)] = module_metadata if module_metadata is not None else ""
     env_vars[_param("MODULE_NAME", use_project_prefix)] = f"{group_name}-{module_manifest_name}"
     env_vars[_param("HASH", use_project_prefix)] = generate_session_hash(session=session)
-    if docker_credentials_secret:
-        env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret
     if permissions_boundary_arn:
         env_vars[_param("PERMISSIONS_BOUNDARY_ARN", use_project_prefix)] = permissions_boundary_arn
+    if docker_credentials_secret:
+        env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = docker_credentials_secret  # (LEGACY)
+        env_vars["SEEDFARMER_DOCKER_SECRET"] = docker_credentials_secret
     if pypi_mirror_secret is not None:
-        env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret
+        env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret  # (LEGACY)
+        env_vars["SEEDFARMER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret
     if npm_mirror_secret is not None:
-        env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret
+        env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret  # (LEGACY)
+        env_vars["SEEDFARMER_NPM_MIRROR_SECRET"] = npm_mirror_secret
     # Add the partition to env for ease of fetching
     env_vars["AWS_PARTITION"] = deployment_partition
     env_vars["SEEDFARMER_VERSION"] = seedfarmer.__version__
@@ -346,7 +349,7 @@ def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         group=mdo.group_name,
         module=module_manifest.name,
         status=StatusType.SUCCESS.value if bi.status.value in ["SUCCEEDED"] else StatusType.ERROR.value,
-        codeseeder_metadata=CodeSeederMetadata(**deploy_info),
+        codebuild_metadata=CodeBuildMetadata(**deploy_info),
     )
 
 
@@ -496,5 +499,5 @@ def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
         group=mdo.group_name,
         module=module_manifest.name,
         status=StatusType.SUCCESS.value if bi.status.value in ["SUCCEEDED"] else StatusType.ERROR.value,
-        codeseeder_metadata=CodeSeederMetadata(**deploy_info),
+        codebuild_metadata=CodeBuildMetadata(**deploy_info),
     )

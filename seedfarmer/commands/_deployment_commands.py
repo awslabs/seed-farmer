@@ -233,7 +233,6 @@ def _execute_deploy(
         else None
     )
     return deploy_remote.deploy_module(mdo)
-    # return commands.deploy_module(mdo)
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
@@ -303,7 +302,6 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
 
     resp = deploy_remote.destroy_module(mdo)
-    # resp = commands.destroy_module(mdo)
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(

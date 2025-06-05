@@ -379,7 +379,7 @@ cdk.json
 
 # codeseeder
 codeseeder.out
-
+seedfarmer.out
 seedfarmer.gitmodules
 seedfarmer.archive
 archive/

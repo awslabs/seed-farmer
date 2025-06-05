@@ -74,7 +74,7 @@ def bundle() -> None:
 @click.option(
     "--origin",
     "-o",
-    help="Full path of the bundle object in CodeSeeder bucket",
+    help="Full path of the bundle object in SeedKit bucket",
     required=True,
 )
 def store_bundle(

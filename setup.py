@@ -65,6 +65,7 @@ setup(
         "boto3==1.36.4",
         "botocore==1.36.4",
         "cfn-flip>=1.2.3",
+        "click==8.1.8",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

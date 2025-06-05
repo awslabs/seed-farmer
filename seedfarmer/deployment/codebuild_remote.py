@@ -74,7 +74,7 @@ def _execute_codebuild(
     session: Optional[Union[Callable[[], Session], Session]] = None,
 ) -> Optional[codebuild.BuildInfo]:
     _logger.debug("bundle_location: %s", bundle_location)
-    stream_name_prefix = f"codeseeder-{execution_id}"
+    stream_name_prefix = f"codeseeder-{execution_id}"  # (LEGACY)
     _logger.debug("stream_name_prefix: %s", stream_name_prefix)
     build_id = codebuild.start(
         project_name=stack_outputs["CodeBuildProject"],
@@ -112,9 +112,9 @@ def run(
         loc = f"{o[0]}/{o[1]}"
     else:
         key: str = (
-            f"codeseeder/{bundle_id}/{execution_id}/bundle.zip"
+            f"seedfarmer/{bundle_id}/{execution_id}/bundle.zip"
             if bundle_id
-            else f"codeseeder/{execution_id}/bundle.zip"
+            else f"seedfarmer/{execution_id}/bundle.zip"
         )
         bucket = stack_outputs["Bucket"]
         s3.delete_objects(bucket=bucket, keys=[key], session=session)

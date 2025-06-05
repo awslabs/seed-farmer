@@ -43,10 +43,8 @@ def _wait_for_changeset(
         resp = ex.last_response
         status = resp["Status"]
         reason = resp["StatusReason"]
-        if (
-            status == "FAILED"
-            and "The submitted information didn't contain changes." in reason
-            or "No updates are to be performed" in reason
+        if status == "FAILED" and (
+            "The submitted information didn't contain changes." in reason or "No updates are to be performed" in reason
         ):
             _logger.debug(f"No changes for {stack_name} CloudFormation stack.")
             return False
@@ -63,7 +61,7 @@ def _create_changeset(
     session: Optional[Union[Callable[[], Session], Session]] = None,
 ) -> Tuple[str, str]:
     now: str = dt.datetime.now(tz=dt.timezone.utc).isoformat()
-    description = f"Created by AWS CodeSeeder CLI at {now} UTC"
+    description = f"Created by SeedFarmer at {now} UTC"
     changeset_name = CHANGESET_PREFIX + str(int(time.time()))
     stack_exist, _ = does_stack_exist(stack_name=stack_name, session=session)
     changeset_type = "UPDATE" if stack_exist else "CREATE"
@@ -129,7 +127,7 @@ def get_stack_name(seedkit_name: str) -> str:
     return f"aws-codeseeder-{seedkit_name}"
 
 
-def get_stack_status(stack_name: str, session: Optional[Session] = None) -> str:
+def get_stack_status(stack_name: str, session: Optional[Union[Callable[[], Session], Session]] = None) -> str:
     """Retrieve the status of a CloudFormation Stack
 
     Parameters
@@ -234,7 +232,7 @@ def deploy_template(
     template_size = os.path.getsize(filename)
     if template_size > 51_200:
         if s3_bucket is None:
-            raise ValueError("s3_bucket: %s", s3_bucket)
+            raise ValueError("s3_bucket argument is required when template size > 51 200 bytes")
         _logger.info(f"The CloudFormation template ({filename}) is too big to be deployed, using s3 bucket.")
         local_template_path = filename
         s3_file_name = filename.split("/")[-1]
@@ -247,6 +245,7 @@ def deploy_template(
             template_str="",
             seedkit_tag=seedkit_tag,
             template_path=s3_template_path,
+            parameters=parameters,
             session=session,
         )
     else:

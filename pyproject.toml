@@ -13,6 +13,7 @@ exclude = [
     "build",
     "dist",
     "codeseeder.out",
+    "seedfarmer.out",
     "seedfarmer.gitmodules"
 ]
 line-length = 120
@@ -32,7 +33,7 @@ python_version = "3.9"
 strict = true
 ignore_missing_imports = true
 disallow_untyped_decorators = false
-exclude = "codeseeder.out/|examples/|modules/|test/|seedfarmer.gitmodules/"
+exclude = "codeseeder.out/|examples/|modules/|test/|seedfarmer.gitmodules/|seedfarmer.out"
 
 [tool.pytest.ini_options]
 markers = [

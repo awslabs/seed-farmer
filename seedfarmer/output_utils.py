@@ -160,8 +160,8 @@ def print_modules_build_info(
             crop=False,
         )
         (
-            console.print(f"    {r_obj.codeseeder_metadata.build_url}", crop=False)  # type: ignore
-            if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url  # type: ignore
+            console.print(f"    {r_obj.codebuild_metadata.build_url}", crop=False)  # type: ignore
+            if r_obj.codebuild_metadata and r_obj.codebuild_metadata.build_url  # type: ignore
             else None
         )
 
@@ -186,8 +186,8 @@ def print_errored_modules_build_info(
         if r_obj and r_obj.status in ["ERROR", "error", "Error"]:
             console.print(f" [cyan]{r_obj.deployment}-{r_obj.group}-{r_obj.module}", crop=False)
             (
-                console.print(f"    {r_obj.codeseeder_metadata.build_url}", crop=False)
-                if r_obj.codeseeder_metadata and r_obj.codeseeder_metadata.build_url
+                console.print(f"    {r_obj.codebuild_metadata.build_url}", crop=False)
+                if r_obj.codebuild_metadata and r_obj.codebuild_metadata.build_url
                 else None
             )
 

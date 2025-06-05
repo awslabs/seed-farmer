@@ -26,7 +26,7 @@ class StatusType(Enum):
     ERROR = "ERROR"
 
 
-class CodeSeederMetadata(CamelModel):
+class CodeBuildMetadata(CamelModel):
     _build_url: str = PrivateAttr()
 
     aws_account_id: Optional[str] = None
@@ -54,8 +54,8 @@ class ModuleDeploymentResponse(CamelModel):
     group: Optional[str] = None
     module: str
     status: str
-    codeseeder_metadata: Optional[CodeSeederMetadata] = None
-    codeseeder_output: Optional[Dict[Any, Any]] = None
+    codebuild_metadata: Optional[CodeBuildMetadata] = None
+    codebuild_output: Optional[Dict[Any, Any]] = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

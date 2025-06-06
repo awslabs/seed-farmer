@@ -31,7 +31,7 @@ import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
-from seedfarmer.deployment import deploy_remote
+from seedfarmer.deployment.deploy_remote import DeployRemoteModule
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -232,7 +232,7 @@ def _execute_deploy(
         if mdo.deployment_manifest.name
         else None
     )
-    return deploy_remote.deploy_module(mdo)
+    return DeployRemoteModule(mdo).deploy_module()
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
@@ -300,8 +300,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
     mdo.module_role_name = module_role_name
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
-
-    resp = deploy_remote.destroy_module(mdo)
+    resp = DeployRemoteModule(mdo).destroy_module()
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(

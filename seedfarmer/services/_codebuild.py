@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import io
 import logging
 import time
 from datetime import datetime, timezone
@@ -22,7 +23,9 @@ import botocore.exceptions
 import yaml
 from boto3 import Session
 
+from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.services._service_utils import boto3_client, try_it
+from seedfarmer.utils import LiteralStr
 
 _logger: logging.Logger = logging.getLogger(__name__)
 _BUILD_WAIT_POLLING_DELAY: float = 5  # SECONDS
@@ -113,6 +116,7 @@ def start(
     timeout: int,
     overrides: Optional[Dict[str, Any]] = None,
     session: Optional[Union[Callable[[], Session], Session]] = None,
+    yaml_dumper: Optional[Any] = None,  # Accepts ruamel.yaml.YAML instance or PyYAML dump function
 ) -> str:
     """Start a CodeBuild Project execution
 
@@ -138,6 +142,26 @@ def start(
     str
         The CodeBuild Build/Exectuion Id
     """
+    # If no dumper is provided, use PyYAML's safe_dump
+    if yaml_dumper is None:
+
+        def default_pyyaml_dumper(data):  # type: ignore[no-untyped-def]
+            return yaml.safe_dump(data, sort_keys=False, indent=4)
+
+        yaml_dumper = default_pyyaml_dumper
+
+    # ruamel.yaml.YAML instance: has a .dump method
+    if hasattr(yaml_dumper, "dump"):
+        stream = io.StringIO()
+        yaml_dumper.dump(buildspec, stream)
+        buildspec_yaml = stream.getvalue()
+        stream.close()
+    # PyYAML: function like yaml.dump or yaml.safe_dump
+    elif callable(yaml_dumper):
+        buildspec_yaml = yaml_dumper(buildspec)
+    else:
+        raise InvalidConfigurationError("yaml_dumper must be a ruamel.yaml.YAML instance or a PyYAML dump function.")
+
     client = boto3_client("codebuild", session=session)
     image_override: Optional[str] = overrides.get("imageOverride", None) if overrides else None
     image_pull_credentials: Optional[str] = None
@@ -153,7 +177,7 @@ def start(
         "projectName": project_name,
         "sourceTypeOverride": "S3",
         "sourceLocationOverride": bundle_location,
-        "buildspecOverride": yaml.safe_dump(data=buildspec, sort_keys=False, indent=4),
+        "buildspecOverride": buildspec_yaml,
         "timeoutInMinutesOverride": timeout,
         "privilegedModeOverride": True,
         "logsConfigOverride": {
@@ -272,10 +296,10 @@ def wait(build_id: str, session: Optional[Union[Callable[[], Session], Session]]
 
 
 def generate_spec(
-    cmds_install: Optional[List[str]] = None,
-    cmds_pre: Optional[List[str]] = None,
-    cmds_build: Optional[List[str]] = None,
-    cmds_post: Optional[List[str]] = None,
+    cmds_install: Optional[List[Union[str, LiteralStr]]] = None,
+    cmds_pre: Optional[List[Union[str, LiteralStr]]] = None,
+    cmds_build: Optional[List[Union[str, LiteralStr]]] = None,
+    cmds_post: Optional[List[Union[str, LiteralStr]]] = None,
     env_vars: Optional[Dict[str, str]] = None,
     exported_env_vars: Optional[List[str]] = None,
     runtime_versions: Optional[Dict[str, str]] = None,
@@ -309,31 +333,31 @@ def generate_spec(
     Dict[str, Any]
         A CodeBuild BuildSpec
     """
-    pre: List[str] = [] if cmds_pre is None else cmds_pre
-    build: List[str] = [] if cmds_build is None else cmds_build
-    post: List[str] = [] if cmds_post is None else cmds_post
+    # pre: List[str] = [] if cmds_pre is None else cmds_pre
+    # build: List[str] = [] if cmds_build is None else cmds_build
+    # post: List[str] = [] if cmds_post is None else cmds_post
     variables: Dict[str, str] = {} if env_vars is None else env_vars
-    exported_variables: List[str] = [] if exported_env_vars is None else exported_env_vars
+    # exported_variables: List[str] = [] if exported_env_vars is None else exported_env_vars
 
     on_failure = "ABORT" if abort_phases_on_failure else "CONTINUE"
     return_spec: Dict[str, Any] = {
         "version": 0.2,
-        "env": {"shell": "bash", "variables": variables, "exported-variables": exported_variables},
+        "env": {"shell": "bash", "variables": variables, "exported-variables": exported_env_vars or []},
         "phases": {
             "install": {
-                "commands": cmds_install,
+                "commands": cmds_install or [],
                 "on-failure": on_failure,
             },
             "pre_build": {
-                "commands": pre,
+                "commands": cmds_pre or [],
                 "on-failure": on_failure,
             },
             "build": {
-                "commands": build,
+                "commands": cmds_build or [],
                 "on-failure": on_failure,
             },
             "post_build": {
-                "commands": post,
+                "commands": cmds_post or [],
                 "on-failure": on_failure,
             },
         },

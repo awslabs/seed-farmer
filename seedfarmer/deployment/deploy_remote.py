@@ -17,8 +17,6 @@ import logging
 import os
 from typing import Dict, List, Optional, cast
 
-import yaml
-
 import seedfarmer
 import seedfarmer.deployment.codebuild_remote as codebuild_remote
 import seedfarmer.errors
@@ -31,7 +29,9 @@ from seedfarmer.models.deploy_responses import CodeBuildMetadata, ModuleDeployme
 from seedfarmer.models.manifests import ModuleManifest
 from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.types.parameter_types import EnvVar
-from seedfarmer.utils import create_output_dir
+
+# import yaml
+from seedfarmer.utils import LiteralStr, create_output_dir, register_literal_str
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -93,16 +93,19 @@ class DeployRemoteModule(DeployModule):
             install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
 
         # needed to make sure both the tool and lib are accessible in the venv
-        install.append(f"uv pip install pip") 
+        install.append("uv pip install pip")
         install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
 
         return install
 
     def deploy_module(self) -> ModuleDeploymentResponse:
         deployment_manifest = self.mdo.deployment_manifest
+        group = self.mdo.group_name
         module_manifest = cast(
             ModuleManifest, self.mdo.deployment_manifest.get_module(self.mdo.group_name, self.mdo.module_name)
         )
+        # Use this yaml so that the spec is pretty
+        yaml = register_literal_str()
         account_id = str(module_manifest.get_target_account_id())
         region = str(module_manifest.target_region)
 
@@ -125,7 +128,7 @@ class DeployRemoteModule(DeployModule):
             )
         ]
 
-        metadata_env_variable = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
+        metadata_env_var = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
         cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
         module_role_name_add = [
             f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {self.mdo.module_role_name} || true"
@@ -136,23 +139,14 @@ class DeployRemoteModule(DeployModule):
             else []
         )
 
-        def literal_str_representer(dumper, data):
-            return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
-
-        class LiteralStr(str):
-            pass
-
-        yaml.add_representer(LiteralStr, literal_str_representer)
-
-        logstream = """
-                build_id_only=$(echo "$CODEBUILD_BUILD_ID" | cut -d':' -f2)
-                project_name=$(echo "$CODEBUILD_PROJECT_ARN" | awk -F'/' '{print $2}')
-                log_stream=$(aws logs describe-log-streams \
-                --log-group-name "/aws/codebuild/$project_name" \
-                --output json \
-                --query "logStreams[?contains(logStreamName, \\`$build_id_only\\`)].logStreamName" \
-                | jq -r 'map(select(. != null)) | .[0]') || true
-            """
+        logstream = LiteralStr("""build_id_only=$(echo "$CODEBUILD_BUILD_ID" | cut -d':' -f2)
+        project_name=$(echo "$CODEBUILD_PROJECT_ARN" | awk -F'/' '{print $2}')
+        log_stream=$(aws logs describe-log-streams \\
+        --log-group-name "/aws/codebuild/$project_name" \\
+        --output json \\
+        --query "logStreams[?contains(logStreamName, \\`$build_id_only\\`)].logStreamName" \\
+        | jq -r 'map(select(. != null)) | .[0]') || true
+        """)
         add_cb_metadata = [
             "seedfarmer metadata add -k CodeBuildBuildUrl -v $CODEBUILD_BUILD_URL",
             logstream,
@@ -160,15 +154,15 @@ class DeployRemoteModule(DeployModule):
         ]
 
         metadata_put = [
-            f"if [[ -f {metadata_env_variable} ]]; then export {metadata_env_variable}=$(cat {metadata_env_variable}); fi",
+            f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
             (
-                f"echo ${metadata_env_variable} | seedfarmer store moduledata "
-                f"-d {self.mdo.deployment_manifest.name} -g {self.mdo.group_name} -m {module_manifest.name} "
+                f"echo ${metadata_env_var} | seedfarmer store moduledata "
+                f"-d {deployment_manifest.name} -g {group} -m {module_manifest.name} "
             ),
         ]
         store_sf_bundle = [
             (
-                f"seedfarmer bundle store -d {self.mdo.deployment_manifest.name} -g {self.mdo.group_name} -m {module_manifest.name} "
+                f"seedfarmer bundle store -d {deployment_manifest.name} -g {group} -m {module_manifest.name} "
                 f"-o $CODEBUILD_SOURCE_REPO_URL -b {self.mdo.seedfarmer_bucket} || true"
             )
         ]
@@ -241,8 +235,10 @@ class DeployRemoteModule(DeployModule):
 
         # Write the deployspec, even if we don't use it...for reference
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
+
         with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
-            file.write(yaml.dump(buildspec))
+            # file.write(yaml.dump(buildspec))
+            yaml.dump(buildspec, file)
 
         overrides = {}
         if codebuild_image:
@@ -272,6 +268,7 @@ class DeployRemoteModule(DeployModule):
             session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
             bundle_id=bundle_id,
             prebuilt_bundle=self._prebuilt_bundle_check(),
+            yaml_dumper=yaml,
         )
 
         bi = cast(codebuild.BuildInfo, build_info)
@@ -293,12 +290,15 @@ class DeployRemoteModule(DeployModule):
         )
 
     def destroy_module(self) -> ModuleDeploymentResponse:
+        import yaml
+
         destroy_manifest = self.mdo.deployment_manifest
         module_manifest = cast(
             ModuleManifest, self.mdo.deployment_manifest.get_module(self.mdo.group_name, self.mdo.module_name)
         )
         account_id = str(module_manifest.get_target_account_id())
         region = str(module_manifest.target_region)
+        deployment_name = self.mdo.deployment_manifest.name
 
         stack_outputs = destroy_manifest.get_region_seedfarmer_metadata(account_id=account_id, region=region)
 
@@ -309,7 +309,7 @@ class DeployRemoteModule(DeployModule):
 
         env_vars = self._env_vars()
         remove_ssm = [
-            f"seedfarmer remove moduledata -d {self.mdo.deployment_manifest.name} -g {self.mdo.group_name} -m {module_manifest.name}"
+            f"seedfarmer remove moduledata -d {deployment_name} -g {self.mdo.group_name} -m {module_manifest.name}"
         ]
 
         remove_sf_bundle = [

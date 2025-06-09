@@ -116,7 +116,7 @@ def _read_json_file(mms: ModuleMetadataSupport, path: str) -> Tuple[str, Dict[st
             j = datafile.read()
         return p, dict(json.loads(j))
     else:
-        return p, None
+        return p, {}
 
 
 def _write_metadata_file(mms: ModuleMetadataSupport, data: Dict[str, Any]) -> None:
@@ -180,7 +180,7 @@ def convert_cdkexports(
     existing_metadata = _read_metadata_file(mms)
 
     try:
-        _write_metadata_file(mms=mms, data={**existing_metadata, **json.loads(data)}) if data else None
+        _write_metadata_file(mms=mms, data={**existing_metadata, **json.loads(data)}) if data else None  # type: ignore[arg-type]
     except json.decoder.JSONDecodeError:
         _logger.info("The CDK Export is not a string that can be converted to a JSON, ignoring this additional data")
         _logger.info("Offending metadata -- %s", data)

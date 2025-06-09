@@ -379,6 +379,7 @@ cdk.json
 
 # codeseeder
 codeseeder.out
+.seedfarmer.out
 seedfarmer.out
 seedfarmer.gitmodules
 seedfarmer.archive
@@ -391,3 +392,5 @@ _build/
 # Testing
 seedfarmer.yaml
 tmp-metadata
+_testing-modules.tar.gz
+_testing-modules.zip

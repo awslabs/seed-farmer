@@ -253,6 +253,8 @@ def test_execute_deploy_invalid_spec(session_manager, mocker):
     mdo = ModuleDeployObject(
         deployment_manifest=dep, group_name=dep.groups[0].name, module_name=dep.groups[0].modules[0].name
     )
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_deploy(mdo)
 
@@ -271,7 +273,7 @@ def test_execute_deploy(session_manager, mocker):
         return_value="role_arn",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
-    mocker.patch("seedfarmer.commands._deployment_commands.deploy_remote.deploy_module", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
@@ -299,7 +301,7 @@ def test_execute_deploy_with_prefix(session_manager, mocker):
         return_value="role_arn",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
-    mocker.patch("seedfarmer.commands._deployment_commands.deploy_remote.deploy_module", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
     dep = DeploymentManifest(**mock_deployment_manifest_with_prefix.deployment_manifest)
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
@@ -331,14 +333,14 @@ def test_execute_destroy_invalid_spec(session_manager, mocker):
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
     module_manifest = group.modules[0]
-    mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
+    ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
 
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
     mocker.patch(
         "seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
         return_value=("stack_name", "role_name"),
     )
-    mocker.patch("seedfarmer.commands._deployment_commands.deploy_remote.destroy_module", return_value=mod_resp)
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_destroy(mdo)
@@ -353,7 +355,7 @@ def test_execute_destroy(session_manager, mocker):
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
     module_manifest = group.modules[0]
-    mod_resp = ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
+    ModuleDeploymentResponse(deployment="myapp", group="optionals", module="metworking", status="SUCCESS")
     mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
     mocker.patch(
         "seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
@@ -363,11 +365,12 @@ def test_execute_destroy(session_manager, mocker):
         "seedfarmer.commands._deployment_commands.get_role_arn",
         return_value="role_arn",
     )
-    mocker.patch("seedfarmer.commands._deployment_commands.deploy_remote.destroy_module", return_value=mod_resp)
+
     mocker.patch("seedfarmer.commands._deployment_commands.commands.destroy_module_stack", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.commands.force_manage_policy_attach", return_value=None)
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group.name, module_name=module_manifest.name)
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
     dc._execute_destroy(mdo)
 
 

@@ -33,10 +33,10 @@ class DeployModule:
         p = project_name.upper().replace("-", "_") if use_project_prefix else "SEEDFARMER"
         return f"{p}_{key}"
 
-    def deploy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+    def deploy_module(self) -> ModuleDeploymentResponse:
         raise NotImplementedError("Subclasses must implement 'deploy_module'")
 
-    def destroy_module(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+    def destroy_module(self) -> ModuleDeploymentResponse:
         raise NotImplementedError("Subclasses must implement 'deploy_module'")
 
     def _prebuilt_bundle_check(self) -> Optional[str]:
@@ -57,7 +57,7 @@ class DeployModule:
             return None
 
     def _env_vars(self, session: Optional[Session] = None) -> Dict[str, str]:
-        use_project_prefix = not self.module_manifest.deploy_spec.publish_generic_env_variables
+        use_project_prefix = not self.module_manifest.deploy_spec.publish_generic_env_variables  # type: ignore [union-attr]
         pypi_mirror_secret = (
             self.module_manifest.pypi_mirror_secret
             if self.module_manifest.pypi_mirror_secret
@@ -83,7 +83,7 @@ class DeployModule:
         _logger.debug(f"env_vars: {env_vars}")
 
         env_vars[DeployModule.seedfarmer_param("PROJECT_NAME", None, use_project_prefix)] = config.PROJECT
-        env_vars[DeployModule.seedfarmer_param("DEPLOYMENT_NAME", None, use_project_prefix)] = (
+        env_vars[DeployModule.seedfarmer_param("DEPLOYMENT_NAME", None, use_project_prefix)] = str(
             self.mdo.deployment_manifest.name
         )
         env_vars[DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)] = (
@@ -97,19 +97,19 @@ class DeployModule:
         )
         if self.mdo.permissions_boundary_arn:
             env_vars[DeployModule.seedfarmer_param("PERMISSIONS_BOUNDARY_ARN", None, use_project_prefix)] = (
-                self.mdo.permissions_boundary_arn,
+                self.mdo.permissions_boundary_arn
             )
         if self.mdo.docker_credentials_secret:
             env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = self.mdo.docker_credentials_secret  # (LEGACY)
             env_vars["SEEDFARMER_DOCKER_SECRET"] = self.mdo.docker_credentials_secret
         if self.mdo.pypi_mirror_secret is not None:
-            env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret  # (LEGACY)
-            env_vars["SEEDFARMER_PYPI_MIRROR_SECRET"] = pypi_mirror_secret
+            env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = str(pypi_mirror_secret)  # (LEGACY)
+            env_vars["SEEDFARMER_PYPI_MIRROR_SECRET"] = str(pypi_mirror_secret)
         if self.mdo.npm_mirror_secret is not None:
-            env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = npm_mirror_secret  # (LEGACY)
-            env_vars["SEEDFARMER_NPM_MIRROR_SECRET"] = npm_mirror_secret
+            env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = str(npm_mirror_secret)  # (LEGACY)
+            env_vars["SEEDFARMER_NPM_MIRROR_SECRET"] = str(npm_mirror_secret)
         # Add the partition to env for ease of fetching
-        env_vars["AWS_PARTITION"] = self.mdo.deployment_manifest._partition
+        env_vars["AWS_PARTITION"] = str(self.mdo.deployment_manifest._partition)
         env_vars["SEEDFARMER_VERSION"] = seedfarmer.__version__
         # return env_vars
         return {k: v if isinstance(v, str) else v.value for k, v in env_vars.items()}

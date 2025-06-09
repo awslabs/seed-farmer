@@ -23,6 +23,8 @@ import humps
 import yaml
 from boto3 import Session
 from dotenv import dotenv_values, load_dotenv
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import PreservedScalarString
 
 import seedfarmer.errors
 from seedfarmer.services._service_utils import get_region, get_sts_identity_info
@@ -46,6 +48,26 @@ class CfnSafeYamlLoader(yaml.SafeLoader):
         k: [r for r in v if r[0] != "tag:yaml.org,2002:timestamp"]
         for k, v in NoDatesSafeLoader.yaml_implicit_resolvers.items()
     }
+
+
+class LiteralStr(PreservedScalarString):
+    """A string subclass that forces block style (|) YAML formatting."""
+
+    pass
+
+
+def register_literal_str() -> YAML:
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    yaml.block_seq_indent = 2
+
+    def literal_str_representer(dumper, data):  # type: ignore [no-untyped-def]
+        kwargs = {"style": "|"}
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, **kwargs)
+
+    yaml.representer.add_representer(LiteralStr, literal_str_representer)
+    return yaml
 
 
 def upper_snake_case(value: str) -> str:

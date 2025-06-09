@@ -92,6 +92,8 @@ class DeployRemoteModule(DeployModule):
             install.append("export UV_INDEX_CODEARTIFACT_USERNAME=aws")
             install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
 
+        # needed to make sure both the tool and lib are accessible in the venv
+        install.append(f"uv pip install pip") 
         install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
 
         return install
@@ -325,7 +327,7 @@ class DeployRemoteModule(DeployModule):
 
         _phases = module_manifest.deploy_spec.destroy.phases
         bundle_id = f"{self.mdo.deployment_manifest.name}-{self.mdo.group_name}-{module_manifest.name}"
-        prebuilt_bundle = self._prebuilt_bundle_check(self.mdo)
+        prebuilt_bundle = self._prebuilt_bundle_check()
         bundle_zip = None
         if not prebuilt_bundle:
             # regenerate everything that is necessary

@@ -212,7 +212,7 @@ def _module_metatdata(
         _logger.debug("loaded parameter value: %s", parameter_value)
 
         parameter_value = (
-            parameter_value.get(parameter.value_from.module_metadata.key, None) # type: ignore[assignment]
+            parameter_value.get(parameter.value_from.module_metadata.key, None)  # type: ignore[assignment]
             if parameter_value is not None and parameter.value_from.module_metadata.key is not None
             else parameter_value
         )

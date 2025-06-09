@@ -30,7 +30,7 @@ def run(
     codebuild_image: Optional[str],
 ) -> None:  # Optional[codebuild.BuildInfo]:
     # write the buildspec to file
-    def write_it(filename, content):
+    def write_it(filename: str, content) -> None:  # type: ignore[no-untyped-def]
         with open(filename, "w") as buildspec:
             buildspec.write(yaml.dump(content, indent=4))
 

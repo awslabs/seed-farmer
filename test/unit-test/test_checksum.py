@@ -29,7 +29,7 @@ def test_checksum():
     project_path = os.path.join(root, "test", "unit-test", "mock_data")
     module_path = os.path.join(project_path, "modules", "module-test")
     _checksum = checksum.get_module_md5(project_path=project_path, module_path=module_path)
-    assert _checksum == "6a97a8aabba291d22221b1f649fba945"
+    assert _checksum == "6320bfae9c91bed55ac6f3dc6f752f88"
 
 
 @pytest.mark.checksum

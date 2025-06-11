@@ -31,7 +31,7 @@ from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.types.parameter_types import EnvVar
 
 # import yaml
-from seedfarmer.utils import LiteralStr, create_output_dir, register_literal_str
+from seedfarmer.utils import apply_literalstr, create_output_dir, register_literal_str
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class DeployRemoteModule(DeployModule):
             else []
         )
 
-        logstream = LiteralStr("""build_id_only=$(echo "$CODEBUILD_BUILD_ID" | cut -d':' -f2)
+        logstream = apply_literalstr("""build_id_only=$(echo "$CODEBUILD_BUILD_ID" | cut -d':' -f2)
         project_name=$(echo "$CODEBUILD_PROJECT_ARN" | awk -F'/' '{print $2}')
         log_stream=$(aws logs describe-log-streams \\
         --log-group-name "/aws/codebuild/$project_name" \\

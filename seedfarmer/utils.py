@@ -18,7 +18,7 @@ import logging
 import os
 import re
 import shutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 import yaml
@@ -69,6 +69,10 @@ def register_literal_str() -> YAML:
 
     yaml.representer.add_representer(LiteralStr, literal_str_representer)
     return yaml
+
+
+def apply_literalstr(s: str) -> Union[str, LiteralStr]:
+    return LiteralStr(s) if "\n" in s else s
 
 
 def upper_snake_case(value: str) -> str:

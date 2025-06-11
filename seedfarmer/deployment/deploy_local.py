@@ -14,7 +14,7 @@
 
 
 import os
-from typing import List, Optional, cast
+from typing import List, Optional, Union, cast
 
 import seedfarmer
 import seedfarmer.deployment.codebuild_local as codebuild_local
@@ -25,28 +25,28 @@ from seedfarmer.deployment.deploy_base import DeployModule
 from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest
-from seedfarmer.utils import LiteralStr, create_output_dir, register_literal_str
+from seedfarmer.utils import LiteralStr, apply_literalstr, create_output_dir, register_literal_str
 
 
 class DeployLocalModule(DeployModule):
     def _codebuild_install_commands(
         self, account_id: str, region: str, ca_domain: Optional[str] = None, ca_repository: Optional[str] = None
-    ) -> List[LiteralStr]:
+    ) -> List[Union[str, LiteralStr]]:
         install = []
-        uv_install = LiteralStr("""if curl -s --head https://astral.sh | grep '200' > /dev/null; then
+        uv_install = apply_literalstr("""if curl -s --head https://astral.sh | grep '200' > /dev/null; then
         curl -Ls https://astral.sh/uv/install.sh | sh
     else
         pip install uv
     fi
     """)
-        install.append(LiteralStr(uv_install))
-        install.append(LiteralStr("export PATH=$PATH:/root/.local/bin"))
-        install.append(LiteralStr("uv venv ~/.venv --python 3.11 --seed"))  ## DGRABS - Make this configurable
-        install.append(LiteralStr(". ~/.venv/bin/activate"))
+        install.append(apply_literalstr(uv_install))
+        install.append(apply_literalstr("export PATH=$PATH:/root/.local/bin"))
+        install.append(apply_literalstr("uv venv ~/.venv --python 3.11 --seed"))  ## DGRABS - Make this configurable
+        install.append(apply_literalstr(". ~/.venv/bin/activate"))
 
         if ca_domain and ca_repository:
             install.append(
-                LiteralStr(
+                apply_literalstr(
                     "cat <<EOF > ~/.config/uv/uv.toml\n"
                     "[[index]]\n"
                     'name = "codeartifact"\n'
@@ -56,7 +56,7 @@ class DeployLocalModule(DeployModule):
             )
 
             install.append(
-                LiteralStr(
+                apply_literalstr(
                     (
                         f"aws codeartifact login --tool pip --domain {ca_domain} "
                         f"--repository {ca_repository} --region {region}"
@@ -64,7 +64,7 @@ class DeployLocalModule(DeployModule):
                 )
             )
             install.append(
-                LiteralStr(
+                apply_literalstr(
                     "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token "
                     f"--domain {ca_domain} "
                     f"--domain-owner {account_id} "
@@ -73,12 +73,12 @@ class DeployLocalModule(DeployModule):
                     "--output text)"
                 )
             )
-            install.append(LiteralStr("export UV_INDEX_CODEARTIFACT_USERNAME=aws"))
-            install.append(LiteralStr('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"'))
+            install.append(apply_literalstr("export UV_INDEX_CODEARTIFACT_USERNAME=aws"))
+            install.append(apply_literalstr('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"'))
 
         # needed to make sure both the tool and lib are accessible in the venv
-        install.append(LiteralStr("uv pip install pip"))
-        install.append(LiteralStr(f"uv tool install seed-farmer=={seedfarmer.__version__}"))
+        install.append(apply_literalstr("uv pip install pip"))
+        install.append(apply_literalstr(f"uv tool install seed-farmer=={seedfarmer.__version__}"))
 
         return install
 

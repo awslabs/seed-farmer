@@ -32,6 +32,7 @@ from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.deployment.deploy_remote import DeployRemoteModule
+from seedfarmer.deployment.deploy_local import DeployLocalModule
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -55,7 +56,7 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services._iam import get_role, get_role_arn
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, SessionManagerLocal, ISessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -106,9 +107,10 @@ def create_generic_module_deployment_role(
     account_id: str,
     region: str,
     deployment_manifest: DeploymentManifest,
+    session_manager: ISessionManager,
 ) -> str:
     session = (
-        SessionManager()
+        session_manager
         .get_or_create()
         .get_deployment_session(
             account_id=account_id,
@@ -141,10 +143,11 @@ def create_generic_module_deployment_role(
 def destroy_generic_module_deployment_role(
     account_id: str,
     region: str,
+    session_manager: ISessionManager,
     deployment_manifest: DeploymentManifest,
 ) -> None:
     session = (
-        SessionManager()
+        session_manager
         .get_or_create()
         .get_deployment_session(
             account_id=account_id,
@@ -169,7 +172,7 @@ def destroy_generic_module_deployment_role(
 
 
 def _execute_deploy(
-    mdo: ModuleDeployObject,
+    mdo: ModuleDeployObject,session_manager: ISessionManager
 ) -> ModuleDeploymentResponse:
     module_manifest = cast(
         ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
@@ -208,7 +211,7 @@ def _execute_deploy(
         )
 
     # Get the current module's SSM if it was already loaded...
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = session_manager.get_or_create().get_deployment_session(account_id=account_id, region_name=region)
 
     mdo.module_role_name = module_role_name
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
@@ -232,14 +235,16 @@ def _execute_deploy(
             module_manifest=module_manifest,
             account_id=account_id,
             region=region,
+            session_manager=session_manager
         )
         if mdo.deployment_manifest.name
         else None
     )
     return DeployRemoteModule(mdo).deploy_module()
+    #return DeployLocalModule(mdo).deploy_module()
 
 
-def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
+def _execute_destroy(mdo: ModuleDeployObject,session_manager: ISessionManager) -> Optional[ModuleDeploymentResponse]:
     module_manifest = cast(
         ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
     )
@@ -254,7 +259,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         account_id=target_account_id, region=target_region
     )
     session = (
-        SessionManager()
+        session_manager
         .get_or_create(role_prefix=role_prefix)
         .get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
@@ -307,7 +312,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     mdo.module_role_name = module_role_name
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
     resp = DeployRemoteModule(mdo).destroy_module()
-
+    #resp = DeployLocalModule(mdo).destroy_module()
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
             cast(str, mdo.deployment_manifest.name),
@@ -324,6 +329,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 def _deploy_validated_deployment(
     deployment_manifest: DeploymentManifest,
     deployment_manifest_wip: DeploymentManifest,
+    session_manager: ISessionManager,
     groups_to_deploy: List[ModulesManifest],
     dryrun: bool,
 ) -> None:
@@ -357,7 +363,7 @@ def _deploy_validated_deployment(
                         threading.current_thread().name = (
                             f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
                         ).replace("_", "-")
-                        return _execute_deploy(mdo)
+                        return _execute_deploy(mdo, session_manager)
 
                     mdos = []
                     for _module in _group.modules:
@@ -391,11 +397,12 @@ def _deploy_validated_deployment(
     else:
         _logger.info(" All modules in %s up to date", deployment_manifest.name)
     # Write the deployment manifest once completed to preserve group order
-    du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
+    du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest, session_manager=session_manager)
 
 
 def prime_target_accounts(
     deployment_manifest: DeploymentManifest,
+    session_manager: ISessionManager,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
 ) -> None:
@@ -422,6 +429,7 @@ def prime_target_accounts(
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
+                session_manager=session_manager
             )
 
             return [target_account_id, target_region, seedkit_stack_outputs]
@@ -483,7 +491,7 @@ def prime_target_accounts(
         _logger.debug(deployment_manifest.model_dump())
 
 
-def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_seedkit: bool = False) -> None:
+def tear_down_target_accounts(deployment_manifest: DeploymentManifest, session_manager: ISessionManager,remove_seedkit: bool = False) -> None:
     # TODO: Investigate whether we need to validate the requested mappings against previously deployed mappings
     _logger.info("Tearing Down Accounts")
 
@@ -503,6 +511,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
                 account_id=target_account_id,
                 region=target_region,
                 deployment_manifest=deployment_manifest,
+                session_manager=session_manager
             )
             commands.destroy_managed_policy_stack(**args)
             commands.destroy_bucket_storage_stack(**args)
@@ -525,6 +534,7 @@ def tear_down_target_accounts(deployment_manifest: DeploymentManifest, remove_se
 
 def destroy_deployment(
     destroy_manifest: DeploymentManifest,
+    session_manager: ISessionManager,
     remove_deploy_manifest: bool = False,
     dryrun: bool = False,
     show_manifest: bool = False,
@@ -580,7 +590,7 @@ def destroy_deployment(
                         threading.current_thread().name = (
                             f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
                         ).replace("_", "-")
-                        return _execute_destroy(mdo)
+                        return _execute_destroy(mdo, session_manager)
 
                     mdos = []
                     for _module in _group.modules:
@@ -624,10 +634,10 @@ def destroy_deployment(
 
         print_manifest_inventory(f"Modules Destroyed: {deployment_name}", destroy_manifest, False, "red")
         if remove_deploy_manifest:
-            session = SessionManager().get_or_create().toolchain_session
+            session = session_manager.get_or_create().toolchain_session
             remove_deployment_manifest(deployment_name, session=session)
             remove_deployed_deployment_manifest(deployment_name, session=session)
-            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit)
+            tear_down_target_accounts(deployment_manifest=destroy_manifest, remove_seedkit=remove_seedkit, session_manager=session_manager)
     if show_manifest:
         print_manifest_json(destroy_manifest)
 
@@ -636,6 +646,7 @@ def deploy_deployment(
     deployment_manifest: DeploymentManifest,
     module_info_index: du.ModuleInfoIndex,
     module_upstream_dep: Dict[str, List[str]],
+    session_manager: ISessionManager,
     dryrun: bool = False,
     show_manifest: bool = False,
 ) -> None:
@@ -744,8 +755,9 @@ def deploy_deployment(
                     group=group.name,
                     account_id=cast(str, module.get_target_account_id()),
                     region=cast(str, module.target_region),
-                    module_name=module.name,
+                    module_name=module.name
                 ),
+                session_manager=session_manager
             )
             if not _build_module:
                 unchanged_modules.append(
@@ -772,6 +784,7 @@ def deploy_deployment(
         deployment_manifest=deployment_manifest,
         deployment_manifest_wip=deployment_manifest_wip,
         groups_to_deploy=groups_to_deploy,
+        session_manager=session_manager,
         dryrun=dryrun,
     )
     print_bolded(f"To see all deployed modules, run seedfarmer list modules -d {deployment_name}")
@@ -857,6 +870,8 @@ def apply(
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,
     )
+    #session_manager = SessionManagerLocal()
+    #session_manager.get_or_create().get_deployment_session(account_id="NotUsed", region_name="NotUsed")
     _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
     deployment_manifest._partition = partition
     if not dryrun:
@@ -896,9 +911,10 @@ def apply(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
+        session_manager=session_manager
     )
 
-    module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
+    module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest, session_manager=session_manager)
     destroy_manifest = du.filter_deploy_destroy(deployment_manifest, module_info_index)
 
     module_depends_on_dict, module_dependencies_dict = du.generate_dependency_maps(manifest=deployment_manifest)
@@ -914,6 +930,7 @@ def apply(
 
     destroy_deployment(
         destroy_manifest=destroy_manifest,
+        session_manager=session_manager,
         remove_deploy_manifest=False,
         dryrun=dryrun,
         show_manifest=show_manifest,
@@ -924,6 +941,7 @@ def apply(
         module_upstream_dep=module_depends_on_dict,
         dryrun=dryrun,
         show_manifest=show_manifest,
+        session_manager=session_manager
     )
 
 
@@ -995,7 +1013,8 @@ def destroy(
         enable_reaper=enable_session_timeout,
         reaper_interval=session_timeout_interval,
     )
-    destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False)
+    #session_manager = SessionManagerLocal()
+    destroy_manifest = du.generate_deployed_manifest(deployment_name=deployment_name, skip_deploy_spec=False, session_manager=session_manager)
     if destroy_manifest:
         _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
         destroy_manifest._partition = partition
@@ -1006,6 +1025,7 @@ def destroy(
             dryrun=dryrun,
             show_manifest=show_manifest,
             remove_seedkit=remove_seedkit,
+            session_manager=session_manager
         )
     else:
         account_id, _, _ = get_sts_identity_info(session=session_manager.toolchain_session)

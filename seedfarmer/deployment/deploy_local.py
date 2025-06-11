@@ -148,6 +148,13 @@ class DeployLocalModule(DeployModule):
         ca_repository = os.getenv("CODEARTIFACT_REPOSITORY", None)
         install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
 
+        md5_put = [
+            (
+                f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {self.mdo.deployment_manifest.name} "
+                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
+            )
+        ]
+
         buildspec = codebuild.generate_spec(
             cmds_install=install_commands
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
@@ -165,7 +172,8 @@ class DeployLocalModule(DeployModule):
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
             + _phases.post_build.commands
-            + metadata_put,
+            + metadata_put
+            + md5_put,
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
         )

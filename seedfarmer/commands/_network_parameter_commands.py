@@ -21,13 +21,14 @@ import seedfarmer.errors
 import seedfarmer.services._ssm as ssm
 from seedfarmer.models import ValueFromRef
 from seedfarmer.models.manifests import NetworkMapping
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, ISessionManager
+from typing import Optional
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def load_network_values(
-    network: NetworkMapping, parameters_regional: Dict[str, Any], account_id: str, region: str
+    network: NetworkMapping, parameters_regional: Dict[str, Any], account_id: str, region: str, session_manager: Optional[ISessionManager] = None,
 ) -> NetworkMapping:
     _logger.debug("Evaluating network for  %s and %s", account_id, region)
 
@@ -35,8 +36,10 @@ def load_network_values(
         _logger.debug("None of the parameters are populated, ignoring networking")
         return network
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-
+    session_manager = session_manager if session_manager else SessionManager()
+    session = session_manager.get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    
+    
     if isinstance(network.vpc_id, ValueFromRef):
         if network.vpc_id.value_from and network.vpc_id.value_from.parameter_value:
             network.vpc_id = cast(

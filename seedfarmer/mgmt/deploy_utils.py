@@ -26,7 +26,7 @@ import seedfarmer.mgmt.module_info as mi
 from seedfarmer.models import DeploySpec
 from seedfarmer.models.manifests import DataFile, DeploymentManifest, ModuleManifest, ModulesManifest
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, ISessionManager
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -76,7 +76,8 @@ class ModuleInfoIndex(object):
             return {"group": "", "account_id": "", "region": "", "module_name": ""}
 
 
-def populate_module_info_index(deployment_manifest: DeploymentManifest) -> ModuleInfoIndex:
+def populate_module_info_index(deployment_manifest: DeploymentManifest, session_manager: Optional[ISessionManager] = None,
+) -> ModuleInfoIndex:
     """
     populate_module_info_index
         Fetch all info for the deployment currently stored, across all Target accounts and regions
@@ -91,14 +92,15 @@ def populate_module_info_index(deployment_manifest: DeploymentManifest) -> Modul
     ModuleInfoIndex
         An index of Module info for all Target accounts and regions
     """
+    
     module_info_index = ModuleInfoIndex()
-
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(deployment_manifest.target_accounts_regions)) as workers:
 
         def _get_module_info(args: Dict[str, Any]) -> None:
             role_prefix = args.pop("role_prefix", "/")
             session = (
-                SessionManager()
+                session_manager
                 .get_or_create(role_prefix=role_prefix)
                 .get_or_create()
                 .get_deployment_session(account_id=args["account_id"], region_name=args["region"])
@@ -271,7 +273,8 @@ def generate_dependency_maps(manifest: DeploymentManifest) -> Tuple[Dict[str, Li
 
 
 def prepare_ssm_for_deploy(
-    deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str
+    deployment_name: str, group_name: str, module_manifest: ModuleManifest, account_id: str, region: str, session_manager: Optional[ISessionManager]=None,
+
 ) -> None:
     """
     prepare_ssm_for_deploy
@@ -292,7 +295,9 @@ def prepare_ssm_for_deploy(
     """
 
     # Remove the deployspec before writing...remove bloat as we write deployspec separately
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
+    
+    session = session_manager.get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     module_manifest_wip = module_manifest.model_copy()
     module_manifest_wip.deploy_spec = None
     mi.write_module_manifest(
@@ -346,7 +351,7 @@ def prepare_ssm_for_deploy(
     )
 
 
-def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) -> None:
+def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest, session_manager: Optional[ISessionManager] =None) -> None:
     """
     write_deployed_deployment_manifest
         Write the deployment manifest to the store
@@ -359,7 +364,8 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
     deployment_name = cast(str, deployment_manifest.name)
     for group in deployment_manifest.groups:
         delattr(group, "modules")
-    session = SessionManager().get_or_create().toolchain_session
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
+    session = session_manager.get_or_create().toolchain_session
     mi.write_deployed_deployment_manifest(
         deployment=deployment_name, data=deployment_manifest.model_dump(), session=session
     )
@@ -367,6 +373,7 @@ def write_deployed_deployment_manifest(deployment_manifest: DeploymentManifest) 
 
 def generate_deployed_manifest(
     deployment_name: str,
+    session_manager: Optional[ISessionManager] = None,
     skip_deploy_spec: bool = False,
     ignore_deployed: Optional[bool] = False,
 ) -> Optional[DeploymentManifest]:
@@ -388,7 +395,7 @@ def generate_deployed_manifest(
     Optional[DeploymentManifest]
         The hydrated DeploymentManifest object of deployed modules
     """
-    session_manager = SessionManager().get_or_create()
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
     dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     if dep_manifest_dict is None or ignore_deployed:
         # No successful deployments, just use what was last requested
@@ -409,7 +416,7 @@ def generate_deployed_manifest(
     return deployed_manifest
 
 
-def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
+def get_deployed_group_ordering(deployment_name: str, session_manager: Optional[ISessionManager]=None) -> Dict[str, int]:
     """
     This generates a dict of the groups deployed and the index representing the proper deployment ordering
 
@@ -423,7 +430,8 @@ def get_deployed_group_ordering(deployment_name: str) -> Dict[str, int]:
     Dict[str, int]
         A dict with the name of the group as the key and an int as the value of the index
     """
-    session_manager = SessionManager().get_or_create()
+    #session_manager = SessionManager().get_or_create()
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
     dep_manifest_dict = mi.get_deployed_deployment_manifest(deployment_name, session=session_manager.toolchain_session)
     if dep_manifest_dict is None:
         # No successful deployments, just use what was last requested
@@ -474,10 +482,12 @@ def need_to_build(
     deployment_name: str,
     group_name: str,
     module_manifest: ModuleManifest,
+    session_manager: Optional[ISessionManager] = None,
     active_modules: List[str] = [],
     module_upstream_dep: Dict[str, List[str]] = {},
     force_redeploy_flag: bool = False,
     deployment_params_cache: Optional[Dict[str, Any]] = None,
+    
 ) -> bool:
     """
     This will indicated whether a module needs to be rebuilt based on
@@ -520,9 +530,9 @@ def need_to_build(
         )
     ):
         return True
-
+    session_manager = session_manager if session_manager else SessionManager().get_or_create()
     session = (
-        SessionManager()
+        session_manager
         .get_or_create()
         .get_deployment_session(
             account_id=cast(str, module_manifest.get_target_account_id()),

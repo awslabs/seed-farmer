@@ -31,7 +31,7 @@ from seedfarmer.mgmt.bundle_support import BUNDLE_PREFIX
 from seedfarmer.mgmt.module_info import get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, SessionManagerLocal
 from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 from seedfarmer.utils import generate_hash, upper_snake_case
 
@@ -229,7 +229,7 @@ def deploy_bucket_storage_stack(
         the bucket name
     """
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     info = StackInfo(account_id=account_id, region=region)
     bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
 
@@ -277,7 +277,7 @@ def deploy_managed_policy_stack(
         Force update the project policy if already deployed
     """
     # Determine if managed policy stack already deployed
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     project_managed_policy_stack_exists, _ = cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
@@ -318,7 +318,7 @@ def destroy_bucket_storage_stack(
     """
 
     # Determine if managed policy stack already deployed
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     info = StackInfo(account_id=account_id, region=region)
     bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
     bucket_stack_exists, outputs = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
@@ -355,7 +355,7 @@ def destroy_managed_policy_stack(account_id: str, region: str, **kwargs: Any) ->
         The region where the module is deployed
     """
     # Determine if managed policy stack already deployed
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     project_managed_policy_stack_exists, stack_outputs = cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
@@ -415,7 +415,7 @@ def destroy_module_stack(
     region: str
         The region where the module is deployed
     """
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
@@ -471,7 +471,7 @@ def deploy_module_stack(
     _logger.debug(module_stack_path)
 
     session = (
-        SessionManager()
+        SessionManagerLocal()
         .get_or_create(role_prefix=role_prefix)
         .get_deployment_session(account_id=account_id, region_name=region)
     )
@@ -572,7 +572,7 @@ def get_module_stack_info(
         [ module_stack_name, module_role_name ]
     """
 
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
@@ -616,7 +616,7 @@ def deploy_seedkit(
     permissions_boundary_arn: Optional[str]
         The ARN of the permissions boundary to attach to seedkit role
     """
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     stack_exists, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     deploy_codeartifact = bool(stack_outputs.get("CodeArtifactRepository")) or bool(deploy_codeartifact)
 
@@ -659,7 +659,7 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     region: str
         The region where the module is deployed
     """
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
     sk_commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
 
@@ -672,7 +672,7 @@ def force_manage_policy_attach(
     region: str,
     module_role_name: Optional[str] = None,
 ) -> None:
-    session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+    session = SessionManagerLocal().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     if not module_role_name:
         module_stack_name, module_role_name = get_module_stack_names(
             deployment_name, group_name, module_name, session=session

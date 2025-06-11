@@ -14,6 +14,7 @@
 
 from seedfarmer.commands._bootstrap_commands import bootstrap_target_account, bootstrap_toolchain_account
 from seedfarmer.commands._deployment_commands import apply, destroy
+from seedfarmer.commands._deployment_local_commands import apply_local
 from seedfarmer.commands._network_parameter_commands import load_network_values
 from seedfarmer.commands._parameter_commands import generate_export_env_params, generate_export_raw_env_params
 from seedfarmer.commands._project_policy_commands import get_default_project_policy
@@ -32,6 +33,7 @@ from seedfarmer.commands._stack_commands import (
 
 __all__ = [
     "apply",
+    "apply_local",
     "destroy",
     "deploy_managed_policy_stack",
     "destroy_managed_policy_stack",

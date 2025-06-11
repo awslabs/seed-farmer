@@ -20,7 +20,9 @@ _logger: logging.Logger = logging.getLogger(__name__)
 class DeployModule:
     def __init__(self, mdo: ModuleDeployObject):
         self.mdo = mdo
-        self.module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+        self.module_manifest = cast(
+            ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
+        )
 
     @staticmethod
     def seedfarmer_param(
@@ -49,8 +51,8 @@ class DeployModule:
             module = self.mdo.module_name
             bucket = self.mdo.seedfarmer_bucket
             session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-            if bundle_support.check_bundle_exists_in_sf(deployment, group, module, bucket, session):
-                return bundle_support.get_bundle_sf_path(deployment, group, module, bucket)
+            if bundle_support.check_bundle_exists_in_sf(deployment, str(group), str(module), bucket, session):
+                return bundle_support.get_bundle_sf_path(deployment, str(group), str(module), bucket)
             else:
                 return None
         else:

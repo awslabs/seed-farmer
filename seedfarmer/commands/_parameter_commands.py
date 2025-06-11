@@ -22,7 +22,7 @@ import seedfarmer.mgmt.module_info as mi
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import ISessionManager, SessionManager
 from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 from seedfarmer.utils import upper_snake_case
 
@@ -51,6 +51,7 @@ def load_parameter_values(
     deployment_manifest: DeploymentManifest,
     target_account: Optional[str],
     target_region: Optional[str],
+    session_manager: Optional[ISessionManager] = None,
 ) -> List[ModuleParameter]:
     parameter_values = []
     parameter_values_cache: Dict[Tuple[str, str, str], Any] = {}
@@ -64,7 +65,7 @@ def load_parameter_values(
         elif parameter.value_from:
             if parameter.value_from.module_metadata:
                 module_metatdata = _module_metatdata(
-                    deployment_name, parameter, parameter_values_cache, deployment_manifest
+                    deployment_name, parameter, parameter_values_cache, deployment_manifest, session_manager
                 )
                 if module_metatdata:
                     parameter_values.append(module_metatdata)
@@ -111,8 +112,12 @@ def load_parameter_values(
 
 
 def resolve_params_for_checksum(
-    deployment_manifest: DeploymentManifest, module: ModuleManifest, group_name: str
+    deployment_manifest: DeploymentManifest,
+    module: ModuleManifest,
+    group_name: str,
+    session_manager: Optional[ISessionManager] = None,
 ) -> None:
+    session_manager = session_manager if session_manager else SessionManager()
     for param in module.parameters:
         if param.value_from and param.value_from.parameter_store:
             if ":" in param.value_from.parameter_store:
@@ -121,9 +126,7 @@ def resolve_params_for_checksum(
                 )
             param.version = mi.get_ssm_parameter_version(
                 ssm_parameter_name=param.value_from.parameter_store,
-                session=SessionManager()
-                .get_or_create()
-                .get_deployment_session(
+                session=session_manager.get_or_create().get_deployment_session(
                     account_id=cast(str, module.get_target_account_id()),
                     region_name=cast(str, module.target_region),
                 ),
@@ -140,9 +143,7 @@ def resolve_params_for_checksum(
             param.version = mi.get_secrets_version(
                 secret_name=param_name,
                 version_ref=version_ref,
-                session=SessionManager()
-                .get_or_create()
-                .get_deployment_session(
+                session=session_manager.get_or_create().get_deployment_session(
                     account_id=cast(str, module.get_target_account_id()),
                     region_name=cast(str, module.target_region),
                 ),
@@ -175,16 +176,14 @@ def _get_param_value_cache(
     m_name: str,
     parameter_values_cache: Dict[Tuple[str, str, str], Any],
     deployment_manifest: DeploymentManifest,
+    session_manager: Optional[ISessionManager] = None,
 ) -> Dict[Any, Any]:
     if (d_name, g_name, m_name) not in parameter_values_cache:
         module = deployment_manifest.get_module(group=g_name, module=m_name)
+        session_manager = session_manager if session_manager else SessionManager()
         if module is not None:
-            module_session = (
-                SessionManager()
-                .get_or_create()
-                .get_deployment_session(
-                    account_id=cast(str, module.get_target_account_id()), region_name=cast(str, module.target_region)
-                )
+            module_session = session_manager.get_or_create().get_deployment_session(
+                account_id=cast(str, module.get_target_account_id()), region_name=cast(str, module.target_region)
             )
             parameter_values_cache[(d_name, g_name, m_name)] = get_module_metadata(
                 d_name, g_name, m_name, session=module_session
@@ -199,6 +198,7 @@ def _module_metatdata(
     parameter: ModuleParameter,
     parameter_values_cache: Dict[Tuple[str, str, str], Any],
     deployment_manifest: DeploymentManifest,
+    session_manager: Optional[ISessionManager] = None,
 ) -> Optional[ModuleParameter]:
     if parameter.value_from and parameter.value_from.module_metadata:
         group = parameter.value_from.module_metadata.group
@@ -207,7 +207,7 @@ def _module_metatdata(
 
         # Ensure we only retrieve the SSM Parameter value once per module
         parameter_value = _get_param_value_cache(
-            deployment_name, group, module_name, parameter_values_cache, deployment_manifest
+            deployment_name, group, module_name, parameter_values_cache, deployment_manifest, session_manager
         )
         _logger.debug("loaded parameter value: %s", parameter_value)
 

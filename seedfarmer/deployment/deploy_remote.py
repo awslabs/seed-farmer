@@ -80,7 +80,7 @@ class DeployRemoteModule(DeployModule):
                 "EOF"
             )
 
-            install.append(f"aws codeartifact login --tool pip --domain {domain} --repository {repo}")
+            install.append(f"aws codeartifact login --tool pip --domain {domain} --repository {repo} --region {region}")
             install.append(
                 "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token "
                 f"--domain {domain} "
@@ -102,7 +102,7 @@ class DeployRemoteModule(DeployModule):
         deployment_manifest = self.mdo.deployment_manifest
         group = self.mdo.group_name
         module_manifest = cast(
-            ModuleManifest, self.mdo.deployment_manifest.get_module(self.mdo.group_name, self.mdo.module_name)
+            ModuleManifest, self.mdo.deployment_manifest.get_module(str(self.mdo.group_name), str(self.mdo.module_name))
         )
         # Use this yaml so that the spec is pretty
         yaml = register_literal_str()
@@ -294,7 +294,7 @@ class DeployRemoteModule(DeployModule):
 
         destroy_manifest = self.mdo.deployment_manifest
         module_manifest = cast(
-            ModuleManifest, self.mdo.deployment_manifest.get_module(self.mdo.group_name, self.mdo.module_name)
+            ModuleManifest, self.mdo.deployment_manifest.get_module(str(self.mdo.group_name), str(self.mdo.module_name))
         )
         account_id = str(module_manifest.get_target_account_id())
         region = str(module_manifest.target_region)

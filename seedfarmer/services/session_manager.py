@@ -276,3 +276,39 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             sleep(interval)
             _logger.info(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}
+
+
+class SessionManagerLocal(ISessionManager, metaclass=SingletonMeta):
+    def __init__(self) -> None:
+        self.created: bool = False
+        super().__init__()
+
+    def get_or_create(
+        self,
+        *,
+        region_name: Optional[str] = None,
+        profile: Optional[str] = None,
+        **kwargs: Optional[Any],
+    ) -> ISessionManager:
+        if not self.created:
+            # Create a session using the specified profile or default credentials
+            self._session = create_new_session(region_name=region_name, profile=profile)
+            self._credentials = self._session.get_credentials().get_frozen_credentials()  # type: ignore [union-attr]
+            self.created = True
+        return self
+
+    @property
+    def toolchain_session(self) -> Session:
+        if not self.created or self._session is None:
+            raise seedfarmer.errors.InvalidConfigurationError("SessionManagerLocal not properly initialized")
+        return self._session
+
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        # Simply return the same session regardless of account/region
+        # The account_id and region are ignored...but need to meet the spec
+        return self.toolchain_session
+
+    def get_toolchain_credentials(self) -> Credentials:
+        if not self.created or self._credentials is None:
+            raise seedfarmer.errors.InvalidConfigurationError("SessionManagerLocal not properly initialized")
+        return cast(Credentials, self._credentials)

@@ -84,19 +84,22 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
 
 def _read_metadata_env_param(mms: ModuleMetadataSupport) -> Dict[str, Any]:
     p = mms.metadata_file_name()
-    if p in os.environ:
-        env_data = os.getenv(p)
+    env_data = os.getenv(p)
+
+    if env_data:
         try:
-            return cast(Dict[str, Any], json.loads(str(env_data)))
+            return cast(Dict[str, Any], json.loads(env_data))
         except ValueError:
-            # When echoing single quotes from env parameter, cannot convert to json.
-            # Poor man's fix
-            return cast(Dict[str, Any], json.loads(env_data.replace("'", '"')))  # type: ignore
+            try:
+                return cast(Dict[str, Any], json.loads(env_data.replace("'", '"')))
+            except Exception as e:
+                _logger.info("Cannot parse env metadata %s after quote fix due to %s", p, e)
+                return {}
         except Exception as e:
-            _logger.info("Cannot parse the file env metadata %s due to %s", p, e)
+            _logger.info("Cannot parse env metadata %s due to %s", p, e)
             return {}
     else:
-        _logger.info("Cannot find existing metadata env param at %s, moving on", p)
+        _logger.info("Cannot find or empty metadata env param at %s, moving on", p)
         return {}
 
 

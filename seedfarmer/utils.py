@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import glob
 import hashlib
 import logging
 import os
@@ -290,23 +291,36 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
     return payload
 
 
-def create_output_dir(name: str) -> str:
-    """Helper function for creating or clearing a .seedfarmer.out output directory
+def create_output_dir(name: str, path_override: Optional[str] = None) -> str:
+    """Helper function for creating or clearing a .seedfarmer.out output directory by default
 
     Parameters
     ----------
     name : str
         Name of the directory to create in  the .seedfarmer.out directory
 
+    path_override: Optional[str]
+        If you want to override the name .seedfarmer.out use this (beware of what you are doing)
+
     Returns
     -------
     str
         Full path of the created directory
     """
-    out_dir = os.path.join(os.getcwd(), ".seedfarmer.out", name)
+    local_path = path_override if path_override else ".seedfarmer.out"
+    out_dir = os.path.join(os.getcwd(), local_path, name)
     try:
         shutil.rmtree(out_dir)
     except FileNotFoundError:
         pass
+    # except PermissionError:
+    #     pass
     os.makedirs(out_dir, exist_ok=True)
     return out_dir
+
+
+def delete_all_output_dir(name: str = ".seedfarmerlocal-") -> None:
+    pattern = os.path.join(os.getcwd(), f"{name}-*")
+    for path in glob.glob(pattern):
+        if os.path.isdir(path):
+            shutil.rmtree(path)

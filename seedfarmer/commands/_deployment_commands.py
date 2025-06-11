@@ -171,7 +171,9 @@ def destroy_generic_module_deployment_role(
 def _execute_deploy(
     mdo: ModuleDeployObject,
 ) -> ModuleDeploymentResponse:
-    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    module_manifest = cast(
+        ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
+    )
     account_id = str(module_manifest.get_target_account_id())
     region = str(module_manifest.target_region)
 
@@ -195,8 +197,8 @@ def _execute_deploy(
         _, module_role_name = commands.deploy_module_stack(
             module_stack_path=module_stack_path,
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            group_name=mdo.group_name,
-            module_name=mdo.module_name,
+            group_name=str(mdo.group_name),
+            module_name=str(mdo.module_name),
             account_id=account_id,
             region=region,
             parameters=mdo.parameters,
@@ -212,7 +214,9 @@ def _execute_deploy(
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
 
     mdo.module_metadata = json.dumps(
-        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
+        get_module_metadata(
+            cast(str, mdo.deployment_manifest.name), str(mdo.group_name), str(mdo.module_name), session=session
+        )
     )
 
     if module_manifest.deploy_spec is None:
@@ -224,7 +228,7 @@ def _execute_deploy(
     (
         du.prepare_ssm_for_deploy(
             deployment_name=mdo.deployment_manifest.name,
-            group_name=mdo.group_name,
+            group_name=str(mdo.group_name),
             module_manifest=module_manifest,
             account_id=account_id,
             region=region,
@@ -236,7 +240,9 @@ def _execute_deploy(
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
-    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    module_manifest = cast(
+        ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
+    )
     if module_manifest.deploy_spec is None:
         raise seedfarmer.errors.InvalidManifestError(
             f"Invalid value for ModuleManifest.deploy_spec in group {mdo.group_name} and module : {mdo.module_name}"
@@ -253,7 +259,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         .get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
     module_metadata = get_module_metadata(
-        cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session
+        cast(str, mdo.deployment_manifest.name), str(mdo.group_name), str(mdo.module_name), session=session
     )
     mdo.module_metadata = json.dumps(module_metadata)
     mdo.parameters = load_parameter_values(
@@ -265,8 +271,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     )
     module_stack_name, module_role_name, module_stack_exists = commands.get_module_stack_info(
         deployment_name=cast(str, mdo.deployment_manifest.name),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
+        group_name=str(mdo.group_name),
+        module_name=str(mdo.module_name),
         account_id=target_account_id,
         region=target_region,
     )
@@ -291,8 +297,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     if module_stack_exists:
         commands.force_manage_policy_attach(
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            group_name=mdo.group_name,
-            module_name=mdo.module_name,
+            group_name=str(mdo.group_name),
+            module_name=str(mdo.module_name),
             account_id=target_account_id,
             region=target_region,
             module_role_name=mdo.module_role_name,
@@ -305,8 +311,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
             cast(str, mdo.deployment_manifest.name),
-            mdo.group_name,
-            mdo.module_name,
+            str(mdo.group_name),
+            str(mdo.module_name),
             account_id=target_account_id,
             region=target_region,
             docker_credentials_secret=mdo.docker_credentials_secret,

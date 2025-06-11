@@ -24,7 +24,7 @@ def run(
     codebuild_image: Optional[str] = None,
 ) -> None:  # Optional[codebuild.BuildInfo]:
     # Write the environment variables to the file
-    env_vars_path = os.path.join(local_deploy_path, "diw.env")
+    env_vars_path = os.path.join(local_deploy_path, "local.env")
     with open(env_vars_path, "w") as f:
         for key, value in env_vars.items():
             f.write(f"{key}={value}\n")
@@ -52,7 +52,7 @@ def run(
         "-v",
         f"{local_deploy_path}/:/LocalBuild/envFile/",
         "-e",
-        "ENV_VAR_FILE=diw.env",
+        "ENV_VAR_FILE=local.env",
         "-e",
         f"AWS_CONFIGURATION={os.environ.get('HOME')}/.aws",
         "-e",
@@ -60,7 +60,7 @@ def run(
         "-e",
         "MOUNT_SOURCE_DIRECTORY=TRUE",
         "-e",
-        "INITIATOR=diw_user",
+        "INITIATOR=local_user",
         "-e",
         f"REPORTS={local_deploy_path}/logs",
     ]

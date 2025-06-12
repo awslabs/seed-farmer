@@ -132,14 +132,14 @@ class DeployLocalModule(DeployModule):
         dirs = {"module": module_path}
         dirs_tuples = [(v, k) for k, v in dirs.items()]
 
-        # extra_files = {}
-        # if module_manifest.data_files is not None:
-        #     extra_files = {
-        #         f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
-        #         for data_file in module_manifest.data_files
-        #     }
-        # if extra_files is not None:
-        #     extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
+        extra_files = {}
+        if module_manifest.data_files is not None:
+            extra_files = {
+                f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+                for data_file in module_manifest.data_files
+            }
+        if extra_files is not None:
+            extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
 
         files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
 
@@ -244,6 +244,14 @@ class DeployLocalModule(DeployModule):
         module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
         dirs = {"module": module_path}
         dirs_tuples = [(v, k) for k, v in dirs.items()]
+        extra_files = {}
+        if module_manifest.data_files is not None:
+            extra_files = {
+                f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+                for data_file in module_manifest.data_files
+            }
+        if extra_files is not None:
+            extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
         files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
 
         runtimes = {"nodejs": "20"}

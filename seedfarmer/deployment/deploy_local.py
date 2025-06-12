@@ -233,9 +233,7 @@ class DeployLocalModule(DeployModule):
         metadata_put = [
             f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
         ]
-        remove_ssm = [
-            f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"
-        ]
+        remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"]
         export_info = [
             f"export DEPLOYMENT={self.mdo.deployment_manifest.name}",
             f"export GROUP={self.mdo.group_name}",
@@ -271,7 +269,7 @@ class DeployLocalModule(DeployModule):
             cmds_install=install_commands
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
-             + _phases.install.commands,
+            + _phases.install.commands,
             cmds_pre=[". ~/.venv/bin/activate"]
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]

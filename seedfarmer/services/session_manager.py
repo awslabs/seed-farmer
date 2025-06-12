@@ -1,6 +1,23 @@
+#    Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License").
+#    You may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+
+from __future__ import annotations
+
 import logging
 import threading
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 from threading import Thread
 from time import sleep
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
@@ -55,7 +72,8 @@ class ISessionManager(object):
         **kwargs: Optional[Any],
     ) -> Any: ...
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def toolchain_session(self) -> Session: ...
 
     @abstractmethod
@@ -65,7 +83,33 @@ class ISessionManager(object):
     def get_toolchain_credentials(self) -> Credentials: ...
 
 
-class SessionManager(ISessionManager, metaclass=SingletonMeta):
+class SessionManager(ISessionManager):
+    _real_instance: Optional[ISessionManager] = None
+
+    def __new__(cls, *args: List[Any], **kwargs: Dict[str, Any]) -> SessionManager:
+        if cls._real_instance is None:
+            raise RuntimeError("SessionManager implementation has not been initialized")
+        return cast(SessionManager, cls._real_instance)
+
+    @classmethod
+    def bind(cls, instance: ISessionManager) -> None:
+        cls._real_instance = instance
+
+    def get_or_create(self, **kwargs: Any) -> ISessionManager:
+        raise NotImplementedError()
+
+    @property
+    def toolchain_session(self) -> Session:
+        raise NotImplementedError()
+
+    def get_toolchain_credentials(self) -> Credentials:
+        raise NotImplementedError()
+
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        raise NotImplementedError()
+
+
+class SessionManagerRemoteImpl(ISessionManager, metaclass=SingletonMeta):
     TOOLCHAIN_KEY: str = "toolchain"
     SESSION: str = "session"
     ROLE: str = "role"
@@ -278,7 +322,7 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             self.sessions = {}
 
 
-class SessionManagerLocal(ISessionManager, metaclass=SingletonMeta):
+class SessionManagerLocalImpl(ISessionManager, metaclass=SingletonMeta):
     def __init__(self) -> None:
         self.created: bool = False
         super().__init__()

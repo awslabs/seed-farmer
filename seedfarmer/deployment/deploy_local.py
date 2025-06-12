@@ -109,6 +109,21 @@ class DeployLocalModule(DeployModule):
             ),
         ]
 
+        md5_put = [
+            (
+                f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {self.mdo.deployment_manifest.name} "
+                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
+            )
+        ]
+
+        metadata_env_var = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
+        sf_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
+        githash_add = (
+            [f"seedfarmer metadata add -k SeedFarmerModuleCommitHash -v {module_manifest.commit_hash} || true"]
+            if module_manifest.commit_hash
+            else []
+        )
+
         extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
         module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
         dirs = {"module": module_path}
@@ -133,12 +148,17 @@ class DeployLocalModule(DeployModule):
             codebuild_image if codebuild_image else "public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0"
         )
 
+        if codebuild_image.startswith("aws/codebuild/"):
+            codebuild_image = f"public.ecr.{codebuild_image}"
+
+        ## This part is a hack....need to think about it
+        if not codebuild_image.startswith("public.ecr."):
+            codebuild_image = f"public.ecr.{codebuild_image}"
+
         # docker_network="pypi-net"
         # local_pypi_endpoint="http://pypiserver:8080/simple"
         runtimes = {"nodejs": "20"}
-        codebuild_image = "public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0"
 
-        # cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs)
         bundle_id = f"{self.mdo.deployment_manifest.name}-{self.mdo.group_name}-{module_manifest.name}"
         output_override = f".seedfarmerlocal-{bundle_id}"
 
@@ -165,7 +185,10 @@ class DeployLocalModule(DeployModule):
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
             + _phases.post_build.commands
-            + metadata_put,
+            + metadata_put
+            + md5_put
+            + sf_version_add
+            + githash_add,
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
         )

@@ -129,7 +129,7 @@ class DeployRemoteModule(DeployModule):
         ]
 
         metadata_env_var = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
-        cs_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
+        sf_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
         module_role_name_add = [
             f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {self.mdo.module_role_name} || true"
         ]
@@ -214,7 +214,7 @@ class DeployRemoteModule(DeployModule):
             + ["cd module/"]
             + _phases.post_build.commands
             + md5_put
-            + cs_version_add
+            + sf_version_add
             + module_role_name_add
             + githash_add
             + add_cb_metadata

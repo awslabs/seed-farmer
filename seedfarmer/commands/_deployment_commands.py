@@ -31,7 +31,7 @@ import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
-from seedfarmer.deployment.deploy_remote import DeployRemoteModule
+from seedfarmer.deployment.deploy_factory import DeployModuleFactory
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -55,7 +55,7 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services._iam import get_role, get_role_arn
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, SessionManagerLocalImpl, SessionManagerRemoteImpl
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -236,7 +236,7 @@ def _execute_deploy(
         if mdo.deployment_manifest.name
         else None
     )
-    return DeployRemoteModule(mdo).deploy_module()
+    return DeployModuleFactory().create(mdo).deploy_module()
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
@@ -306,7 +306,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
 
     mdo.module_role_name = module_role_name
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
-    resp = DeployRemoteModule(mdo).destroy_module()
+    resp = DeployModuleFactory().create(mdo).destroy_module()
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
@@ -790,6 +790,7 @@ def apply(
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
+    is_local_deploy: bool = False,
 ) -> None:
     """
     apply
@@ -830,6 +831,10 @@ def apply(
         Force update run of seedkit, defaults to False
     update_project_policy: bool
         Force update run of managed project policy, defaults to False
+    is_local_deploy: bool
+        If set to true, use the credentials of active session and do not
+        use the seedfarmer roles
+        By default False
 
     Raises
     ------
@@ -845,6 +850,11 @@ def apply(
     with open(manifest_path) as manifest_file:
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
     _logger.debug(deployment_manifest.model_dump())
+
+    if is_local_deploy:
+        SessionManager.bind(SessionManagerLocalImpl())
+    else:
+        SessionManager.bind(SessionManagerRemoteImpl())
 
     # Initialize the SessionManager for the entire project
     session_manager = SessionManager().get_or_create(
@@ -938,6 +948,7 @@ def destroy(
     remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
+    is_local_deploy: bool = False,
 ) -> None:
     """
     destroy
@@ -975,6 +986,10 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
+    is_local_deploy: bool
+        If set to true, use the credentials of active session and do not
+        use the seedfarmer roles
+        By default False
     Raises
     ------
     InvalidConfigurationError
@@ -986,6 +1001,12 @@ def destroy(
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
+
+    if is_local_deploy:
+        SessionManager.bind(SessionManagerLocalImpl())
+    else:
+        SessionManager.bind(SessionManagerRemoteImpl())
+
     session_manager = SessionManager().get_or_create(
         project_name=project,
         profile=profile,

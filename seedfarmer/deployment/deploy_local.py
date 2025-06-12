@@ -118,6 +118,9 @@ class DeployLocalModule(DeployModule):
 
         metadata_env_var = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
         sf_version_add = [f"seedfarmer metadata add -k SeedFarmerDeployed -v {seedfarmer.__version__} || true"]
+        module_role_name_add = [
+            f"seedfarmer metadata add -k ModuleDeploymentRoleName -v {self.mdo.module_role_name} || true"
+        ]
         githash_add = (
             [f"seedfarmer metadata add -k SeedFarmerModuleCommitHash -v {module_manifest.commit_hash} || true"]
             if module_manifest.commit_hash
@@ -184,6 +187,7 @@ class DeployLocalModule(DeployModule):
             + metadata_put
             + md5_put
             + sf_version_add
+            + module_role_name_add
             + githash_add,
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
@@ -205,10 +209,98 @@ class DeployLocalModule(DeployModule):
         )
 
     def destroy_module(self) -> ModuleDeploymentResponse:
+        deployment_name = self.mdo.deployment_manifest.name
+        group_name = self.mdo.group_name
+        module_name = self.mdo.module_name
+
+        module_manifest = cast(
+            ModuleManifest, self.mdo.deployment_manifest.get_module(str(group_name), str(module_name))
+        )
+        use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables  # type: ignore [union-attr]
+        yaml = register_literal_str()
+
+        if module_manifest.deploy_spec is None or module_manifest.deploy_spec.destroy is None:
+            raise seedfarmer.errors.InvalidConfigurationError(
+                f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml"
+            )
+
+        account_id = str(module_manifest.get_target_account_id())
+        region = str(module_manifest.target_region)
+        env_vars = self._env_vars()
+
+        metadata_env_var = DeployModule.seedfarmer_param("MODULE_METADATA", None, use_project_prefix)
+
+        metadata_put = [
+            f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
+        ]
+        remove_ssm = [
+            f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"
+        ]
+        export_info = [
+            f"export DEPLOYMENT={self.mdo.deployment_manifest.name}",
+            f"export GROUP={self.mdo.group_name}",
+            f"export MODULE={module_manifest.name}",
+        ]
+
+        extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
+        module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+        dirs = {"module": module_path}
+        dirs_tuples = [(v, k) for k, v in dirs.items()]
+        files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
+
+        runtimes = {"nodejs": "20"}
+        codebuild_image = (
+            module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
+        )
+        codebuild_image = (
+            codebuild_image if codebuild_image else "public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+        )
+
+        bundle_id = f"{deployment_name}-{group_name}-{module_name}"
+        output_override = f".seedfarmerlocal-{bundle_id}"
+
+        local_path = create_output_dir(f"{bundle_id}", output_override)
+        bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id, path_override=output_override)
+        ca_domain = os.getenv("CODEARTIFACT_DOMAIN", None)
+        ca_repository = os.getenv("CODEARTIFACT_REPOSITORY", None)
+
+        _phases = module_manifest.deploy_spec.destroy.phases
+        install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
+
+        buildspec = codebuild.generate_spec(
+            cmds_install=install_commands
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+             + _phases.install.commands,
+            cmds_pre=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+            + _phases.pre_build.commands
+            + export_info,
+            cmds_build=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+            + _phases.build.commands,
+            cmds_post=[". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+            + _phases.post_build.commands
+            + metadata_put
+            + remove_ssm,
+            abort_phases_on_failure=True,
+            runtime_versions=runtimes,
+        )
+
+        buildspec_dir = create_output_dir(f"{bundle_id}/buildspec", output_override)
+        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+            yaml.dump(buildspec, file)
+
+        codebuild_local.run(local_path, env_vars, codebuild_image)
+
         return ModuleDeploymentResponse(
-            deployment="placeholder",
-            group="placeholder",
-            module="placeholder",
+            deployment=deployment_name,
+            group=group_name,
+            module=module_name,
             status=StatusType.SUCCESS.value,
             codebuild_metadata=None,
         )

@@ -304,8 +304,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
             module_role_name=mdo.module_role_name,
         )
 
-    mdo.module_role_name = module_role_name
-    mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
+    mdo.module_role_arn = get_role_arn(role_name=mdo.module_role_name, session=session)
     resp = DeployModuleFactory().create(mdo).destroy_module()
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:

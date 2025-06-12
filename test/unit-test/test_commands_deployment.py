@@ -20,7 +20,10 @@ from seedfarmer.models.manifests import (
 )
 from seedfarmer.models.transfer import ModuleDeployObject
 from seedfarmer.services._service_utils import boto3_client
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import (
+    SessionManager,
+    SessionManagerRemoteImpl,
+)
 
 
 @pytest.fixture(scope="function")
@@ -43,6 +46,9 @@ def sts_client(aws_credentials):
 @pytest.fixture(scope="function")
 def session_manager(sts_client):
     SessionManager._instances = {}
+    SessionManager._real_instance = None
+    real_instance = SessionManagerRemoteImpl()
+    SessionManager.bind(real_instance)
     SessionManager().get_or_create(
         project_name="test",
         region_name="us-east-1",
@@ -253,7 +259,7 @@ def test_execute_deploy_invalid_spec(session_manager, mocker):
     mdo = ModuleDeployObject(
         deployment_manifest=dep, group_name=dep.groups[0].name, module_name=dep.groups[0].modules[0].name
     )
-    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
 
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_deploy(mdo)
@@ -273,7 +279,7 @@ def test_execute_deploy(session_manager, mocker):
         return_value="role_arn",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
-    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
@@ -301,7 +307,7 @@ def test_execute_deploy_with_prefix(session_manager, mocker):
         return_value="role_arn",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
-    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
     dep = DeploymentManifest(**mock_deployment_manifest_with_prefix.deployment_manifest)
     dep.validate_and_set_module_defaults()
     group = dep.groups[0]
@@ -340,7 +346,7 @@ def test_execute_destroy_invalid_spec(session_manager, mocker):
         "seedfarmer.commands._deployment_commands.commands.get_module_stack_info",
         return_value=("stack_name", "role_name"),
     )
-    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
     with pytest.raises(seedfarmer.errors.InvalidManifestError):
         dc._execute_destroy(mdo)
@@ -370,7 +376,7 @@ def test_execute_destroy(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.commands.force_manage_policy_attach", return_value=None)
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=group.name, module_name=module_manifest.name)
-    mocker.patch("seedfarmer.commands._deployment_commands.DeployRemoteModule")
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
     dc._execute_destroy(mdo)
 
 

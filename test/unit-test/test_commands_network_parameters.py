@@ -8,7 +8,10 @@ import seedfarmer.commands._network_parameter_commands as npc
 import seedfarmer.errors
 from seedfarmer.models.manifests import DeploymentManifest, NetworkMapping
 from seedfarmer.services._service_utils import boto3_client
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import (
+    SessionManager,
+    SessionManagerRemoteImpl,
+)
 
 
 @pytest.fixture(scope="function")
@@ -31,6 +34,9 @@ def sts_client(aws_credentials):
 @pytest.fixture(scope="function")
 def session_manager(sts_client):
     SessionManager._instances = {}
+    SessionManager._real_instance = None
+    real_instance = SessionManagerRemoteImpl()
+    SessionManager.bind(real_instance)
     SessionManager().get_or_create(
         project_name="test",
         region_name="us-east-1",

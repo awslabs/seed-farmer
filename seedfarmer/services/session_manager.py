@@ -88,7 +88,7 @@ class SessionManager(ISessionManager):
 
     def __new__(cls, *args: List[Any], **kwargs: Dict[str, Any]) -> SessionManager:
         if cls._real_instance is None:
-            raise RuntimeError("SessionManager implementation has not been initialized")
+            raise seedfarmer.errors.InvalidSessionError("SessionManager implementation has not been initialized")
         return cast(SessionManager, cls._real_instance)
 
     @classmethod

@@ -26,7 +26,10 @@ from seedfarmer.__main__ import list as list
 from seedfarmer.models._deploy_spec import DeploySpec
 from seedfarmer.models.manifests import DeploymentManifest
 from seedfarmer.services._service_utils import boto3_client
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import (
+    SessionManager,
+    SessionManagerRemoteImpl,
+)
 
 # Override OPS_ROOT to reflect path of resource policy needed for some testing #
 _OPS_ROOT = config.OPS_ROOT
@@ -82,6 +85,9 @@ def sts_client(aws_credentials):
 @pytest.fixture(scope="function")
 def session_manager(sts_client):
     SessionManager._instances = {}
+    SessionManager._real_instance = None
+    real_instance = SessionManagerRemoteImpl()
+    SessionManager.bind(real_instance)
     SessionManager().get_or_create(
         project_name="test",
         region_name="us-east-1",

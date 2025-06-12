@@ -151,10 +151,6 @@ class DeployLocalModule(DeployModule):
         if codebuild_image.startswith("aws/codebuild/"):
             codebuild_image = f"public.ecr.{codebuild_image}"
 
-        ## This part is a hack....need to think about it
-        if not codebuild_image.startswith("public.ecr."):
-            codebuild_image = f"public.ecr.{codebuild_image}"
-
         # docker_network="pypi-net"
         # local_pypi_endpoint="http://pypiserver:8080/simple"
         runtimes = {"nodejs": "20"}

@@ -66,6 +66,7 @@ setup(
         "botocore==1.36.4",
         "cfn-flip>=1.2.3",
         "click==8.1.8",
+        "ruamel.yaml==0.18.14",
     ],
     entry_points={"console_scripts": ["seedfarmer = seedfarmer.__main__:main"]},
     classifiers=[

@@ -330,7 +330,7 @@ This feature will allow you to stage files locally in your SeedFarmer Project (M
 
 When using this feature, any change to these file(s) (modifying, add to manifest, removing from manifest) will indicate to SeedFarmer that a redeployment is necessary.
 
-***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to destroy the module(s)...we are not keeping them stored anywhere (much like the module source code).  ***Iceburg  missed us! (why is everything so wet??)***
+***Iceburg, dead ahead!*** Heres the rub: if you deploy with data files sourced from a local filesystem, you MUST provide those same files in order to update the module(s) at a later time.  We do persist the bundled code with datafiles, but for destroy ONLY.     ***Iceburg missed us! (why is everything so wet??)***
 
 (universaloverride)=
 ## Universal Environment Variable Replacement in Manifests

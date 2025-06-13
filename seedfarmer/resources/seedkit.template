@@ -4,7 +4,7 @@ Description: |
 Parameters:
   BuildImage:
     Type: String
-    Default: aws/codebuild/standard:7.0
+    Default: aws/codebuild/amazonlinux2-x86_64-standard:5.0
 Resources:
   Bucket:
     Type: AWS::S3::Bucket

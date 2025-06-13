@@ -111,7 +111,9 @@ def load_parameter_values(
 
 
 def resolve_params_for_checksum(
-    deployment_manifest: DeploymentManifest, module: ModuleManifest, group_name: str
+    deployment_manifest: DeploymentManifest,
+    module: ModuleManifest,
+    group_name: str,
 ) -> None:
     for param in module.parameters:
         if param.value_from and param.value_from.parameter_store:

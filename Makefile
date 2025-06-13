@@ -7,38 +7,38 @@
 install:  ## Install dependencies
 	curl -Ls https://astral.sh/uv/install.sh | sh
 	@echo "Setting up virtual environment..."
-	uv venv -p3.11 .venv-uvtest
+	uv venv -p3.11 .venv
 	@echo "Installing Dev dependencies..."
-	. .venv-uvtest/bin/activate && \
-	uv pip install -r requirements.txt && \
-	uv pip install -r requirements-dev.txt && \
-	uv pip install -e .
+	. .venv/bin/activate && \
+	uv sync --frozen
 
 .PHONY: test
 test:  ## Run unit tests
 	@echo "Running unit tests..."
-	. .venv-uvtest/bin/activate && ./test/pytest.sh
+	. .venv/bin/activate && ./test/pytest.sh
+
+.PHONY: build
+build:  ## Run build
+	@echo "Running build..."
+	. .venv/bin/activate && uv build --wheel
 
 .PHONY: validate
 validate:  ## Run linters and type checkers
 	@echo "Running ruff and type checkers..."
-	. .venv-uvtest/bin/activate && \
-		pip install ruff mypy && \
-		ruff format --check seedfarmer --quiet && \
-		python3 -m ruff check --fix seedfarmer --quiet && \
-		python3 -m mypy --pretty --ignore-missing-imports seedfarmer
-
+	. .venv/bin/activate && \
+		uv sync --frozen --inexact --no-install-project --only-dev
+		uv run ruff format --check seedfarmer --quiet && \
+		uv run ruff check seedfarmer --quiet && \
+		uv run mypy --pretty  --non-interactive --ignore-missing-imports seedfarmer
 
 .PHONY: format
 format:  ## Format code with ruff and prettier
 	@echo "Formatting code with ruff and prettier..."
-	. .venv-uvtest/bin/activate && \
-		python -m ruff format seedfarmer && \
-		python -m ruff check --fix seedfarmer && \
-		python -m ruff format test && \
-		python -m ruff check --fix test && \
-		python -m ruff format setup.py && \
-		python -m ruff check --fix setup.py
+	. .venv/bin/activate && \
+		uv run ruff format seedfarmer && \
+		uv run ruff check --fix seedfarmer && \
+		uv run ruff format test && \
+		uv run ruff check --fix test
 
 .PHONY: help
 help:  ## Show help for each of the Makefile recipes
@@ -50,7 +50,7 @@ clean:  ## Remove build artifacts and virtual environment
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info
-	rm -rf .venv-uvtest/
+	rm -rf .venv/
 	rm -rf .pytest_cache/
 	rm -rf .coverage
 	rm -rf htmlcov/

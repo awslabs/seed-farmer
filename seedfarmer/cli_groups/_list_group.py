@@ -33,7 +33,12 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
 )
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services.session_manager import ISessionManager, SessionManager
+from seedfarmer.services.session_manager import (
+    ISessionManager,
+    SessionManager,
+    SessionManagerLocalImpl,
+    SessionManagerRemoteImpl,
+)
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -55,6 +60,13 @@ def _error_messaging(deployment: str, group: Optional[str] = None, module: Optio
     else:
         print(f"No module data found for {deployment}")
     print_bolded("To see all deployments, run seedfarmer list deployments")
+
+
+def assign_session_manager(local: bool) -> None:
+    if local:
+        SessionManager.bind(SessionManagerLocalImpl())
+    else:
+        SessionManager.bind(SessionManagerRemoteImpl())
 
 
 @click.group(name="list", help="List the relative data (module or deployment)")
@@ -128,6 +140,13 @@ def list() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_dependencies(
     deployment: str,
     group: str,
@@ -138,6 +157,7 @@ def list_dependencies(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -147,6 +167,7 @@ def list_dependencies(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
+    assign_session_manager(local)
 
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -236,6 +257,13 @@ def list_dependencies(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_deployspec(
     deployment: str,
     group: str,
@@ -246,6 +274,7 @@ def list_deployspec(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -255,7 +284,7 @@ def list_deployspec(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-
+    assign_session_manager(local)
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -350,6 +379,13 @@ def list_deployspec(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_module_metadata(
     deployment: str,
     group: str,
@@ -361,6 +397,7 @@ def list_module_metadata(
     env_files: List[str],
     export_local_env: bool,
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -370,7 +407,7 @@ def list_module_metadata(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-
+    assign_session_manager(local)
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -454,6 +491,13 @@ def list_module_metadata(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_all_module_metadata(
     deployment: str,
     project: Optional[str],
@@ -462,6 +506,7 @@ def list_all_module_metadata(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -471,7 +516,7 @@ def list_all_module_metadata(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-
+    assign_session_manager(local)
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -554,6 +599,13 @@ def list_all_module_metadata(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_modules(
     deployment: str,
     project: Optional[str],
@@ -562,6 +614,7 @@ def list_modules(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -571,7 +624,7 @@ def list_modules(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-
+    assign_session_manager(local)
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -612,12 +665,20 @@ def list_modules(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_deployments(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -625,6 +686,7 @@ def list_deployments(
         project = _load_project()
     _logger.debug("Listing all deployments for Project %s", project)
 
+    assign_session_manager(local)
     session_manager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -719,6 +781,13 @@ def list_deployments(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def list_build_env_params(
     deployment: str,
     group: str,
@@ -731,6 +800,7 @@ def list_build_env_params(
     env_files: List[str],
     export_local_env: str,
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -742,7 +812,7 @@ def list_build_env_params(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-
+    assign_session_manager(local)
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )

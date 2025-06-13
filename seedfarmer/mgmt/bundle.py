@@ -123,14 +123,14 @@ def generate_bundle(
     dirs: Optional[List[Tuple[str, str]]] = None,
     files: Optional[List[Tuple[str, str]]] = None,
     bundle_id: Optional[str] = None,
+    path_override: Optional[str] = None,
 ) -> str:
-    bundle_dir = create_output_dir(f"{bundle_id}/bundle") if bundle_id else create_output_dir("bundle")
+    bundle_dir = (
+        create_output_dir(f"{bundle_id}/bundle", path_override)
+        if bundle_id
+        else create_output_dir("bundle", path_override)
+    )
     remote_dir = os.path.dirname(bundle_dir)
-
-    # fn_args_file = os.path.join(bundle_dir, "fn_args.json")
-    # _logger.debug("writing fn_ars file %s", fn_args_file)
-    # with open(fn_args_file, "w") as file:
-    #     file.write(json.dumps(fn_args))
 
     # Add the docker login script
     shutil.copy(
@@ -138,13 +138,13 @@ def generate_bundle(
         dst=os.path.join(bundle_dir, "retrieve_docker_creds.py"),
     )
 
-    # Add the pypi credentials suppprt
+    # Add the pypi credentials support
     shutil.copy(
         src=os.path.join(CLI_ROOT, "resources/pypi_mirror_support.py"),
         dst=os.path.join(bundle_dir, "pypi_mirror_support.py"),
     )
 
-    # Add the npm credentials suppprt
+    # Add the npm credentials support
     shutil.copy(
         src=os.path.join(CLI_ROOT, "resources/npm_mirror_support.py"),
         dst=os.path.join(bundle_dir, "npm_mirror_support.py"),

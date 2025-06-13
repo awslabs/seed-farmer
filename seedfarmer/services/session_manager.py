@@ -1,6 +1,23 @@
+#    Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License").
+#    You may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+
+from __future__ import annotations
+
 import logging
 import threading
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 from threading import Thread
 from time import sleep
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
@@ -55,7 +72,8 @@ class ISessionManager(object):
         **kwargs: Optional[Any],
     ) -> Any: ...
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def toolchain_session(self) -> Session: ...
 
     @abstractmethod
@@ -65,7 +83,33 @@ class ISessionManager(object):
     def get_toolchain_credentials(self) -> Credentials: ...
 
 
-class SessionManager(ISessionManager, metaclass=SingletonMeta):
+class SessionManager(ISessionManager):
+    _real_instance: Optional[ISessionManager] = None
+
+    def __new__(cls, *args: List[Any], **kwargs: Dict[str, Any]) -> SessionManager:
+        if cls._real_instance is None:
+            raise seedfarmer.errors.InvalidSessionError("SessionManager implementation has not been initialized")
+        return cast(SessionManager, cls._real_instance)
+
+    @classmethod
+    def bind(cls, instance: ISessionManager) -> None:
+        cls._real_instance = instance
+
+    def get_or_create(self, **kwargs: Any) -> ISessionManager:
+        raise NotImplementedError()
+
+    @property
+    def toolchain_session(self) -> Session:
+        raise NotImplementedError()
+
+    def get_toolchain_credentials(self) -> Credentials:
+        raise NotImplementedError()
+
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        raise NotImplementedError()
+
+
+class SessionManagerRemoteImpl(ISessionManager, metaclass=SingletonMeta):
     TOOLCHAIN_KEY: str = "toolchain"
     SESSION: str = "session"
     ROLE: str = "role"
@@ -276,3 +320,39 @@ class SessionManager(ISessionManager, metaclass=SingletonMeta):
             sleep(interval)
             _logger.info(f"Reaping Sessions - sleeping for {interval} seconds")
             self.sessions = {}
+
+
+class SessionManagerLocalImpl(ISessionManager, metaclass=SingletonMeta):
+    def __init__(self) -> None:
+        self.created: bool = False
+        super().__init__()
+
+    def get_or_create(
+        self,
+        *,
+        region_name: Optional[str] = None,
+        profile: Optional[str] = None,
+        **kwargs: Optional[Any],
+    ) -> ISessionManager:
+        if not self.created:
+            # Create a session using the specified profile or default credentials
+            self._session = create_new_session(region_name=region_name, profile=profile)
+            self._credentials = self._session.get_credentials().get_frozen_credentials()  # type: ignore [union-attr]
+            self.created = True
+        return self
+
+    @property
+    def toolchain_session(self) -> Session:
+        if not self.created or self._session is None:
+            raise seedfarmer.errors.InvalidConfigurationError("SessionManagerLocal not properly initialized")
+        return self._session
+
+    def get_deployment_session(self, account_id: str, region_name: str) -> Session:
+        # Simply return the same session regardless of account/region
+        # The account_id and region are ignored...but need to meet the spec
+        return self.toolchain_session
+
+    def get_toolchain_credentials(self) -> Credentials:
+        if not self.created or self._credentials is None:
+            raise seedfarmer.errors.InvalidConfigurationError("SessionManagerLocal not properly initialized")
+        return cast(Credentials, self._credentials)

@@ -72,6 +72,7 @@ def _execute_codebuild(
     overrides: Optional[Dict[str, Any]] = None,
     codebuild_log_callback: Optional[Callable[[str], None]] = None,
     session: Optional[Union[Callable[[], Session], Session]] = None,
+    yaml_dumper: Optional[Any] = None,  # Accepts ruamel.yaml.YAML instance or PyYAML dump function
 ) -> Optional[codebuild.BuildInfo]:
     _logger.debug("bundle_location: %s", bundle_location)
     stream_name_prefix = f"codeseeder-{execution_id}"  # (LEGACY)
@@ -84,6 +85,7 @@ def _execute_codebuild(
         timeout=timeout,
         overrides=overrides,
         session=session,
+        yaml_dumper=yaml_dumper,
     )
     return _wait_execution(
         build_id=build_id,
@@ -103,6 +105,7 @@ def run(
     session: Optional[Union[Callable[[], Session], Session]] = None,
     bundle_id: Optional[str] = None,
     prebuilt_bundle: Optional[str] = None,
+    yaml_dumper: Optional[Any] = None,  # Accepts ruamel.yaml.YAML instance or PyYAML dump function
 ) -> Optional[codebuild.BuildInfo]:
     execution_id = "".join(random.choice(string.ascii_lowercase) for i in range(8))
 
@@ -130,6 +133,7 @@ def run(
         timeout=timeout,
         overrides=overrides,
         session=session,
+        yaml_dumper=yaml_dumper,
     )
     if not prebuilt_bundle:
         s3.delete_objects(bucket=bucket, keys=[key], session=session)

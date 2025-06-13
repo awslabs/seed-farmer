@@ -789,7 +789,7 @@ def apply(
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
-    is_local: bool = False,
+    local: bool = False,
 ) -> None:
     """
     apply
@@ -830,7 +830,7 @@ def apply(
         Force update run of seedkit, defaults to False
     update_project_policy: bool
         Force update run of managed project policy, defaults to False
-    is_local: bool
+    local: bool
         If set to true, use the credentials of active session and do not
         use the seedfarmer roles
         By default False
@@ -850,7 +850,7 @@ def apply(
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
     _logger.debug(deployment_manifest.model_dump())
 
-    if is_local:
+    if local:
         SessionManager.bind(SessionManagerLocalImpl())
     else:
         SessionManager.bind(SessionManagerRemoteImpl())
@@ -947,7 +947,7 @@ def destroy(
     remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
-    is_local: bool = False,
+    local: bool = False,
 ) -> None:
     """
     destroy
@@ -985,7 +985,7 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
-    is_local: bool
+    local: bool
         If set to true, use the credentials of active session and do not
         use the seedfarmer roles
         By default False
@@ -1001,7 +1001,7 @@ def destroy(
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
 
-    if is_local:
+    if local:
         SessionManager.bind(SessionManagerLocalImpl())
     else:
         SessionManager.bind(SessionManagerRemoteImpl())

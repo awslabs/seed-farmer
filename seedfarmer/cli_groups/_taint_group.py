@@ -21,7 +21,12 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import ISessionManager, SessionManager
+from seedfarmer.services.session_manager import (
+    ISessionManager,
+    SessionManager,
+    SessionManagerLocalImpl,
+    SessionManagerRemoteImpl,
+)
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -122,6 +127,13 @@ def taint() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def taint_module(
     deployment: str,
     group: str,
@@ -132,6 +144,7 @@ def taint_module(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -142,6 +155,10 @@ def taint_module(
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 
+    if local:
+        SessionManager.bind(SessionManagerLocalImpl())
+    else:
+        SessionManager.bind(SessionManagerRemoteImpl())
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )

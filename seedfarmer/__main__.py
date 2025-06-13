@@ -131,6 +131,13 @@ def version() -> None:
     show_default=True,
     type=bool,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def apply(
     spec: str,
     profile: Optional[str],
@@ -145,6 +152,7 @@ def apply(
     session_timeout_interval: int,
     update_seedkit: bool,
     update_project_policy: bool,
+    local: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
@@ -169,6 +177,7 @@ def apply(
         session_timeout_interval=session_timeout_interval,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
+        local=local,
     )
 
 
@@ -257,6 +266,13 @@ def apply(
     show_default=True,
     type=bool,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def destroy(
     deployment: str,
     dry_run: bool,
@@ -270,6 +286,7 @@ def destroy(
     enable_session_timeout: bool,
     session_timeout_interval: int,
     remove_seedkit: bool,
+    local: bool,
 ) -> None:
     """Destroy a SeedFarmer managed deployment"""
     if debug:
@@ -297,6 +314,7 @@ def destroy(
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
         remove_seedkit=remove_seedkit,
+        local=local,
     )
 
 

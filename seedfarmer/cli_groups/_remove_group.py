@@ -22,7 +22,7 @@ import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, SessionManagerLocalImpl, SessionManagerRemoteImpl
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -114,6 +114,13 @@ def remove() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
 def remove_module_data(
     deployment: str,
     group: str,
@@ -125,6 +132,7 @@ def remove_module_data(
     target_account_id: Optional[str],
     target_region: Optional[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -139,6 +147,10 @@ def remove_module_data(
             "Must either specify both --target-account-id and --target-region, or neither"
         )
     elif target_account_id is not None and target_region is not None:
+        if local:
+            SessionManager.bind(SessionManagerLocalImpl())
+        else:
+            SessionManager.bind(SessionManagerRemoteImpl())
         session = (
             SessionManager()
             .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)

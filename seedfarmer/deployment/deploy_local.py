@@ -105,14 +105,14 @@ class DeployLocalModule(DeployModule):
             f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
             (
                 f"echo ${metadata_env_var} | seedfarmer store moduledata "
-                f"-d {deployment_manifest.name} -g {group} -m {module_manifest.name} "
+                f"-d {deployment_manifest.name} -g {group} -m {module_manifest.name} --region {region} --local"
             ),
         ]
 
         md5_put = [
             (
                 f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {self.mdo.deployment_manifest.name} "
-                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
+                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --region {region} --local"
             )
         ]
 
@@ -163,8 +163,15 @@ class DeployLocalModule(DeployModule):
 
         local_path = create_output_dir(f"{bundle_id}", output_override)
         bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id, path_override=output_override)
-        ca_domain = os.getenv("CODEARTIFACT_DOMAIN", None)
-        ca_repository = os.getenv("CODEARTIFACT_REPOSITORY", None)
+        stack_outputs = deployment_manifest.get_region_seedfarmer_metadata(account_id=account_id, region=region)
+        ca_domain = (
+            stack_outputs["CodeArtifactDomain"] if stack_outputs and "CodeArtifactDomain" in stack_outputs else None
+        )
+        ca_repository = (
+            stack_outputs["CodeArtifactRepository"]
+            if stack_outputs and "CodeArtifactRepository" in stack_outputs
+            else None
+        )
         install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
 
         buildspec = codebuild.generate_spec(
@@ -233,7 +240,12 @@ class DeployLocalModule(DeployModule):
         metadata_put = [
             f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
         ]
-        remove_ssm = [f"seedfarmer remove moduledata -d {deployment_name} -g {group_name} -m {module_manifest.name}"]
+        remove_ssm = [
+            (
+                f"seedfarmer remove moduledata "
+                f"-d {deployment_name} -g {group_name} -m {module_manifest.name} --region {region} --local"
+            )
+        ]
         export_info = [
             f"export DEPLOYMENT={self.mdo.deployment_manifest.name}",
             f"export GROUP={self.mdo.group_name}",
@@ -262,15 +274,27 @@ class DeployLocalModule(DeployModule):
             codebuild_image if codebuild_image else "public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0"
         )
 
+        if codebuild_image.startswith("aws/codebuild/"):
+            codebuild_image = f"public.ecr.{codebuild_image}"
+
         bundle_id = f"{deployment_name}-{group_name}-{module_name}"
         output_override = f".seedfarmerlocal-{bundle_id}"
 
         local_path = create_output_dir(f"{bundle_id}", output_override)
         bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id, path_override=output_override)
-        ca_domain = os.getenv("CODEARTIFACT_DOMAIN", None)
-        ca_repository = os.getenv("CODEARTIFACT_REPOSITORY", None)
 
         _phases = module_manifest.deploy_spec.destroy.phases
+        stack_outputs = self.mdo.deployment_manifest.get_region_seedfarmer_metadata(
+            account_id=account_id, region=region
+        )
+        ca_domain = (
+            stack_outputs["CodeArtifactDomain"] if stack_outputs and "CodeArtifactDomain" in stack_outputs else None
+        )
+        ca_repository = (
+            stack_outputs["CodeArtifactRepository"]
+            if stack_outputs and "CodeArtifactRepository" in stack_outputs
+            else None
+        )
         install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
 
         buildspec = codebuild.generate_spec(

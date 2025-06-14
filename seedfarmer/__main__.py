@@ -20,7 +20,7 @@ import click
 
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
-from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, store, taint
+from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, seedkit, store, taint
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.utils import load_dotenv_files
 
@@ -331,5 +331,6 @@ def main() -> int:
     cli.add_command(metadata)
     cli.add_command(bundle)
     cli.add_command(taint)
+    cli.add_command(seedkit)
     cli()
     return 0

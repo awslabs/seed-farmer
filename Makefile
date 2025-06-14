@@ -29,7 +29,7 @@ validate:  ## Run linters and type checkers
 		uv sync --frozen --inexact --no-install-project --only-dev
 		uv run ruff format --check seedfarmer --quiet && \
 		uv run ruff check seedfarmer --quiet && \
-		uv run mypy --pretty  --non-interactive --ignore-missing-imports seedfarmer
+		uv run mypy --pretty --ignore-missing-imports seedfarmer
 
 .PHONY: format
 format:  ## Format code with ruff and prettier

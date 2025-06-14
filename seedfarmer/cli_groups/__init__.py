@@ -19,7 +19,8 @@ from seedfarmer.cli_groups._list_group import list
 from seedfarmer.cli_groups._manage_metadata_group import metadata
 from seedfarmer.cli_groups._project_group import projectpolicy
 from seedfarmer.cli_groups._remove_group import remove
+from seedfarmer.cli_groups._seedkit_group import seedkit
 from seedfarmer.cli_groups._store_group import store
 from seedfarmer.cli_groups._taint_group import taint
 
-__all__ = ["bootstrap", "init", "list", "remove", "store", "projectpolicy", "metadata", "bundle", "taint"]
+__all__ = ["bootstrap", "bundle", "init", "list", "metadata", "projectpolicy", "remove", "seedkit", "store", "taint"]

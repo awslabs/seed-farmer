@@ -14,12 +14,14 @@
 
 import logging
 import sys
+from typing import Optional
 
 import click
 
 from seedfarmer import config
 from seedfarmer.mgmt import bundle_support
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.services.session_manager import SessionManager, SessionManagerLocalImpl
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -77,21 +79,26 @@ def bundle() -> None:
     help="Full path of the bundle object in SeedKit bucket",
     required=True,
 )
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region used to create a session",
+    required=False,
+)
 def store_bundle(
-    deployment: str,
-    group: str,
-    module: str,
-    bucket: str,
-    origin: str,
+    deployment: str, group: str, module: str, bucket: str, origin: str, region: Optional[str] = None
 ) -> None:
     _load_project()
     print(f"{deployment} - {group} - {module} -{bucket} - {origin}")
+    SessionManager.bind(SessionManagerLocalImpl())
+    session = (
+        SessionManager()
+        .get_or_create(region_name=region)
+        .get_deployment_session(account_id="000000000000", region_name=str(region))
+    )
+
     bundle_support.copy_bundle_to_sf(
-        deployment=deployment,
-        group=group,
-        module=module,
-        bucket=bucket,
-        bundle_src_path=origin,
+        deployment=deployment, group=group, module=module, bucket=bucket, bundle_src_path=origin, session=session
     )
 
 
@@ -129,12 +136,7 @@ def store_bundle(
     help="The Name of the bucket where the bundle is stored in SeedFarmer",
     required=True,
 )
-def fetch_bundle(
-    deployment: str,
-    group: str,
-    module: str,
-    bucket: str,
-) -> None:
+def fetch_bundle(deployment: str, group: str, module: str, bucket: str, region: Optional[str] = None) -> None:
     _load_project()
     p = bundle_support.get_bundle_sf_path(deployment=deployment, group=group, module=module, bucket=bucket)
     sys.stdout.write(p) if p else None
@@ -174,11 +176,19 @@ def fetch_bundle(
     help="The Name of the bucket where the bundle is stored in SeedFarmer",
     required=True,
 )
-def delete_bundle(
-    deployment: str,
-    group: str,
-    module: str,
-    bucket: str,
-) -> None:
+@click.option(
+    "--region",
+    default=None,
+    help="The AWS region used to create a session",
+    required=False,
+)
+def delete_bundle(deployment: str, group: str, module: str, bucket: str, region: Optional[str] = None) -> None:
     _load_project()
-    bundle_support.delete_bundle_from_sf(deployment=deployment, group=group, module=module, bucket=bucket)
+    SessionManager.bind(SessionManagerLocalImpl())
+    session = (
+        SessionManager().get_or_create().get_deployment_session(account_id="000000000000", region_name=str(region))
+    )
+
+    bundle_support.delete_bundle_from_sf(
+        deployment=deployment, group=group, module=module, bucket=bucket, session=session
+    )

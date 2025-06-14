@@ -47,7 +47,9 @@ class BundleS3Support:
             self.seedkit_key = o[1]
 
 
-def copy_bundle_to_sf(deployment: str, group: str, module: str, bucket: str, bundle_src_path: str) -> None:
+def copy_bundle_to_sf(
+    deployment: str, group: str, module: str, bucket: str, bundle_src_path: str, session: Optional[Session] = None
+) -> None:
     bundle = BundleS3Support(
         deployment=deployment, group=group, module=module, bucket=bucket, bundle_src_path=bundle_src_path
     )
@@ -57,6 +59,7 @@ def copy_bundle_to_sf(deployment: str, group: str, module: str, bucket: str, bun
             src_key=str(bundle.seedkit_key),
             dest_bucket=str(bundle.seedfarmer_bucket),
             dest_key=str(bundle.seedfarmer_key),
+            session=session,
         )
     except Exception as e:
         _logger.info("Cannot copy the bundle to S3 - %s", e)
@@ -77,10 +80,11 @@ def delete_bundle_from_sf(
     group: str,
     module: str,
     bucket: str,
+    session: Optional[Session] = None,
 ) -> None:
     bundle = BundleS3Support(deployment=deployment, group=group, module=module, bucket=bucket)
     try:
-        s3.delete_objects(bucket=str(bundle.seedfarmer_bucket), keys=[str(bundle.seedfarmer_key)])
+        s3.delete_objects(bucket=str(bundle.seedfarmer_bucket), keys=[str(bundle.seedfarmer_key)], session=session)
     except Exception as e:
         _logger.info("Cannot delete the bundle from S3 - %s", e)
 

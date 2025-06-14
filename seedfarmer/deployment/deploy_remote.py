@@ -124,7 +124,7 @@ class DeployRemoteModule(DeployModule):
         md5_put = [
             (
                 f"echo {module_manifest.bundle_md5} | seedfarmer store md5 -d {self.mdo.deployment_manifest.name} "
-                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --debug ;"
+                f"-g {self.mdo.group_name} -m {module_manifest.name} -t bundle --region {region} --local"
             )
         ]
 
@@ -157,13 +157,13 @@ class DeployRemoteModule(DeployModule):
             f"if [[ -f {metadata_env_var} ]]; then export {metadata_env_var}=$(cat {metadata_env_var}); fi",
             (
                 f"echo ${metadata_env_var} | seedfarmer store moduledata "
-                f"-d {deployment_manifest.name} -g {group} -m {module_manifest.name} "
+                f"-d {deployment_manifest.name} -g {group} -m {module_manifest.name} --region {region} --local"
             ),
         ]
         store_sf_bundle = [
             (
                 f"seedfarmer bundle store -d {deployment_manifest.name} -g {group} -m {module_manifest.name} "
-                f"-o $CODEBUILD_SOURCE_REPO_URL -b {self.mdo.seedfarmer_bucket} || true"
+                f"-o $CODEBUILD_SOURCE_REPO_URL -b {self.mdo.seedfarmer_bucket} --region {region} || true"
             )
         ]
 
@@ -309,13 +309,16 @@ class DeployRemoteModule(DeployModule):
 
         env_vars = self._env_vars()
         remove_ssm = [
-            f"seedfarmer remove moduledata -d {deployment_name} -g {self.mdo.group_name} -m {module_manifest.name}"
+            (
+                f"seedfarmer remove moduledata "
+                f"-d {deployment_name} -g {self.mdo.group_name} -m {module_manifest.name} --region {region} --local"
+            )
         ]
 
         remove_sf_bundle = [
             (
                 f"seedfarmer bundle delete -d {self.mdo.deployment_manifest.name} -g {self.mdo.group_name} "
-                f"-m {module_manifest.name} -b {self.mdo.seedfarmer_bucket} || true"
+                f"-m {module_manifest.name} -b {self.mdo.seedfarmer_bucket} --region {region} || true"
             )
         ]
 

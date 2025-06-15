@@ -12,14 +12,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import logging
-
 import click
 
 import seedfarmer.mgmt.module_init as minit
-from seedfarmer import DEBUG_LOGGING_FORMAT, enable_debug
-
-_logger: logging.Logger = logging.getLogger(__name__)
 
 
 @click.group(name="init", help="Initialize a project or module")
@@ -28,9 +23,13 @@ def init() -> None:
     pass
 
 
-@init.command(
-    name="project",
-    help="Initialize a project. Make sure seedfarmer.yaml is present in the same location you execute this command!!",
+@init.command(name="project", help="Initialize a project.")
+@click.option(
+    "--project-name",
+    "-p",
+    default=None,
+    help="The name of the project. If None, seedfarmer.yaml must be at the dir where cli invoked.",
+    required=False,
 )
 @click.option(
     "--template-url",
@@ -46,8 +45,8 @@ def init() -> None:
     help="The Branch on the template repository. If not specified, the default template branch is `main`",
     required=False,
 )
-def init_project(template_url: str, template_branch: str) -> None:
-    minit.create_project(template_url=template_url, template_branch=template_branch)
+def init_project(template_url: str, template_branch: str, project_name: str) -> None:
+    minit.create_project(template_url=template_url, template_branch=template_branch, project_name=project_name)
 
 
 @init.command(name="module", help="Initialize a new module")
@@ -86,10 +85,6 @@ def init_project(template_url: str, template_branch: str) -> None:
 def init_module(
     group_name: str, module_name: str, module_type: str, template_url: str, template_branch: str, debug: bool
 ) -> None:
-    if debug:
-        enable_debug(format=DEBUG_LOGGING_FORMAT)
-    _logger.debug("Initializing module %s", module_name)
-
     minit.create_module_dir(
         group_name=group_name,
         module_name=module_name,

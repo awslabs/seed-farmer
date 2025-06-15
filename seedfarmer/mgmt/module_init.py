@@ -16,6 +16,7 @@ import logging
 import os
 from typing import Optional
 
+import yaml
 from cookiecutter.main import cookiecutter
 
 import seedfarmer.errors
@@ -78,34 +79,47 @@ def create_module_dir(
     )
 
 
-def create_project(template_url: Optional[str], template_branch: Optional[str] = "main") -> None:
+def create_project(
+    template_url: str, template_branch: Optional[str] = "main", project_name: Optional[str] = None
+) -> None:
     """Initializes a new project directory.
 
     Creates a new directory that contains files that will aid in setting up a development environment
 
     Parameters
     ----------
-    project_name : str
-        Name of the project. The initialization will include project files pulled from the template_url
-        using the template_branch as reference
-    template_url : Optional[List[str]]
+    template_url : str
         A URL, for example a Github repo, that is or contains the template for the initialization
     template_branch : Optional[str]
         The Branch on the template repository. If not specified, the default template branch is `main`
+    project_name : Optional[str]
+        Name of the project. The initialization will include project files pulled from the template_url
+        using the template_branch as reference
     """
+    # Create minimal seedfarmer.yaml first if project_name is provided
+    if project_name is not None:
+        with open(os.path.join(os.getcwd(), "seedfarmer.yaml"), "w") as f:
+            yaml.dump({"project": project_name}, f, default_flow_style=False)
 
     checkout_branch = (
         "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else template_branch
     )
-    _logger.info(" New project will be created in the following dir: %s", os.path.join(config.OPS_ROOT, config.PROJECT))
+
     cookiecutter(
         template=template_url,
         checkout=checkout_branch,
         no_input=True,
-        extra_context={"project_name": config.PROJECT},
+        extra_context={"project_name": project_name if project_name else config.PROJECT},
         output_dir=config.OPS_ROOT,
     )
-    os.replace(
-        os.path.join(config.OPS_ROOT, config.CONFIG_FILE),
-        os.path.join(config.OPS_ROOT, config.PROJECT, config.CONFIG_FILE),
-    )
+
+    if project_name is not None:
+        # Move the seedfarmer.yaml to the project directory
+        os.replace(
+            os.path.join(os.getcwd(), "seedfarmer.yaml"), os.path.join(config.OPS_ROOT, project_name, "seedfarmer.yaml")
+        )
+    else:
+        os.replace(
+            os.path.join(config.OPS_ROOT, config.CONFIG_FILE),
+            os.path.join(config.OPS_ROOT, config.PROJECT, config.CONFIG_FILE),
+        )

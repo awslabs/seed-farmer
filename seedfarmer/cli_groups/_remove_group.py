@@ -16,7 +16,6 @@ import logging
 from typing import Optional
 
 import click
-from boto3 import Session
 
 import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
@@ -141,20 +140,24 @@ def remove_module_data(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
-    if (target_account_id is not None) != (target_region is not None):
-        raise seedfarmer.errors.InvalidConfigurationError(
-            "Must either specify both --target-account-id and --target-region, or neither"
-        )
-    elif target_account_id is not None and target_region is not None:
-        if local:
-            SessionManager.bind(SessionManagerLocalImpl())
-        else:
-            SessionManager.bind(SessionManagerRemoteImpl())
+    if local:
+        SessionManager.bind(SessionManagerLocalImpl())
         session = (
             SessionManager()
-            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-            .get_deployment_session(account_id=target_account_id, region_name=target_region)
+            .get_or_create(profile=profile, region_name=region)
+            .get_deployment_session(account_id="000000000000", region_name=str(region))
         )
+    else:
+        SessionManager.bind(SessionManagerRemoteImpl())
+        if (target_account_id is not None) != (target_region is not None):
+            raise seedfarmer.errors.InvalidConfigurationError(
+                "Must either specify both --target-account-id and --target-region, or neither"
+            )
+        elif target_account_id is not None and target_region is not None:
+            session = (
+                SessionManager()
+                .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
+                .get_deployment_session(account_id=target_account_id, region_name=target_region)
+            )
 
     mi.remove_module_info(deployment, group, module, session=session)

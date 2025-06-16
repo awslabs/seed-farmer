@@ -62,7 +62,6 @@ def _error_messaging(deployment: str, group: Optional[str] = None, module: Optio
 
 
 @click.group(name="list", help="List the relative data (module or deployment)")
-@bind_session_mgr
 def list() -> None:
     """List module data"""
     pass
@@ -140,6 +139,7 @@ def list() -> None:
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_dependencies(
     deployment: str,
     group: str,
@@ -256,6 +256,7 @@ def list_dependencies(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_deployspec(
     deployment: str,
     group: str,
@@ -378,6 +379,7 @@ def list_deployspec(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_module_metadata(
     deployment: str,
     group: str,
@@ -490,6 +492,7 @@ def list_module_metadata(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_all_module_metadata(
     deployment: str,
     project: Optional[str],
@@ -598,6 +601,7 @@ def list_all_module_metadata(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_modules(
     deployment: str,
     project: Optional[str],
@@ -664,6 +668,7 @@ def list_modules(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_deployments(
     project: Optional[str],
     profile: Optional[str],
@@ -779,6 +784,7 @@ def list_deployments(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def list_build_env_params(
     deployment: str,
     group: str,
@@ -854,5 +860,6 @@ def list_build_env_params(
     required=False,
     default="deployment",
 )
+@bind_session_mgr
 def list_manifest_schema(type: str) -> None:
     print(json.dumps(bi.get_manifest_schema(type=type), indent=2))

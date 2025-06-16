@@ -37,7 +37,6 @@ def _load_project() -> str:
 
 
 @click.group(name="remove", help="Top Level command to support removing module metadata")
-@bind_session_mgr
 def remove() -> None:
     """Remove module data"""
     pass
@@ -122,6 +121,7 @@ def remove() -> None:
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def remove_module_data(
     deployment: str,
     group: str,

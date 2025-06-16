@@ -134,6 +134,7 @@ def taint() -> None:
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def taint_module(
     deployment: str,
     group: str,

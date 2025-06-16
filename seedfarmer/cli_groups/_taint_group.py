@@ -159,7 +159,6 @@ def taint_module(
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
-    print(session_manager)
 
     try:
         dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)

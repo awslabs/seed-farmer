@@ -40,7 +40,6 @@ def _load_project() -> str:
 
 
 @click.group(name="store", help="Top Level command to support storing module information")
-@bind_session_mgr
 def store() -> None:
     "Store module information"
     pass
@@ -139,6 +138,7 @@ def store() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_deployspec(
     deployment: str,
     group: str,

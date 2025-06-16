@@ -18,13 +18,14 @@ from typing import Optional
 
 import click
 import yaml
+from boto3 import Session
 
 import seedfarmer.errors
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import SessionManager, SessionManagerLocalImpl, SessionManagerRemoteImpl
+from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ def _load_project() -> str:
 
 
 @click.group(name="store", help="Top Level command to support storing module information")
+@bind_session_mgr
 def store() -> None:
     "Store module information"
     pass
@@ -162,25 +164,17 @@ def store_deployspec(
     if project is None:
         project = _load_project()
 
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
+    session: Session = Session(profile_name=profile, region_name=region)
+    if (target_account_id is not None) != (target_region is not None):
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Must either specify both --target-account-id and --target-region, or neither"
+        )
+    elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(profile=profile, region_name=region)
-            .get_deployment_session(account_id="000000000000", region_name=str(region))
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
-        if (target_account_id is not None) != (target_region is not None):
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "Must either specify both --target-account-id and --target-region, or neither"
-            )
-        elif target_account_id is not None and target_region is not None:
-            session = (
-                SessionManager()
-                .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-                .get_deployment_session(account_id=target_account_id, region_name=target_region)
-            )
 
     du.update_deployspec(deployment, group, module, path, session=session)
 
@@ -285,25 +279,17 @@ def store_module_metadata(
     if project is None:
         project = _load_project()
 
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
+    session: Session = Session(profile_name=profile, region_name=region)
+    if (target_account_id is not None) != (target_region is not None):
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Must either specify both --target-account-id and --target-region, or neither"
+        )
+    elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(profile=profile, region_name=region)
-            .get_deployment_session(account_id="000000000000", region_name=str(region))
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
-        if (target_account_id is not None) != (target_region is not None):
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "Must either specify both --target-account-id and --target-region, or neither"
-            )
-        elif target_account_id is not None and target_region is not None:
-            session = (
-                SessionManager()
-                .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-                .get_deployment_session(account_id=target_account_id, region_name=target_region)
-            )
 
     d = yaml.safe_load(sys.stdin.read())
     if d:
@@ -417,25 +403,17 @@ def store_module_md5(
     if project is None:
         project = _load_project()
 
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
+    session: Session = Session(profile_name=profile, region_name=region)
+    if (target_account_id is not None) != (target_region is not None):
+        raise seedfarmer.errors.InvalidConfigurationError(
+            "Must either specify both --target-account-id and --target-region, or neither"
+        )
+    elif target_account_id is not None and target_region is not None:
         session = (
             SessionManager()
-            .get_or_create(profile=profile, region_name=region)
-            .get_deployment_session(account_id="000000000000", region_name=str(region))
+            .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
+            .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
-        if (target_account_id is not None) != (target_region is not None):
-            raise seedfarmer.errors.InvalidConfigurationError(
-                "Must either specify both --target-account-id and --target-region, or neither"
-            )
-        elif target_account_id is not None and target_region is not None:
-            session = (
-                SessionManager()
-                .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
-                .get_deployment_session(account_id=target_account_id, region_name=target_region)
-            )
 
     d = sys.stdin.readline().strip()
     if d:

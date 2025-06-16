@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import threading
 from abc import abstractmethod
+from functools import update_wrapper
 from threading import Thread
 from time import sleep
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
@@ -356,3 +357,17 @@ class SessionManagerLocalImpl(ISessionManager, metaclass=SingletonMeta):
         if not self.created or self._credentials is None:
             raise seedfarmer.errors.InvalidConfigurationError("SessionManagerLocal not properly initialized")
         return cast(Credentials, self._credentials)
+
+
+def bind_session_mgr(f):
+    def bind_session_mgr_inner(*args, **kwargs):
+        local = kwargs.get("local", False)
+
+        if local:
+            SessionManager.bind(SessionManagerLocalImpl())
+        else:
+            SessionManager.bind(SessionManagerRemoteImpl())
+
+        return f(*args, **kwargs)
+
+    return update_wrapper(bind_session_mgr_inner, f)

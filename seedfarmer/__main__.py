@@ -22,6 +22,7 @@ import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, seedkit, store, taint
 from seedfarmer.output_utils import print_bolded
+from seedfarmer.services.session_manager import bind_session_mgr
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ def version() -> None:
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def apply(
     spec: str,
     profile: Optional[str],
@@ -177,7 +179,6 @@ def apply(
         session_timeout_interval=session_timeout_interval,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
-        local=local,
     )
 
 
@@ -273,6 +274,7 @@ def apply(
     show_default=True,
     type=bool,
 )
+@bind_session_mgr
 def destroy(
     deployment: str,
     dry_run: bool,
@@ -314,7 +316,6 @@ def destroy(
         enable_session_timeout=enable_session_timeout,
         session_timeout_interval=session_timeout_interval,
         remove_seedkit=remove_seedkit,
-        local=local,
     )
 
 

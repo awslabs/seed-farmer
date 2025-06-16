@@ -94,7 +94,8 @@ class DeployRemoteModule(DeployModule):
 
         # needed to make sure both the tool and lib are accessible in the venv
         install.append("uv pip install pip")
-        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
+        # install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
+        install.append(apply_literalstr(f"uv tool install seed-farmer==6.1.0"))
 
         return install
 

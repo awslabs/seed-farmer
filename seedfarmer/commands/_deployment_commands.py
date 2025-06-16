@@ -55,7 +55,7 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services._iam import get_role, get_role_arn
-from seedfarmer.services.session_manager import SessionManager, SessionManagerLocalImpl, SessionManagerRemoteImpl
+from seedfarmer.services.session_manager import SessionManager
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -789,7 +789,6 @@ def apply(
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
-    local: bool = False,
 ) -> None:
     """
     apply
@@ -849,11 +848,6 @@ def apply(
     with open(manifest_path) as manifest_file:
         deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
     _logger.debug(deployment_manifest.model_dump())
-
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
 
     # Initialize the SessionManager for the entire project
     session_manager = SessionManager().get_or_create(
@@ -947,7 +941,6 @@ def destroy(
     remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
-    local: bool = False,
 ) -> None:
     """
     destroy
@@ -1000,11 +993,6 @@ def destroy(
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
-
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
 
     session_manager = SessionManager().get_or_create(
         project_name=project,

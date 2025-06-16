@@ -36,8 +36,7 @@ from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import (
     ISessionManager,
     SessionManager,
-    SessionManagerLocalImpl,
-    SessionManagerRemoteImpl,
+    bind_session_mgr,
 )
 from seedfarmer.utils import load_dotenv_files
 
@@ -62,14 +61,8 @@ def _error_messaging(deployment: str, group: Optional[str] = None, module: Optio
     print_bolded("To see all deployments, run seedfarmer list deployments")
 
 
-def assign_session_manager(local: bool) -> None:
-    if local:
-        SessionManager.bind(SessionManagerLocalImpl())
-    else:
-        SessionManager.bind(SessionManagerRemoteImpl())
-
-
 @click.group(name="list", help="List the relative data (module or deployment)")
+@bind_session_mgr
 def list() -> None:
     """List module data"""
     pass
@@ -167,7 +160,6 @@ def list_dependencies(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
 
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -284,7 +276,7 @@ def list_deployspec(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
+
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -407,7 +399,7 @@ def list_module_metadata(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
+
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -516,7 +508,7 @@ def list_all_module_metadata(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
+
     session = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -624,7 +616,7 @@ def list_modules(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
+
     SessionManager().get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
 
     dep_manifest = du.generate_deployed_manifest(deployment_name=deployment, skip_deploy_spec=True)
@@ -686,7 +678,6 @@ def list_deployments(
         project = _load_project()
     _logger.debug("Listing all deployments for Project %s", project)
 
-    assign_session_manager(local)
     session_manager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )
@@ -812,7 +803,7 @@ def list_build_env_params(
         project = _load_project()
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
-    assign_session_manager(local)
+
     session_manager: ISessionManager = SessionManager().get_or_create(
         project_name=project, profile=profile, region_name=region, qualifier=qualifier
     )

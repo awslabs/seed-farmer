@@ -55,7 +55,7 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services._iam import get_role, get_role_arn
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -777,6 +777,7 @@ def deploy_deployment(
     print_manifest_json(deployment_manifest) if show_manifest else None
 
 
+@bind_session_mgr
 def apply(
     deployment_manifest_path: str,
     profile: Optional[str] = None,
@@ -789,6 +790,7 @@ def apply(
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
+    local: bool = False,
 ) -> None:
     """
     apply
@@ -930,6 +932,7 @@ def apply(
     )
 
 
+@bind_session_mgr
 def destroy(
     deployment_name: str,
     profile: Optional[str] = None,
@@ -941,6 +944,7 @@ def destroy(
     remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
+    local: bool = False,
 ) -> None:
     """
     destroy

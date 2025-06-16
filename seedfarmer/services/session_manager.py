@@ -21,7 +21,7 @@ from abc import abstractmethod
 from functools import update_wrapper
 from threading import Thread
 from time import sleep
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, cast
 
 import botocore.exceptions
 from boto3 import Session
@@ -359,8 +359,8 @@ class SessionManagerLocalImpl(ISessionManager, metaclass=SingletonMeta):
         return cast(Credentials, self._credentials)
 
 
-def bind_session_mgr(f):
-    def bind_session_mgr_inner(*args, **kwargs):
+def bind_session_mgr(f: Callable[..., Any]) -> Callable[..., Any]:
+    def bind_session_mgr_inner(*args: List[Any], **kwargs: Dict[str, Any]) -> Any:
         local = kwargs.get("local", False)
 
         if local:

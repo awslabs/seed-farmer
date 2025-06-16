@@ -191,11 +191,11 @@ class DeployLocalModule(DeployModule):
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
             + _phases.post_build.commands
-            + metadata_put
             + md5_put
             + sf_version_add
             + module_role_name_add
-            + githash_add,
+            + githash_add
+            + metadata_put,
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
         )

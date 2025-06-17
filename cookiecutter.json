@@ -1,7 +1,6 @@
 {
   "project_name": "new-project",
-  "project_root_dir": "",
-  "project_slug": "{{ (project_root_dir or project_name)|lower|replace(' ', '-') }}",
+  "project_slug": "{{ cookiecutter.project_name|lower|replace(' ', '-') }}",
   "project_short_description": "A short description of the project.",
   "version": "0.1.0",
   "open_source_license": ["MIT License", "GNU General Public License v3", "Apache Software License 2.0"],

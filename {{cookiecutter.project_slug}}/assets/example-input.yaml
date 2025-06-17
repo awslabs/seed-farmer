@@ -1,0 +1,6 @@
+EXAMPLE1: 'custom-input'
+EXAMPLE2: 'custom-input2'
+STORAGE_BUCKETS:
+    - suffix: 'raw'
+    - suffix: 'stage'
+    - suffix: 'analytics'

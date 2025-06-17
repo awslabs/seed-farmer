@@ -7,12 +7,17 @@ labels:
   - Add Custom Tags Here #EDIT ME
   - Add More Custom Tags Here #EDIT ME
 # input:
-#   - name: <name of the input>
+#   - name: EXAMPLE1 #EDIT ME
 #     description: What this input is for
 #     isRequired: false
-#   - name: <name of the input 2> 
+#   - name: EXAMPLE2 #EDIT ME
 #     description: What this input is for
 #     isRequired: false
+#   - name: STORAGE_BUCKETS
+#     description: List of buckets to create.
+#     isRequired: false
+#     defaultValue: '[{"suffix": "bronze", {"suffix": "silver"}, {"suffix": "gold"}]'
+
 environments:
   - name: DEPLOYMENT # Can be whatever, but this is what your environment will reference
     description: <give a description>

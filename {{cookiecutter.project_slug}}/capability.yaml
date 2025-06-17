@@ -1,4 +1,4 @@
-path: {{ cookiecutter."project_slug}}
+path: {{ cookiecutter.project_slug}}
 version: 1.0.0
 type: SeedFarmer
 name: name of my capability #EDIT ME

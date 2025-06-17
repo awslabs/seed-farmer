@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - removed `_module_commands`
 - BREAKING CHANGE - the default setting for all moduels (in deployspec.yaml) is now `publishGenericEnvVariables = True`, before it was `False` - 
   - any legacy modules must EXPLICITLY set this parameter to `False` in order to use this new version with backward compatibility
+- enhancing init project and init module - appending groups to deployment.yaml
 
 ### Fixes
 

@@ -1,0 +1,22 @@
+path: {{ cookiecutter."project_slug}}
+version: 1.0.0
+type: SeedFarmer
+name: name of my capability #EDIT ME
+description: This capability <add context here> #EDIT ME
+labels:
+  - Add Custom Tags Here #EDIT ME
+  - Add More Custom Tags Here #EDIT ME
+# input:
+#   - name: <name of the input>
+#     description: What this input is for
+#     isRequired: false
+#   - name: <name of the input 2> 
+#     description: What this input is for
+#     isRequired: false
+environments:
+  - name: DEPLOYMENT # Can be whatever, but this is what your environment will reference
+    description: <give a description>
+    label: Capability deployment environment
+  # - name: WHATEVER # Can be whatever, but this is what your environment will reference
+  #   description: <give a description>
+  #   label: Capability deployment environment

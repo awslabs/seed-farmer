@@ -1,8 +1,5 @@
 name: ${DEPLOYMENT_NAME} #do not edit
 toolchainRegion: ${PLATFORM_REGION} #do not edit
-groups:
-  - name: main
-    path: main-group.yaml
 targetAccountMappings:
   - alias: primary
     accountId: ${DEPLOYMENT_ACCOUNT} #do not edit

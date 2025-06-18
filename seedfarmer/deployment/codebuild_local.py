@@ -15,6 +15,7 @@
 
 import os
 import subprocess
+import uuid
 from typing import Dict, Optional
 
 
@@ -60,6 +61,8 @@ def run(
         "MOUNT_SOURCE_DIRECTORY=TRUE",
         "-e",
         "INITIATOR=local_user",
+        "-e",
+        f"COMPOSE_PROJECT_NAME=agent-{str(uuid.uuid4())[:8]}",
         "-e",
         f"REPORTS={local_deploy_path}/logs",
     ]

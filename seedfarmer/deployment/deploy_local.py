@@ -195,7 +195,9 @@ class DeployLocalModule(DeployModule):
             + sf_version_add
             + module_role_name_add
             + githash_add
-            + metadata_put,
+            + metadata_put
+            + ["cd ${CODEBUILD_SRC_DIR}"]
+            + ["chmod -R 777 ${CODEBUILD_SRC_DIR}"],  # makes sure output isn't locked
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
         )
@@ -316,7 +318,9 @@ class DeployLocalModule(DeployModule):
             + ["cd module/"]
             + _phases.post_build.commands
             + metadata_put
-            + remove_ssm,
+            + remove_ssm
+            + ["cd ${CODEBUILD_SRC_DIR}"]
+            + ["chmod -R 777 ${CODEBUILD_SRC_DIR}"],  # makes sure output isn't locked
             abort_phases_on_failure=True,
             runtime_versions=runtimes,
         )

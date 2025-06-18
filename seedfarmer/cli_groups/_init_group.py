@@ -32,6 +32,13 @@ def init() -> None:
     required=False,
 )
 @click.option(
+    "--project_dir",
+    "-pd",
+    default=None,
+    help="The name of the directory that houses the project if not to be the same as the project name",
+    required=False,
+)
+@click.option(
     "--template-url",
     "-t",
     default="https://github.com/awslabs/seed-farmer.git",
@@ -45,8 +52,10 @@ def init() -> None:
     help="The Branch on the template repository. If not specified, the default template branch is `main`",
     required=False,
 )
-def init_project(template_url: str, template_branch: str, project_name: str) -> None:
-    minit.create_project(template_url=template_url, template_branch=template_branch, project_name=project_name)
+def init_project(template_url: str, template_branch: str, project_name: str, project_dir: str) -> None:
+    minit.create_project(
+        template_url=template_url, template_branch=template_branch, project_name=project_name, project_dir=project_dir
+    )
 
 
 @init.command(name="module", help="Initialize a new module")

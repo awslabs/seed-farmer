@@ -1,7 +1,0 @@
-awscli
-cfn-lint
-mypy
-pip-tools
-pytest
-pytest-cov
-ruff

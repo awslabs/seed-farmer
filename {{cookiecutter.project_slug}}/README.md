@@ -1,39 +1,45 @@
-
-# {{ cookiecutter.module_name }}
-
+# {{ cookiecutter.module_name }} Module
 
 ## Description
 
-{{ cookiecutter.project_short_description }}
-This module:
-
-- FILL THIS OUT
-
+Add the description of {{ cookiecutter.module_name }} here.
 
 ## Inputs/Outputs
 
-### Input Paramenters
+### Required
 
-#### Required
+- `sampleinput` - Describe it
+- `listinput` - Ordered list 
+  - `item1` (required): Describe it
+  - `item2` (optional): Describe it
 
 
-#### Optional
+### Example Input
 
-- `solution-id`: a unique identifier for this deployment (must be used with `solution-description`)
-- `solution-name`: a unique name for this deployment (must be used with `solution-id`)
-- `solution-version`: a unique version for this deployment
+```yaml
+sampleinput: "samplevalue"
+listinput: 
+    - item1: "lambda"
+    - item2: "glue"
+```
 
-The parameters `(solution-*)` will resolve a custom text that is used as a description of the stack if populated.
+### Architecture
 
-### Module Metadata Outputs
+The above example input would translate to this architecture:
 
-- `TemplateOutput1`: ChangeMe
+![Architecture](docs/imgs/ArchitectureDiagram.png)
 
-#### Output Example
+## Module Metadata Outputs
+
+- `ExampleOutput1`: Describe it
+- `ExampleOutput2`: Describe it
+
+
+### Output Example
 
 ```json
 {
-    "TemplateOutput1": "Add something from template_stack",
+  "ExampleOutput1": "arn:aws:...",
+  "ExampleOutput2": "arn:aws:...",
 }
 ```
-

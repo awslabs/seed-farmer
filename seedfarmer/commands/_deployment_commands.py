@@ -349,16 +349,8 @@ def _deploy_validated_deployment(
             )
         for _group in deployment_manifest_wip.groups:
             if len(_group.modules) > 0:
-                threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(max_workers=threads, thread_name_prefix="Deploy") as workers:
-
-                    def _exec_deploy(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
-                        threading.current_thread().name = (
-                            f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
-                        ).replace("_", "-")
-                        return _execute_deploy(mdo)
-
-                    mdos = []
+                deploy_response = []
+                if not DeployModuleFactory.parallel_enabled():
                     for _module in _group.modules:
                         if _module and _module.deploy_spec:
                             mdo = ModuleDeployObject(
@@ -366,25 +358,51 @@ def _deploy_validated_deployment(
                                 group_name=_group.name,
                                 module_name=_module.name,
                             )
-                            mdos.append(mdo)
+                            resp = _execute_deploy(mdo)
+                            deploy_response.append(resp)
+                else:
+                    threads = _group.concurrency if _group.concurrency else len(_group.modules)
+                    with concurrent.futures.ThreadPoolExecutor(
+                        max_workers=threads, thread_name_prefix="Deploy"
+                    ) as workers:
 
-                    deploy_response = list(workers.map(_exec_deploy, mdos))
-                    _logger.debug(deploy_response)
-                    (
-                        print_modules_build_info("Build Info Debug Data", deploy_response)  # type: ignore
-                        if _logger.isEnabledFor(logging.DEBUG)
-                        else None
+                        def _exec_deploy(mdo: ModuleDeployObject) -> ModuleDeploymentResponse:
+                            threading.current_thread().name = (
+                                f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
+                            ).replace("_", "-")
+                            return _execute_deploy(mdo)
+
+                        mdos = []
+                        for _module in _group.modules:
+                            if _module and _module.deploy_spec:
+                                mdo = ModuleDeployObject(
+                                    deployment_manifest=deployment_manifest_wip,
+                                    group_name=_group.name,
+                                    module_name=_module.name,
+                                )
+                                mdos.append(mdo)
+
+                        deploy_response = list(workers.map(_exec_deploy, mdos))
+                _logger.debug(deploy_response)
+                (
+                    print_modules_build_info("Build Info Debug Data", deploy_response)  # type: ignore
+                    if _logger.isEnabledFor(logging.DEBUG)
+                    else None
+                )
+                if len(deploy_response) == 0:
+                    raise seedfarmer.errors.ModuleDeploymentError(
+                        error_message="No modules returned as successfully deployed."
                     )
-                    for dep_resp_object in deploy_response:
-                        if dep_resp_object.status in ["ERROR", "error", "Error"]:
-                            _logger.error("At least one module failed to deploy...exiting deployment")
-                            print_errored_modules_build_info(
-                                "These modules had errors deploying",
-                                deploy_response,  # type: ignore
-                            )
-                            raise seedfarmer.errors.ModuleDeploymentError(
-                                error_message="At least one module failed to deploy...exiting deployment"
-                            )
+                for dep_resp_object in deploy_response:
+                    if dep_resp_object.status in ["ERROR", "error", "Error"]:
+                        _logger.error("At least one module failed to deploy...exiting deployment")
+                        print_errored_modules_build_info(
+                            "These modules had errors deploying",
+                            deploy_response,  # type: ignore
+                        )
+                        raise seedfarmer.errors.ModuleDeploymentError(
+                            error_message="At least one module failed to deploy...exiting deployment"
+                        )
 
         print_manifest_inventory(f"Modules Deployed: {deployment_manifest_wip.name}", deployment_manifest_wip, False)
     else:
@@ -570,18 +588,8 @@ def destroy_deployment(
     if not dryrun:
         for _group in reversed(destroy_manifest.groups):
             if len(_group.modules) > 0:
-                threads = _group.concurrency if _group.concurrency else len(_group.modules)
-                with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=threads, thread_name_prefix="Destroy"
-                ) as workers:
-
-                    def _exec_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
-                        threading.current_thread().name = (
-                            f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
-                        ).replace("_", "-")
-                        return _execute_destroy(mdo)
-
-                    mdos = []
+                destroy_response = []
+                if not DeployModuleFactory.parallel_enabled():
                     for _module in _group.modules:
                         if _module.path.startswith("git::"):
                             _process_git_module_path(module=_module)
@@ -598,19 +606,62 @@ def destroy_deployment(
                                 group_name=_group.name,
                                 secret_name=destroy_manifest.archive_secret,
                             )
-
                         if _module and _module.deploy_spec:
                             mdo = ModuleDeployObject(
-                                deployment_manifest=destroy_manifest, group_name=_group.name, module_name=_module.name
+                                deployment_manifest=destroy_manifest,
+                                group_name=_group.name,
+                                module_name=_module.name,
                             )
-                            mdos.append(mdo)
-                    destroy_response = list(workers.map(_exec_destroy, mdos))
+                            resp = _execute_destroy(mdo)
+                            destroy_response.append(resp)
+                else:
+                    threads = _group.concurrency if _group.concurrency else len(_group.modules)
+                    with concurrent.futures.ThreadPoolExecutor(
+                        max_workers=threads, thread_name_prefix="Destroy"
+                    ) as workers:
+
+                        def _exec_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
+                            threading.current_thread().name = (
+                                f"{threading.current_thread().name}-{mdo.group_name}_{mdo.module_name}"
+                            ).replace("_", "-")
+                            return _execute_destroy(mdo)
+
+                        mdos = []
+                        for _module in _group.modules:
+                            if _module.path.startswith("git::"):
+                                _process_git_module_path(module=_module)
+                            elif _module.path.startswith("archive::"):
+                                _process_archive_path(
+                                    module=_module,
+                                    secret_name=destroy_manifest.archive_secret,
+                                )
+
+                            if _module.data_files is not None:
+                                _process_data_files(
+                                    data_files=_module.data_files,
+                                    module_name=_module.name,
+                                    group_name=_group.name,
+                                    secret_name=destroy_manifest.archive_secret,
+                                )
+
+                            if _module and _module.deploy_spec:
+                                mdo = ModuleDeployObject(
+                                    deployment_manifest=destroy_manifest,
+                                    group_name=_group.name,
+                                    module_name=_module.name,
+                                )
+                                mdos.append(mdo)
+                        destroy_response = list(workers.map(_exec_destroy, mdos))
                     _logger.debug(destroy_response)
                     (
                         print_modules_build_info("Build Info Debug Data", destroy_response)
                         if _logger.isEnabledFor(logging.DEBUG)
                         else None
                     )
+                    if len(destroy_response) == 0:
+                        raise seedfarmer.errors.ModuleDeploymentError(
+                            error_message="No modules returned as successfully destroyed."
+                        )
                     for dep_resp_object in destroy_response:
                         if dep_resp_object and dep_resp_object.status in ["ERROR", "error", "Error"]:
                             _logger.error("At least one module failed to destroy...exiting deployment")

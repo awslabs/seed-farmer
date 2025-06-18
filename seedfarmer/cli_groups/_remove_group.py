@@ -142,7 +142,7 @@ def remove_module_data(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
+    session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):
         raise seedfarmer.errors.InvalidConfigurationError(
             "Must either specify both --target-account-id and --target-region, or neither"
@@ -153,5 +153,4 @@ def remove_module_data(
             .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
-
     mi.remove_module_info(deployment, group, module, session=session)

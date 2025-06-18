@@ -60,7 +60,7 @@ def run(
         "-e",
         "MOUNT_SOURCE_DIRECTORY=TRUE",
         "-e",
-        "INITIATOR=local_user",
+        "INITIATOR=codebuild-user",
         "-e",
         f"COMPOSE_PROJECT_NAME=agent-{str(uuid.uuid4())[:8]}",
         "-e",

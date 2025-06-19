@@ -48,8 +48,8 @@ def init() -> None:
 @click.option(
     "--template-branch",
     "-b",
-    default="main",
-    help="The Branch on the template repository. If not specified, the default template branch is `main`",
+    default="init-project",
+    help="The Branch on the template repository. If not specified, the default template branch is `init-project`",
     required=False,
 )
 def init_project(template_url: str, template_branch: str, project_name: str, project_dir: str) -> None:

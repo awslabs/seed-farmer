@@ -40,3 +40,12 @@ class DeployModuleFactory:
             return DeployLocalModule(mdo)
         else:
             raise seedfarmer.errors.InvalidConfigurationError(f"Unsupported session type: {session_type}")
+
+    @staticmethod
+    def is_local() -> bool:
+        session_instance = SessionManager()
+        session_type: Type[ISessionManager] = type(session_instance)
+        if session_type is SessionManagerRemoteImpl:
+            return False
+        else:
+            return True

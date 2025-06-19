@@ -259,6 +259,7 @@ def store_deployspec(
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_module_metadata(
     deployment: str,
     group: str,
@@ -382,6 +383,7 @@ def store_module_metadata(
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_module_md5(
     deployment: str,
     group: str,

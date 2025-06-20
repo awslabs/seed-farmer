@@ -848,7 +848,15 @@ def apply(
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path) as manifest_file:
-        deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
+        manifest_input = yaml.safe_load(manifest_file)
+    ## Override all regions with the local session region if local
+    if DeployModuleFactory.is_local():
+        region = SessionManager().get_or_create().toolchain_session.region_name
+        for account in manifest_input["targetAccountMappings"]:
+            for mapping in account.get("regionMappings", []):
+                mapping["region"] = region
+
+    deployment_manifest = DeploymentManifest(**manifest_input)
     _logger.debug(deployment_manifest.model_dump())
 
     # Initialize the SessionManager for the entire project
@@ -885,7 +893,15 @@ def apply(
         if module_group.path:
             try:
                 with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
-                    module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+                    if DeployModuleFactory.is_local():
+                        region = session_manager.toolchain_session.region_name
+                        updated_manifests = []
+                        for m in yaml.safe_load_all(manifest_file):
+                            m["targetRegion"] = region
+                            updated_manifests.append(ModuleManifest(**m))
+                        module_group.modules = updated_manifests
+                    else:
+                        module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
             except FileNotFoundError as fe:
                 _logger.error(fe)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")

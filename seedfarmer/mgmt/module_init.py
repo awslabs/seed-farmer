@@ -14,6 +14,7 @@
 
 import logging
 import os
+from pathlib import Path
 from typing import Optional
 
 import yaml
@@ -139,8 +140,8 @@ def create_module_dir(
 
 
 def create_project(
-    template_url: str,
-    template_branch: Optional[str] = "main",
+    template_url: str = "https://github.com/awslabs/seed-farmer.git",
+    template_branch: Optional[str] = "init-project",
     project_name: Optional[str] = None,
     project_dir: Optional[str] = None,
 ) -> None:
@@ -165,14 +166,18 @@ def create_project(
         with open(os.path.join(os.getcwd(), "seedfarmer.yaml"), "w") as f:
             yaml.dump({"project": project_name}, f, default_flow_style=False)
 
-    checkout_branch = (
-        "init-project" if template_url == "https://github.com/awslabs/seed-farmer.git" else template_branch
-    )
     project_name = project_name if project_name else config.PROJECT
     project_dir = project_dir if project_dir else project_name
+
+    proposed_project_path = Path(project_dir)
+
+    if proposed_project_path.is_dir():
+        print("The targeted project / capability directory already exists. Exiting.")
+        exit(0)
+
     cookiecutter(
         template=template_url,
-        checkout=checkout_branch,
+        checkout=template_branch,
         no_input=True,
         extra_context={"project_name": project_name, "project_slug": project_dir},
         output_dir=config.OPS_ROOT,

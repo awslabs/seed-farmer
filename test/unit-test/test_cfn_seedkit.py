@@ -20,10 +20,8 @@ def test_synth_creates_file(mocker):
     # Mock yaml.safe_load to return the template content
     mocker.patch("yaml.safe_load", return_value=template_content)
 
-    # Define the expected output directory
-    output_dir = "/Users/noahpaig/Desktop/seedfarmer/seed-farmer/.seedfarmer.out/seedkit-test123"
-
     # Mock create_output_dir to return our expected path
+    output_dir = os.path.join(os.getcwd(), ".seedfarmer.out/seedkit-test123")
     mocker.patch("seedfarmer.utils.create_output_dir", return_value=output_dir)
 
     # Call the function
@@ -31,7 +29,7 @@ def test_synth_creates_file(mocker):
 
     # Verify the result is the expected filename
     expected_filename = os.path.join(output_dir, config.SEEDKIT_YAML_FILENAME)
-    assert result == expected_filename
+    assert expected_filename == result
 
     # Verify open was called with the correct paths
     mock_open.assert_any_call(config.SEEDKIT_TEMPLATE_PATH)
@@ -83,10 +81,8 @@ def test_synth_with_kwargs(mocker):
     # Mock yaml.safe_load to return the template content
     mocker.patch("yaml.safe_load", return_value=template_content)
 
-    # Define the expected output directory
-    output_dir = "/Users/noahpaig/Desktop/seedfarmer/seed-farmer/.seedfarmer.out/seedkit-test123"
-
     # Mock create_output_dir to return our expected path
+    output_dir = os.path.join(os.getcwd(), ".seedfarmer.out/seedkit-test123")
     mocker.patch("seedfarmer.utils.create_output_dir", return_value=output_dir)
 
     # Call the function with additional kwargs
@@ -94,4 +90,4 @@ def test_synth_with_kwargs(mocker):
 
     # Verify the result is the expected filename
     expected_filename = os.path.join(output_dir, config.SEEDKIT_YAML_FILENAME)
-    assert result == expected_filename
+    assert expected_filename == result

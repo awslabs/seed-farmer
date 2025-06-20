@@ -13,6 +13,8 @@
 #    limitations under the License.
 
 import logging
+import random
+import string
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from boto3 import Session
@@ -106,19 +108,43 @@ def deploy_seedkit(
     if stack_exists:
         deploy_id = stack_outputs.get("DeployId")
         _logger.info("Seedkit found with DeployId: %s", deploy_id)
+
+    deploy_id = deploy_id if deploy_id else "".join(random.choice(string.ascii_lowercase) for i in range(6))
     template_filename: Optional[str] = cfn_seedkit.synth(
-        seedkit_name=seedkit_name,
         deploy_id=deploy_id,
-        managed_policy_arns=managed_policy_arns,
-        deploy_codeartifact=deploy_codeartifact,
-        session=session,
-        vpc_id=vpc_id,
-        subnet_ids=subnet_ids,
-        security_group_ids=security_group_ids,
-        permissions_boundary_arn=permissions_boundary_arn,
         synthesize=synthesize,
         **kwargs,
     )
+
+    # Create parameters dictionary for CloudFormation
+    parameters: Dict[str, str] = {
+        "SeedkitName": seedkit_name,
+        "DeployId": deploy_id,
+        "RolePrefix": str(kwargs.get("role_prefix", "/")),
+        "PolicyPrefix": str(kwargs.get("policy_prefix", "/")),
+        "DeployCodeArtifact": str(deploy_codeartifact).lower(),
+    }
+
+    # Only add ManagedPolicyArns if it's not None
+    if managed_policy_arns:
+        parameters["ManagedPolicyArns"] = ",".join(managed_policy_arns)
+
+    # Only add PermissionsBoundaryArn if it's not None
+    if permissions_boundary_arn:
+        parameters["PermissionsBoundaryArn"] = permissions_boundary_arn
+
+    # Only add VpcId if it's not None
+    if vpc_id:
+        parameters["VpcId"] = vpc_id
+
+    # Only add SecurityGroupIds if it's not None
+    if security_group_ids:
+        parameters["SecurityGroupIds"] = ",".join(security_group_ids)
+
+    # Only add SubnetIds if it's not None
+    if subnet_ids:
+        parameters["SubnetIds"] = ",".join(subnet_ids)
+
     if not synthesize:
         assert template_filename is not None, "Template filename is required"
         cfn.deploy_template(
@@ -126,6 +152,7 @@ def deploy_seedkit(
             filename=template_filename,
             seedkit_tag=f"codeseeder-{seedkit_name}",  # (LEGACY)
             session=session,
+            parameters=parameters,
         )
         _logger.info("Seedkit Deployed")
 

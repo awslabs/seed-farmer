@@ -333,7 +333,6 @@ def test_bootstrap_toolchain_account_as_target(mocker):
         qualifier="test",
         role_prefix="/custom/",
         policy_prefix="/custom/",
-        profile="default",
         region_name="us-east-1",
         synthesize=False,
         as_target=True,
@@ -351,7 +350,6 @@ def test_bootstrap_toolchain_account_as_target(mocker):
     assert kwargs["role_prefix"] == "/custom/"
     assert kwargs["policy_prefix"] == "/custom/"
     assert kwargs["permissions_boundary_arn"] == "arn:aws:iam::123456789012:policy/boundary"
-    assert kwargs["profile"] == "default"
     assert kwargs["region_name"] == "us-east-1"
     assert kwargs["policy_arns"] == ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 

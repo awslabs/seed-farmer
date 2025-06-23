@@ -22,7 +22,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import yaml
 from boto3 import Session
 from botocore.exceptions import WaiterError
-from jinja2 import Template
 
 import seedfarmer.errors
 import seedfarmer.services._cfn as cfn
@@ -34,63 +33,13 @@ from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, g
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def get_toolchain_template(
-    project_name: str,
-    principal_arn: List[str],
-    role_name: str,
-    permissions_boundary_arn: Optional[str] = None,
-    role_prefix: Optional[str] = None,
-) -> Dict[Any, Any]:
-    with open((os.path.join(CLI_ROOT, "resources/toolchain_role.template")), "r") as f:
+def get_template(template_name: str) -> Dict[str, Any]:
+    with open((os.path.join(CLI_ROOT, f"resources/{template_name}.template")), "r") as f:
         role = yaml.safe_load(f)
-    if principal_arn:
-        role["Resources"]["ToolchainRole"]["Properties"]["AssumeRolePolicyDocument"]["Statement"][0]["Principal"][
-            "AWS"
-        ] = principal_arn
-    if permissions_boundary_arn:
-        role["Resources"]["ToolchainRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
-    role_prefix = role_prefix if role_prefix else "/"
-    template = Template(json.dumps(role))
-    t = template.render(
-        {
-            "project_name": project_name,
-            "role_name": role_name,
-            "role_prefix": role_prefix,
-            "seedfarmer_version": __version__,
-        }
-    )
-    return dict(json.loads(t))
 
-
-def get_deployment_template(
-    toolchain_role_arn: str,
-    project_name: str,
-    role_name: str,
-    policy_arns: Optional[List[str]],
-    permissions_boundary_arn: Optional[str] = None,
-    role_prefix: Optional[str] = None,
-    policy_prefix: Optional[str] = None,
-) -> Dict[Any, Any]:
-    with open((os.path.join(CLI_ROOT, "resources/deployment_role.template")), "r") as f:
-        role = yaml.safe_load(f)
-    if permissions_boundary_arn:
-        role["Resources"]["DeploymentRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
-    if policy_arns:
-        role["Resources"]["DeploymentRole"]["Properties"]["ManagedPolicyArns"] = policy_arns
-    role_prefix = role_prefix if role_prefix else "/"
-    policy_prefix = policy_prefix if policy_prefix else "/"
-    template = Template(json.dumps(role))
-    t = template.render(
-        {
-            "toolchain_role_arn": toolchain_role_arn,
-            "project_name": project_name,
-            "role_name": role_name,
-            "role_prefix": role_prefix,
-            "policy_prefix": policy_prefix,
-            "seedfarmer_version": __version__,
-        }
-    )
-    return dict(json.loads(t))
+    if not isinstance(role, dict):
+        raise TypeError(f"Expected dictionary from YAML file, got {type(role).__name__}")
+    return role
 
 
 def write_template(template: Dict[Any, Any]) -> None:
@@ -119,14 +68,25 @@ def bootstrap_toolchain_account(
             raise seedfarmer.errors.InvalidConfigurationError(f"Trusted principal: {arn} is not a valid principal arn")
 
     role_stack_name = get_toolchain_role_name(project_name=project_name, qualifier=cast(str, qualifier))
-    template = get_toolchain_template(
-        project_name=project_name,
-        role_name=role_stack_name,
-        principal_arn=principal_arns,
-        permissions_boundary_arn=permissions_boundary_arn,
-        role_prefix=role_prefix,
-    )
+    template = get_template("toolchain_role")
     _logger.debug((json.dumps(template, indent=4)))
+
+    # Prepare CloudFormation parameters
+    role_prefix_value = role_prefix if role_prefix else "/"
+    parameters: Dict[str, str] = {
+        "ProjectName": project_name,
+        "RoleName": role_stack_name,
+        "RolePrefix": role_prefix_value,
+        "SeedFarmerVersion": __version__,
+        "PrincipalArns": ",".join(principal_arns),
+    }
+
+    # Only add PermissionsBoundaryArn if it's not None
+    if permissions_boundary_arn:
+        parameters["PermissionsBoundaryArn"] = permissions_boundary_arn
+
+    _logger.debug((json.dumps(parameters, indent=4)))
+
     if not synthesize:
         session = create_new_session(profile=profile, region_name=region_name)
         session_account_id, _, _ = get_sts_identity_info(session=session)
@@ -136,6 +96,7 @@ def bootstrap_toolchain_account(
             stack_name=role_stack_name,
             session=session,
             account_id=session_account_id,
+            parameters=parameters,
         )
         if as_target:
             bootstrap_target_account(
@@ -196,16 +157,31 @@ def bootstrap_target_account(
         role_prefix=role_prefix,
     )
 
-    template = get_deployment_template(
-        toolchain_role_arn=toolchain_role_arn,
-        project_name=project_name,
-        role_name=role_stack_name,
-        policy_arns=policy_arns if policy_arns else None,
-        permissions_boundary_arn=permissions_boundary_arn,
-        role_prefix=role_prefix,
-        policy_prefix=policy_prefix,
-    )
+    template = get_template("deployment_role")
     _logger.debug((json.dumps(template, indent=4)))
+
+    # Prepare CloudFormation parameters
+    role_prefix_value = role_prefix if role_prefix else "/"
+    policy_prefix_value = policy_prefix if policy_prefix else "/"
+    parameters: Dict[str, str] = {
+        "RolePrefix": role_prefix_value,
+        "PolicyPrefix": policy_prefix_value,
+        "ProjectName": project_name,
+        "RoleName": role_stack_name,
+        "ToolchainRoleArn": toolchain_role_arn,
+        "SeedFarmerVersion": __version__,
+    }
+
+    # Only add ManagedPolicyArn if it's not None
+    if policy_arns:
+        parameters["ManagedPolicyArns"] = ",".join(policy_arns)
+
+    # Only add PermissionsBoundaryArn if it's not None
+    if permissions_boundary_arn:
+        parameters["PermissionsBoundaryArn"] = permissions_boundary_arn
+
+    _logger.debug((json.dumps(parameters, indent=4)))
+
     if not synthesize:
         apply_deploy_logic(
             template=template,
@@ -213,6 +189,7 @@ def bootstrap_target_account(
             stack_name=role_stack_name,
             session=session,
             account_id=session_account_id,
+            parameters=parameters,
         )
     else:
         write_template(template=template)
@@ -220,18 +197,23 @@ def bootstrap_target_account(
 
 
 def apply_deploy_logic(
-    template: Dict[Any, Any], role_name: str, stack_name: str, session: Session, account_id: Optional[str] = None
+    template: Dict[Any, Any],
+    role_name: str,
+    stack_name: str,
+    session: Session,
+    account_id: Optional[str] = None,
+    parameters: Optional[Dict[str, str]] = None,
 ) -> None:
     role_exists, stack_exists = role_deploy_status(role_name=role_name, stack_name=stack_name, session=session)
     if not account_id:
         account_id, role_arn, partition = get_sts_identity_info(session=session)
     if not role_exists:
         _logger.info("Deploying role in account %s, region %s", account_id, get_region(session=session))
-        deploy_template(template=template, stack_name=stack_name, session=session)
+        deploy_template(template=template, stack_name=stack_name, session=session, parameters=parameters)
     else:
         if stack_exists[0]:
             _logger.info("Updating role in account %s, region %s", account_id, get_region(session=session))
-            deploy_template(template=template, stack_name=stack_name, session=session)
+            deploy_template(template=template, stack_name=stack_name, session=session, parameters=parameters)
         else:
             _logger.info(
                 "The role %s exists in account %s as was not deployed in region %s, it will NOT be updated",
@@ -241,15 +223,17 @@ def apply_deploy_logic(
             )
 
 
-def deploy_template(template: Dict[Any, Any], stack_name: str, session: Optional[Session]) -> None:
+def deploy_template(
+    template: Dict[Any, Any], stack_name: str, session: Optional[Session], parameters: Optional[Dict[str, str]] = None
+) -> None:
     loc = os.path.join(os.getcwd(), "templates")
     output = os.path.join(loc, f"{stack_name}.yaml")
     os.makedirs(loc, exist_ok=True)
     with open(output, "w") as outfile:
         yaml.dump(template, outfile)
     try:
-        # cs_services.set_boto3_session(session) if session else None
-        cfn.deploy_template(stack_name=stack_name, filename=output, session=session)
+        # Deploy with parameters
+        cfn.deploy_template(stack_name=stack_name, filename=output, session=session, parameters=parameters)
         _logger.info(f"Role for Seed-Farmer deployed in stack {stack_name}")
     except WaiterError as we:
         _logger.error("Could not create the deployment role...make sure the toolchain role exists and check CFN Logs")

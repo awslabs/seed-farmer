@@ -86,7 +86,7 @@ def init_project(template_url: str, template_branch: str, project_name: str, pro
 @click.option(
     "--template-branch",
     "-b",
-    default="main",
+    default="init-module",
     help="The Branch on the template repository. If not specified, the default template branch is `main`",
     required=False,
 )

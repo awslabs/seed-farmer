@@ -25,6 +25,7 @@ It has a CommandLine Interface (CLI) based in Python.
    cli_commands
    module_development
    deployment_guide
+   local_deployments
    module_best_practices
    cookiecutter
    faq

@@ -7,12 +7,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New 
 - adding in AWS CodeSeeder logic
-- adding uv support
+- adding uv support for python module deployments
+- adding `--local` support for running a codebuild-local image (not using AWS CodeBuild service)
+  - this is for testing only, not for production deployments
 
 ### Changes
 - removed dependency on CodeSeeder
+- set default codebuild image to `aws/codebuild/amazonlinux2-x86_64-standard:5.0`
 - removed `_module_commands`
-- BREAKING CHANGE - the default setting for all moduels (in deployspec.yaml) is now `publishGenericEnvVariables = True`, before it was `False` - 
+- BREAKING CHANGE - the default setting for all modules (in deployspec.yaml) is now `publishGenericEnvVariables = True`, before it was `False` 
   - any legacy modules must EXPLICITLY set this parameter to `False` in order to use this new version with backward compatibility
 - enhancing init project and init module - appending groups to deployment.yaml
 

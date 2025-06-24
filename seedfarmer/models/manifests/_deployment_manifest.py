@@ -57,6 +57,7 @@ class RegionMapping(CamelModel):
     parameters_regional: Dict[str, Any] = {}
     network: Optional[NetworkMapping] = None
     codebuild_image: Optional[str] = None
+    runtime_overrides: Optional[Dict[str, str]] = None
     npm_mirror: Optional[str] = None
     pypi_mirror: Optional[str] = None
     pypi_mirror_secret: Optional[str] = None
@@ -79,6 +80,7 @@ class TargetAccountMapping(CamelModel):
     parameters_global: Dict[str, str] = {}
     region_mappings: List[RegionMapping] = []
     codebuild_image: Optional[str] = None
+    runtime_overrides: Optional[Dict[str, str]] = None
     npm_mirror: Optional[str] = None
     npm_mirror_secret: Optional[str] = None
     pypi_mirror: Optional[str] = None
@@ -318,6 +320,34 @@ class DeploymentManifest(CamelModel):
                             image = region_mapping.seedkit_metadata["CodeBuildProjectBuildImage"]
 
                         return image
+        else:
+            return None
+
+    def get_region_runtime_overrides(
+        self,
+        *,
+        account_alias: Optional[str] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+    ) -> Optional[Dict[str, str]]:
+        if account_alias is not None and account_id is not None:
+            raise seedfarmer.errors.InvalidManifestError("Only one of 'account_alias' and 'account_id' is allowed")
+
+        use_default_account = account_alias is None and account_id is None
+        use_default_region = region is None
+
+        for target_account in self.target_account_mappings:
+            if (
+                account_alias == target_account.alias
+                or account_id == target_account.actual_account_id
+                or (use_default_account and target_account.default)
+            ):
+                # Search the region_mappings for the region, if the codebuild_image is in region
+                for region_mapping in target_account.region_mappings:
+                    if region == region_mapping.region or (use_default_region and region_mapping.default):
+                        region_overrides = region_mapping.runtime_overrides if region_mapping.runtime_overrides else {}
+                        account_overrides = target_account.runtime_overrides if target_account.runtime_overrides else {}
+                        return {**account_overrides, **region_overrides}
         else:
             return None
 

@@ -5,6 +5,7 @@ from unittest.mock import ANY
 import mock_data.mock_deployment_manifest_for_destroy as mock_deployment_manifest_for_destroy
 import mock_data.mock_deployment_manifest_huge as mock_deployment_manifest_huge
 import mock_data.mock_deployment_manifest_with_prefix as mock_deployment_manifest_with_prefix
+import mock_data.mock_deployment_manifest_with_runtime_overrides as mock_deployment_manifest_with_runtime_overrides
 import mock_data.mock_deployspec as mock_deployspec
 import mock_data.mock_manifests as mock_manifests
 import mock_data.mock_module_info_huge as mock_module_info_huge
@@ -286,6 +287,31 @@ def test_execute_deploy(session_manager, mocker):
     module_manifest = group.modules[0]
     module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
     mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
+    dc._execute_deploy(mdo)
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
+def test_execute_deploy_with_overrides(session_manager, mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands.load_parameter_values", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.commands.deploy_module_stack",
+        return_value=("stack_name", "role_name"),
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.get_module_metadata", return_value=None)
+    mocker.patch(
+        "seedfarmer.commands._deployment_commands.get_role_arn",
+        return_value="role_arn",
+    )
+    mocker.patch("seedfarmer.commands._deployment_commands.du.prepare_ssm_for_deploy", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.DeployModuleFactory.create")
+    dep = DeploymentManifest(**mock_deployment_manifest_with_runtime_overrides.deployment_manifest)
+    dep.validate_and_set_module_defaults()
+    group = dep.groups[0]
+    module_manifest = group.modules[0]
+    module_manifest.deploy_spec = DeploySpec(**mock_deployspec.dummy_deployspec)
+    mdo = ModuleDeployObject(deployment_manifest=dep, group_name=dep.groups[0].name, module_name=module_manifest.name)
+    assert mdo.runtime_overrides == {"python": "3.13", "nodejs": "22", "java": "corretto21"}
     dc._execute_deploy(mdo)
 
 

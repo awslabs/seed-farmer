@@ -38,10 +38,14 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 class DeployRemoteModule(DeployModule):
     def _codebuild_install_commands(
-        self, module_manifest: ModuleManifest, stack_outputs: Optional[Dict[str, str]]
+        self,
+        module_manifest: ModuleManifest,
+        stack_outputs: Optional[Dict[str, str]],
+        runtimes: Optional[Dict[str, str]] = None,
     ) -> List[str]:
         npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else self.mdo.npm_mirror
         pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else self.mdo.pypi_mirror
+        python_version = runtimes.get("python", "3.11") if runtimes else "3.11"
 
         install = [
             "mkdir -p /var/scripts/",
@@ -64,7 +68,7 @@ class DeployRemoteModule(DeployModule):
             "fi",
         )
         install.append("export PATH=$PATH:/root/.local/bin")
-        install.append("uv venv ~/.venv --python 3.11 --seed")  ## DGRABS - Make this configurable
+        install.append(f"uv venv ~/.venv --python {python_version} --seed")
         install.append(". ~/.venv/bin/activate")
 
         if stack_outputs and "CodeArtifactDomain" in stack_outputs and "CodeArtifactRepository" in stack_outputs:
@@ -195,8 +199,8 @@ class DeployRemoteModule(DeployModule):
 
         _logger.debug("Beginning Remote Execution")
 
-        ## The install commands are specific to AWS Codebuild service
-        cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs)
+        runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
+        cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
         bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
         buildspec = codebuild.generate_spec(
@@ -221,7 +225,7 @@ class DeployRemoteModule(DeployModule):
             + metadata_put
             + store_sf_bundle,
             abort_phases_on_failure=True,
-            runtime_versions=get_runtimes(codebuild_image),
+            runtime_versions=runtime_versions,
         )
 
         ## Try and force the default install to use uv for older modules
@@ -354,7 +358,8 @@ class DeployRemoteModule(DeployModule):
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
         )
 
-        cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs)
+        runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
+        cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
         buildspec = codebuild.generate_spec(
             cmds_install=cmds_install + ["cd ${CODEBUILD_SRC_DIR}/bundle"] + ["cd module/"] + _phases.install.commands,
@@ -374,7 +379,7 @@ class DeployRemoteModule(DeployModule):
             + remove_ssm
             + remove_sf_bundle,
             abort_phases_on_failure=True,
-            runtime_versions=get_runtimes(codebuild_image),
+            runtime_versions=runtime_versions,
         )
 
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")

@@ -31,7 +31,7 @@ targetAccountMappings:
     default: true
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
     runtimeOverrides:
-      python: "3.X"
+      python: "3.13"
     npmMirror: https://registry.npmjs.org/
     npmMirrorSecret: /something/aws-addf-mirror-credentials
     pypiMirror: https://pypi.python.org/simple
@@ -46,7 +46,7 @@ targetAccountMappings:
         default: true
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
         runtimeOverrides:
-          python: "3.X"
+          python: "3.13"
         npmMirror: https://registry.npmjs.org/
         npmMirrorSecret: /something/aws-addf-mirror-credentials
         pypiMirror: https://pypi.python.org/simple
@@ -273,7 +273,7 @@ targetAccount: secondary
 targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
 runtimeOverrides:
-  python: "3.X"
+  python: "3.13"
 npmMirror: https://registry.npmjs.org/
 npmMirrorSecret: /something/aws-addf-mirror-credentials
 pypiMirror: https://pypi.python.org/simple

@@ -94,11 +94,11 @@ def test_get_region_mirror_secret():
 @pytest.mark.models_deployment_manifest
 def test_get_region_runtime_overrides():
     manifest = DeploymentManifest(**deployment_yaml)
-    assert manifest.get_region_runtime_overrides() ==  {}
+    assert manifest.get_region_runtime_overrides() == {}
     deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["runtime_overrides"] = {"python": "3.13"}
     deployment_yaml["targetAccountMappings"][0]["runtime_overrides"] = {"java": "corretto21"}
     manifest = DeploymentManifest(**deployment_yaml)
-    assert manifest.get_region_runtime_overrides() ==  {"python": "3.13", "java": "corretto21"}
+    assert manifest.get_region_runtime_overrides() == {"python": "3.13", "java": "corretto21"}
 
 
 @pytest.mark.models

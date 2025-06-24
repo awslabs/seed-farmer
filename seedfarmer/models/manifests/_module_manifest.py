@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import PrivateAttr, model_validator
 from pydantic.json_schema import SkipJsonSchema
@@ -95,6 +95,7 @@ class ModuleManifest(CamelModel):
     target_account: Optional[str] = None
     target_region: Optional[str] = None
     codebuild_image: Optional[str] = None
+    runtime_overrides: Optional[Dict[str, str]] = None
     data_files: Optional[List[DataFile]] = None
     commit_hash: SkipJsonSchema[Optional[str]] = None
     npm_mirror: Optional[str] = None

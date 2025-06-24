@@ -20,17 +20,23 @@ class CuratedBuildImages:
     class ImageEnums(Enum):
         UBUNTU_STANDARD_6 = "aws/codebuild/standard:6.0"
         UBUNTU_STANDARD_7 = "aws/codebuild/standard:7.0"
+        AL2_X86_64_STANDARD_5_0 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+        AL2_AARCH64_STANDARD_3_0 = "aws/codebuild/amazonlinux2-aarch64-standard:3.0"
 
     class ImageRuntimes(Enum):
         UBUNTU_STANDARD_6 = {"nodejs": "16", "python": "3.10", "java": "corretto17"}
         UBUNTU_STANDARD_7 = {"nodejs": "18", "python": "3.11", "java": "corretto21"}
+        AL2_X86_64_STANDARD_5_0 = {"nodejs": "20", "python": "3.12", "java": "corretto21"}
+        AL2_AARCH64_STANDARD_3_0 = {"nodejs": "20", "python": "3.12", "java": "corretto21"}
 
 
-def get_runtimes(codebuild_image: Optional[str]) -> Optional[Dict[str, str]]:
+def get_runtimes(
+    codebuild_image: Optional[str], runtime_overrides: Optional[Dict[str, str]] = None
+) -> Optional[Dict[str, str]]:
+    runtime_overrides = runtime_overrides if runtime_overrides else {}
     image_vals = [cbi.value for cbi in CuratedBuildImages.ImageEnums]
     if codebuild_image in image_vals:
         cir_d = {cir.name: cir.value for cir in CuratedBuildImages.ImageRuntimes}
         k = CuratedBuildImages.ImageEnums(codebuild_image).name
-        return cir_d[k]
-    else:
-        return None
+        return {**cir_d[k], **runtime_overrides}
+    return runtime_overrides

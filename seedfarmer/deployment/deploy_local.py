@@ -14,13 +14,14 @@
 
 
 import os
-from typing import List, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 
 import seedfarmer
 import seedfarmer.deployment.codebuild_local as codebuild_local
 import seedfarmer.mgmt.bundle as bundle
 import seedfarmer.services._codebuild as codebuild
 from seedfarmer import config
+from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.deployment.deploy_base import DeployModule
 from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
@@ -30,8 +31,14 @@ from seedfarmer.utils import LiteralStr, apply_literalstr, create_output_dir, re
 
 class DeployLocalModule(DeployModule):
     def _codebuild_install_commands(
-        self, account_id: str, region: str, ca_domain: Optional[str] = None, ca_repository: Optional[str] = None
+        self,
+        account_id: str,
+        region: str,
+        ca_domain: Optional[str] = None,
+        ca_repository: Optional[str] = None,
+        runtimes: Optional[Dict[str, str]] = None,
     ) -> List[Union[str, LiteralStr]]:
+        python_version = runtimes.get("python", "3.11") if runtimes else "3.11"
         install = []
         uv_install = apply_literalstr("""if curl -s --head https://astral.sh | grep '200' > /dev/null; then
         curl -Ls https://astral.sh/uv/install.sh | sh
@@ -41,7 +48,7 @@ class DeployLocalModule(DeployModule):
     """)
         install.append(apply_literalstr(uv_install))
         install.append(apply_literalstr("export PATH=$PATH:/root/.local/bin"))
-        install.append(apply_literalstr("uv venv ~/.venv --python 3.11 --seed"))  ## DGRABS - Make this configurable
+        install.append(apply_literalstr(f"uv venv ~/.venv --python {python_version} --seed"))
         install.append(apply_literalstr(". ~/.venv/bin/activate"))
 
         if ca_domain and ca_repository:
@@ -156,7 +163,6 @@ class DeployLocalModule(DeployModule):
 
         # docker_network="pypi-net"
         # local_pypi_endpoint="http://pypiserver:8080/simple"
-        runtimes = {"nodejs": "20"}
 
         bundle_id = f"{self.mdo.deployment_manifest.name}-{self.mdo.group_name}-{module_manifest.name}"
         output_override = f".seedfarmerlocal-{bundle_id}"
@@ -172,7 +178,11 @@ class DeployLocalModule(DeployModule):
             if stack_outputs and "CodeArtifactRepository" in stack_outputs
             else None
         )
-        install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
+
+        runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
+        install_commands = self._codebuild_install_commands(
+            account_id, region, ca_domain, ca_repository, runtime_versions
+        )
 
         buildspec = codebuild.generate_spec(
             cmds_install=install_commands
@@ -199,7 +209,7 @@ class DeployLocalModule(DeployModule):
             + ["cd ${CODEBUILD_SRC_DIR}"]
             + ["chmod -R 777 ${CODEBUILD_SRC_DIR}"],  # makes sure output isn't locked
             abort_phases_on_failure=True,
-            runtime_versions=runtimes,
+            runtime_versions=runtime_versions,
         )
 
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec", output_override)
@@ -268,7 +278,6 @@ class DeployLocalModule(DeployModule):
             extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
         files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
 
-        runtimes = {"nodejs": "20"}
         codebuild_image = (
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
         )
@@ -297,7 +306,11 @@ class DeployLocalModule(DeployModule):
             if stack_outputs and "CodeArtifactRepository" in stack_outputs
             else None
         )
-        install_commands = self._codebuild_install_commands(account_id, region, ca_domain, ca_repository)
+
+        runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
+        install_commands = self._codebuild_install_commands(
+            account_id, region, ca_domain, ca_repository, runtime_versions
+        )
 
         buildspec = codebuild.generate_spec(
             cmds_install=install_commands
@@ -322,7 +335,7 @@ class DeployLocalModule(DeployModule):
             + ["cd ${CODEBUILD_SRC_DIR}"]
             + ["chmod -R 777 ${CODEBUILD_SRC_DIR}"],  # makes sure output isn't locked
             abort_phases_on_failure=True,
-            runtime_versions=runtimes,
+            runtime_versions=runtime_versions,
         )
 
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec", output_override)

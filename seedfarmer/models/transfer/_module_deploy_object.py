@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 import seedfarmer.errors
 from seedfarmer.models._base import CamelModel
@@ -18,6 +18,7 @@ class ModuleDeployObject(CamelModel):
     module_role_name: Optional[str] = None
     module_role_arn: Optional[str] = None
     codebuild_image: Optional[str] = None
+    runtime_overrides: Optional[Dict[str, str]] = None
     npm_mirror: Optional[str] = None
     npm_mirror_secret: Optional[str] = None
     pypi_mirror: Optional[str] = None
@@ -46,6 +47,13 @@ class ModuleDeployObject(CamelModel):
             codebuild_image = self.deployment_manifest.get_region_codebuild_image(
                 account_alias=_module.target_account, region=_module.target_region
             )
+            region_runtime_overrides = self.deployment_manifest.get_region_runtime_overrides(
+                account_alias=_module.target_account, region=_module.target_region
+            )
+            runtime_overrides = {
+                **(region_runtime_overrides if region_runtime_overrides else {}),
+                **(_module.runtime_overrides if _module.runtime_overrides else {}),
+            }
             dcs = self.deployment_manifest.get_parameter_value(
                 "dockerCredentialsSecret",
                 account_alias=_module.target_account,
@@ -71,14 +79,15 @@ class ModuleDeployObject(CamelModel):
                 account_alias=_module.target_account, region=_module.target_region
             )
 
-            self.permissions_boundary_arn = pba if pba is not None else None
-            self.codebuild_image = codebuild_image if codebuild_image is not None else None
-            self.docker_credentials_secret = dcs if dcs else None
-            self.npm_mirror = npm_mirror if npm_mirror is not None else None
-            self.npm_mirror_secret = npm_mirror_secret if npm_mirror_secret is not None else None
-            self.pypi_mirror = pypi_mirror if pypi_mirror is not None else None
-            self.pypi_mirror_secret = pypi_mirror_secret if pypi_mirror_secret is not None else None
-            self.seedfarmer_bucket = sf_bucket if sf_bucket is not None else None
+            self.permissions_boundary_arn = pba
+            self.codebuild_image = codebuild_image
+            self.runtime_overrides = runtime_overrides
+            self.docker_credentials_secret = dcs
+            self.npm_mirror = npm_mirror
+            self.npm_mirror_secret = npm_mirror_secret
+            self.pypi_mirror = pypi_mirror
+            self.pypi_mirror_secret = pypi_mirror_secret
+            self.seedfarmer_bucket = sf_bucket
 
         elif self.module_manifest:
             # Placeholder for single modules

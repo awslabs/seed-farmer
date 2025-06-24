@@ -56,7 +56,7 @@ pyyaml==6.0.2
     #   -r requirements-docs.in
     #   myst-parser
     #   sphinx-autoapi
-requests==2.32.3
+requests==2.32.4
     # via sphinx
 snowballstemmer==2.2.0
     # via sphinx

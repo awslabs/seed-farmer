@@ -30,6 +30,8 @@ targetAccountMappings:
         envVariable: PRIMARY_ACCOUNT
     default: true
     codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:5.5.0
+    runtimeOverrides:
+      python: "3.X"
     npmMirror: https://registry.npmjs.org/
     npmMirrorSecret: /something/aws-addf-mirror-credentials
     pypiMirror: https://pypi.python.org/simple
@@ -43,6 +45,8 @@ targetAccountMappings:
       - region: us-east-2
         default: true
         codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:4.4.0
+        runtimeOverrides:
+          python: "3.X"
         npmMirror: https://registry.npmjs.org/
         npmMirrorSecret: /something/aws-addf-mirror-credentials
         pypiMirror: https://pypi.python.org/simple
@@ -106,6 +110,7 @@ targetAccountMappings:
   - **account** - the account id tied to the alias.  This parameter also supports [Environment Variables](envVariable)
   - **default** - this designates this mapping as the default account for all modules unless otherwise specified.  This is primarily for supporting migrating from `seedfarmer v1` to the current version.
   - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+  - **runtimeOverrides** - runtime versions, see [Build specification reference](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.phases.install.runtime-versions) and [Runtime versions](https://docs.aws.amazon.com/codebuild/latest/userguide/runtime-versions.html)
   - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
   - **npmMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
   - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
@@ -119,6 +124,7 @@ targetAccountMappings:
     - **region** - the region name
     - **default** - this designates this mapping as the default region for all modules unless otherwise specified.  This is primarily for supporting migrating
     - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+    - **runtimeOverrides** - runtime versions, see [Build specification reference](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.phases.install.runtime-versions) and [Runtime versions](https://docs.aws.amazon.com/codebuild/latest/userguide/runtime-versions.html)
     - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
     - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
     - **pypiMirrorSecret** - the AWS SecretManager to use when setting the mirror (see [Mirror Override](mirroroverride))
@@ -266,6 +272,8 @@ path: modules/optionals/buckets
 targetAccount: secondary
 targetRegion: us-west-2
 codebuildImage:  XXXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/aws-codeseeder/code-build-base:3.3.0
+runtimeOverrides:
+  python: "3.X"
 npmMirror: https://registry.npmjs.org/
 npmMirrorSecret: /something/aws-addf-mirror-credentials
 pypiMirror: https://pypi.python.org/simple
@@ -294,6 +302,7 @@ dataFiles:
 - **targetAccount** - the alias of the account from the [deployment manifest mappings](deployment_manifest)
 - **targetRegion** - the name of the region to deploy to - this overrides any mappings
 - **codebuildImage** - a custom build image to use (see [Build Image Override](buildimageoverride))
+- **runtimeOverrides** - runtime versions, see [Build specification reference](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.phases.install.runtime-versions) and [Runtime versions](https://docs.aws.amazon.com/codebuild/latest/userguide/runtime-versions.html)
 - **npmMirror** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
 - **npmMirrorSecret** - the NPM registry mirror to use (see [Mirror Override](mirroroverride))
 - **pypiMirror** - the Pypi mirror to use (see [Mirror Override](mirroroverride))
@@ -395,14 +404,25 @@ Users can override the default build image via one of the following:
 #### AWS Curated Build Images
 There are multiple [build images and available runtimes](https://docs.aws.amazon.com/codebuild/latest/userguide/available-runtimes.html) that are supported by AWS Codebuild.  For `seed-farmer`, we currently support the following AWS Curated Images with the default runtimes installed:
 
-| AWS Curated Build Image | Confgured Runtimes|
-| ----------- | ----------- |    
-|aws/codebuild/standard:6.0|nodejs:16|
-||python:3.10|
-||java:corretto17|
-|aws/codebuild/standard:7.0|nodejs:18|
-||python:3.11|
-||java:corretto21|
+| AWS Curated Build Image                         | Confgured Runtimes |
+| ----------------------------------------------- | ------------------ |
+| aws/codebuild/standard:6.0                      | nodejs:16          |
+|                                                 | python:3.10        |
+|                                                 | java:corretto17    |
+| aws/codebuild/standard:7.0                      | nodejs:18          |
+|                                                 | python:3.11        |
+|                                                 | java:corretto21    |
+| aws/codebuild/amazonlinux2-x86_64-standard:5.0  | nodejs:20          |
+|                                                 | python:3.12        |
+|                                                 | java:corretto21    |
+| aws/codebuild/amazonlinux2-aarch64-standard:3.0 | nodejs:20          |
+|                                                 | python:3.12        |
+|                                                 | java:corretto21    |
+
+#### Runtime versions
+It is possible to override runtime versions using deployment manifest target account mappings, region mappings, and module manifest using **runtimeOverrides** property. 
+
+For available runtime versions, see [Build specification reference](https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html#build-spec.phases.install.runtime-versions) and [Runtime versions](https://docs.aws.amazon.com/codebuild/latest/userguide/runtime-versions.html).
 
 #### Custom Build Images
 If an end user wants to build their own image, it is STRONGLY encouraged to use [this Dockerfile from AWS public repos](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile) as the base layer.  `seed-farmer` leverages this as the base for its default image ([see HERE](https://github.com/awslabs/aws-codeseeder/blob/main/images/code-build-image/Dockerfile)).  It is up to the module developer to verify all proper libraries are installed and available.

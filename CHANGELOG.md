@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v7.0.1 (2025-06-25)
+
+### New 
+
+### Changes
+
+### Fixes
+-Increase time to allow new roles to create
+
 
 ## v7.0.0 (2025-06-24)
 

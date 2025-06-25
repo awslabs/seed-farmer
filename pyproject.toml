@@ -1,6 +1,6 @@
 [project]
 name = "seed-farmer"
-version = "7.1.0.dev0"
+version = "7.0.1"
 description = "The AWS Professional Services CLI tool SeedFarmer for GitOps support"
 authors = [{ name = "AWS Professional Services" }]
 requires-python = ">=3.9, <3.14"

@@ -266,7 +266,7 @@ class DeployRemoteModule(DeployModule):
             stack_outputs=stack_outputs,  # type: ignore [arg-type]
             bundle_path=bundle_zip,
             buildspec=buildspec,
-            timeout=90,
+            timeout=120,
             overrides=overrides,
             codebuild_log_callback=None,
             session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),

@@ -260,7 +260,7 @@ class SessionManagerRemoteImpl(ISessionManager, metaclass=SingletonMeta):
         role_prefix = self.config.get("role_prefix")
         toolchain_region = self.config.get("toolchain_region")
         _logger.debug(
-            f"""Creating a local session with the following info passed in:
+            f"""Creating a remote session with the following info passed in:
                       region_name = {region_name}
                       profile_name = {profile_name}
                       project_name = {project_name}

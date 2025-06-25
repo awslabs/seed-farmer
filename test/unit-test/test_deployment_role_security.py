@@ -1,6 +1,6 @@
 import pytest
 
-from seedfarmer.commands._bootstrap_commands import get_deployment_template
+from seedfarmer.commands._bootstrap_commands import get_template
 
 
 @pytest.mark.commands
@@ -9,12 +9,7 @@ def test_deployment_role_deny_actions():
     """Test that the deployment role template includes the required deny actions for improved security posture."""
 
     # Get the deployment template using the same function the application uses
-    template = get_deployment_template(
-        toolchain_role_arn="arn:aws:iam::123456789012:role/test-role",
-        project_name="test-project",
-        role_name="test-deployment-role",
-        policy_arns=None,
-    )
+    template = get_template("deployment_role")
 
     # Expected deny actions that should be in the template
     expected_deny_actions = [

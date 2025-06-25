@@ -11,7 +11,7 @@ sphinx-click==6.0.0
 myst_parser~=3.0.1
 docutils~=0.16
 PyYAML==6.0.2
-urllib3~=1.26.19
+urllib3~=2.5.0
 wheel==0.44.0
 typing-extensions>=4.11
 certifi~=2024.8.30

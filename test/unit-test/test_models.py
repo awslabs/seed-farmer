@@ -22,7 +22,7 @@ import yaml
 
 import seedfarmer.errors
 from seedfarmer.errors import InvalidManifestError
-from seedfarmer.models.deploy_responses import CodeSeederMetadata
+from seedfarmer.models.deploy_responses import CodeBuildMetadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest
 from seedfarmer.models.manifests._module_manifest import DeploySpec
 
@@ -88,6 +88,17 @@ def test_get_region_mirror_secret():
     assert manifest.get_region_mirror_secret() == secret_name
     assert manifest.get_region_npm_mirror() == "https://mynpmmirror.com/here"
     assert manifest.get_region_pypi_mirror() == "https://mypypimirror.com/here"
+
+
+@pytest.mark.models
+@pytest.mark.models_deployment_manifest
+def test_get_region_runtime_overrides():
+    manifest = DeploymentManifest(**deployment_yaml)
+    assert manifest.get_region_runtime_overrides() == {}
+    deployment_yaml["targetAccountMappings"][0]["regionMappings"][0]["runtime_overrides"] = {"python": "3.13"}
+    deployment_yaml["targetAccountMappings"][0]["runtime_overrides"] = {"java": "corretto21"}
+    manifest = DeploymentManifest(**deployment_yaml)
+    assert manifest.get_region_runtime_overrides() == {"python": "3.13", "java": "corretto21"}
 
 
 @pytest.mark.models
@@ -584,7 +595,7 @@ destroy:
 @pytest.mark.models
 @pytest.mark.models_deployresponses
 def test_deployresponses():
-    CodeSeederMetadata(
+    CodeBuildMetadata(
         aws_account_id="123456789012",
         aws_region="us-east-1",
         codebuild_build_id="codebuild:12345",

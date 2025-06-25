@@ -18,20 +18,21 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-import aws_codeseeder as cs
 import boto3
-from aws_codeseeder import EnvVar, EnvVarType, codeseeder, commands, services
 from cfn_tools import load_yaml
-from packaging import version
 
+import seedfarmer.commands._seedkit_commands as sk_commands
 import seedfarmer.errors
+import seedfarmer.services._cfn as cfn
 import seedfarmer.services._iam as iam
+import seedfarmer.services._s3 as s3
 from seedfarmer import config
 from seedfarmer.mgmt.bundle_support import BUNDLE_PREFIX
 from seedfarmer.mgmt.module_info import get_module_stack_names
 from seedfarmer.models.manifests import DeploymentManifest, ModuleParameter
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 from seedfarmer.utils import generate_hash, upper_snake_case
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -63,10 +64,7 @@ info = StackInfo()
 
 def _get_project_managed_policy_arn(session: Optional[boto3.Session]) -> str:
     def _check_stack_status() -> Tuple[bool, Dict[str, str]]:
-        return cast(
-            Tuple[bool, Dict[str, str]],
-            services.cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session),
-        )
+        return cfn.does_stack_exist(stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session)
 
     retries = 3
     while retries > 0:
@@ -93,7 +91,7 @@ def _get_project_managed_policy_arn(session: Optional[boto3.Session]) -> str:
 
 
 def _get_seedkit_resources_policy_arn(session: Optional[boto3.Session]) -> Optional[str]:
-    seedkit_stack_exists, seedkit_stack_name, stack_outputs = commands.seedkit_deployed(
+    seedkit_stack_exists, seedkit_stack_name, stack_outputs = sk_commands.seedkit_deployed(
         seedkit_name=config.PROJECT, session=session
     )
     if seedkit_stack_exists:
@@ -166,7 +164,7 @@ def create_module_deployment_role(
     policies_attached = iam.attach_policy_to_role(role_name, policies, session=session)
     if policies.sort() == policies_attached.sort():
         _logger.info("Delaying deployment to allow %s IAM Role and Policies to take effect", role_name)
-        time.sleep(10)  # on first deployment roles and policy attachments need time to take effect
+        time.sleep(1)
 
     if docker_credentials_secret:
         policy_body = _get_docker_secret_inline_policy(
@@ -188,12 +186,12 @@ def destroy_module_deployment_role(
         policies.append(seedkit_resources_policy_arn)
 
     # Extract Project Managed policy name
-    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
+    project_managed_policy_stack_exists, stack_outputs = cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
     if project_managed_policy_stack_exists:
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
-        policies.append(project_managed_policy_arn)
+        policies.append(str(project_managed_policy_arn))
 
     _logger.debug(
         f"seedkit_resources_policy {seedkit_resources_policy_arn}  project_managed_policy {project_managed_policy_arn}"
@@ -235,7 +233,7 @@ def deploy_bucket_storage_stack(
     info = StackInfo(account_id=account_id, region=region)
     bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
 
-    stack_exists, output = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+    stack_exists, output = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
 
     if not stack_exists:
         _logger.info("Deploying the bucket storage stack %s", bucket_stack_name)
@@ -245,14 +243,14 @@ def deploy_bucket_storage_stack(
             limit = len(f"seedfarmer--{config.PROJECT.lower()}-no-delete")
             sm_hash = generate_hash(string=f"{config.PROJECT.lower()}-{region}-{account_id}", length=63 - limit)
             bucket_name = f"seedfarmer-{config.PROJECT.lower()}-{sm_hash}-no-delete"
-        services.cfn.deploy_template(
+        cfn.deploy_template(
             stack_name=bucket_stack_name,
             filename=config.BUCKET_STORAGE_PATH,
             seedkit_tag=config.PROJECT.lower(),
             parameters={"ProjectName": config.PROJECT.lower(), "BucketName": bucket_name[:63]},
             session=session,
         )
-        stack_exists, output = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+        stack_exists, output = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
     return str(output.get("Bucket"))
 
 
@@ -265,7 +263,7 @@ def deploy_managed_policy_stack(
 ) -> None:
     """
     deploy_managed_policy_stack
-        This function deploys the deployment-specific policy to allow CodeSeeder to deploy.
+        This function deploys the deployment-specific policy
 
     Parameters
     ----------
@@ -280,7 +278,7 @@ def deploy_managed_policy_stack(
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    project_managed_policy_stack_exists, _ = services.cfn.does_stack_exist(
+    project_managed_policy_stack_exists, _ = cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
     if not project_managed_policy_stack_exists or update_project_policy:
@@ -293,11 +291,11 @@ def deploy_managed_policy_stack(
         _logger.info(
             "Deploying %s from the path %s", info.PROJECT_MANAGED_POLICY_CFN_NAME, project_managed_policy_template
         )
-        services.cfn.deploy_template(
+        cfn.deploy_template(
             stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,
             seedkit_tag=deployment_manifest.name,
-            parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": deployment_manifest.name},
+            parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": str(deployment_manifest.name)},
             session=session,
         )
 
@@ -323,17 +321,17 @@ def destroy_bucket_storage_stack(
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     info = StackInfo(account_id=account_id, region=region)
     bucket_stack_name = info.SEEDFARMER_BUCKET_STACK_NAME
-    bucket_stack_exists, outputs = services.cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
+    bucket_stack_exists, outputs = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
     if bucket_stack_exists and outputs is not None:
         bucket_name = str(outputs.get("Bucket"))
-        bucket_empty = services.s3.is_bucket_empty(bucket=bucket_name, folder=BUNDLE_PREFIX, session=session)
+        bucket_empty = s3.is_bucket_empty(bucket=bucket_name, folder=BUNDLE_PREFIX, session=session)
         if bucket_empty:
             _logger.info("Destroying Stack %s in Account/Region: %s/%s", bucket_stack_name, account_id, region)
             import botocore.exceptions
 
             try:
-                services.s3.delete_objects(bucket=bucket_name, session=session)
-                services.cfn.destroy_stack(
+                s3.delete_objects(bucket=bucket_name, session=session)
+                cfn.destroy_stack(
                     stack_name=bucket_stack_name,
                     session=session,
                 )
@@ -358,14 +356,14 @@ def destroy_managed_policy_stack(account_id: str, region: str, **kwargs: Any) ->
     """
     # Determine if managed policy stack already deployed
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    project_managed_policy_stack_exists, stack_outputs = services.cfn.does_stack_exist(
+    project_managed_policy_stack_exists, stack_outputs = cfn.does_stack_exist(
         stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME, session=session
     )
     _logger.debug("project_managed_policy_output is : %s", stack_outputs)
     has_roles_attached = False
     if project_managed_policy_stack_exists:
         project_managed_policy_arn = stack_outputs.get("ProjectPolicyARN")
-        policy = iam.get_policy_info(policy_arn=project_managed_policy_arn, session=session)
+        policy = iam.get_policy_info(policy_arn=str(project_managed_policy_arn), session=session)
         has_roles_attached = True if policy and policy["Policy"]["AttachmentCount"] > 0 else False
 
     if project_managed_policy_stack_exists and not has_roles_attached:
@@ -375,7 +373,7 @@ def destroy_managed_policy_stack(account_id: str, region: str, **kwargs: Any) ->
         import botocore.exceptions
 
         try:
-            services.cfn.destroy_stack(
+            cfn.destroy_stack(
                 stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
                 session=session,
             )
@@ -422,8 +420,7 @@ def destroy_module_stack(
         deployment_name, group_name, module_name, session=session
     )
 
-    if not codeseeder.EXECUTING_REMOTELY:
-        services.cfn.destroy_stack(module_stack_name, session=session)
+    cfn.destroy_stack(module_stack_name, session=session)
 
     destroy_module_deployment_role(
         role_name=module_role_name,
@@ -447,7 +444,7 @@ def deploy_module_stack(
     """
     deploy_module_stack
         This function deploys the module stack (modulestack.yaml) to support the module
-        for deployment with CodeSeeder
+        for deployment
 
     Parameters
     ----------
@@ -496,7 +493,8 @@ def deploy_module_stack(
     _logger.debug("module_role_name %s", module_role_name)
 
     with open(module_stack_path, "r") as file:
-        template_parameters = load_yaml(file).get("Parameters", {})
+        template = load_yaml(file)
+        template_parameters = template.get("Parameters", {})
 
     stack_parameters = {}
     group_module_name = f"{group_name}-{module_name}"
@@ -531,7 +529,7 @@ def deploy_module_stack(
 
     # Create/Update Module IAM Policy
     _logger.info("Deploying Module Stack for %s", group_module_name)
-    services.cfn.deploy_template(
+    cfn.deploy_template(
         stack_name=module_stack_name,
         filename=module_stack_path,
         seedkit_tag=module_stack_name,
@@ -578,7 +576,7 @@ def get_module_stack_info(
     module_stack_name, module_role_name = get_module_stack_names(
         deployment_name, group_name, module_name, session=session
     )
-    stack_exists, _ = services.cfn.does_stack_exist(stack_name=module_stack_name, session=session)
+    stack_exists, _ = cfn.does_stack_exist(stack_name=module_stack_name, session=session)
     return module_stack_name, module_role_name, stack_exists
 
 
@@ -592,11 +590,12 @@ def deploy_seedkit(
     role_prefix: Optional[str] = None,
     policy_prefix: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
+    deploy_codeartifact: Optional[bool] = False,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     """
     deploy_seedkit
-        Accessor method to CodeSeeder to deploy the SeedKit if not deployed
+        Deploy the SeedKit if not deployed
 
     Parameters
     ----------
@@ -618,8 +617,9 @@ def deploy_seedkit(
         The ARN of the permissions boundary to attach to seedkit role
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    stack_exists, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
-    deploy_codeartifact = "CodeArtifactRepository" in stack_outputs
+    stack_exists, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+    deploy_codeartifact = bool(stack_outputs.get("CodeArtifactRepository")) or bool(deploy_codeartifact)
+
     if stack_exists and not update_seedkit:
         _logger.debug("SeedKit exists and not updating for Account/Region: %s/%s", account_id, region)
     else:
@@ -634,24 +634,23 @@ def deploy_seedkit(
             "security_group_ids": security_group_ids,
         }
 
-        if version.parse(cs.__version__) >= version.parse("1.3.0"):
-            if role_prefix:
-                seedkit_args["role_prefix"] = role_prefix
-            if policy_prefix:
-                seedkit_args["policy_prefix"] = policy_prefix
-            if permissions_boundary_arn:
-                seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
+        if role_prefix:
+            seedkit_args["role_prefix"] = role_prefix
+        if policy_prefix:
+            seedkit_args["policy_prefix"] = policy_prefix
+        if permissions_boundary_arn:
+            seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
 
-        commands.deploy_seedkit(**seedkit_args)
+        sk_commands.deploy_seedkit(**seedkit_args)  # type: ignore [arg-type]
         # Go get the outputs and return them
-        _, _, stack_outputs = commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+        _, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
     return dict(stack_outputs)
 
 
 def destroy_seedkit(account_id: str, region: str) -> None:
     """
     destroy_seedkit
-        Accessor method to CodeSeeder to destroy the SeedKit if deployed
+        Destroy the SeedKit if deployed
 
     Parameters
     ----------
@@ -662,7 +661,7 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
-    commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
+    sk_commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
 
 
 def force_manage_policy_attach(

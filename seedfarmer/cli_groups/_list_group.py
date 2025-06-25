@@ -33,7 +33,11 @@ from seedfarmer.output_utils import (
     print_manifest_inventory,
 )
 from seedfarmer.services import get_sts_identity_info
-from seedfarmer.services.session_manager import ISessionManager, SessionManager
+from seedfarmer.services.session_manager import (
+    ISessionManager,
+    SessionManager,
+    bind_session_mgr,
+)
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -128,6 +132,14 @@ def list() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_dependencies(
     deployment: str,
     group: str,
@@ -138,6 +150,7 @@ def list_dependencies(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -236,6 +249,14 @@ def list_dependencies(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_deployspec(
     deployment: str,
     group: str,
@@ -246,6 +267,7 @@ def list_deployspec(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -350,6 +372,14 @@ def list_deployspec(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_module_metadata(
     deployment: str,
     group: str,
@@ -361,6 +391,7 @@ def list_module_metadata(
     env_files: List[str],
     export_local_env: bool,
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -454,6 +485,14 @@ def list_module_metadata(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_all_module_metadata(
     deployment: str,
     project: Optional[str],
@@ -462,6 +501,7 @@ def list_all_module_metadata(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -554,6 +594,14 @@ def list_all_module_metadata(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_modules(
     deployment: str,
     project: Optional[str],
@@ -562,6 +610,7 @@ def list_modules(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -612,12 +661,21 @@ def list_modules(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_deployments(
     project: Optional[str],
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -719,6 +777,14 @@ def list_deployments(
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def list_build_env_params(
     deployment: str,
     group: str,
@@ -731,6 +797,7 @@ def list_build_env_params(
     env_files: List[str],
     export_local_env: str,
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -793,5 +860,6 @@ def list_build_env_params(
     required=False,
     default="deployment",
 )
+@bind_session_mgr
 def list_manifest_schema(type: str) -> None:
     print(json.dumps(bi.get_manifest_schema(type=type), indent=2))

@@ -22,7 +22,7 @@ import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -114,6 +114,14 @@ def remove() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def remove_module_data(
     deployment: str,
     group: str,
@@ -125,6 +133,7 @@ def remove_module_data(
     target_account_id: Optional[str],
     target_region: Optional[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
@@ -133,7 +142,7 @@ def remove_module_data(
     if project is None:
         project = _load_project()
 
-    session: Optional[Session] = None
+    session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):
         raise seedfarmer.errors.InvalidConfigurationError(
             "Must either specify both --target-account-id and --target-region, or neither"
@@ -144,5 +153,4 @@ def remove_module_data(
             .get_or_create(project_name=project, profile=profile, region_name=region, qualifier=qualifier)
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
-
     mi.remove_module_info(deployment, group, module, session=session)

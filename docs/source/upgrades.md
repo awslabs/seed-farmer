@@ -98,3 +98,23 @@ To upgrade:
     ```bash
     seedfarmer apply my/manifest/path --update-seedkit
     ```
+
+## Upgrading to 7.0.0  
+
+This is a **BREAKING CHANGE !!!**.
+
+In this release, we have:
+- removed support for python 3.8
+- have set the `publishGenericEnvVariables` to true by default
+- changed the default version of the codebuild image to `aws/codebuild/amazonlinux2-x86_64-standard:5.0`
+
+Each of these changes constitutes a breaking change.
+
+If you are running modules that do NOT leverage generic environment variables, you will need to set `publishGenericEnvVariables` to false in the `deployspec.yaml` of the module. [See this documentation](./module_development.mdl#deployspec-parameters-of-interest)
+
+To update an existing project to use the new default image, you can run:
+```bash
+seedfarmer apply <deployment.yaml> --update-seedkit [OPTIONS] 
+```
+ ** We have also removed a dependency on [AWS CodeSeeder](https://github.com/awslabs/aws-codeseeder).  All login within that library is now encapsulated within SeedFarmer.  AWS CodeSeeder is still available in KTLO (Keep The Light On) status.
+

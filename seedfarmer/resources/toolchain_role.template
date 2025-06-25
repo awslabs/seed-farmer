@@ -1,9 +1,48 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS CloudFormation for the SeedFarmer Toolchain Role
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: Name of the project
+  RoleName:
+    Type: String
+    Description: Name of the role to create
+  RolePrefix:
+    Type: String
+    Description: Prefix for the role path
+    Default: "/"
+  SeedFarmerVersion:
+    Type: String
+    Description: Version of SeedFarmer
+  PrincipalArns:
+    Type: CommaDelimitedList
+    Description: A comma-delimited list of trusted principals for the role
+    Default: ""
+  PermissionsBoundaryArn:
+    Type: String
+    Description: Permission Boundary to set on the role
+    Default: ""
 Outputs:
   ToolchainRoleName:
     Value:
       Ref: ToolchainRole
+
+Conditions:
+  HasPermissionsBoundary: 
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: PermissionsBoundaryArn
+          - ""
+  HasPrincipals:
+    Fn::Not:
+      - Fn::Equals:
+          - Fn::Join:
+              - ","
+              - Ref: PrincipalArns
+          - ""
+
+
 Resources:
   ToolchainRole:
     Properties:
@@ -13,8 +52,13 @@ Resources:
         -   Action: sts:AssumeRole
             Effect: Allow
             Principal:
-                AWS: []
-      Path: "{{ role_prefix }}"
+                AWS:
+                  Fn::If:
+                    - HasPrincipals
+                    - Ref: PrincipalArns
+                    - Ref: "AWS::NoValue"
+      Path: 
+        Ref: RolePrefix
       Policies:
         - PolicyName: InlineToolchain
           PolicyDocument:
@@ -25,8 +69,8 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-{{ project_name }}*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-{{ project_name }}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-${ProjectName}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-${ProjectName}*"
               Sid: ToolChainSTS
             - Action:
               - ssm:Put*
@@ -37,7 +81,7 @@ Resources:
               - ssm:Get*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/{{ project_name }}/*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/${ProjectName}/*"
               Sid: ToolChainSSM
             - Action:
               - ssm:Describe*
@@ -56,9 +100,16 @@ Resources:
               Action:
                 - s3:GetObject*
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:s3:::{{ project_name }}-*/*"
-      RoleName: "{{ role_name }}"
+                - Fn::Sub: "arn:${AWS::Partition}:s3:::${ProjectName}-*/*"
+      PermissionsBoundary:
+        Fn::If:
+          - HasPermissionsBoundary
+          - Ref: PermissionsBoundaryArn
+          - Ref: "AWS::NoValue"
+      RoleName: 
+        Ref: RoleName
       Tags:
         - Key: "SeedFarmer"
-          Value: "{{ seedfarmer_version }}"
+          Value: 
+            Ref: SeedFarmerVersion
     Type: AWS::IAM::Role

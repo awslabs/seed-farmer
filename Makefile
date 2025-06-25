@@ -5,38 +5,40 @@
 
 .PHONY: install
 install:  ## Install dependencies
+	curl -Ls https://astral.sh/uv/install.sh | sh
 	@echo "Setting up virtual environment..."
-	python3 -m venv .venv
+	uv venv -p3.11 .venv
 	@echo "Installing Dev dependencies..."
 	. .venv/bin/activate && \
-	python -m pip install --upgrade pip && \
-	pip install -r requirements.txt && \
-	pip install -r requirements-dev.txt && \
-	pip install -e .
+	uv sync --frozen
 
 .PHONY: test
 test:  ## Run unit tests
 	@echo "Running unit tests..."
 	. .venv/bin/activate && ./test/pytest.sh
 
+.PHONY: build
+build:  ## Run build
+	@echo "Running build..."
+	. .venv/bin/activate && uv build --wheel
+
 .PHONY: validate
 validate:  ## Run linters and type checkers
 	@echo "Running ruff and type checkers..."
 	. .venv/bin/activate && \
-		pip install ruff && \
-		pip install mypy && \
-		ruff format --check seedfarmer && \
-		python3 -m ruff check --fix seedfarmer && \
-		python3 -m mypy --ignore-missing-imports seedfarmer
+		uv sync --frozen --inexact --no-install-project --only-dev
+		uv run ruff format --check seedfarmer --quiet && \
+		uv run ruff check seedfarmer --quiet && \
+		uv run mypy --pretty --ignore-missing-imports seedfarmer
 
 .PHONY: format
 format:  ## Format code with ruff and prettier
 	@echo "Formatting code with ruff and prettier..."
 	. .venv/bin/activate && \
-		python -m ruff format seedfarmer && \
-		python -m ruff check --fix seedfarmer && \
-		python -m ruff format test && \
-		python -m ruff check --fix test
+		uv run ruff format seedfarmer && \
+		uv run ruff check --fix seedfarmer && \
+		uv run ruff format test && \
+		uv run ruff check --fix test
 
 .PHONY: help
 help:  ## Show help for each of the Makefile recipes

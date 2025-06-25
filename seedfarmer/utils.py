@@ -12,16 +12,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import glob
 import hashlib
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional
+import shutil
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 import yaml
 from boto3 import Session
 from dotenv import dotenv_values, load_dotenv
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import PreservedScalarString
 
 import seedfarmer.errors
 from seedfarmer.services._service_utils import get_region, get_sts_identity_info
@@ -45,6 +49,30 @@ class CfnSafeYamlLoader(yaml.SafeLoader):
         k: [r for r in v if r[0] != "tag:yaml.org,2002:timestamp"]
         for k, v in NoDatesSafeLoader.yaml_implicit_resolvers.items()
     }
+
+
+class LiteralStr(PreservedScalarString):
+    """A string subclass that forces block style (|) YAML formatting."""
+
+    pass
+
+
+def register_literal_str() -> YAML:
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    yaml.block_seq_indent = 2
+
+    def literal_str_representer(dumper, data):  # type: ignore [no-untyped-def]
+        kwargs = {"style": "|"}
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, **kwargs)
+
+    yaml.representer.add_representer(LiteralStr, literal_str_representer)
+    return yaml
+
+
+def apply_literalstr(s: str) -> Union[str, LiteralStr]:
+    return LiteralStr(s) if "\n" in s else s
 
 
 def upper_snake_case(value: str) -> str:
@@ -108,10 +136,10 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str, part
     str
         The standard URL with protocol and query parameters
         ex: https://us-east-1.console.aws.amazon.com/codesuite/codebuild/123456789012/projects/
-            codebuild-id/build/codebuild-id:3413241234/?region-us-east-1
-        if in a differeing partion (ex.aws-cn) the url looks like:
+            codebuild-id/build/codebuild-id:3413241234/?region-us-east-1 (LEGACY)
+        if in a differing partition (ex.aws-cn) the url looks like:
             https://cn-north-1.console.amazonaws.cn/codesuite/codebuild/123456789012/projects/
-            codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1
+            codeseeder-idf/build/codeseeder-id:3413241234/?region=cn-north-1 (LEGACY)
     """
     try:
         b_id_enc = codebuild_id.replace(":", "%3A")
@@ -265,3 +293,38 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     payload = recurse_dict(payload)
     return payload
+
+
+def create_output_dir(name: str, path_override: Optional[str] = None) -> str:
+    """Helper function for creating or clearing a .seedfarmer.out output directory by default
+
+    Parameters
+    ----------
+    name : str
+        Name of the directory to create in  the .seedfarmer.out directory
+
+    path_override: Optional[str]
+        If you want to override the name .seedfarmer.out use this (beware of what you are doing)
+
+    Returns
+    -------
+    str
+        Full path of the created directory
+    """
+    local_path = path_override if path_override else ".seedfarmer.out"
+    out_dir = os.path.join(os.getcwd(), local_path, name)
+    try:
+        shutil.rmtree(out_dir)
+    except FileNotFoundError:
+        pass
+    # except PermissionError:
+    #     pass
+    os.makedirs(out_dir, exist_ok=True)
+    return out_dir
+
+
+def delete_all_output_dir(name: str = ".seedfarmerlocal-") -> None:
+    pattern = os.path.join(os.getcwd(), f"{name}-*")
+    for path in glob.glob(pattern):
+        if os.path.isdir(path):
+            shutil.rmtree(path)

@@ -17,14 +17,13 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from aws_codeseeder import EnvVar, EnvVarType
-
 import seedfarmer.errors
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import config
 from seedfarmer.mgmt.module_info import get_module_metadata
 from seedfarmer.models.manifests import DeploymentManifest, ModuleManifest, ModuleParameter
 from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.types.parameter_types import EnvVar, EnvVarType
 from seedfarmer.utils import upper_snake_case
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -112,7 +111,9 @@ def load_parameter_values(
 
 
 def resolve_params_for_checksum(
-    deployment_manifest: DeploymentManifest, module: ModuleManifest, group_name: str
+    deployment_manifest: DeploymentManifest,
+    module: ModuleManifest,
+    group_name: str,
 ) -> None:
     for param in module.parameters:
         if param.value_from and param.value_from.parameter_store:
@@ -213,7 +214,7 @@ def _module_metatdata(
         _logger.debug("loaded parameter value: %s", parameter_value)
 
         parameter_value = (
-            parameter_value.get(parameter.value_from.module_metadata.key, None)
+            parameter_value.get(parameter.value_from.module_metadata.key, None)  # type: ignore[assignment]
             if parameter_value is not None and parameter.value_from.module_metadata.key is not None
             else parameter_value
         )

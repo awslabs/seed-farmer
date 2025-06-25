@@ -21,7 +21,11 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import ISessionManager, SessionManager
+from seedfarmer.services.session_manager import (
+    ISessionManager,
+    SessionManager,
+    bind_session_mgr,
+)
 from seedfarmer.utils import load_dotenv_files
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -46,6 +50,7 @@ def _error_messaging(deployment: str, group: Optional[str] = None, module: Optio
 
 
 @click.group(name="taint", help="Top Level command to support adding a taint to a deployed module")
+@bind_session_mgr
 def taint() -> None:
     """Taint module"""
     pass
@@ -122,6 +127,14 @@ def taint() -> None:
     help="Enable detailed logging.",
     show_default=True,
 )
+@click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@bind_session_mgr
 def taint_module(
     deployment: str,
     group: str,
@@ -132,6 +145,7 @@ def taint_module(
     qualifier: Optional[str],
     env_files: List[str],
     debug: bool,
+    local: bool,
 ) -> None:
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)

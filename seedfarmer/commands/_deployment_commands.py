@@ -31,6 +31,7 @@ import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
+from seedfarmer.deployment.deploy_factory import DeployModuleFactory
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -54,7 +55,7 @@ from seedfarmer.output_utils import (
 )
 from seedfarmer.services import get_sts_identity_info
 from seedfarmer.services._iam import get_role, get_role_arn
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 from seedfarmer.utils import get_generic_module_deployment_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -170,7 +171,9 @@ def destroy_generic_module_deployment_role(
 def _execute_deploy(
     mdo: ModuleDeployObject,
 ) -> ModuleDeploymentResponse:
-    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    module_manifest = cast(
+        ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
+    )
     account_id = str(module_manifest.get_target_account_id())
     region = str(module_manifest.target_region)
 
@@ -194,8 +197,8 @@ def _execute_deploy(
         _, module_role_name = commands.deploy_module_stack(
             module_stack_path=module_stack_path,
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            group_name=mdo.group_name,
-            module_name=mdo.module_name,
+            group_name=str(mdo.group_name),
+            module_name=str(mdo.module_name),
             account_id=account_id,
             region=region,
             parameters=mdo.parameters,
@@ -211,7 +214,9 @@ def _execute_deploy(
     mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
 
     mdo.module_metadata = json.dumps(
-        get_module_metadata(cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session)
+        get_module_metadata(
+            cast(str, mdo.deployment_manifest.name), str(mdo.group_name), str(mdo.module_name), session=session
+        )
     )
 
     if module_manifest.deploy_spec is None:
@@ -223,7 +228,7 @@ def _execute_deploy(
     (
         du.prepare_ssm_for_deploy(
             deployment_name=mdo.deployment_manifest.name,
-            group_name=mdo.group_name,
+            group_name=str(mdo.group_name),
             module_manifest=module_manifest,
             account_id=account_id,
             region=region,
@@ -231,12 +236,13 @@ def _execute_deploy(
         if mdo.deployment_manifest.name
         else None
     )
-
-    return commands.deploy_module(mdo)
+    return DeployModuleFactory().create(mdo).deploy_module()
 
 
 def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentResponse]:
-    module_manifest = cast(ModuleManifest, mdo.deployment_manifest.get_module(mdo.group_name, mdo.module_name))
+    module_manifest = cast(
+        ModuleManifest, mdo.deployment_manifest.get_module(str(mdo.group_name), str(mdo.module_name))
+    )
     if module_manifest.deploy_spec is None:
         raise seedfarmer.errors.InvalidManifestError(
             f"Invalid value for ModuleManifest.deploy_spec in group {mdo.group_name} and module : {mdo.module_name}"
@@ -253,7 +259,7 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
         .get_deployment_session(account_id=target_account_id, region_name=target_region)
     )
     module_metadata = get_module_metadata(
-        cast(str, mdo.deployment_manifest.name), mdo.group_name, mdo.module_name, session=session
+        cast(str, mdo.deployment_manifest.name), str(mdo.group_name), str(mdo.module_name), session=session
     )
     mdo.module_metadata = json.dumps(module_metadata)
     mdo.parameters = load_parameter_values(
@@ -265,8 +271,8 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     )
     module_stack_name, module_role_name, module_stack_exists = commands.get_module_stack_info(
         deployment_name=cast(str, mdo.deployment_manifest.name),
-        group_name=mdo.group_name,
-        module_name=mdo.module_name,
+        group_name=str(mdo.group_name),
+        module_name=str(mdo.module_name),
         account_id=target_account_id,
         region=target_region,
     )
@@ -291,23 +297,21 @@ def _execute_destroy(mdo: ModuleDeployObject) -> Optional[ModuleDeploymentRespon
     if module_stack_exists:
         commands.force_manage_policy_attach(
             deployment_name=cast(str, mdo.deployment_manifest.name),
-            group_name=mdo.group_name,
-            module_name=mdo.module_name,
+            group_name=str(mdo.group_name),
+            module_name=str(mdo.module_name),
             account_id=target_account_id,
             region=target_region,
             module_role_name=mdo.module_role_name,
         )
 
-    mdo.module_role_name = module_role_name
-    mdo.module_role_arn = get_role_arn(role_name=module_role_name, session=session)
-
-    resp = commands.destroy_module(mdo)
+    mdo.module_role_arn = get_role_arn(role_name=mdo.module_role_name, session=session)
+    resp = DeployModuleFactory().create(mdo).destroy_module()
 
     if resp.status == StatusType.SUCCESS.value and module_stack_exists:
         commands.destroy_module_stack(
             cast(str, mdo.deployment_manifest.name),
-            mdo.group_name,
-            mdo.module_name,
+            str(mdo.group_name),
+            str(mdo.module_name),
             account_id=target_account_id,
             region=target_region,
             docker_credentials_secret=mdo.docker_credentials_secret,
@@ -773,6 +777,7 @@ def deploy_deployment(
     print_manifest_json(deployment_manifest) if show_manifest else None
 
 
+@bind_session_mgr
 def apply(
     deployment_manifest_path: str,
     profile: Optional[str] = None,
@@ -785,6 +790,7 @@ def apply(
     session_timeout_interval: int = 900,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
+    local: bool = False,
 ) -> None:
     """
     apply
@@ -825,6 +831,10 @@ def apply(
         Force update run of seedkit, defaults to False
     update_project_policy: bool
         Force update run of managed project policy, defaults to False
+    local: bool
+        If set to true, use the credentials of active session and do not
+        use the seedfarmer roles
+        By default False
 
     Raises
     ------
@@ -838,7 +848,15 @@ def apply(
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path) as manifest_file:
-        deployment_manifest = DeploymentManifest(**yaml.safe_load(manifest_file))
+        manifest_input = yaml.safe_load(manifest_file)
+    ## Override all regions with the local session region if local
+    if DeployModuleFactory.is_local():
+        region = SessionManager().get_or_create().toolchain_session.region_name
+        for account in manifest_input["targetAccountMappings"]:
+            for mapping in account.get("regionMappings", []):
+                mapping["region"] = region
+
+    deployment_manifest = DeploymentManifest(**manifest_input)
     _logger.debug(deployment_manifest.model_dump())
 
     # Initialize the SessionManager for the entire project
@@ -875,7 +893,15 @@ def apply(
         if module_group.path:
             try:
                 with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
-                    module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
+                    if DeployModuleFactory.is_local():
+                        region = session_manager.toolchain_session.region_name
+                        updated_manifests = []
+                        for m in yaml.safe_load_all(manifest_file):
+                            m["targetRegion"] = region
+                            updated_manifests.append(ModuleManifest(**m))
+                        module_group.modules = updated_manifests
+                    else:
+                        module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
             except FileNotFoundError as fe:
                 _logger.error(fe)
                 _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
@@ -922,6 +948,7 @@ def apply(
     )
 
 
+@bind_session_mgr
 def destroy(
     deployment_name: str,
     profile: Optional[str] = None,
@@ -933,6 +960,7 @@ def destroy(
     remove_seedkit: bool = False,
     enable_session_timeout: bool = False,
     session_timeout_interval: int = 900,
+    local: bool = False,
 ) -> None:
     """
     destroy
@@ -970,6 +998,10 @@ def destroy(
         If enabled, boto3 Sessions will be reset on the timeout interval
     session_timeout_interval: int
         The interval, in seconds, to reset boto3 Sessions
+    local: bool
+        If set to true, use the credentials of active session and do not
+        use the seedfarmer roles
+        By default False
     Raises
     ------
     InvalidConfigurationError
@@ -981,6 +1013,7 @@ def destroy(
     """
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
+
     session_manager = SessionManager().get_or_create(
         project_name=project,
         profile=profile,

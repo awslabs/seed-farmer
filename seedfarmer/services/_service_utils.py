@@ -14,7 +14,9 @@
 
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Tuple, cast, overload
+import random
+import time
+from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, Union, cast, overload
 
 import boto3
 import botocore.config
@@ -30,8 +32,10 @@ import seedfarmer.errors
 if TYPE_CHECKING:
     from boto3.resources.base import ServiceResource
     from botocore.client import BaseClient
+    from mypy_boto3_cloudformation.client import CloudFormationClient
     from mypy_boto3_codebuild import CodeBuildClient
     from mypy_boto3_iam import IAMClient, IAMServiceResource
+    from mypy_boto3_logs.client import CloudWatchLogsClient
     from mypy_boto3_s3 import S3Client, S3ServiceResource
     from mypy_boto3_secretsmanager import SecretsManagerClient
     from mypy_boto3_ssm import SSMClient
@@ -76,7 +80,7 @@ def create_new_session_with_creds(
 @overload
 def boto3_client(
     service_name: Literal["codebuild"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -88,7 +92,7 @@ def boto3_client(
 @overload
 def boto3_client(
     service_name: Literal["iam"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -100,7 +104,7 @@ def boto3_client(
 @overload
 def boto3_client(
     service_name: Literal["s3"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -112,7 +116,7 @@ def boto3_client(
 @overload
 def boto3_client(
     service_name: Literal["secretsmanager"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -124,7 +128,7 @@ def boto3_client(
 @overload
 def boto3_client(
     service_name: Literal["ssm"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -136,7 +140,7 @@ def boto3_client(
 @overload
 def boto3_client(
     service_name: Literal["sts"],
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -147,8 +151,32 @@ def boto3_client(
 
 @overload
 def boto3_client(
+    service_name: Literal["cloudformation"],
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "CloudFormationClient": ...
+
+
+@overload
+def boto3_client(
+    service_name: Literal["logs"],
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
+    region_name: Optional[str] = ...,
+    profile: Optional[str] = ...,
+    aws_access_key_id: Optional[str] = ...,
+    aws_secret_access_key: Optional[str] = ...,
+    aws_session_token: Optional[str] = ...,
+) -> "CloudWatchLogsClient": ...
+
+
+@overload
+def boto3_client(
     service_name: str,
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
     aws_access_key_id: Optional[str] = ...,
@@ -159,7 +187,7 @@ def boto3_client(
 
 def boto3_client(
     service_name: str,
-    session: Optional[Session] = None,
+    session: Optional[Union[Callable[[], Session], Session]] = None,
     region_name: Optional[str] = None,
     profile: Optional[str] = None,
     aws_access_key_id: Optional[str] = None,
@@ -175,13 +203,16 @@ def boto3_client(
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )
     else:
-        return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())  # type: ignore[call-overload,no-any-return]
+        if isinstance(session, Session):
+            return session.client(service_name=service_name, use_ssl=True, config=get_botocore_config())  # type: ignore
+        else:
+            raise TypeError(f"Expected boto3.Session instance, got {type(session)}")
 
 
 @overload
 def boto3_resource(
     service_name: Literal["iam"],
-    ssession: Optional[Session] = ...,
+    ssession: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
 ) -> "IAMServiceResource": ...
@@ -190,7 +221,7 @@ def boto3_resource(
 @overload
 def boto3_resource(
     service_name: Literal["s3"],
-    ssession: Optional[Session] = ...,
+    ssession: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
 ) -> "S3ServiceResource": ...
@@ -199,7 +230,7 @@ def boto3_resource(
 @overload
 def boto3_resource(
     service_name: str,
-    session: Optional[Session] = ...,
+    session: Optional[Union[Callable[[], Session], Session]] = ...,
     region_name: Optional[str] = ...,
     profile: Optional[str] = ...,
 ) -> "ServiceResource": ...
@@ -207,7 +238,7 @@ def boto3_resource(
 
 def boto3_resource(  # type: ignore[misc]
     service_name: str,
-    session: Optional[Session] = None,
+    session: Optional[Union[Callable[[], Session], Session]] = None,
     region_name: Optional[str] = None,
     profile: Optional[str] = None,
 ) -> "ServiceResource":
@@ -216,6 +247,8 @@ def boto3_resource(  # type: ignore[misc]
             service_name=service_name, use_ssl=True, config=get_botocore_config()
         )  # type: ignore[call-overload]
     else:
+        if callable(session):
+            session = session()
         return session.resource(  # type: ignore[no-any-return]
             service_name=service_name,
             use_ssl=True,
@@ -223,8 +256,8 @@ def boto3_resource(  # type: ignore[misc]
         )  # type: ignore[call-overload]
 
 
-def get_region(session: Optional[Session] = None, profile: Optional[str] = None) -> str:
-    sess = session if session else create_new_session(profile=profile)
+def get_region(session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None) -> str:
+    sess = session() if callable(session) else (session or create_new_session(profile=profile))
     if sess.region_name is None:
         raise seedfarmer.errors.InvalidConfigurationError(
             "It is not possible to infer AWS REGION from your environment."
@@ -232,7 +265,9 @@ def get_region(session: Optional[Session] = None, profile: Optional[str] = None)
     return str(sess.region_name)
 
 
-def _call_sts(session: Optional[Session] = None, profile: Optional[str] = None) -> Dict[str, Any]:
+def _call_sts(
+    session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None
+) -> Dict[str, Any]:
     try:
         if not session:
             return cast(Dict[str, Any], boto3_client(service_name="sts", profile=profile).get_caller_identity())
@@ -253,7 +288,9 @@ def _call_sts(session: Optional[Session] = None, profile: Optional[str] = None) 
         raise e
 
 
-def get_sts_identity_info(session: Optional[Session] = None, profile: Optional[str] = None) -> Tuple[str, str, str]:
+def get_sts_identity_info(
+    session: Optional[Union[Callable[[], Session], Session]] = None, profile: Optional[str] = None
+) -> Tuple[str, str, str]:
     sts_info = _call_sts(session=session, profile=profile)
     return cast(
         Tuple[str, str, str], (sts_info.get("Account"), sts_info.get("Arn"), str(sts_info.get("Arn")).split(":")[1])
@@ -277,3 +314,32 @@ def create_signed_request(
     auth.add_auth(request)
 
     return request
+
+
+def try_it(
+    f: Callable[..., Any],
+    ex: Any,
+    base: float = 1.0,
+    max_num_tries: int = 3,
+    **kwargs: Any,
+) -> Any:
+    """Run function with decorrelated Jitter.
+
+    Reference: https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+    """
+    delay: float = base
+    for i in range(max_num_tries):
+        try:
+            return f(**kwargs)
+        except ex as exception:
+            if i == (max_num_tries - 1):
+                raise exception
+            delay = random.uniform(base, delay * 3)
+            _logger.error(
+                "Retrying %s | Fail number %s/%s | Exception: %s",
+                f,
+                i + 1,
+                max_num_tries,
+                exception,
+            )
+            time.sleep(delay)

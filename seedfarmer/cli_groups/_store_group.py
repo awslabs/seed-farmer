@@ -25,7 +25,7 @@ import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
 from seedfarmer.output_utils import print_bolded
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -126,11 +126,19 @@ def store() -> None:
     show_default=True,
 )
 @click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_deployspec(
     deployment: str,
     group: str,
@@ -142,6 +150,7 @@ def store_deployspec(
     project: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
+    local: bool,
     debug: bool,
 ) -> None:
     if debug:
@@ -238,11 +247,19 @@ def store_deployspec(
     show_default=True,
 )
 @click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_module_metadata(
     deployment: str,
     group: str,
@@ -253,6 +270,7 @@ def store_module_metadata(
     qualifier: Optional[str],
     target_account_id: Optional[str],
     target_region: Optional[str],
+    local: bool,
     debug: bool,
 ) -> None:
     if debug:
@@ -263,7 +281,6 @@ def store_module_metadata(
         project = _load_project()
 
     session: Session = Session(profile_name=profile, region_name=region)
-
     if (target_account_id is not None) != (target_region is not None):
         raise seedfarmer.errors.InvalidConfigurationError(
             "Must either specify both --target-account-id and --target-region, or neither"
@@ -354,11 +371,19 @@ def store_module_metadata(
     show_default=True,
 )
 @click.option(
+    "--local/--remote",
+    default=False,
+    help="Indicates whether to use local session role or the SeedFarmer roles",
+    show_default=True,
+    type=bool,
+)
+@click.option(
     "--debug/--no-debug",
     default=False,
     help="Enable detailed logging.",
     show_default=True,
 )
+@bind_session_mgr
 def store_module_md5(
     deployment: str,
     group: str,
@@ -370,6 +395,7 @@ def store_module_md5(
     profile: Optional[str],
     region: Optional[str],
     qualifier: Optional[str],
+    local: bool,
     debug: bool,
 ) -> None:
     if debug:
@@ -399,4 +425,4 @@ def store_module_md5(
             _type = mi.ModuleConst.DEPLOYSPEC
         mi.write_module_md5(deployment=deployment, group=group, module=module, hash=d, type=_type, session=session)
     else:
-        _logger.info("No Data avaiable...skipping")
+        _logger.info("No Data available...skipping")

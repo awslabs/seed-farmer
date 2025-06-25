@@ -19,12 +19,18 @@ from moto import mock_aws
 
 import seedfarmer.errors
 from seedfarmer.services._service_utils import boto3_client
-from seedfarmer.services.session_manager import SessionManager
+from seedfarmer.services.session_manager import (
+    SessionManager,
+    SessionManagerRemoteImpl,
+)
 
 
 @pytest.fixture(scope="function")
 def session_manager():
     SessionManager._instances = {}
+    SessionManager._real_instance = None
+    real_instance = SessionManagerRemoteImpl()
+    SessionManager.bind(real_instance)
 
 
 @pytest.fixture(scope="function")
@@ -45,10 +51,13 @@ def sts_client(aws_credentials):
 
 
 @pytest.mark.session_manager
-def test_failed_creation(session_manager):
-    with pytest.raises(seedfarmer.errors.InvalidConfigurationError) as e:
+def test_failed_creation():
+    # Reset proxy
+    SessionManager._instances = {}
+    SessionManager._real_instance = None
+    with pytest.raises(seedfarmer.errors.InvalidSessionError) as e:
         SessionManager().get_or_create()
-    assert "A 'project_name' is required for first time initialization of the SessionManager" in str(e)
+    assert "SessionManager implementation has not been initialized" in str(e)
 
 
 @pytest.mark.session_manager

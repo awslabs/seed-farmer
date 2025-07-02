@@ -3,13 +3,19 @@ deploy:
   phases:
     install:
       commands:
-      - pip install -r requirements.txt
+        - TERRAFORM_VERSION=1.12.2
+        - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
+        - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
+        - mv terraform /usr/local/bin/
     pre_build:
       commands:
       - echo "Prebuild stage"
     build:
       commands:
-       - echo "bash deploy.sh"
+       - terraform init -input=false
+       - terraform plan -input=false -out tf.plan
+       - terraform apply -auto-approve
+       - terraform output -json > ./tf-exports.json
     post_build:
       commands:
       - echo "Deploy successful"
@@ -17,13 +23,17 @@ destroy:
   phases:
     install:
       commands:
-      - pip install -r requirements.txt
+        - TERRAFORM_VERSION=1.12.2
+        - wget https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
+        - unzip terraform_"$TERRAFORM_VERSION"_linux_amd64.zip
+        - mv terraform /usr/local/bin/
     pre_build:
       commands:
       - echo "Prebuild stage"
     build:
       commands:
-      - echo "DESTROY!"
+      - terraform init
+      - terraform destroy -auto-approve
     post_build:
       commands:
       - echo "Destroy successful"

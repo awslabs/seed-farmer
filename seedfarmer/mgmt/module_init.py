@@ -136,7 +136,7 @@ def create_module_dir(
             output_dir=output_dir,
         )
 
-    add_module_manifest(module_name, module_path)
+        add_module_manifest(module_name, module_path)
 
 
 def create_project(

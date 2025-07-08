@@ -8,8 +8,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New 
 
 ### Changes
+- adding terraform module init template
 
 ### Fixes
+- improved local mode error handling
 
 ## v7.0.1 (2025-06-25)
 
@@ -18,8 +20,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
--Increase time to allow new roles to create
-
+- Increase time to allow new roles to create
 
 ## v7.0.0 (2025-06-24)
 

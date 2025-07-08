@@ -12,6 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - improved local mode error handling
+- make sure that a no-op occurs on module-init for deployment.yaml
 
 ## v7.0.1 (2025-06-25)
 

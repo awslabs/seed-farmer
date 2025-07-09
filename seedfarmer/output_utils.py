@@ -38,9 +38,9 @@ def print_deployment_inventory(description: str, dep: List[str], color: str = "y
     """
     table = Table(title=f"[bold {color}]{description}", title_justify="left")
 
-    table.add_column("Deployment", justify="left", style="cyan", no_wrap=True)
+    table.add_column(f"Deployment ({len(dep)} found)", justify="left", style="cyan", no_wrap=True)
     for deployment in dep:
-        table.add_row(deployment)
+        table.add_row(f"- {deployment}")
 
     console.print(table)
 

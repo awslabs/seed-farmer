@@ -693,7 +693,7 @@ def list_deployments(
         _logger.info("No Deployments found for project %s in account %s and region %s", project, account_id, region)
         print_bolded(message=messages.no_deployment_found(), color="yellow")
     else:
-        print_deployment_inventory(description="Deployment Names", dep=deps)
+        print_deployment_inventory(description="Deployment Names", dep=sorted(deps))
 
 
 @list.command(

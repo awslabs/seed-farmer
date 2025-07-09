@@ -217,14 +217,13 @@ class DeployLocalModule(DeployModule):
             # file.write(yaml.dump(buildspec))
             yaml.dump(buildspec, file)
 
-        codebuild_local.run(local_path, env_vars, codebuild_image)
+        build_info = codebuild_local.run(local_path, env_vars, codebuild_image)
 
         return ModuleDeploymentResponse(
             deployment=self.mdo.deployment_manifest.name,
             group=self.mdo.group_name,
             module=module_manifest.name,
-            status=StatusType.SUCCESS.value,
-            codebuild_metadata=None,
+            status=StatusType.SUCCESS.value if build_info.status.value in ["SUCCEEDED"] else StatusType.ERROR.value,
         )
 
     def destroy_module(self) -> ModuleDeploymentResponse:
@@ -342,12 +341,11 @@ class DeployLocalModule(DeployModule):
         with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
             yaml.dump(buildspec, file)
 
-        codebuild_local.run(local_path, env_vars, codebuild_image)
+        build_info = codebuild_local.run(local_path, env_vars, codebuild_image)
 
         return ModuleDeploymentResponse(
             deployment=deployment_name,
             group=group_name,
             module=module_name,
-            status=StatusType.SUCCESS.value,
-            codebuild_metadata=None,
+            status=StatusType.SUCCESS.value if build_info.status.value in ["SUCCEEDED"] else StatusType.ERROR.value,
         )

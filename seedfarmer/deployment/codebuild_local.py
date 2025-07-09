@@ -12,18 +12,23 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-
+import logging
 import os
 import subprocess
 import uuid
+from datetime import datetime, timezone
 from typing import Dict, Optional
+
+import seedfarmer.services._codebuild as codebuild
+
+_logger: logging.Logger = logging.getLogger(__name__)
 
 
 def run(
     local_deploy_path: str,
     env_vars: Dict[str, str] = {},
     codebuild_image: Optional[str] = None,
-) -> None:  # Optional[codebuild.BuildInfo]:
+) -> codebuild.BuildInfo:
     # Write the environment variables to the file
     env_vars_path = os.path.join(local_deploy_path, "local.env")
     with open(env_vars_path, "w") as f:
@@ -75,6 +80,41 @@ def run(
     docker_command.append("public.ecr.aws/codebuild/local-builds:latest")
 
     try:
-        subprocess.run(docker_command, check=True)
+        start_time = datetime.now(timezone.utc)
+        _logger.debug("Running local Docker deployment: \n%s", " ".join(docker_command))
+
+        process = subprocess.run(docker_command, check=True)
+
+        end_time = datetime.now(timezone.utc)
+        duration = (end_time - start_time).total_seconds()
+
+        return codebuild.BuildInfo(
+            build_id="local",
+            status=codebuild.BuildStatus.succeeded if process.returncode == 0 else codebuild.BuildStatus.failed,
+            start_time=start_time,
+            end_time=end_time,
+            duration_in_seconds=duration,
+            current_phase=codebuild.BuildPhaseType.build,
+            exported_env_vars=env_vars,
+            phases=None,  # type: ignore[arg-type]
+            logs=None,  # type: ignore[arg-type]
+        )
     except KeyboardInterrupt:
-        print("\nInterrupted by user.")
+        _logger.info("Interrupted by the user")
+    except (subprocess.CalledProcessError, Exception) as e:
+        _logger.error(e)
+
+    end_time = datetime.now(timezone.utc)
+    duration = (end_time - start_time).total_seconds()
+
+    return codebuild.BuildInfo(
+        build_id="local",
+        status=codebuild.BuildStatus.failed,
+        start_time=start_time,
+        end_time=datetime.now(timezone.utc),
+        duration_in_seconds=duration,
+        current_phase=codebuild.BuildPhaseType.build,
+        exported_env_vars=env_vars,
+        phases=None,  # type: ignore[arg-type]
+        logs=None,  # type: ignore[arg-type]
+    )

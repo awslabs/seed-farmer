@@ -45,7 +45,7 @@ aws-codeseeder-addf
 
 An end user who would need to update the `seedkit` would delete the CFN template in that account/region mapping and redeploy it (choose either)
    - via `SeedFarmer` default deployment routine
-     - just run the seedfarmer deploy
+     - just run the seedfarmer apply
    - via `AWS CodeSeeder` CLI commands
      - this can occur outside of seedfarmer
      - Please see [AWS CodeSeeder - deploying](https://aws-codeseeder.readthedocs.io/en/latest/usage.html#deploying) for more info on the CLI command.

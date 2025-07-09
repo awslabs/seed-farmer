@@ -271,7 +271,7 @@ class DeployRemoteModule(DeployModule):
             codebuild_log_callback=None,
             session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
             bundle_id=bundle_id,
-            prebuilt_bundle=self._prebuilt_bundle_check(),
+            prebuilt_bundle=None,  # NEVER CHECK FOR THIS BUNDLE ON DEPLOY
             yaml_dumper=yaml,
         )
 

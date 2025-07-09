@@ -8,6 +8,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New 
 
 ### Changes
+
+### Fixes
+
+## v7.0.2 (2025-07-09)
+
+### New 
+
+### Changes
 - adding terraform module init template
 
 ### Fixes

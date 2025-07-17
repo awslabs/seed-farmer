@@ -153,6 +153,7 @@ def test_destroy_clean(session_manager, mocker):
         return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
 
     dc.destroy(deployment_name="myapp", dryrun=True, remove_seedkit=False)
 
@@ -169,6 +170,7 @@ def test_destroy_not_found(session_manager, mocker):
         "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
         return_value=("1234566789012", "arn:aws", "aws"),
     )
+    mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
 
     dc.destroy(deployment_name="myapp", dryrun=True, remove_seedkit=False)
 
@@ -181,6 +183,7 @@ def test_destroy_with_prefix(session_manager, mocker):
         return_value=DeploymentManifest(**mock_deployment_manifest_for_destroy.destroy_manifest),
     )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
 
     dc.destroy(deployment_name="myapp", role_prefix="/test/", dryrun=True, remove_seedkit=False)
 
@@ -487,6 +490,7 @@ def test_destroy_generic_module_deployment_role(session_manager, mocker):
         return_value="generic-module-deployment-role",
     )
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_module_deployment_role", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
 
     dep = DeploymentManifest(**mock_deployment_manifest_huge.deployment_manifest)
     dep.validate_and_set_module_defaults()

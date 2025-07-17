@@ -1028,6 +1028,11 @@ def destroy(
         _, _, partition = get_sts_identity_info(session=session_manager.toolchain_session)
         destroy_manifest._partition = partition
         destroy_manifest.validate_and_set_module_defaults()
+        prime_target_accounts(
+            deployment_manifest=destroy_manifest,
+            update_seedkit=False,
+            update_project_policy=False,
+        )
         destroy_deployment(
             destroy_manifest,
             remove_deploy_manifest=True,

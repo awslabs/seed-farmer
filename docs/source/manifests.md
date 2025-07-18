@@ -138,7 +138,7 @@ targetAccountMappings:
       - Any other parameter in this list is NOT a NAMED PARAMETER (ex. `vpcId`,`privateSubnetIds`,`publicSubnetIds`, etc,) and is solely for the use of lookup in:
         - module manifests
         - the `network` object in the `regionMappings` (see examples above)
-    - **network** - this section indicates to `seed-farmer` and `aws-codeseeder` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isolated subnets.  This CANNOT be changed once the `seedkit` is deployed (it either has VPC support or it does not).  ALL THREE parameters are required!
+    - **network** - this section indicates to `seed-farmer` that the CodeBuild Project should be run in a VPC on Private Subnets.  This is to support compute resources in private or isolated subnets.  A VPC / Subnets can be added to the Codebuild definition at any time, but once added, it cannot be removed without deleting and redeploying (i.e an update will not remove an existing VPC / Subnet).  Security Groups can be be updated at any time.  ALL THREE parameters are required!
       - **vpcId** - the VPC ID the Codebuild Project should be associated to 
       - **privateSubnetIds** - the private subnets the Codebuild Project should be associated to 
       - **securityGroupIds** - the Security Groups the Codebuild Project should be associated to -- a limit of 5 is allowed

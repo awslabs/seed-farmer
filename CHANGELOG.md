@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v7.0.3 (2025-07-18)
+
+### New 
+
+### Changes
+
+### Fixes
+- prime_target_accounts on destroy - fix failed deployments on first apply cannot be destroyed
+
 ## v7.0.2 (2025-07-09)
 
 ### New 

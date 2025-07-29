@@ -60,13 +60,7 @@ class DeployRemoteModule(DeployModule):
             install.append("mv $CODEBUILD_SRC_DIR/bundle/npm_mirror_support.py /var/scripts/npm_mirror_support.py")
             install.append(f"/var/scripts/npm_mirror_support.py {npm_mirror} && echo 'NPM Mirror Set'")
 
-        install.append(
-            "if curl -s --head https://astral.sh | grep '200' > /dev/null; then\n"
-            "  curl -Ls https://astral.sh/uv/install.sh | sh\n"
-            "else\n"
-            "  pip install uv\n"
-            "fi",
-        )
+        install.append("pip install uv")
         install.append("export PATH=$PATH:/root/.local/bin")
         install.append(f"uv venv ~/.venv --python {python_version} --seed")
         install.append(". ~/.venv/bin/activate")

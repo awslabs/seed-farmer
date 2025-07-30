@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
-- install uv via pip in remote deployment
+- install uv via pip in remote deployment, add uv.config path
 - unpin urllib3 due to CVE-2025-50181
 
 ## v7.0.3 (2025-07-18)

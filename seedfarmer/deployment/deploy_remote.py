@@ -60,12 +60,8 @@ class DeployRemoteModule(DeployModule):
             install.append("mv $CODEBUILD_SRC_DIR/bundle/npm_mirror_support.py /var/scripts/npm_mirror_support.py")
             install.append(f"/var/scripts/npm_mirror_support.py {npm_mirror} && echo 'NPM Mirror Set'")
 
-        install.append("pip install uv")
-        install.append("export PATH=$PATH:~/.local/bin")
-        install.append(f"uv venv ~/.venv --python {python_version} --seed")
-        install.append(". ~/.venv/bin/activate")
-
         if stack_outputs and "CodeArtifactDomain" in stack_outputs and "CodeArtifactRepository" in stack_outputs:
+            ## Need to configure pip BEFORE installing uv
             domain = stack_outputs["CodeArtifactDomain"]
             repo = stack_outputs["CodeArtifactRepository"]
             region = str(module_manifest.target_region)
@@ -90,6 +86,11 @@ class DeployRemoteModule(DeployModule):
             )
             install.append("export UV_INDEX_CODEARTIFACT_USERNAME=aws")
             install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
+
+        install.append("pip install uv")
+        install.append("export PATH=$PATH:~/.local/bin")
+        install.append(f"uv venv ~/.venv --python {python_version} --seed")
+        install.append(". ~/.venv/bin/activate")
 
         # needed to make sure both the tool and lib are accessible in the venv
         install.append("uv pip install pip")

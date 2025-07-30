@@ -61,7 +61,7 @@ class DeployRemoteModule(DeployModule):
             install.append(f"/var/scripts/npm_mirror_support.py {npm_mirror} && echo 'NPM Mirror Set'")
 
         install.append("pip install uv")
-        install.append("export PATH=$PATH:/root/.local/bin")
+        install.append("export PATH=$PATH:~/.local/bin")
         install.append(f"uv venv ~/.venv --python {python_version} --seed")
         install.append(". ~/.venv/bin/activate")
 
@@ -70,6 +70,7 @@ class DeployRemoteModule(DeployModule):
             repo = stack_outputs["CodeArtifactRepository"]
             region = str(module_manifest.target_region)
             account_id = str(module_manifest.get_target_account_id())
+            install.append("mkdir -p ~/.config/uv")
             install.append(
                 "cat <<EOF > ~/.config/uv/uv.toml\n"
                 "[[index]]\n"

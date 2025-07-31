@@ -851,7 +851,7 @@ def apply(
         manifest_input = yaml.safe_load(manifest_file)
     ## Override all regions with the local session region if local
     if DeployModuleFactory.is_local():
-        region = SessionManager().get_or_create().toolchain_session.region_name
+        region = SessionManager().get_or_create(region_name=region_name, profile=profile).toolchain_session.region_name
         for account in manifest_input["targetAccountMappings"]:
             for mapping in account.get("regionMappings", []):
                 mapping["region"] = region

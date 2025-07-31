@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- add region and profile support for local deploy
 
 
 ## v7.0.4 (2025-07-30)

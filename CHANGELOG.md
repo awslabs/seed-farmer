@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
+
 ## Unreleased
 
 ### New 
@@ -10,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+## v7.0.5 (2025-07-31)
+
+### New 
+
+### Changes
+
+### Fixes
+- add region and profile support for local deploy
 
 
 ## v7.0.4 (2025-07-30)

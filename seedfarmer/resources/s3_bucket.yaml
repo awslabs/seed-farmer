@@ -9,6 +9,27 @@ Parameters:
     Description: The name of the Bucket
     MaxLength: 64
 Resources:
+  AccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${BucketName}-access-logs'
+      Tags:
+        - Key: seedfarmer-artifacts
+          Value: !Sub 'seedfarmer-${ProjectName}'
+        - Key: seedfarmer-project
+          Value: !Sub '${ProjectName}'
+        - Key: Purpose
+          Value: 'Access Logs'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -29,6 +50,9 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogsBucket
+        LogFilePrefix: 'access-logs/'
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -60,3 +84,7 @@ Outputs:
     Value: !Ref Bucket
     Export:
       Name: !Sub 'seedfarmer-${ProjectName}-${AWS::Region}-${AWS::AccountId}'
+  AccessLogsBucket:
+    Value: !Ref AccessLogsBucket
+    Export:
+      Name: !Sub 'seedfarmer-${ProjectName}-access-logs-${AWS::Region}-${AWS::AccountId}'

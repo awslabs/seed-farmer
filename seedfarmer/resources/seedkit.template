@@ -84,6 +84,27 @@ Conditions:
           - ""
 
 Resources:
+  AccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: codeseeder-${SeedkitName}-${AWS::AccountId}-${DeployId}-access-logs
+      Tags:
+        - Key: codeseeder-seedkit-name
+          Value: 
+            Fn::Sub: codeseeder-${SeedkitName}
+        - Key: Purpose
+          Value: 'Access Logs'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -104,6 +125,9 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref AccessLogsBucket
+        LogFilePrefix: 'access-logs/'
       LifecycleConfiguration:
         Rules:
           - Id: CleaningUp
@@ -484,6 +508,13 @@ Outputs:
     Export:
       Name: 
         Fn::Sub: codeseeder-${SeedkitName}-bucket
+
+  AccessLogsBucket:
+    Value: 
+      Ref: AccessLogsBucket
+    Export:
+      Name: 
+        Fn::Sub: codeseeder-${SeedkitName}-access-logs-bucket
 
   KmsKeyArn:
     Value:

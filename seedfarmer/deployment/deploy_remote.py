@@ -87,14 +87,10 @@ class DeployRemoteModule(DeployModule):
             install.append("export UV_INDEX_CODEARTIFACT_USERNAME=aws")
             install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
 
-        install.append("pip install uv")
+        install.append("pip install uv --disable-pip-version-check --quiet --root-user-action=ignore")
         install.append("export PATH=$PATH:~/.local/bin")
-        install.append(f"uv venv ~/.venv --python {python_version} --seed")
-        install.append(". ~/.venv/bin/activate")
-
-        # needed to make sure both the tool and lib are accessible in the venv
-        install.append("uv pip install pip")
-        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__}")
+        install.append(f"uv venv ~/.venv --python {python_version} --seed --quiet")
+        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__} --quiet")
 
         return install
 
@@ -200,7 +196,11 @@ class DeployRemoteModule(DeployModule):
 
         bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
         buildspec = codebuild.generate_spec(
-            cmds_install=cmds_install + ["cd ${CODEBUILD_SRC_DIR}/bundle"] + ["cd module/"] + _phases.install.commands,
+            cmds_install=cmds_install
+            + [". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+            + _phases.install.commands,
             cmds_pre=[". ~/.venv/bin/activate"]
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
@@ -223,15 +223,6 @@ class DeployRemoteModule(DeployModule):
             abort_phases_on_failure=True,
             runtime_versions=runtime_versions,
         )
-
-        ## Try and force the default install to use uv for older modules
-        # commands = buildspec["phases"]["install"]["commands"]
-        # for i, cmd in enumerate(commands):
-        #     if "pip install -r requirements.txt" == cmd:
-        #         commands[i] = cmd.replace(
-        #             "pip install -r requirements.txt",
-        #             "uv pip install -r requirements.txt"
-        #         )
 
         # Write the deployspec, even if we don't use it...for reference
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
@@ -358,7 +349,11 @@ class DeployRemoteModule(DeployModule):
         cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
         buildspec = codebuild.generate_spec(
-            cmds_install=cmds_install + ["cd ${CODEBUILD_SRC_DIR}/bundle"] + ["cd module/"] + _phases.install.commands,
+            cmds_install=cmds_install
+            + [". ~/.venv/bin/activate"]
+            + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
+            + ["cd module/"]
+            + _phases.install.commands,
             cmds_pre=[". ~/.venv/bin/activate"]
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]

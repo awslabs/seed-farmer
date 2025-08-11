@@ -32,26 +32,37 @@ from seedfarmer.utils import LiteralStr, apply_literalstr, create_output_dir, re
 class DeployLocalModule(DeployModule):
     def _codebuild_install_commands(
         self,
-        account_id: str,
-        region: str,
-        ca_domain: Optional[str] = None,
-        ca_repository: Optional[str] = None,
+        module_manifest: ModuleManifest,
+        stack_outputs: Optional[Dict[str, str]],
         runtimes: Optional[Dict[str, str]] = None,
     ) -> List[Union[str, LiteralStr]]:
         python_version = runtimes.get("python", "3.11") if runtimes else "3.11"
-        install = []
-        uv_install = apply_literalstr("""if curl -s --head https://astral.sh | grep '200' > /dev/null; then
-        curl -Ls https://astral.sh/uv/install.sh | sh
-    else
-        pip install uv
-    fi
-    """)
-        install.append(apply_literalstr(uv_install))
-        install.append(apply_literalstr("export PATH=$PATH:/root/.local/bin"))
-        install.append(apply_literalstr(f"uv venv ~/.venv --python {python_version} --seed"))
-        install.append(apply_literalstr(". ~/.venv/bin/activate"))
+        npm_mirror = module_manifest.npm_mirror if module_manifest.npm_mirror is not None else self.mdo.npm_mirror
+        pypi_mirror = module_manifest.pypi_mirror if module_manifest.pypi_mirror is not None else self.mdo.pypi_mirror
 
-        if ca_domain and ca_repository:
+        install = []
+        install.append("mkdir -p /var/scripts/")
+        install.append(
+            "mv $CODEBUILD_SRC_DIR/bundle/retrieve_docker_creds.py /var/scripts/retrieve_docker_creds.py || true"
+        )
+        install.append(
+            "/var/scripts/retrieve_docker_creds.py && echo 'Docker logins successful' || echo 'Docker logins failed'"
+        )
+
+        if pypi_mirror is not None:
+            install.append("mv $CODEBUILD_SRC_DIR/bundle/pypi_mirror_support.py /var/scripts/pypi_mirror_support.py")
+            install.append(f"/var/scripts/pypi_mirror_support.py {pypi_mirror} && echo 'Pypi Mirror Set'")
+
+        if npm_mirror:
+            install.append("mv $CODEBUILD_SRC_DIR/bundle/npm_mirror_support.py /var/scripts/npm_mirror_support.py")
+            install.append(f"/var/scripts/npm_mirror_support.py {npm_mirror} && echo 'NPM Mirror Set'")
+
+        if stack_outputs and "CodeArtifactDomain" in stack_outputs and "CodeArtifactRepository" in stack_outputs:
+            ca_domain = stack_outputs["CodeArtifactDomain"]
+            ca_repository = stack_outputs["CodeArtifactRepository"]
+            region = str(module_manifest.target_region)
+            account_id = str(module_manifest.get_target_account_id())
+            install.append("mkdir -p ~/.config/uv")
             install.append(
                 apply_literalstr(
                     "cat <<EOF > ~/.config/uv/uv.toml\n"
@@ -80,12 +91,14 @@ class DeployLocalModule(DeployModule):
                     "--output text)"
                 )
             )
-            install.append(apply_literalstr("export UV_INDEX_CODEARTIFACT_USERNAME=aws"))
-            install.append(apply_literalstr('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"'))
+            install.append("export UV_INDEX_CODEARTIFACT_USERNAME=aws")
+            install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
 
         # needed to make sure both the tool and lib are accessible in the venv
-        install.append(apply_literalstr("uv pip install pip"))
-        install.append(apply_literalstr(f"uv tool install seed-farmer=={seedfarmer.__version__}"))
+        install.append("pip install uv --disable-pip-version-check --quiet --root-user-action=ignore")
+        install.append("export PATH=$PATH:/root/.local/bin")
+        install.append(f"uv venv ~/.venv --python {python_version} --seed --quiet")
+        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__} --quiet")
 
         return install
 
@@ -161,31 +174,19 @@ class DeployLocalModule(DeployModule):
         if codebuild_image.startswith("aws/codebuild/"):
             codebuild_image = f"public.ecr.{codebuild_image}"
 
-        # docker_network="pypi-net"
-        # local_pypi_endpoint="http://pypiserver:8080/simple"
-
         bundle_id = f"{self.mdo.deployment_manifest.name}-{self.mdo.group_name}-{module_manifest.name}"
         output_override = f".seedfarmerlocal-{bundle_id}"
 
         local_path = create_output_dir(f"{bundle_id}", output_override)
         bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id, path_override=output_override)
         stack_outputs = deployment_manifest.get_region_seedfarmer_metadata(account_id=account_id, region=region)
-        ca_domain = (
-            stack_outputs["CodeArtifactDomain"] if stack_outputs and "CodeArtifactDomain" in stack_outputs else None
-        )
-        ca_repository = (
-            stack_outputs["CodeArtifactRepository"]
-            if stack_outputs and "CodeArtifactRepository" in stack_outputs
-            else None
-        )
 
         runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
-        install_commands = self._codebuild_install_commands(
-            account_id, region, ca_domain, ca_repository, runtime_versions
-        )
+        install_commands = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
         buildspec = codebuild.generate_spec(
             cmds_install=install_commands
+            + [". ~/.venv/bin/activate"]
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
             + _phases.install.commands,
@@ -297,22 +298,13 @@ class DeployLocalModule(DeployModule):
         stack_outputs = self.mdo.deployment_manifest.get_region_seedfarmer_metadata(
             account_id=account_id, region=region
         )
-        ca_domain = (
-            stack_outputs["CodeArtifactDomain"] if stack_outputs and "CodeArtifactDomain" in stack_outputs else None
-        )
-        ca_repository = (
-            stack_outputs["CodeArtifactRepository"]
-            if stack_outputs and "CodeArtifactRepository" in stack_outputs
-            else None
-        )
 
         runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
-        install_commands = self._codebuild_install_commands(
-            account_id, region, ca_domain, ca_repository, runtime_versions
-        )
+        install_commands = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
         buildspec = codebuild.generate_spec(
             cmds_install=install_commands
+            + [". ~/.venv/bin/activate"]
             + ["cd ${CODEBUILD_SRC_DIR}/bundle"]
             + ["cd module/"]
             + _phases.install.commands,

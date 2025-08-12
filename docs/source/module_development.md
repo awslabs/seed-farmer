@@ -84,9 +84,9 @@ The currently supported values are:
 - BUILD_GENERAL1_2XLARGE
 ```
 
-The parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specific modules (ex ADDF).  This parameter defaults to `false` implying the prefix of the project to the pertient environment parameters in the codebuild environment.  When developing generic modules (modules for reuse regardless of project) this parameter MUST be set to `true`.  
+The parameter `publishGenericEnvVariables`is a boolean and was implemented to support generic modules (deploy regardless of project name) and project-specific modules (ex ADDF).  This parameter defaults to `true` implying the prefix of SeedFarmer to the environment parameters in the codebuild environment (`SEEDFARMER_PARAMETER_`).  When developing modules specific to a project (EX `ADDF_PARAMETER_` this parameter MUST be set to `FALSE` in order to prefix the project name.
 
-[This Pull Request goes into detail ...please read](https://github.com/awslabs/seed-farmer/pull/249).  Here is an exerpt:
+[This Pull Request goes into detail ...please read](https://github.com/awslabs/seed-farmer/pull/249).  Here is an excerpt:
 
 *When creating a module, builders can now specify the optional publishGenericEnvVariables attribute in the module deployspec.yaml. When set to true the Env Variables passed to CodeBuild for SeedFarmer metadata (ProjectName, DeploymentName, ModuleName, etc) are prefixed with SEEDFARMER_ rather than the UPPER ProjectName. From the included exampleproj project in examples: EXAMPLEPROJ_DEPLOYMENT_NAME would be SEEDFARMER_DEPLOYMENT_NAME. And for Module Parameters, EXAMPLEPROJ_PARAMETER_SOME_PARAMETER would be SEEDFARMER_PARAMETER_SOME_PARAMETER.*
 

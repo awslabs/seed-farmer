@@ -119,10 +119,10 @@ class DeployModule:
         if self.mdo.docker_credentials_secret:
             env_vars["AWS_CODESEEDER_DOCKER_SECRET"] = self.mdo.docker_credentials_secret  # (LEGACY)
             env_vars["SEEDFARMER_DOCKER_SECRET"] = self.mdo.docker_credentials_secret
-        if self.mdo.pypi_mirror_secret is not None:
+        if pypi_mirror_secret is not None:
             env_vars["AWS_CODESEEDER_PYPI_MIRROR_SECRET"] = str(pypi_mirror_secret)  # (LEGACY)
             env_vars["SEEDFARMER_PYPI_MIRROR_SECRET"] = str(pypi_mirror_secret)
-        if self.mdo.npm_mirror_secret is not None:
+        if npm_mirror_secret is not None:
             env_vars["AWS_CODESEEDER_NPM_MIRROR_SECRET"] = str(npm_mirror_secret)  # (LEGACY)
             env_vars["SEEDFARMER_NPM_MIRROR_SECRET"] = str(npm_mirror_secret)
         # Add the partition to env for ease of fetching

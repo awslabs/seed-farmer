@@ -12,6 +12,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v7.0.6 (2025-08-11)
+
+### New 
+
+### Changes
+
+### Fixes
+- set the npm and pypi mirror secrets when set in module manifest
+
 ## v7.0.5 (2025-07-31)
 
 ### New 

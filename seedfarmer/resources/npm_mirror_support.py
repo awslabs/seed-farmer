@@ -47,7 +47,7 @@ def main(url: str) -> None:
             registry_url = urlparse(url).netloc
             npm_key = f"//{registry_url}/:_auth"
             process = subprocess.Popen(
-                ["npm", "config", "set", npm_key, ssl_token],
+                ["npm", "config", "set", npm_key, ssl_token],  # type: ignore[list-item]
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

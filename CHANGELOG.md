@@ -12,6 +12,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+
+## v7.0.7 (2025-08-13)
+
+### New 
+
+### Changes
+
+### Fixes
+- added standard libraries to parse npm mirror info
+
 ## v7.0.6 (2025-08-11)
 
 ### New 

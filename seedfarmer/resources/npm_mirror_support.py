@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 from typing import Dict, cast
+from urllib.parse import urlparse
 
 import boto3
 from botocore.exceptions import ClientError
@@ -43,9 +44,10 @@ def main(url: str) -> None:
         if key in creds.keys():
             ssl_token = creds[key]["ssl_token"] if creds[key].get("ssl_token") else None
             print("Secret configured for npm auth")
-            config_command = f"{url.replace('https:', '')}:_auth={ssl_token}"
+            registry_url = urlparse(url).netloc
+            npm_key = f"//{registry_url}/:_auth"
             process = subprocess.Popen(
-                ["npm", "config", "set", config_command.split("=")[0], config_command.split("=")[1]],
+                ["npm", "config", "set", npm_key, ssl_token],  # type: ignore[list-item]
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

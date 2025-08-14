@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
+import base64
 import json
 import logging
 import os
 import subprocess
-from typing import Dict, cast
+from typing import Dict, Optional, cast
 from urllib.parse import urlparse
 
 import boto3
@@ -29,6 +30,19 @@ def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 
 
+def get_auth(username: Optional[str] = None, password: Optional[str] = None, ssl_token: Optional[str] = None) -> str:
+    if ssl_token:
+        logger.info("ssl_token found and being used in url")
+        return ssl_token
+
+    if (username and not password) or (not username and password):
+        logger.error("For NPM mirror auth support, both username and password must be provided")
+        raise RuntimeError("For NPM mirror auth support, both username and password must be provided")
+    else:
+        logger.info("Both username and password found, encoding for use in url")
+        return base64.b64encode((f"{username}:{password}").encode("ascii")).decode("ascii")
+
+
 def main(url: str) -> None:
     secret_name = os.environ.get("SEEDFARMER_NPM_MIRROR_SECRET", "NO_SECRET")
     # Backwards Compatibility
@@ -42,20 +56,27 @@ def main(url: str) -> None:
         key = secret_name.split("::")[1] if "::" in secret_name else "npm"
         creds = get_secret(secret_name=secret_name_key)
         if key in creds.keys():
-            ssl_token = creds[key]["ssl_token"] if creds[key].get("ssl_token") else None
-            print("Secret configured for npm auth")
+            username = creds[key].get("username") if creds[key].get("username") else None
+            password = creds[key].get("password") if creds[key].get("password") else None
+            ssl_token = creds[key].get("ssl_token") if creds[key].get("ssl_token") else None
+            try:
+                auth = get_auth(username, password, ssl_token)
+            except RuntimeError:
+                logger.error(f"The auth token could not be generated - check the secret {secret_name}")
+                exit(1)
             registry_url = urlparse(url).netloc
             npm_key = f"//{registry_url}/:_auth"
             process = subprocess.Popen(
-                ["npm", "config", "set", npm_key, ssl_token],  # type: ignore[list-item]
+                ["npm", "config", "set", npm_key, auth],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
             process.communicate()
     else:
+        logger.info("'NPM_MIRROR_SECRET' is not set")
         print("'NPM_MIRROR_SECRET' is not set")
-    print(f"Calling npm config with {url}")
+    print(f"Setting npm config without auth:  {url}")
     subprocess.call(["npm", "config", "set", "registry", url])
 
 

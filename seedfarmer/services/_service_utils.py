@@ -57,7 +57,7 @@ def get_botocore_config() -> botocore.config.Config:
         retries={"max_attempts": 5},
         connect_timeout=10,
         max_pool_connections=10,
-        user_agent_extra=f"seedfarmer/{seedfarmer.__version__}",
+        user_agent_extra=f"seedfarmer/{seedfarmer.__version__} seedfarmer/project/{seedfarmer.config.PROJECT}",
         proxies=setup_proxies(),  # type: ignore[arg-type]
     )
 

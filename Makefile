@@ -27,18 +27,18 @@ validate:  ## Run linters and type checkers
 	@echo "Running ruff and type checkers..."
 	. .venv/bin/activate && \
 		uv sync --frozen --inexact --no-install-project --only-dev
-		uv run ruff format --check seedfarmer --quiet && \
-		uv run ruff check seedfarmer --quiet && \
-		uv run mypy --pretty --ignore-missing-imports seedfarmer
+		uv run ruff format --check ./seedfarmer --quiet && \
+		uv run ruff check ./seedfarmer --quiet && \
+		uv run mypy --pretty --ignore-missing-imports ./seedfarmer
 
 .PHONY: format
 format:  ## Format code with ruff and prettier
 	@echo "Formatting code with ruff and prettier..."
 	. .venv/bin/activate && \
-		uv run ruff format seedfarmer && \
-		uv run ruff check --fix seedfarmer && \
-		uv run ruff format test && \
-		uv run ruff check --fix test
+		uv run ruff format ./seedfarmer && \
+		uv run ruff check --fix ./seedfarmer && \
+		uv run ruff format ./test && \
+		uv run ruff check --fix ./test
 
 .PHONY: help
 help:  ## Show help for each of the Makefile recipes

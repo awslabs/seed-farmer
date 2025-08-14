@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import subprocess
-from typing import Dict, cast
+from typing import Dict, Optional, cast
 from urllib.parse import urlparse
 
 import boto3
@@ -30,7 +30,7 @@ def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 
 
-def get_auth(username: str = None, password: str = None, ssl_token: str = None) -> str:
+def get_auth(username: Optional[str] = None, password: Optional[str] = None, ssl_token: Optional[str] = None) -> str:
     if ssl_token:
         logger.info("ssl_token found and being used in url")
         return ssl_token
@@ -67,7 +67,7 @@ def main(url: str) -> None:
             registry_url = urlparse(url).netloc
             npm_key = f"//{registry_url}/:_auth"
             process = subprocess.Popen(
-                ["npm", "config", "set", npm_key, auth],  # type: ignore[list-item]
+                ["npm", "config", "set", npm_key, auth],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

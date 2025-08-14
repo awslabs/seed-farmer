@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New 
 
 ### Changes
+- adding seedfarmer project to user agents headers for boto3 calls
+- adding username / password support for npm mirror auth
 
 ### Fixes
 

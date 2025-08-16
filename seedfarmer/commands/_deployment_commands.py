@@ -29,6 +29,7 @@ import seedfarmer.mgmt.archive_support as sf_archive
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.git_support as sf_git
 from seedfarmer import commands, config
+from seedfarmer.error_handler import log_error_safely
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.deployment.deploy_factory import DeployModuleFactory
@@ -903,12 +904,15 @@ def apply(
                     else:
                         module_group.modules = [ModuleManifest(**m) for m in yaml.safe_load_all(manifest_file)]
             except FileNotFoundError as fe:
-                _logger.error(fe)
-                _logger.error(f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}")
+                log_error_safely(
+                    _logger, 
+                    fe, 
+                    f"Cannot parse a file at {os.path.join(config.OPS_ROOT, module_group.path)}"
+                )
                 _logger.error("Verify (in deployment manifest) that relative path to the module manifest is correct")
                 raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
             except Exception as e:
-                _logger.error(e)
+                log_error_safely(_logger, e, "Failed to parse module manifest file")
                 _logger.error("Verify that elements are filled out and yaml compliant")
                 raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
     deployment_manifest.validate_and_set_module_defaults()

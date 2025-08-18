@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- fix cloudwatch_log_stream key missing in codebuild metadata model
 
 ## v7.0.6 (2025-08-11)
 

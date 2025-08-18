@@ -25,6 +25,7 @@ import seedfarmer.services._codebuild as codebuild
 from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.deployment.deploy_base import DeployModule
+from seedfarmer.error_handler import log_error_safely
 from seedfarmer.models.deploy_responses import CodeBuildMetadata, ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest
 from seedfarmer.services.session_manager import SessionManager
@@ -194,7 +195,12 @@ class DeployRemoteModule(DeployModule):
         runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
         cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
-        bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
+        try:
+            bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
+        except Exception as e:
+            log_error_safely(_logger, e, f"Failed to generate deployment bundle for {module_manifest.name}")
+            raise seedfarmer.errors.ModuleDeploymentError(f"Bundle generation failed for module {module_manifest.name}")
+
         buildspec = codebuild.generate_spec(
             cmds_install=cmds_install
             + [". ~/.venv/bin/activate"]
@@ -225,11 +231,14 @@ class DeployRemoteModule(DeployModule):
         )
 
         # Write the deployspec, even if we don't use it...for reference
-        buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
-
-        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
-            # file.write(yaml.dump(buildspec))
-            yaml.dump(buildspec, file)
+        try:
+            buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
+            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+                # file.write(yaml.dump(buildspec))
+                yaml.dump(buildspec, file)
+        except Exception as e:
+            log_error_safely(_logger, e, f"Failed to write buildspec file for {module_manifest.name}")
+            # This is not critical for deployment, so we continue
 
         overrides = {}
         if codebuild_image:
@@ -249,18 +258,26 @@ class DeployRemoteModule(DeployModule):
                 }
                 for k, v in env_vars.items()
             ]
-        build_info = codebuild_remote.run(
-            stack_outputs=stack_outputs,  # type: ignore [arg-type]
-            bundle_path=bundle_zip,
-            buildspec=buildspec,
-            timeout=120,
-            overrides=overrides,
-            codebuild_log_callback=None,
-            session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
-            bundle_id=bundle_id,
-            prebuilt_bundle=None,  # NEVER CHECK FOR THIS BUNDLE ON DEPLOY
-            yaml_dumper=yaml,
-        )
+        try:
+            build_info = codebuild_remote.run(
+                stack_outputs=stack_outputs,  # type: ignore [arg-type]
+                bundle_path=bundle_zip,
+                buildspec=buildspec,
+                timeout=120,
+                overrides=overrides,
+                codebuild_log_callback=None,
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=account_id, region_name=region),
+                bundle_id=bundle_id,
+                prebuilt_bundle=None,  # NEVER CHECK FOR THIS BUNDLE ON DEPLOY
+                yaml_dumper=yaml,
+            )
+        except Exception as e:
+            log_error_safely(_logger, e, f"Remote deployment failed for module {module_manifest.name}")
+            raise seedfarmer.errors.ModuleDeploymentError(
+                f"Remote deployment execution failed for module {module_manifest.name}"
+            )
 
         bi = cast(codebuild.BuildInfo, build_info)
         deploy_info = {
@@ -325,21 +342,27 @@ class DeployRemoteModule(DeployModule):
         bundle_zip = None
         if not prebuilt_bundle:
             # regenerate everything that is necessary
-            module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
-            dirs = {"module": module_path}
-            dirs_tuples = [(v, k) for k, v in dirs.items()]
-            extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
-            extra_files = {}
-            if module_manifest.data_files is not None:
-                extra_files = {
-                    f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
-                    for data_file in module_manifest.data_files
-                }
-            module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
-            if extra_files is not None:
-                extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
-            files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
-            bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
+            try:
+                module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+                dirs = {"module": module_path}
+                dirs_tuples = [(v, k) for k, v in dirs.items()]
+                extra_file_bundle = {config.CONFIG_FILE: os.path.join(config.OPS_ROOT, config.CONFIG_FILE)}
+                extra_files = {}
+                if module_manifest.data_files is not None:
+                    extra_files = {
+                        f"module/{data_file.get_bundle_path()}": data_file.get_local_file_path()
+                        for data_file in module_manifest.data_files
+                    }
+                module_path = os.path.join(config.OPS_ROOT, str(module_manifest.get_local_path()))
+                if extra_files is not None:
+                    extra_file_bundle.update(extra_files)  # type: ignore [arg-type]
+                files_tuples = [(v, f"{k}") for k, v in extra_file_bundle.items()]
+                bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
+            except Exception as e:
+                log_error_safely(_logger, e, f"Failed to generate destroy bundle for {module_manifest.name}")
+                raise seedfarmer.errors.ModuleDeploymentError(
+                    f"Bundle generation failed for module {module_manifest.name} destroy"
+                )
 
         codebuild_image = (
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
@@ -373,9 +396,13 @@ class DeployRemoteModule(DeployModule):
             runtime_versions=runtime_versions,
         )
 
-        buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
-        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
-            file.write(yaml.dump(buildspec))
+        try:
+            buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
+            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+                file.write(yaml.dump(buildspec))
+        except Exception as e:
+            log_error_safely(_logger, e, f"Failed to write destroy buildspec file for {module_manifest.name}")
+            # This is not critical for destroy, so we continue
 
         overrides = {}
         if codebuild_image:
@@ -396,17 +423,25 @@ class DeployRemoteModule(DeployModule):
                 for k, v in env_vars.items()
             ]
 
-        build_info = codebuild_remote.run(
-            stack_outputs=stack_outputs,  # type: ignore [arg-type]
-            bundle_path=str(bundle_zip),
-            buildspec=buildspec,
-            timeout=90,
-            overrides=overrides,
-            codebuild_log_callback=None,
-            session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
-            bundle_id=bundle_id,
-            prebuilt_bundle=prebuilt_bundle,
-        )
+        try:
+            build_info = codebuild_remote.run(
+                stack_outputs=stack_outputs,  # type: ignore [arg-type]
+                bundle_path=str(bundle_zip),
+                buildspec=buildspec,
+                timeout=90,
+                overrides=overrides,
+                codebuild_log_callback=None,
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=account_id, region_name=region),
+                bundle_id=bundle_id,
+                prebuilt_bundle=prebuilt_bundle,
+            )
+        except Exception as e:
+            log_error_safely(_logger, e, f"Remote destroy failed for module {module_manifest.name}")
+            raise seedfarmer.errors.ModuleDeploymentError(
+                f"Remote destroy execution failed for module {module_manifest.name}"
+            )
 
         bi = cast(codebuild.BuildInfo, build_info)
         deploy_info = {

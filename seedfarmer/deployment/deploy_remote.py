@@ -266,14 +266,18 @@ class DeployRemoteModule(DeployModule):
                 timeout=120,
                 overrides=overrides,
                 codebuild_log_callback=None,
-                session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=account_id, region_name=region),
                 bundle_id=bundle_id,
                 prebuilt_bundle=None,  # NEVER CHECK FOR THIS BUNDLE ON DEPLOY
                 yaml_dumper=yaml,
             )
         except Exception as e:
             log_error_safely(_logger, e, f"Remote deployment failed for module {module_manifest.name}")
-            raise seedfarmer.errors.ModuleDeploymentError(f"Remote deployment execution failed for module {module_manifest.name}")
+            raise seedfarmer.errors.ModuleDeploymentError(
+                f"Remote deployment execution failed for module {module_manifest.name}"
+            )
 
         bi = cast(codebuild.BuildInfo, build_info)
         deploy_info = {
@@ -356,7 +360,9 @@ class DeployRemoteModule(DeployModule):
                 bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
             except Exception as e:
                 log_error_safely(_logger, e, f"Failed to generate destroy bundle for {module_manifest.name}")
-                raise seedfarmer.errors.ModuleDeploymentError(f"Bundle generation failed for module {module_manifest.name} destroy")
+                raise seedfarmer.errors.ModuleDeploymentError(
+                    f"Bundle generation failed for module {module_manifest.name} destroy"
+                )
 
         codebuild_image = (
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
@@ -425,13 +431,17 @@ class DeployRemoteModule(DeployModule):
                 timeout=90,
                 overrides=overrides,
                 codebuild_log_callback=None,
-                session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region),
+                session=SessionManager()
+                .get_or_create()
+                .get_deployment_session(account_id=account_id, region_name=region),
                 bundle_id=bundle_id,
                 prebuilt_bundle=prebuilt_bundle,
             )
         except Exception as e:
             log_error_safely(_logger, e, f"Remote destroy failed for module {module_manifest.name}")
-            raise seedfarmer.errors.ModuleDeploymentError(f"Remote destroy execution failed for module {module_manifest.name}")
+            raise seedfarmer.errors.ModuleDeploymentError(
+                f"Remote destroy execution failed for module {module_manifest.name}"
+            )
 
         bi = cast(codebuild.BuildInfo, build_info)
         deploy_info = {

@@ -24,7 +24,6 @@ from seedfarmer import config
 from seedfarmer.commands._runtimes import get_runtimes
 from seedfarmer.deployment.deploy_base import DeployModule
 from seedfarmer.errors import InvalidConfigurationError
-from seedfarmer.error_handler import log_error_safely
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest
 from seedfarmer.utils import LiteralStr, apply_literalstr, create_output_dir, register_literal_str

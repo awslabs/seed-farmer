@@ -152,5 +152,5 @@ def run(
             except Exception as e:
                 log_error_safely(_logger, e, f"Failed to clean up S3 bundle: {bucket}/{key}")
                 # Don't raise here - this is just cleanup
-    
+
     return build_info

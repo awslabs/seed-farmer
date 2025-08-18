@@ -21,9 +21,9 @@ import click
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, seedkit, store, taint
+from seedfarmer.error_handler import safe_execute
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.utils import load_dotenv_files
-from seedfarmer.error_handler import safe_execute
 
 _logger: logging.Logger = logging.getLogger(__name__)
 

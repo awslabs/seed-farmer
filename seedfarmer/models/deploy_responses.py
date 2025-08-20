@@ -34,6 +34,7 @@ class CodeBuildMetadata(CamelModel):
     aws_partition: Optional[str] = None
     codebuild_build_id: Optional[str] = None
     codebuild_log_path: Optional[str] = None
+    cloudwatch_log_stream: Optional[str] = None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)

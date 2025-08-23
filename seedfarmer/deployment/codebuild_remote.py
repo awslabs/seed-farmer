@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from boto3 import Session
-
+import seedfarmer.errors
 import seedfarmer.services._cloudwatch as cloudwatch
 import seedfarmer.services._codebuild as codebuild
 import seedfarmer.services._s3 as s3
@@ -127,7 +127,8 @@ def run(
             loc = f"{bucket}/{key}"
         except Exception as e:
             log_error_safely(_logger, e, f"Failed to upload deployment bundle to S3: {bucket}/{key}")
-            raise
+            _logger.error(f"Cannot find SeedKit artifacts, check the Bucket  {e}")
+            raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"{e}")
 
     try:
         build_info = _execute_codebuild(

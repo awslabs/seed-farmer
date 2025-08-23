@@ -911,7 +911,7 @@ def apply(
                 raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
             except Exception as e:
                 log_error_safely(_logger, e, "Failed to parse module manifest file")
-                _logger.error("Verify that elements are filled out and yaml compliant")
+                _logger.error(f"Verify that elements are filled out and yaml compliant  {e}")
                 raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
     deployment_manifest.validate_and_set_module_defaults()
 

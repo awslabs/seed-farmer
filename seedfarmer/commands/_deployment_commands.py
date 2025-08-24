@@ -32,7 +32,7 @@ from seedfarmer import commands, config
 from seedfarmer.commands._parameter_commands import load_parameter_values, resolve_params_for_checksum
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.deployment.deploy_factory import DeployModuleFactory
-from seedfarmer.error_handler import log_error_safely
+from seedfarmer.error_handler import log_error_safely, safe_execute
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -779,6 +779,7 @@ def deploy_deployment(
 
 
 @bind_session_mgr
+@safe_execute("Deployment Apply")
 def apply(
     deployment_manifest_path: str,
     profile: Optional[str] = None,
@@ -911,8 +912,9 @@ def apply(
                 raise seedfarmer.errors.InvalidPathError(f"Cannot parse manifest file path at {module_group.path}")
             except Exception as e:
                 log_error_safely(_logger, e, "Failed to parse module manifest file")
-                _logger.error(f"Verify that elements are filled out and yaml compliant  {e}")
-                raise seedfarmer.errors.InvalidManifestError("Cannot parse manifest properly")
+                _logger.error(f"Module manifest file parsing error: {e}")
+                _logger.error("Verify that YAML syntax is valid and all required fields are present")
+                raise seedfarmer.errors.InvalidManifestError(f"Cannot parse manifest file: {e}")
     deployment_manifest.validate_and_set_module_defaults()
 
     prime_target_accounts(
@@ -951,6 +953,7 @@ def apply(
 
 
 @bind_session_mgr
+@safe_execute("Deployment Destroy")
 def destroy(
     deployment_name: str,
     profile: Optional[str] = None,

@@ -373,7 +373,7 @@ def get_ssm_parameter_version(
     resp = ssm.describe_parameter(name=ssm_parameter_name, session=session)
     if resp is None:
         _logger.error("The SSM parameter %s could not be fetched", ssm_parameter_name)
-        raise seedfarmer.errors.ModuleDeploymentError("The SSM parameter could not be fetched")
+        raise seedfarmer.errors.ModuleDeploymentError(f"SSM parameter '{ssm_parameter_name}' could not be fetched")
     else:
         return int(resp["Parameters"][0]["Version"]) if len(resp["Parameters"]) > 0 else None
 

@@ -199,7 +199,8 @@ class DeployRemoteModule(DeployModule):
             bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
         except Exception as e:
             log_error_safely(_logger, e, f"Failed to generate deployment bundle for {module_manifest.name}")
-            raise seedfarmer.errors.ModuleDeploymentError(f"Bundle generation failed for module {module_manifest.name}")
+            _logger.error(f"Bundle generation failed for module {module_manifest.name}: {e}")
+            raise seedfarmer.errors.ModuleDeploymentError(f"Bundle generation failed for module {module_manifest.name}: {e}")
 
         buildspec = codebuild.generate_spec(
             cmds_install=cmds_install
@@ -275,8 +276,9 @@ class DeployRemoteModule(DeployModule):
             )
         except Exception as e:
             log_error_safely(_logger, e, f"Remote deployment failed for module {module_manifest.name}")
+            _logger.error(f"Remote deployment failed for module {module_manifest.name}: {e}")
             raise seedfarmer.errors.ModuleDeploymentError(
-                f"Remote deployment execution failed for module {module_manifest.name}"
+                f"Remote deployment execution failed for module {module_manifest.name}: {e}"
             )
 
         bi = cast(codebuild.BuildInfo, build_info)
@@ -360,8 +362,9 @@ class DeployRemoteModule(DeployModule):
                 bundle_zip = bundle.generate_bundle(dirs=dirs_tuples, files=files_tuples, bundle_id=bundle_id)
             except Exception as e:
                 log_error_safely(_logger, e, f"Failed to generate destroy bundle for {module_manifest.name}")
+                _logger.error(f"Destroy bundle generation failed for module {module_manifest.name}: {e}")
                 raise seedfarmer.errors.ModuleDeploymentError(
-                    f"Bundle generation failed for module {module_manifest.name} destroy"
+                    f"Bundle generation failed for module {module_manifest.name} destroy: {e}"
                 )
 
         codebuild_image = (
@@ -439,8 +442,9 @@ class DeployRemoteModule(DeployModule):
             )
         except Exception as e:
             log_error_safely(_logger, e, f"Remote destroy failed for module {module_manifest.name}")
+            _logger.error(f"Remote destroy failed for module {module_manifest.name}: {e}")
             raise seedfarmer.errors.ModuleDeploymentError(
-                f"Remote destroy execution failed for module {module_manifest.name}"
+                f"Remote destroy execution failed for module {module_manifest.name}: {e}"
             )
 
         bi = cast(codebuild.BuildInfo, build_info)

@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from boto3 import Session
+import botocore.exceptions
 import seedfarmer.errors
 import seedfarmer.services._cloudwatch as cloudwatch
 import seedfarmer.services._codebuild as codebuild
@@ -126,9 +127,10 @@ def run(
             s3.upload_file(src=bundle_path, bucket=bucket, key=key, session=session)
             loc = f"{bucket}/{key}"
         except Exception as e:
-            log_error_safely(_logger, e, f"Failed to upload deployment bundle to S3: {bucket}/{key}")
-            _logger.error(f"Cannot find SeedKit artifacts, check the Bucket  {e}")
-            raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"{e}")
+            log_error_safely(_logger, e, f"Failed to upload deployment bundle to S3")
+            # Show the actual error to user without stacktrace
+            _logger.error(f"S3 upload failed: {e}")
+            raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"S3 upload failed: {e}")
 
     try:
         build_info = _execute_codebuild(
@@ -144,7 +146,9 @@ def run(
         )
     except Exception as e:
         log_error_safely(_logger, e, "CodeBuild execution failed")
-        raise
+        # Show the actual error to user without stacktrace
+        _logger.error(f"CodeBuild execution failed: {e}")
+        raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"CodeBuild execution failed: {e}")
     finally:
         # Clean up S3 bundle even if execution failed (unless it's prebuilt)
         if not prebuilt_bundle:

@@ -104,8 +104,10 @@ def run(
         _logger.info("Interrupted by the user")
     except subprocess.CalledProcessError as e:
         log_error_safely(_logger, e, f"Local deployment failed with exit code {e.returncode}")
+        _logger.error(f"Local CodeBuild container failed: {e}")
     except Exception as e:
         log_error_safely(_logger, e, "Unexpected error during local deployment")
+        _logger.error(f"Local deployment error: {e}")
 
     end_time = datetime.now(timezone.utc)
     duration = (end_time - start_time).total_seconds()

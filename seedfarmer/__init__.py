@@ -31,7 +31,26 @@ __all__ = ["__description__", "__license__", "__title__"]
 __version__: str = distribution(__title__).version
 
 DEBUG_LOGGING_FORMAT = "[%(asctime)s][%(filename)-13s:%(lineno)3d] %(message)s"
-INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"
+INFO_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(threadName)s ] %(message)s"
+ERROR_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)3d | %(threadName)s ] %(message)s"
+
+
+class LevelBasedFormatter(logging.Formatter):
+    """Custom formatter that uses different formats based on log level"""
+    
+    def __init__(self):
+        super().__init__()
+        self.formatters = {
+            logging.DEBUG: logging.Formatter(DEBUG_LOGGING_FORMAT),
+            logging.INFO: logging.Formatter(INFO_LOGGING_FORMAT),
+            logging.WARNING: logging.Formatter(ERROR_LOGGING_FORMAT),
+            logging.ERROR: logging.Formatter(ERROR_LOGGING_FORMAT),
+            logging.CRITICAL: logging.Formatter(ERROR_LOGGING_FORMAT)
+        }
+    
+    def format(self, record):
+        formatter = self.formatters.get(record.levelno, self.formatters[logging.INFO])
+        return formatter.format(record)
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
@@ -41,7 +60,19 @@ SEEDKIT_YAML_NAME = "seedkit.yaml"
 
 
 def enable_debug(format: str) -> None:
-    logging.basicConfig(level=logging.DEBUG, format=format)
+    # For debug mode, use the custom formatter for level-based formatting
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    
+    # Clear any existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Create a new handler with our custom formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(LevelBasedFormatter())
+    root_logger.addHandler(handler)
+    
     _logger.setLevel(logging.DEBUG)
     logging.getLogger("boto3").setLevel(logging.ERROR)
     logging.getLogger("botocore").setLevel(logging.ERROR)
@@ -50,7 +81,19 @@ def enable_debug(format: str) -> None:
 
 
 def enable_info(format: str) -> None:
-    logging.basicConfig(level=logging.INFO, format=format)
+    # For info mode, use the custom formatter for level-based formatting
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # Clear any existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Create a new handler with our custom formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(LevelBasedFormatter())
+    root_logger.addHandler(handler)
+    
     _logger.setLevel(logging.INFO)
     logging.getLogger("boto3").setLevel(logging.ERROR)
     logging.getLogger("botocore").setLevel(logging.ERROR)

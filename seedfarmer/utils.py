@@ -240,7 +240,7 @@ def load_dotenv_files(root_path: str, env_files: List[str]) -> None:
 
     for env_file in env_files:
         _logger.info("Loading environment variables from %s", env_file)
-        try: 
+        try:
             dotenv_path = os.path.join(root_path, env_file)
             _logger.debug("Loading environment variables from %s", dotenv_path)
             load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)

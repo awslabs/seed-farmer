@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from boto3 import Session
-import botocore.exceptions
+
 import seedfarmer.errors
 import seedfarmer.services._cloudwatch as cloudwatch
 import seedfarmer.services._codebuild as codebuild
@@ -127,7 +127,9 @@ def run(
             s3.upload_file(src=bundle_path, bucket=bucket, key=key, session=session)
             loc = f"{bucket}/{key}"
         except Exception as e:
-            log_error_safely(_logger, e, f"Failed to upload deployment bundle to S3")
+            log_error_safely(
+                _logger, e, "Failed to upload deployment bundle to S3. Verify SeedKit has deployed successfully."
+            )
             # Show the actual error to user without stacktrace
             _logger.error(f"S3 upload failed: {e}")
             raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"S3 upload failed: {e}")

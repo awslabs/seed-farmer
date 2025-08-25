@@ -200,7 +200,9 @@ class DeployRemoteModule(DeployModule):
         except Exception as e:
             log_error_safely(_logger, e, f"Failed to generate deployment bundle for {module_manifest.name}")
             _logger.error(f"Bundle generation failed for module {module_manifest.name}: {e}")
-            raise seedfarmer.errors.ModuleDeploymentError(f"Bundle generation failed for module {module_manifest.name}: {e}")
+            raise seedfarmer.errors.ModuleDeploymentError(
+                f"Bundle generation failed for module {module_manifest.name}: {e}"
+            )
 
         buildspec = codebuild.generate_spec(
             cmds_install=cmds_install

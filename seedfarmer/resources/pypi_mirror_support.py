@@ -17,14 +17,13 @@ logger.setLevel(logging.INFO)
 def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
     region_name = os.environ.get("AWS_DEFAULT_REGION")
 
-
     try:
         session = boto3.session.Session()
         client = session.client(service_name="secretsmanager", region_name=region_name)
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-    except ClientError:
+    except ClientError as ce:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
-        print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager")
+        print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager - {ce}")
         exit(1)
     except FileNotFoundError:
         logger.info("Make sure AWW credentials are set")

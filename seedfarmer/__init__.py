@@ -17,6 +17,7 @@ import logging
 import os
 import pathlib
 from importlib.metadata import distribution
+from logging import LogRecord
 from typing import Any, Dict, Optional, cast
 
 import yaml
@@ -37,20 +38,21 @@ ERROR_LOGGING_FORMAT = "[%(asctime)s | %(levelname)s | %(filename)-13s:%(lineno)
 
 class LevelBasedFormatter(logging.Formatter):
     """Custom formatter that uses different formats based on log level"""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         super().__init__()
         self.formatters = {
             logging.DEBUG: logging.Formatter(DEBUG_LOGGING_FORMAT),
             logging.INFO: logging.Formatter(INFO_LOGGING_FORMAT),
             logging.WARNING: logging.Formatter(ERROR_LOGGING_FORMAT),
             logging.ERROR: logging.Formatter(ERROR_LOGGING_FORMAT),
-            logging.CRITICAL: logging.Formatter(ERROR_LOGGING_FORMAT)
+            logging.CRITICAL: logging.Formatter(ERROR_LOGGING_FORMAT),
         }
-    
-    def format(self, record):
+
+    def format(self, record: LogRecord) -> str:
         formatter = self.formatters.get(record.levelno, self.formatters[logging.INFO])
         return formatter.format(record)
+
 
 CLI_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROJECT_POLICY_PATH = "resources/projectpolicy.yaml"
@@ -63,16 +65,16 @@ def enable_debug(format: str) -> None:
     # For debug mode, use the custom formatter for level-based formatting
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
-    
+
     # Clear any existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     # Create a new handler with our custom formatter
     handler = logging.StreamHandler()
     handler.setFormatter(LevelBasedFormatter())
     root_logger.addHandler(handler)
-    
+
     _logger.setLevel(logging.DEBUG)
     logging.getLogger("boto3").setLevel(logging.ERROR)
     logging.getLogger("botocore").setLevel(logging.ERROR)
@@ -84,16 +86,16 @@ def enable_info(format: str) -> None:
     # For info mode, use the custom formatter for level-based formatting
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    
+
     # Clear any existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     # Create a new handler with our custom formatter
     handler = logging.StreamHandler()
     handler.setFormatter(LevelBasedFormatter())
     root_logger.addHandler(handler)
-    
+
     _logger.setLevel(logging.INFO)
     logging.getLogger("boto3").setLevel(logging.ERROR)
     logging.getLogger("botocore").setLevel(logging.ERROR)

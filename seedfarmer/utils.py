@@ -240,10 +240,16 @@ def load_dotenv_files(root_path: str, env_files: List[str]) -> None:
 
     for env_file in env_files:
         _logger.info("Loading environment variables from %s", env_file)
-        dotenv_path = os.path.join(root_path, env_file)
-
-        load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
-        loaded_values.update(dotenv_values(dotenv_path, verbose=True))
+        try:
+            dotenv_path = os.path.join(root_path, env_file)
+            _logger.debug("Loading environment variables from %s", dotenv_path)
+            load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
+        except FileNotFoundError:
+            _logger.error("Error loading .env file")
+        try:
+            loaded_values.update(dotenv_values(dotenv_path, verbose=True))
+        except Exception as e:
+            _logger.error(f"Failed to load environment variables from {env_file}: {e}")
 
     _logger.debug("Loaded environment variables: %s", loaded_values)
 
@@ -268,7 +274,9 @@ def batch_replace_env(payload: Dict[str, Any]) -> Dict[str, Any]:
                 string=value,
             )
         except KeyError as e:
-            raise seedfarmer.errors.InvalidManifestError(f"The environment variable is not available: {e}")
+            # Show just the variable name, not the full KeyError
+            var_name = str(e).strip("'\"")
+            raise seedfarmer.errors.InvalidManifestError(f"Environment variable not set: {var_name}")
 
     def recurse_list(working_list: List[Any]) -> List[Any]:
         for key, value in enumerate(working_list):

@@ -18,14 +18,18 @@ logger.setLevel(logging.INFO)
 
 def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
     region_name = os.environ.get("AWS_DEFAULT_REGION")
-    session = boto3.session.Session()
-    client = session.client(service_name="secretsmanager", region_name=region_name)
-
     try:
+        session = boto3.session.Session()
+        client = session.client(service_name="secretsmanager", region_name=region_name)
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-    except ClientError:
+    except ClientError as ce:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
-        return {}
+        print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager - {ce}")
+        exit(1)
+    except FileNotFoundError:
+        logger.info("Make sure AWW credentials are set")
+        print("Make sure credentials  AWW credentials are set")
+        exit(1)
     else:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 
@@ -73,10 +77,11 @@ def main(url: str) -> None:
                 stderr=subprocess.PIPE,
             )
             process.communicate()
+            print(f"Setting npm config WITH auth:  {url}")
     else:
         logger.info("'NPM_MIRROR_SECRET' is not set")
         print("'NPM_MIRROR_SECRET' is not set")
-    print(f"Setting npm config without auth:  {url}")
+        print(f"Setting npm config WITHOUT auth:  {url}")
     subprocess.call(["npm", "config", "set", "registry", url])
 
 

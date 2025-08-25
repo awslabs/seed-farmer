@@ -390,9 +390,9 @@ def test_bootstrap_target_account_with_qualifier(mocker):
 @pytest.mark.apply
 def test_apply_missing_deployment():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-manifest/deployment.yaml"
-
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-    assert result.exception.args[1] == "No such file or directory"
+    assert isinstance(result.exception, SystemExit)
+    assert result.exception.code == 1
 
 
 @pytest.mark.apply
@@ -406,7 +406,8 @@ def test_apply_missing_deployment_name():
     deployment_manifest = f"{_TEST_ROOT}/manifests/test-missing-deployment-name/deployment.yaml"
 
     result = _test_command(sub_command=apply, options=deployment_manifest, exit_code=1, return_result=True)
-    assert result.exception.args[0] == "One of 'name' or 'name_generator' is required"
+    assert isinstance(result.exception, SystemExit)
+    assert result.exception.code == 1
 
 
 # -------------------------------------------

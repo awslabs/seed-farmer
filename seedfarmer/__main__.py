@@ -21,6 +21,7 @@ import click
 import seedfarmer
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
 from seedfarmer.cli_groups import bootstrap, bundle, init, list, metadata, projectpolicy, remove, seedkit, store, taint
+from seedfarmer.error_handler import safe_execute
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.utils import load_dotenv_files
 
@@ -138,6 +139,7 @@ def version() -> None:
     show_default=True,
     type=bool,
 )
+@safe_execute("Deployment Apply")
 def apply(
     spec: str,
     profile: Optional[str],
@@ -273,6 +275,7 @@ def apply(
     show_default=True,
     type=bool,
 )
+@safe_execute("Deployment Destroy")
 def destroy(
     deployment: str,
     dry_run: bool,

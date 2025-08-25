@@ -20,9 +20,11 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from boto3 import Session
 
+import seedfarmer.errors
 import seedfarmer.services._cloudwatch as cloudwatch
 import seedfarmer.services._codebuild as codebuild
 import seedfarmer.services._s3 as s3
+from seedfarmer.error_handler import log_error_safely
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -114,27 +116,48 @@ def run(
         o = prebuilt_bundle.split("/", 1)
         loc = f"{o[0]}/{o[1]}"
     else:
-        key: str = (
-            f"seedfarmer/{bundle_id}/{execution_id}/bundle.zip"
-            if bundle_id
-            else f"seedfarmer/{execution_id}/bundle.zip"
-        )
-        bucket = stack_outputs["Bucket"]
-        s3.delete_objects(bucket=bucket, keys=[key], session=session)
-        s3.upload_file(src=bundle_path, bucket=bucket, key=key, session=session)
-        loc = f"{bucket}/{key}"
+        try:
+            key: str = (
+                f"seedfarmer/{bundle_id}/{execution_id}/bundle.zip"
+                if bundle_id
+                else f"seedfarmer/{execution_id}/bundle.zip"
+            )
+            bucket = stack_outputs["Bucket"]
+            s3.delete_objects(bucket=bucket, keys=[key], session=session)
+            s3.upload_file(src=bundle_path, bucket=bucket, key=key, session=session)
+            loc = f"{bucket}/{key}"
+        except Exception as e:
+            log_error_safely(
+                _logger, e, "Failed to upload deployment bundle to S3. Verify SeedKit has deployed successfully."
+            )
+            # Show the actual error to user without stacktrace
+            _logger.error(f"S3 upload failed: {e}")
+            raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"S3 upload failed: {e}")
 
-    build_info = _execute_codebuild(
-        stack_outputs=stack_outputs,
-        bundle_location=loc,
-        execution_id=execution_id,
-        buildspec=buildspec,
-        codebuild_log_callback=codebuild_log_callback,
-        timeout=timeout,
-        overrides=overrides,
-        session=session,
-        yaml_dumper=yaml_dumper,
-    )
-    if not prebuilt_bundle:
-        s3.delete_objects(bucket=bucket, keys=[key], session=session)
+    try:
+        build_info = _execute_codebuild(
+            stack_outputs=stack_outputs,
+            bundle_location=loc,
+            execution_id=execution_id,
+            buildspec=buildspec,
+            codebuild_log_callback=codebuild_log_callback,
+            timeout=timeout,
+            overrides=overrides,
+            session=session,
+            yaml_dumper=yaml_dumper,
+        )
+    except Exception as e:
+        log_error_safely(_logger, e, "CodeBuild execution failed")
+        # Show the actual error to user without stacktrace
+        _logger.error(f"CodeBuild execution failed: {e}")
+        raise seedfarmer.errors.RemoteDeploymentRuntimeError(f"CodeBuild execution failed: {e}")
+    finally:
+        # Clean up S3 bundle even if execution failed (unless it's prebuilt)
+        if not prebuilt_bundle:
+            try:
+                s3.delete_objects(bucket=bucket, keys=[key], session=session)
+            except Exception as e:
+                log_error_safely(_logger, e, f"Failed to clean up S3 bundle: {bucket}/{key}")
+                # Don't raise here - this is just cleanup
+
     return build_info

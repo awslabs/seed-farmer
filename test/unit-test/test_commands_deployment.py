@@ -84,7 +84,7 @@ def test_apply_violations(session_manager, mocker):
         "seedfarmer.commands._deployment_commands.du.validate_module_dependencies",
         return_value=[{"module1": ["moduleA", "moduleB"]}],
     )
-    with pytest.raises(Exception):
+    with pytest.raises(SystemExit):
         dc.apply(deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-hc.yaml")
 
 
@@ -137,7 +137,7 @@ def test_apply_duplicate_account_mappings_nok(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
     mocker.patch("seedfarmer.commands._deployment_commands.deploy_deployment", return_value=None)
-    with pytest.raises(seedfarmer.errors.InvalidManifestError):
+    with pytest.raises(SystemExit):
         dc.apply(
             deployment_manifest_path="test/unit-test/mock_data/manifests/test-duplicate-target-account-mappings/deployment-nok.yaml",
             role_prefix="/test1/",

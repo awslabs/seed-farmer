@@ -13,6 +13,20 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v7.0.8 (2025-08-29)
+
+### New 
+
+### Changes
+- adding seedfarmer project to user agents headers for boto3 calls
+- adding username / password support for npm mirror auth
+- updating logging framework to remove stack traces, and provide detailed info
+
+### Fixes
+- fix cloudwatch_log_stream key missing in codebuild metadata model
+- add the proper parameter types (PARAMETER_STORE and SECRETS_MANAGER) to codebuild env types when defined in manifests
+
+
 ## v7.0.7 (2025-08-13)
 
 ### New 

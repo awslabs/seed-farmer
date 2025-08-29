@@ -136,9 +136,9 @@ def test_deploy_template_waiter_error(mocker):
     # Mock os.remove
     mock_remove = mocker.patch("os.remove")
 
-    # Call the function and verify it raises WaiterError
+    # Call the function and verify it raises ModuleDeploymentError
     template = {"Resources": {"TestResource": {"Type": "AWS::S3::Bucket"}}}
-    with pytest.raises(WaiterError):
+    with pytest.raises(seedfarmer.errors.ModuleDeploymentError):
         bc.deploy_template(template=template, stack_name="test-stack", session=None, parameters={"Param1": "Value1"})
 
     # Verify os.remove was called (cleanup happens in finally block)

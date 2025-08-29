@@ -236,8 +236,9 @@ def deploy_template(
         cfn.deploy_template(stack_name=stack_name, filename=output, session=session, parameters=parameters)
         _logger.info(f"Role for Seed-Farmer deployed in stack {stack_name}")
     except WaiterError as we:
-        _logger.error("Could not create the deployment role...make sure the toolchain role exists and check CFN Logs")
-        raise we
+        _logger.error(f"CloudFormation deployment failed for stack '{stack_name}': {we}")
+        _logger.error("Check: 1) Toolchain role exists, 2) CloudFormation permissions, 3) CloudFormation logs")
+        raise seedfarmer.errors.ModuleDeploymentError(f"Failed to deploy CloudFormation stack '{stack_name}': {we}")
     finally:
         os.remove(output)
 

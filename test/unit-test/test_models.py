@@ -652,7 +652,7 @@ parameters:
         },
         clear=True,
     ):
-        with pytest.raises(InvalidManifestError, match="The environment variable is not available: 'GIT_URL'"):
+        with pytest.raises(InvalidManifestError, match="Environment variable not set: GIT_URL"):
             ModuleManifest(**module_yaml)
 
 
@@ -727,5 +727,5 @@ parameters:
         echo "${VAR}"
 """
     )
-    with pytest.raises(InvalidManifestError, match="The environment variable is not available: 'VAR'"):
+    with pytest.raises(InvalidManifestError, match="Environment variable not set: VAR"):
         ModuleManifest(**module_yaml)

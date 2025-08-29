@@ -70,7 +70,8 @@ def load_parameter_values(
                     parameter_values.append(module_metatdata)
                 else:
                     raise seedfarmer.errors.InvalidManifestError(
-                        f"The module metadata parameter ({parameter.value_from.module_metadata}) is not available"
+                        f"""Module metadata not found for parameter '{parameter.name}' from module
+                         {parameter.value_from.module_metadata.group}-{parameter.value_from.module_metadata.name}"""
                     )
             elif parameter.value_from.env_variable:
                 if parameter.value_from.env_variable in os.environ:
@@ -79,7 +80,8 @@ def load_parameter_values(
                     )
                 else:
                     raise seedfarmer.errors.InvalidManifestError(
-                        f"The environment variable ({parameter.value_from.env_variable}) is not available"
+                        f"""Environment variable '{parameter.value_from.env_variable}'
+                          not set (required for parameter '{parameter.name}')"""
                     )
             elif parameter.value_from.parameter_store:
                 parameter_values.append(
@@ -104,7 +106,8 @@ def load_parameter_values(
                     parameter_values.append(ModuleParameter(name=parameter.name, value=p_value))
                 else:
                     raise seedfarmer.errors.InvalidManifestError(
-                        f"The parameter value defined ({parameter.value_from.parameter_value}) is not available"
+                        f"""Parameter value '{parameter.value_from.parameter_value}' not found
+                         (required for parameter '{parameter.name}')"""
                     )
 
     return parameter_values
@@ -159,7 +162,8 @@ def resolve_params_for_checksum(
                 param.resolved_value = str(p_value) if isinstance(p_value, str) else json.dumps(p_value)
             else:
                 raise seedfarmer.errors.InvalidManifestError(
-                    f"The parameter value defined ({param.value_from.parameter_value}) is not available"
+                    f"""Parameter value '{param.value_from.parameter_value}' not found in deployment manifest
+                     (module: {group_name}-{module.name})"""
                 )
 
         elif param.value_from and param.value_from.env_variable:
@@ -167,7 +171,8 @@ def resolve_params_for_checksum(
                 param.resolved_value = os.getenv(param.value_from.env_variable)
             else:
                 raise seedfarmer.errors.InvalidManifestError(
-                    f"The environment variable ({param.value_from.env_variable}) is not available"
+                    f"""Environment variable '{param.value_from.env_variable}' not set
+                     (module: {group_name}-{module.name})"""
                 )
 
 

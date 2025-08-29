@@ -26,6 +26,7 @@ from seedfarmer.deployment.deploy_base import DeployModule
 from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.models.deploy_responses import ModuleDeploymentResponse, StatusType
 from seedfarmer.models.manifests import ModuleManifest
+from seedfarmer.types.parameter_types import EnvVar
 from seedfarmer.utils import LiteralStr, apply_literalstr, create_output_dir, register_literal_str
 
 
@@ -218,7 +219,9 @@ class DeployLocalModule(DeployModule):
             # file.write(yaml.dump(buildspec))
             yaml.dump(buildspec, file)
 
-        build_info = codebuild_local.run(local_path, env_vars, codebuild_image)
+        build_info = codebuild_local.run(
+            local_path, {k: v.value if isinstance(v, EnvVar) else v for k, v in env_vars.items()}, codebuild_image
+        )
 
         return ModuleDeploymentResponse(
             deployment=self.mdo.deployment_manifest.name,
@@ -333,7 +336,9 @@ class DeployLocalModule(DeployModule):
         with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
             yaml.dump(buildspec, file)
 
-        build_info = codebuild_local.run(local_path, env_vars, codebuild_image)
+        build_info = codebuild_local.run(
+            local_path, {k: v.value if isinstance(v, EnvVar) else v for k, v in env_vars.items()}, codebuild_image
+        )
 
         return ModuleDeploymentResponse(
             deployment=deployment_name,

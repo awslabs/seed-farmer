@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 
 import seedfarmer.services._codebuild as codebuild
+from seedfarmer.error_handler import log_error_safely
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -101,8 +102,12 @@ def run(
         )
     except KeyboardInterrupt:
         _logger.info("Interrupted by the user")
-    except (subprocess.CalledProcessError, Exception) as e:
-        _logger.error(e)
+    except subprocess.CalledProcessError as e:
+        log_error_safely(_logger, e, f"Local deployment failed with exit code {e.returncode}")
+        _logger.error(f"Local CodeBuild container failed: {e}")
+    except Exception as e:
+        log_error_safely(_logger, e, "Unexpected error during local deployment")
+        _logger.error(f"Local deployment error: {e}")
 
     end_time = datetime.now(timezone.utc)
     duration = (end_time - start_time).total_seconds()

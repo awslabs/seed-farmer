@@ -16,18 +16,21 @@ logger.setLevel(logging.INFO)
 def get_secret() -> Dict[str, Dict[str, str]]:
     secret_name = os.environ.get("SEEDFARMER_DOCKER_SECRET", "NO_SECRET")
     # Backwards Compatibility
+    region_name = os.environ.get("AWS_DEFAULT_REGION")
     if secret_name == "NO_SECRET":
         secret_name = os.environ.get("AWS_CODESEEDER_DOCKER_SECRET", "NO_SECRET")
-    region_name = os.environ.get("AWS_DEFAULT_REGION")
-
-    session = boto3.session.Session()
-    client = session.client(service_name="secretsmanager", region_name=region_name)
-
     try:
+        session = boto3.session.Session()
+        client = session.client(service_name="secretsmanager", region_name=region_name)
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
     except ClientError:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
-        return {}
+        print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager")
+        exit(1)
+    except FileNotFoundError:
+        logger.info("Make sure AWW credentials are set")
+        print("Make sure credentials  AWW credentials are set")
+        exit(1)
     else:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 

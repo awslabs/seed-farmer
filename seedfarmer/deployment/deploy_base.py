@@ -15,7 +15,7 @@
 
 import json
 import logging
-from typing import Dict, Optional, cast
+from typing import Dict, Optional, Union, cast
 
 from boto3 import Session
 
@@ -73,7 +73,7 @@ class DeployModule:
         else:
             return None
 
-    def _env_vars(self, session: Optional[Session] = None) -> Dict[str, str]:
+    def _env_vars(self, session: Optional[Session] = None) -> Dict[str, Union[str, EnvVar]]:
         use_project_prefix = not self.module_manifest.deploy_spec.publish_generic_env_variables  # type: ignore [union-attr]
         pypi_mirror_secret = (
             self.module_manifest.pypi_mirror_secret
@@ -129,4 +129,4 @@ class DeployModule:
         env_vars["AWS_PARTITION"] = str(self.mdo.deployment_manifest._partition)
         env_vars["SEEDFARMER_VERSION"] = seedfarmer.__version__
         # return env_vars
-        return {k: v if isinstance(v, str) else v.value for k, v in env_vars.items()}
+        return {k: v if isinstance(v, (str, EnvVar)) else v.value for k, v in env_vars.items()}

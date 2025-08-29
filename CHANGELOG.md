@@ -15,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - fix cloudwatch_log_stream key missing in codebuild metadata model
+- add the proper parameter types (PARAMETER_STORE and SECRETS_MANAGER) to codebuild env types when defined in manifests
 
 
 ## v7.0.7 (2025-08-13)

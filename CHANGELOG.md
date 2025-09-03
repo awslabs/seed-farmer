@@ -11,6 +11,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+- remote deployments now generating hash based on active session passed in
 
 
 ## v7.0.8 (2025-08-29)

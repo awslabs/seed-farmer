@@ -112,7 +112,9 @@ class DeployRemoteModule(DeployModule):
             raise seedfarmer.errors.InvalidConfigurationError("Missing `deploy` in module's deployspec.yaml")
 
         use_project_prefix = not module_manifest.deploy_spec.publish_generic_env_variables
-        env_vars = self._env_vars()
+        env_vars = self._env_vars(
+            session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+        )
 
         env_vars[DeployModule.seedfarmer_param("MODULE_MD5", None, use_project_prefix)] = (
             module_manifest.bundle_md5 if module_manifest.bundle_md5 is not None else ""
@@ -319,7 +321,9 @@ class DeployRemoteModule(DeployModule):
                 f"Missing `destroy` in module: {module_manifest.name} with deployspec.yaml"
             )
 
-        env_vars = self._env_vars()
+        env_vars = self._env_vars(
+            session=SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
+        )
         remove_ssm = [
             (
                 f"seedfarmer remove moduledata "

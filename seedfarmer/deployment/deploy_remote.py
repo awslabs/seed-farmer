@@ -139,17 +139,18 @@ class DeployRemoteModule(DeployModule):
         )
 
         logstream = apply_literalstr("""build_id_only=$(echo "$CODEBUILD_BUILD_ID" | cut -d':' -f2)
-        project_name=$(echo "$CODEBUILD_PROJECT_ARN" | awk -F'/' '{print $2}')
-        log_stream=$(aws logs describe-log-streams \\
-        --log-group-name "/aws/codebuild/$project_name" \\
-        --output json \\
-        --query "logStreams[?contains(logStreamName, \\`$build_id_only\\`)].logStreamName" \\
-        | jq -r 'map(select(. != null)) | .[0]') || true
+project_name=$(echo "$CODEBUILD_PROJECT_ARN" | awk -F'/' '{print $2}')
+log_response=$(aws logs describe-log-streams \\
+--log-group-name "/aws/codebuild/$project_name" \\
+--output json | jq --arg build_id "$build_id_only" '.logStreams[] | select(.logStreamName | contains($build_id))')
+log_stream=$(echo "$log_response" | jq -r '.logStreamName')
+log_arn=$(echo "$log_response" | jq -r '.arn')
         """)
         add_cb_metadata = [
             "seedfarmer metadata add -k CodeBuildBuildUrl -v $CODEBUILD_BUILD_URL",
             logstream,
             'seedfarmer metadata add -k CloudWatchLogStream -v "/aws/codebuild/$project_name/$log_stream" || true',
+            'seedfarmer metadata add -k CloudWatchLogStreamArn -v "$log_arn" || true',
         ]
 
         metadata_put = [

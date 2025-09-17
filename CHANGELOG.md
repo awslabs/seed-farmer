@@ -23,7 +23,6 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
-
 ## v7.0.9 (2025-09-03)
 
 ### New 

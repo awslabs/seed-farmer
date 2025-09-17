@@ -542,11 +542,10 @@ class DeploymentManifest(CamelModel):
             account_id=target_account,
             region=target_region,
         )
-        return (
-            f"arn:{self._partition}:iam::{target_account}:policy/{permissions_boundary_name}"
-            if permissions_boundary_name is not None
-            else None
-        )
+        if permissions_boundary_name in [None, "", " ", "", " "]:
+            return None
+        else:
+            return f"arn:{self._partition}:iam::{target_account}:policy/{permissions_boundary_name}"
 
     def validate_and_set_module_defaults(self) -> None:
         for group in self.groups:

@@ -17,7 +17,6 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New 
 
-
 ### Changes
 - adding the Cloudwatch Log Stream ARN to module metadata output
 - allow a permissionBoundaryName to be empty string as input, but resolves to None

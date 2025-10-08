@@ -405,6 +405,7 @@ Resources:
   KmsKey:
     Type: AWS::KMS::Key
     Properties:
+      EnableKeyRotation: true
       Tags:
         - Key: codeseeder-seedkit-name
           Value: 

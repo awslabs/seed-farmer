@@ -71,6 +71,8 @@ def run(
         f"COMPOSE_PROJECT_NAME=agent-{str(uuid.uuid4())[:8]}",
         "-e",
         f"REPORTS={local_deploy_path}/logs",
+        "-e",
+        "DOCKER_PRIVILEGED_MODE=TRUE",
     ]
 
     for key, value in os.environ.items():

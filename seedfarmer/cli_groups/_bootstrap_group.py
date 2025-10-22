@@ -143,6 +143,8 @@ def bootstrap_toolchain(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     if project is None:
         project = _load_project()
+    else:
+        config.set_project_name(project)
     _logger.debug("Bootstrapping a Toolchain account for Project %s", project)
     if len(policy_arn) > 0 and not as_target:  # type: ignore
         raise click.ClickException("Cannot set PolicyARNS when the `-as-target` flag is not set.")
@@ -245,6 +247,8 @@ def bootstrap_target(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     if project is None:
         project = _load_project()
+    else:
+        config.set_project_name(project)
     _logger.debug("Bootstrapping a Target account for Project %s", project)
     bootstrap_target_account(
         toolchain_account_id=toolchain_account,

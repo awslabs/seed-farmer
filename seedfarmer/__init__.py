@@ -111,6 +111,7 @@ class Config(object):
     _OPS_ROOT: Optional[str] = None
 
     _project_spec: Optional[ProjectSpec] = None
+    _project_name_param: Optional[str] = None
 
     def _load_config_data(self) -> None:
         count = 0
@@ -147,6 +148,9 @@ class Config(object):
 
     @property
     def PROJECT(self) -> str:
+        if self._project_name_param and self._project_spec is None:
+            return self._project_name_param
+
         if self._project_spec is None:
             self._load_config_data()
         return str(cast(ProjectSpec, self._project_spec).project)
@@ -192,6 +196,9 @@ class Config(object):
         if self._project_spec is None:
             self._load_config_data()
         return SEEDKIT_YAML_NAME
+
+    def set_project_name(self, project_name_param: str) -> None:
+        self._project_name_param = project_name_param
 
 
 config = Config()

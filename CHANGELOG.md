@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v7.0.11 (2025-10-23)
+
+### New 
+
+### Changes
+
+### Fixes
 - enable KMS key rotation for seedkit template
 - support using project name parameter 
   - implemented for all, but used by bootstrap commands

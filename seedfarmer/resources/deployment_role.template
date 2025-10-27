@@ -96,6 +96,7 @@ Resources:
               - kms:DescribeKey
               - kms:CreateAlias
               - kms:DeleteAlias
+              - kms:EnableKeyRotation
               Effect: Allow
               Resource: '*'
               Sid: DeploymentKMSKey

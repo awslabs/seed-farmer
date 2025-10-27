@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v7.0.12 (2025-10-27)
+
+### New 
+
+### Changes
+
+### Fixes
 - permissions on deployment role missing kms:EnableKeyRotation from 7.0.11
 
 

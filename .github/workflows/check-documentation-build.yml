@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Install yq
@@ -42,7 +42,7 @@ jobs:
             python_version=$(cat .readthedocs.yaml | yq ".build.tools.python")
             echo python-version=$python_version >> $GITHUB_OUTPUT
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '${{ steps.get-version.outputs.python-version }}'
       - name: Update pip

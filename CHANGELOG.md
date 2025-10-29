@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New 
 
 ### Changes
+- adding support to allow `.python-version` files into module bundle 
 
 ### Fixes
 

@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Changes
 - adding support to allow `.python-version` files into module bundle 
+- update and publish next version of SeedFarmer Documentation
 
 ### Fixes
 

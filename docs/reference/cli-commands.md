@@ -2,7 +2,7 @@
 
 This page provides a reference for all Seed-Farmer CLI commands.  
 
-It is recommended to use the `--help` command to get detailed information about each CLI command and option that is available in your SeedFarmer version.
+It is recommended to use the `--help` command to get detailed information about each CLI command and option that is available in your Seed-Farmer version.
 
 ```bash
 > seedfarmer --version
@@ -12,26 +12,26 @@ seedfarmer, version 7.0.12
 > seedfarmer --help   
 Usage: seedfarmer [OPTIONS] COMMAND [ARGS]...
 
-  SeedFarmer CLI interface
+  Seed-Farmer CLI interface
 
 Options:
   --version  Show the version and exit.
   --help     Show this message and exit.
 
 Commands:
-  apply          Apply manifests to a SeedFarmer managed deployment
+  apply          Apply manifests to a Seed-Farmer managed deployment
   bootstrap      Bootstrap (initialize) a Toolchain or Target account
   bundle         Manage the bundle in a module deployment execution
-  destroy        Destroy a SeedFarmer managed deployment
+  destroy        Destroy a Seed-Farmer managed deployment
   init           Initialize a project or module
   list           List the relative data (module or deployment)
   metadata       Manage the metadata in a module deployment execution
   projectpolicy  Fetch info about the project policy.
   remove         Top Level command to support removing module metadata
-  seedkit        Top Level command to support seedkits in SeedFarmer
+  seedkit        Top Level command to support seedkits in Seed-Farmer
   store          Top Level command to support storing module information
   taint          Top Level command to support adding a taint to a...
-  version        Get the version SeedFarmer
+  version        Get the version Seed-Farmer
 
 ```
 
@@ -106,7 +106,7 @@ seedfarmer destroy DEPLOYMENT_NAME
 The commands are frequently used to interrogate deployments and modules.  It is recommended to explore these commands as they do not alter the deployments.
 
 !!! warning "Toolchain Region"
-    The toolchain account is region-specific.  If you cannot get your deployment or module information, be sure to pass the `--region` of the toolchain account to assure SeedFarmer interrogates the proper region.
+    The toolchain account is region-specific.  If you cannot get your deployment or module information, be sure to pass the `--region` of the toolchain account to assure Seed-Farmer interrogates the proper region.
 
 ### list deployments
 
@@ -124,7 +124,7 @@ seedfarmer list allmoduledata -d DEPLOYMENT_NAME
 
 ## Seedkit Commands
 
-These commands are provided as a convenience, but SeedFarmer will auto-deploy the SeedKit on first deploy.  These commands are used to update the SeedKit when necessary.
+These commands are provided as a convenience, but Seed-Farmer will auto-deploy the SeedKit on first deploy.  These commands are used to update the SeedKit when necessary.
 
 ### seedkit deploy
 

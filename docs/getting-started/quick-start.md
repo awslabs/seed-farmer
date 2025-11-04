@@ -1,4 +1,4 @@
-# Quick Start Guide
+# Quick Start Guide for Seed-Farmer
 
 This quick start guide will help you get up and running with Seed-Farmer quickly. It provides a step-by-step walkthrough of creating and deploying a simple project using [public modules](../modules/index.md).
 
@@ -17,7 +17,7 @@ Before you begin, make sure you have:
 
 Create a directory and navigate to that directory.
 
-We will create the skeleton of a new projct named `myproject`.
+We will create the skeleton of a new project named `myproject`.
 
 ```bash
 seedfarmer init project --project-name myproject
@@ -61,7 +61,7 @@ The resulting structure now looks like this:
 
 ```
 
-The `deployment.yaml` contains the information necessary for SeedFarmer to AWS Sessions to access the AWS Accounts via the bootstrap roles, the paths to the definitions of the module(s) to deploy, and other deployment-specific information.  The provided `deployment.yaml` has a large, commented-out section for reference.  In our use case, we do not need this, so we can replace it with the minimal information necessary.
+The `deployment.yaml` contains the information necessary for Seed-Farmer to AWS Sessions to access the AWS Accounts via the bootstrap roles, the paths to the definitions of the module(s) to deploy, and other deployment-specific information.  The provided `deployment.yaml` has a large, commented-out section for reference.  In our use case, we do not need this, so we can replace it with the minimal information necessary.
 
 ```bash
 mv deployment.yaml deployment.orig
@@ -75,11 +75,11 @@ name: verysimple    # The name of my deployment
 toolchainRegion: <REPLACE WITH REGION>  # The toolchain region
 forceDependencyRedeploy: True
 groups:
-    - name: group1   # A Logical name of the moduel group
+    - name: group1   # A Logical name of the module group
       path: simple-modules.yaml   # the module definition via relative path
 targetAccountMappings:
     - alias: primary
-      accountId: <REPLACE WITH ACCCOUNT IT>  # The target account the module will go to 
+      accountId: <REPLACE WITH ACCOUNT IT>  # The target account the module will go to 
       default: true
       regionMappings:
         - region: <REPLACE WITH REGION> # The target region the module will go to 
@@ -126,9 +126,9 @@ Now the deployment is ready for deployment.
 seedfarmer apply deployment.yaml
 ```
 
-Since this is the first deployment for the project `myproject`, SeedFarmer will add the necessary artifacts to support the project (a generic [module role](../concepts/architecture.md/#3-module-role), the [SeedKit](../concepts/architecture.md#seedkit-infrastructure), and a [SeedFarmer Artifacts](../concepts/architecture.md/#seed-farmer-artifacts) bucket).  These items are created once and reused by all deployments in the project.
+Since this is the first deployment for the project `myproject`, Seed-Farmer will add the necessary artifacts to support the project (a generic [module role](../concepts/architecture.md/#3-module-role), the [SeedKit](../concepts/architecture.md#seedkit-infrastructure), and a [Seed-Farmer Artifacts](../concepts/architecture.md/#seed-farmer-artifacts) bucket).  These items are created once and reused by all deployments in the project.
 
-You should see somethign similar to:
+You should see output similar to:
 
 ```bash
 
@@ -173,7 +173,7 @@ Deployed Modules
 And to check if there are any module outputs, you can get that information (note, in the below, [jq](https://github.com/jqlang/jq) is used to parse the output since is it json...but is not necessary to use).
 
 ```bash
-seedfarmer list allmodledata -d verysimple | jq .
+seedfarmer list allmoduledata -d verysimple | jq .
 ```
 
 This returns all the module metadata:
@@ -182,15 +182,15 @@ This returns all the module metadata:
 {
   "group1-simplebucket": {
     "ArtifactsBucketName": "myproject-verysimple-artifacts-bucket-074ff5b4-9a01f6e68e54b",
-    "CloudWatchLogStream": "/aws/codebuild/codeseeder-myproject/codeseeder-mcbzocvf/39ace228-9956-416b-bc58-0887ffe09824",
-    "CloudWatchLogStreamArn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/codebuild/codeseeder-myproject:log-stream:codeseeder-mcbzocvf/REDACTED",
+    "CloudWatchLogStream": "/aws/codebuild/codeseeder-myproject/codeseeder-random/39ace228-9956-416b-bc58-0887ffe09824",
+    "CloudWatchLogStreamArn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/codebuild/codeseeder-myproject:log-stream:codeseeder-random/REDACTED",
     "CodeBuildBuildUrl": "https://us-east-1.console.aws.amazon.com/codebuild/home?region=us-east-1#/builds/codeseeder-myproject:REDACTED/view/new",
     "FullAccessPolicyArn": "arn:aws:iam::123456789012:policy/myproject-verysimple-group1-simplebucket-us-east-1-123456789012-full-access",
     "LogsBucketName": "myproject-verysimple-logs-bucket-074ff5b4-9a01f6e68e54bd9784",
     "ModuleDeploymentRoleName": "myproject-verysimple-us-east-1-deployment-role",
     "ReadOnlyPolicyArn": "arn:aws:iam::123456789012:policy/myproject-verysimple-group1-simplebucket-us-east-1-123456789012-readonly-access",
-    "SeedFarmerDeployed": "7.0.12",
-    "SeedFarmerModuleCommitHash": "589a5a5606e859929e7c4d88ac138b7962ed0cff"
+    "Seed-FarmerDeployed": "7.0.12",
+    "Seed-FarmerModuleCommitHash": "589a5a5606e859929e7c4d88ac138b7962ed0cff"
   }
 }
 ```

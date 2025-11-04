@@ -19,7 +19,7 @@ Key features include:
 
 ## Concepts
 
-Seed-Farmer organizes deployments within scoped hierarchies to insulate artifacts from one another, following the principals of least-privilege and dedicated access roles.  Within a scoped unit, SeedFarmer artifacts are named according to a structured pattern, assuring a unique name to prevent collisions.
+Seed-Farmer organizes deployments within scoped hierarchies to insulate artifacts from one another, following the principals of least-privilege and dedicated access roles.  Within a scoped unit, Seed-Farmer artifacts are named according to a structured pattern, assuring a unique name to prevent collisions.
 
 - **Project**: Represents all deployments scoped to a single logical name
 - **Deployment**: Represents all modules leveraging AWS resources in one or many accounts
@@ -37,7 +37,7 @@ This documentation is organized into the following sections:
 - **Getting Started**: Installation and initial setup guides
 - **Concepts**: Core concepts and architecture
 - **Guides**: How-to guides for common tasks
-- **Sequence Diagrams**: Sequence diagrams of important processes with SeedFarmer
+- **Sequence Diagrams**: Sequence diagrams of important processes with Seed-Farmer
 - **Reference**: Detailed reference documentation for CLI commands, manifests, and module development
 - **Public Modules**: Listing of Seed-Farmer compliant OpenSource modules ready for use
 - **AI Support**: Artificial Intelligence support for Seed-Farmer module development

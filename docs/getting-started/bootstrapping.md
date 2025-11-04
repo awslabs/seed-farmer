@@ -1,4 +1,4 @@
-# Bootstrapping Accounts
+# Bootstrapping Accounts for Seed-Farmer
 
 Before you can use Seed-Farmer to deploy resources, you need to bootstrap your AWS accounts. This guide explains how to bootstrap your toolchain and target accounts.
 

@@ -1,4 +1,4 @@
-# Architecture
+# Seed-Farmer Architecture
 
 This page explains the overall architecture of Seed-Farmer, including its multi-account security model, deployment orchestration, and integration with AWS services.
 
@@ -363,7 +363,7 @@ targetAccountMappings:
 
 #### Updates
 
-The seedkit is not automatically updated.  A manual update is requested via `--update-seedkit` flag when using the `seedfarmer seedkit` CLI.  This is to prevent accidential updates when changing SeedFarmer versions, or if making customizations to the seedkit artifacts (ex. the managed policy).
+The seedkit is not automatically updated.  A manual update is requested via `--update-seedkit` flag when using the `seedfarmer seedkit` CLI.  This is to prevent accidental updates when changing Seed-Farmer versions, or if making customizations to the seedkit artifacts (ex. the managed policy).
 
 #### Deletion
 

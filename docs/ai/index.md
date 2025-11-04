@@ -1,5 +1,4 @@
-# Artificial Intelligence (AI) Support
 
-## MCP Servers
+# MCP Servers
 
 **_Coming Soon_**

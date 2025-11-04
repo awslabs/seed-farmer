@@ -349,18 +349,18 @@ name: metadata-storage
 path: modules/core/metadata-storage/
 parameters:
   - name: glue-db-suffix
-    value: vsidata
-  - name: rosbag-bagfile-table-suffix
-    value: Rosbag-BagFile-Metadata
-  - name: rosbag-scene-table-suffix
-    value: Rosbag-Scene-Metadata
+    value: db
+  - name: data-table-suffix
+    value: Data-Metadata
+  - name: data-modified-table-suffix
+    value: Modified-Metadata
 ```
 
 ### Environment
 
-SeedFarmer supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement. When a file named `.env` is placed at the project root (where seedfarmer.yaml resides), any value in a manifest with a key of envVariable will be matched and replaced with the corresponding environment variable. You can pass in overriding .env files by using the `--env-file` on CLI command invocation.
+Seed-Farmer supports using [Dotenv](https://github.com/theskumar/python-dotenv) for dynamic replacement. When a file named `.env` is placed at the project root (where seedfarmer.yaml resides), any value in a manifest with a key of envVariable will be matched and replaced with the corresponding environment variable. You can pass in overriding .env files by using the `--env-file` on CLI command invocation.
 
-SeedFarmer supports passing multiple `.env`, by using `--env-file` where subsequent files will override duplicate values.
+Seed-Farmer supports passing multiple `.env`, by using `--env-file` where subsequent files will override duplicate values.
 
 ```yaml
 name: opensearch
@@ -712,9 +712,9 @@ codebuildImage:  public.ecr.aws/codebuild/amazonlinux2-x86_64-standard:5.0 ## Th
 runtimeOverrides:
   python: "3.13"
 npmMirror: https://registry.npmjs.org/
-npmMirrorSecret: /something/aws-addf-mirror-credentials
+npmMirrorSecret: /something/aws-myproject-mirror-credentials
 pypiMirror: https://pypi.python.org/simple
-pypiMirrorSecret: /something/aws-addf-mirror-credentials
+pypiMirrorSecret: /something/aws-myproject-mirror-credentials
 parameters:
   - name: encryption-type
     value: SSE

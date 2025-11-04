@@ -22,7 +22,7 @@ In the above example, the `MYACCOUNTID` and `PREFERRED` will be replaced with th
 
 ## Module Sourcing
 
-SeedFarmer supports sourcing modules from the following:
+Seed-Farmer supports sourcing modules from the following:
   
 - Local Filesystem
 - Git Repositories

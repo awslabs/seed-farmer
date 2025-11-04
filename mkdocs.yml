@@ -1,7 +1,7 @@
 site_name: Seed-Farmer Documentation
 site_description: Documentation for the Seed-Farmer CI/CD library
 site_author: AWS
-ite_url: !ENV READTHEDOCS_CANONICAL_URL
+site_url: !ENV READTHEDOCS_CANONICAL_URL
 repo_url: https://github.com/awslabs/seed-farmer
 repo_name: awslabs/seed-farmer
 edit_uri: edit/main/docs/
@@ -36,6 +36,8 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.indexes
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.top
     - toc.follow
     - search.highlight
@@ -86,22 +88,22 @@ plugins:
 nav:
   - Home: index.md
   - Getting Started:
-    - getting-started/index.md
+    - Getting Started: getting-started/index.md
     - Installation: getting-started/installation.md
     - Bootstrapping: getting-started/bootstrapping.md
     - Quick Start: getting-started/quick-start.md
-  - Concepts:
-    - concepts/index.md
+  - Concepts: 
+    - Concepts: concepts/index.md
     - Architecture: concepts/architecture.md
     - Multi-Account Support: concepts/multi-account.md
   - Guides:
-    - guides/index.md
+    - Guides: guides/index.md
     - Project Development: guides/project-development.md
     - Module Development: guides/module-development.md
     - Remote Deployments: guides/remote-deployments.md
     - Local Deployments: guides/local-deployments.md
   - Reference:
-    - reference/index.md
+    - Reference: reference/index.md
     - CLI Commands: reference/cli-commands.md
     - Manifests: reference/manifests.md
     - Deployspec: reference/deployspec.md
@@ -109,16 +111,16 @@ nav:
     - Glossary: reference/glossary.md
     - FAQ: reference/faq.md
   - Sequence Diagrams: 
-    - sequence/index.md
-    - Deployment Workflow: sequence/apply-deployment-workflow.md
+    - Sequence Diagrams: sequence/index.md
+    - Deployment Workflow: sequence/deployment-workflow.md
     - Module Deployment Strategies: sequence/module-deployment-strategies.md
     - SSM Metadata Tracking: sequence/ssm-metadata-tracking.md
   - Public Modules:
-    - Overview: modules/index.md
+    - Public Modules: modules/index.md
     - IDF Modules: modules/idf-modules/index.md
     - AIOps Modules: modules/aiops-modules/index.md
   - AI Support:
-    - Overview: ai/index.md
+    - AI Support: ai/index.md
     
 extra:
   social:

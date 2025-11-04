@@ -227,7 +227,7 @@ When your deployspec runs, Seed-Farmer automatically creates a metadata file tha
 
 There are several ways to export metadata from your module:
 
-### Method 1: Using SeedFarmer Metadata CLI Commands (Recommended)
+### Method 1: Using Seed-Farmer Metadata CLI Commands (Recommended)
 
 The [seedfarmer metadata](./cli-commands.md#metadata-commands) commands automatically handle the metadata file creation and management:
 
@@ -240,7 +240,7 @@ deploy:
         - cdk deploy --require-approval never --progress events --app "python app.py" --outputs-file ./cdk-exports.json
         - seedfarmer metadata convert -f cdk-exports.json 
         - seedfarmer metadata add -k VpcId -v vpc-12345678
-        - seedfarmer metadata add -k DatabaseEndpoint -v mydb.cluster-xyz.us-east-1.rds.amazonaws.com
+        - seedfarmer metadata add -k DatabaseEndpoint -v data.cluster-xyz.us-east-1.rds.amazonaws.com
 ```
 
 ### Method 2: Direct Environment Variable Export
@@ -336,12 +336,12 @@ Use consistent, descriptive names for your metadata keys:
 ```yaml
 # ✅ Good - Clear, consistent naming
 - seedfarmer metadata add -k VpcId -v vpc-12345678
-- seedfarmer metadata add -k DatabaseEndpoint -v mydb.cluster-xyz.us-east-1.rds.amazonaws.com
+- seedfarmer metadata add -k DatabaseEndpoint -v data.cluster-xyz.us-east-1.rds.amazonaws.com
 - seedfarmer metadata add -k SubnetIds -v '["subnet-123", "subnet-456"]'
 
 # ❌ Bad - Inconsistent, unclear naming
 - seedfarmer metadata add -k vpc -v vpc-12345678
-- seedfarmer metadata add -k db_endpoint -v mydb.cluster-xyz.us-east-1.rds.amazonaws.com
+- seedfarmer metadata add -k db_endpoint -v data.cluster-xyz.us-east-1.rds.amazonaws.com
 - seedfarmer metadata add -k subnets -v '["subnet-123", "subnet-456"]'
 ```
 
@@ -362,7 +362,7 @@ Always document what metadata your module exports in your README.md:
 ```json
 {
   "VpcId": "vpc-12345678",
-  "DatabaseEndpoint": "mydb.cluster-xyz.us-east-1.rds.amazonaws.com",
+  "DatabaseEndpoint": "data.cluster-xyz.us-east-1.rds.amazonaws.com",
   "SubnetIds": ["subnet-123", "subnet-456"],
   "SecurityGroupId": "sg-789"
 }

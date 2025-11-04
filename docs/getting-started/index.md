@@ -2,13 +2,13 @@
 
 This section provides instructions to get started with Seed-Farmer and be ready to deploy an application.
 
-SeedFarmer can run on local compute and on compute within a CI/CD pipeline -- the setup requirements are the same.
+Seed-Farmer can run on local compute and on compute within a CI/CD pipeline -- the setup requirements are the same.
 
-- **Installation** -  SeedFarmer needs to be installed where the CLI will be invoked.  It is a one-time event for new compute resources.
+- **Installation** -  Seed-Farmer needs to be installed where the CLI will be invoked.  It is a one-time event for new compute resources.
 
-- **Bootstrapping** - the steps necessary to prepare your AWS Accounts to use SeedFarmer.  It is a one-time event for each AWS account to be used for deploying AWS Resources.
+- **Bootstrapping** - the steps necessary to prepare your AWS Accounts to use Seed-Farmer.  It is a one-time event for each AWS account to be used for deploying AWS Resources.
 
-SeedFarmer uses a **toolchain account** and a **target account**.  Though named as _account_, these are region-specific in context:  the toolchain account and target account store their data in their designated region, respectively.
+Seed-Farmer uses a **toolchain account** and a **target account**.  Though named as _account_, these are region-specific in context:  the toolchain account and target account store their data in their designated region, respectively.
 
 <div align="center"><img src="../static/multi-account-setup.png" alt="MultiSetup"/></div>
 

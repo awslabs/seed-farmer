@@ -166,8 +166,8 @@ This module creates an OpenSearch cluster
 
 - `OpenSearchDomainEndpoint`: the endpoint name of the OpenSearch Domain
   `OpenSearchDomainName`: the name of the OpenSearch Domain
-- `OpenSeearchDashboardUrl`: URL of the OpenSearch cluster dashboard
-- `OpenSearchSecurityGroupId`: name of the DDB table created for Rosbag Scene Data
+- `OpenSearchDashboardUrl`: URL of the OpenSearch cluster dashboard
+- `OpenSearchSecurityGroupId`: name of the DDB table created for OpenSearch usage
 
 #### Output Example
 

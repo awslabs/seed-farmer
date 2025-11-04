@@ -1,4 +1,4 @@
-# Guides
+# Guides for Using Seed-Farmer
 
 This section provides how-to guides for common tasks with Seed-Farmer. These guides are designed to help you accomplish specific goals and solve common problems.
 

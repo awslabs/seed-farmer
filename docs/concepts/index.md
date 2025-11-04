@@ -1,8 +1,7 @@
-# Concepts
+
+# Fundamentals Concepts 
 
 This section explains the fundamental concepts behind Seed-Farmer, providing a deeper understanding of how the system works and its key architectural principles.
-
-## Overview
 
 Seed-Farmer is a [GitOps-based](https://opengitops.dev/) framework for deploying Infrastructure as Code (IaC) modules across multiple AWS accounts and regions. It orchestrates deployments using AWS CodeBuild while maintaining security, scalability, and auditability.
 
@@ -144,7 +143,7 @@ Seed-Farmer follows [GitOps](https://opengitops.dev/) best practices:
 
 ### Parallel Execution
 
-Seed-Farmer optimizes deployment performance by parallelizing grouped module deployment.  Each module deployment execution is independent: failure of one module within the group does not impact the other modules in that group...but after all modules within the group complete, SeedFarmer halts deployment.
+Seed-Farmer optimizes deployment performance by parallelizing grouped module deployment.  Each module deployment execution is independent: failure of one module within the group does not impact the other modules in that group...but after all modules within the group complete, Seed-Farmer halts deployment.
 
 - **Module-level parallelism**: Modules within groups deploy concurrently
 - **Account-level parallelism**: Multi-account deployments run in parallel

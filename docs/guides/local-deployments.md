@@ -80,9 +80,9 @@ echo BUCKET_NAME=loggingbucket >> .env
 Seed-Farmer local deployments use AWS IAM for authentication, including [AWS CLI profiles](https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html#cli-configure-files-format-profile) and temporary security credentials via [AWS Session credentials](https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-envvars.html). For example, the following can be set in the active session or in the environment file:
 
 ```bash
-export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+export AWS_ACCESS_KEY_ID=ACCESS7EXAMPLE
 export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-export AWS_SESSION_TOKEN=AQoEXAMPLEH4aoAH0gNCAPy...truncated...zrkuWJOgQs8IZZaIv2BXIa2R4Olgk
+export AWS_SESSION_TOKEN=AQoEXAMPLE4aoAH0gNCAPy...truncated...WJOgQs8IZZaIv2BXIa2R4O
 export AWS_REGION=us-east-1
 ```
 

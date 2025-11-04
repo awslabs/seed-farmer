@@ -1,0 +1,127 @@
+site_name: Seed-Farmer Documentation
+site_description: Documentation for the Seed-Farmer CI/CD library
+site_author: AWS
+ite_url: !ENV READTHEDOCS_CANONICAL_URL
+repo_url: https://github.com/awslabs/seed-farmer
+repo_name: awslabs/seed-farmer
+edit_uri: edit/main/docs/
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Ubuntu
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+      baselevel: 2
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Bootstrapping: getting-started/bootstrapping.md
+    - Quick Start: getting-started/quick-start.md
+  - Concepts:
+    - concepts/index.md
+    - Architecture: concepts/architecture.md
+    - Multi-Account Support: concepts/multi-account.md
+  - Guides:
+    - guides/index.md
+    - Project Development: guides/project-development.md
+    - Module Development: guides/module-development.md
+    - Remote Deployments: guides/remote-deployments.md
+    - Local Deployments: guides/local-deployments.md
+  - Reference:
+    - reference/index.md
+    - CLI Commands: reference/cli-commands.md
+    - Manifests: reference/manifests.md
+    - Deployspec: reference/deployspec.md
+    - Conventions: reference/conventions.md
+    - Glossary: reference/glossary.md
+    - FAQ: reference/faq.md
+  - Sequence Diagrams: 
+    - sequence/index.md
+    - Deployment Workflow: sequence/apply-deployment-workflow.md
+    - Module Deployment Strategies: sequence/module-deployment-strategies.md
+    - SSM Metadata Tracking: sequence/ssm-metadata-tracking.md
+  - Public Modules:
+    - Overview: modules/index.md
+    - IDF Modules: modules/idf-modules/index.md
+    - AIOps Modules: modules/aiops-modules/index.md
+  - AI Support:
+    - Overview: ai/index.md
+    
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/awslabs/seed-farmer
+  generator: false

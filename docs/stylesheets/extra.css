@@ -1,0 +1,36 @@
+:root {
+  --md-primary-fg-color: 	#6db7dc;
+  --md-accent-fg-color: #63e668; 
+}
+
+.md-header, .md-header__title, .md-header__topic {
+  color: #000 !important;
+}
+.md-tabs, .md-tabs__link, .md-tabs__item {
+  color: #000 !important;
+}
+
+.md-search__icon {
+  color: #000 !important;
+  fill: #000 !important;
+}
+
+.md-nav__link {
+  color: #34a2d9 !important;
+  fill: #000 !important;
+}
+
+.md_ellipsis {
+  color: #34a2d9 !important;
+  fill: #000 !important;
+}
+
+/* Fix anchor/permalink links color */
+.md-typeset .headerlink {
+  color: #6db7dc !important;
+}
+
+.md-typeset .headerlink:hover,
+.md-typeset .headerlink:focus {
+  color: #d8a932 !important;
+}

@@ -396,3 +396,9 @@ _testing-modules.tar.gz
 _testing-modules.zip
 scripts_local/
 scriptslocal/
+references/
+
+.kiro/
+backup/
+
+

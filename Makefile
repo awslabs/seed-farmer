@@ -7,7 +7,7 @@
 install:  ## Install dependencies
 	curl -Ls https://astral.sh/uv/install.sh | sh
 	@echo "Setting up virtual environment..."
-	uv venv -p3.11 .venv
+	uv venv -p3.12 .venv
 	@echo "Installing Dev dependencies..."
 	. .venv/bin/activate && \
 	uv sync --frozen
@@ -27,18 +27,18 @@ validate:  ## Run linters and type checkers
 	@echo "Running ruff and type checkers..."
 	. .venv/bin/activate && \
 		uv sync --frozen --inexact --no-install-project --only-dev
-		uv run ruff format --check ./seedfarmer --quiet && \
-		uv run ruff check ./seedfarmer --quiet && \
-		uv run mypy --pretty --ignore-missing-imports ./seedfarmer
+		uv run ruff format --check seedfarmer --quiet && \
+		uv run ruff check seedfarmer --quiet && \
+		uv run mypy --pretty --ignore-missing-imports seedfarmer
 
 .PHONY: format
 format:  ## Format code with ruff and prettier
 	@echo "Formatting code with ruff and prettier..."
 	. .venv/bin/activate && \
-		uv run ruff format ./seedfarmer && \
-		uv run ruff check --fix ./seedfarmer && \
-		uv run ruff format ./test && \
-		uv run ruff check --fix ./test
+		uv run ruff format seedfarmer && \
+		uv run ruff check --fix seedfarmer && \
+		uv run ruff format test && \
+		uv run ruff check --fix test
 
 .PHONY: help
 help:  ## Show help for each of the Makefile recipes
@@ -57,3 +57,21 @@ clean:  ## Remove build artifacts and virtual environment
 	rm -rf .mypy_cache/
 	rm -rf .ruff_cache/
 	find . -type d -name __pycache__ -exec rm -rf {} +
+
+.PHONY: docs-install
+docs-install:  ## Install dependencies
+	curl -Ls https://astral.sh/uv/install.sh | sh
+	@echo "Setting up virtual environment for docs at .venv-docs..."
+	uv venv -p3.12 .venv --clear
+	@echo "Installing Dev dependencies..."
+	. .venv/bin/activate && \
+	uv sync --group docs
+
+.PHONY: docs-build
+docs-build: 
+	mkdocs build
+
+.PHONY: docs-serve
+docs-serve:
+	mkdocs serve -a localhost:9000
+	

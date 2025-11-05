@@ -13,6 +13,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v7.0.13 (2025-11-5)
+
+### New 
+
+### Changes
+- adding support to allow `.python-version` files into module bundle 
+- update and publish next version of SeedFarmer Documentation
+
+### Fixes
+
+
 ## v7.0.12 (2025-10-27)
 
 ### New 

@@ -37,14 +37,48 @@ BUNDLE_IGNORED_FILE_PATHS: MutableSet[str] = {
     "/cdk.out/",
 }
 
+BUNDLE_ALLOWED_HIDDEN_FILE_PATHS: MutableSet[str] = {".python-version"}
 
-def _is_valid_image_file(file_path: str) -> bool:
-    return all([word not in file_path for word in BUNDLE_IGNORED_FILE_PATHS])
+
+def _is_valid_image_file(file_path: str, allowed_hidden_files: Optional[List[str]] = None) -> bool:
+    if not all([word not in file_path for word in BUNDLE_IGNORED_FILE_PATHS]):
+        return False
+
+    filename = os.path.basename(file_path)
+    # If it's a hidden file, check if it's in the allowed list
+    if filename.startswith("."):
+        return filename in BUNDLE_ALLOWED_HIDDEN_FILE_PATHS
+
+    # Non-hidden files are valid by default
+    return True
 
 
 def _list_files(path: str) -> List[str]:
-    path = os.path.join(path, "**")
-    return [f for f in glob.iglob(path, recursive=True) if os.path.isfile(f) and _is_valid_image_file(file_path=f)]
+    # Use a pattern that includes hidden files
+    all_files_pattern = os.path.join(path, "**", "*")
+    hidden_files_pattern = os.path.join(path, "**", ".*")
+
+    files = []
+
+    # Get all regular files
+    files.extend(
+        [
+            f
+            for f in glob.iglob(all_files_pattern, recursive=True)
+            if os.path.isfile(f) and _is_valid_image_file(file_path=f)
+        ]
+    )
+
+    # Get all hidden files
+    files.extend(
+        [
+            f
+            for f in glob.iglob(hidden_files_pattern, recursive=True)
+            if os.path.isfile(f) and _is_valid_image_file(file_path=f)
+        ]
+    )
+
+    return list(set(files))
 
 
 def _make_zipfile(

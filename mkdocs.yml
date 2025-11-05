@@ -2,7 +2,7 @@ site_name: Seed-Farmer Documentation
 site_description: Documentation for the Seed-Farmer CI/CD library
 site_author: AWS
 site_url: !ENV READTHEDOCS_CANONICAL_URL
-site_dir: !ENV [READTHEDOCS_OUTPUT, _readthedocs/html]
+site_dir: _readthedocs/html
 repo_url: https://github.com/awslabs/seed-farmer
 repo_name: awslabs/seed-farmer
 edit_uri: edit/main/docs/

@@ -34,14 +34,3 @@
 .md-typeset .headerlink:focus {
   color: #d8a932 !important;
 }
-
-/* Target the main element that contains the Read the Docs flyout menu */
-.badge-rtd,
-.rst-versions {
-    display: none !important;
-}
-
-/* Also hide the shadow/overlay element that appears when the flyout is open */
-#readthedocs-mask {
-    display: none !important;
-}

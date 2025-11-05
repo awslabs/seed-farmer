@@ -34,3 +34,8 @@
 .md-typeset .headerlink:focus {
   color: #d8a932 !important;
 }
+
+#readthedocs-version-menu,
+.rst-versions {
+    display: none !important;
+}

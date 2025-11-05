@@ -1,4 +1,6 @@
-# Module Deployment Strategies
+---
+title: Module Deployment Strategies
+---
 
 This sequence diagram shows how Seed-Farmer determines and executes module deployment strategies (Local vs Remote).
 

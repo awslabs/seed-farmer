@@ -38,6 +38,7 @@ theme:
     - navigation.indexes
     - navigation.tabs
     - navigation.tabs.sticky
+    - navigation.footer
     - navigation.top
     - toc.follow
     - search.highlight
@@ -87,7 +88,7 @@ plugins:
 
 nav:
   - Home: index.md
-  - Getting Started:
+  - Getting Started: 
     - Getting Started: getting-started/index.md
     - Installation: getting-started/installation.md
     - Bootstrapping: getting-started/bootstrapping.md

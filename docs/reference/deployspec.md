@@ -1,4 +1,6 @@
-# Deployspec
+---
+title: Deployspec
+---
 
 The `deployspec.yaml` file is the **execution blueprint** for your module. It defines exactly how your infrastructure code gets deployed and destroyed within AWS CodeBuild. Think of it as the "recipe" that tells Seed-Farmer how to cook your infrastructure.
 

@@ -1,4 +1,6 @@
-# SSM Metadata Tracking Workflow
+---
+title: SSM Metadata Tracking
+---
 
 This sequence diagram shows how Seed-Farmer tracks module metadata and MD5 checksums in SSM Parameter Store.
 

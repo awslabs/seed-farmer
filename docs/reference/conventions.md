@@ -1,4 +1,6 @@
-# Standard Formats and Configurations
+---
+title: Conventions
+---
 
 ## Global Replace in Manifests
 

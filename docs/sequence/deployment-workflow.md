@@ -1,4 +1,6 @@
-# Deployment Workflow
+---
+title: Deployment Workflow
+---
 
 This sequence diagram shows the end-to-end process when running `seedfarmer apply manifest.yaml`.
 

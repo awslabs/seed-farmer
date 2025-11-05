@@ -1,4 +1,6 @@
-# Project Development
+---
+title: Project Development
+---
 
 This guide covers how to structure and organize Seed-Farmer projects effectively. It focuses on project-level organization, directory structure, and high-level development patterns.
 

@@ -1,4 +1,6 @@
-# IDF Modules
+---
+title: IDF Modules
+---
 
 The **Industry Data Framework (IDF)** modules provide foundational infrastructure components for building scalable data processing and analytics solutions on AWS. These modules follow AWS best practices and provide consistent, reusable patterns for common infrastructure needs.
 

@@ -1,4 +1,6 @@
-# Remote Deployments
+---
+title: Remote Deployments
+---
 
 This guide explains how Seed-Farmer executes remote deployments using AWS CodeBuild. Remote deployments are the default and recommended approach for deploying modules in production environments.
 

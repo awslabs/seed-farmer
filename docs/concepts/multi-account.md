@@ -1,4 +1,6 @@
-# Multi-Account Support in Seed-Farmer
+---
+title: Multi-Account Support
+---
 
 Seed-Farmer is designed to work across multiple AWS accounts, allowing you to deploy resources in different accounts from a central toolchain account. This page explains how Seed-Farmer manages deployments across toolchain and target accounts.
 

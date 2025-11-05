@@ -1,4 +1,6 @@
-# Frequently Asked Questions
+---
+title: Frequently Asked Questions
+---
 
 This page answers common questions about Seed-Farmer and provides solutions to common problems.
 

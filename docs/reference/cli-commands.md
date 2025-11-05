@@ -1,4 +1,6 @@
-# CLI Commands
+---
+title: CLI Commands
+---
 
 This page provides a reference for all Seed-Farmer CLI commands.  
 

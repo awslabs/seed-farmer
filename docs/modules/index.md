@@ -1,4 +1,6 @@
-# Public Modules
+---
+title: Public Modules
+---
 
 Seed-Farmer provides access to a comprehensive library of pre-built, reusable infrastructure modules that you can use in your deployments. These modules are designed to accelerate your infrastructure development by providing tested, production-ready components.
 

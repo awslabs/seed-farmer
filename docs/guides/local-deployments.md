@@ -1,4 +1,6 @@
-# Local Deployments
+---
+title: Local Deployments
+---
 
 This guide explains how to deploy Seed-Farmer projects locally using Docker for development and testing purposes. Local deployments provide a fast feedback loop for module development while maintaining consistency with remote deployments.
 

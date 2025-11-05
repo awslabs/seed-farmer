@@ -1,18 +1,20 @@
-# Glossary
+---
+title: Glossary
+---
 
 This glossary provides definitions for technical terms and concepts used throughout the Seed-Farmer documentation. Terms are organized alphabetically for easy reference.
 
-### A 
+### A
 
-### B 
+### B
 
 **Bundle**: A collection of module code and dependencies that gets packaged and deployed together. The bundle includes the module's infrastructure code, deployspec, and any additional data files needed for deployment.
 
-### C 
+### C
 
 **Configuration File**: A structured file that defines settings, parameters, and behavior for Seed-Farmer components. Common configuration files include `seedfarmer.yaml` (project configuration), `deployspec.yaml` (deployment instructions), and `modulestack.yaml` (IAM permissions).
 
-### D 
+### D
 
 **Deployspec.yaml**: The YAML configuration file that serves as the execution blueprint for a module. It defines the phases and commands for both deployment and destruction operations, including dependency installation, pre/post-build steps, and the main build commands that deploy infrastructure resources.
 
@@ -20,33 +22,33 @@ This glossary provides definitions for technical terms and concepts used through
 
 **Deployment Role**: An IAM role created in each target account that is assumed by the Toolchain Role to orchestrate module deployments. This role is also referred to as a Target Role.  The Deployment Role has account-specific permissions with minimal required access and includes explicit deny policies for high-risk IAM actions to maintain security posture. It creates Module roles that are assigned to AWS Codebuild jobs by Seed-Farmer.
 
-### E 
+### E
 
-### F 
+### F
 
-### G 
+### G
 
 **GitOps**: A deployment methodology that uses Git repositories as the single source of truth for infrastructure configuration. Seed-Farmer follows GitOps principles by using declarative manifests stored in version control to define and manage infrastructure deployments.
 
 **Group**: A logical collection of related modules within a deployment that are processed together. Groups are deployed sequentially, with modules within each group deployed in parallel. Groups help organize modules by function (e.g., networking, compute, applications) and manage deployment dependencies.
 
-### H 
+### H
 
-### I 
+### I
 
 **IAM (Identity and Access Management)**: AWS service that enables secure control of access to AWS resources. Seed-Farmer uses IAM extensively for its multi-account security model, creating roles with least-privilege permissions for toolchain operations, deployment orchestration, and module-specific resource management.
 
 **Infrastructure as Code (IaC)**: The practice of managing and provisioning infrastructure through machine-readable definition files rather than manual processes. Seed-Farmer supports various IaC tools including AWS CDK, CloudFormation, and Terraform.
 
-### J 
+### J
 
-### K 
+### K
 
-### L 
+### L
 
 **Least Privilege**: A security principle that grants users and roles only the minimum permissions necessary to perform their required tasks. Seed-Farmer implements least privilege through its role hierarchy, where Toolchain Roles have orchestration permissions, Deployment Roles have account-specific permissions, and Module Roles have only the permissions needed for their specific resources.
 
-### M 
+### M
 
 **Manifest**: Configuration files that define what gets deployed, where it gets deployed, and how it gets configured. Seed-Farmer uses two types of manifests: deployment manifests (top-level configuration) and module manifests (individual component configurations).
 
@@ -60,11 +62,11 @@ This glossary provides definitions for technical terms and concepts used through
 
 **Multi-Account Security Model**: Seed-Farmer's security architecture that uses IAM role assumption chains across multiple AWS accounts to provide isolation and least-privilege access. The model includes Toolchain Roles in the central account, Deployment Roles in target accounts, and Module Roles for individual components, with optional permissions boundaries and qualifiers for enhanced security controls.
 
-### N 
+### N
 
-### O 
+### O
 
-### P 
+### P
 
 **Parameter**: A configurable value that can be passed to modules during deployment to customize their behavior. Parameters are defined in manifest files and can include strings, numbers, booleans, or complex data structures. They enable module reusability by allowing the same module to be deployed with different configurations.
 
@@ -72,11 +74,11 @@ This glossary provides definitions for technical terms and concepts used through
 
 **Project**: The top-level organizational structure of Seed-Farmer managed deployments.  This is defined in the `seedfarmer.yaml` and applies to all Deployments with that project name definition.
 
-### Q 
+### Q
 
 **Qualifier**: A 6-character alphanumeric string that can be appended to Toolchain Roles and Deployment Roles to segregate target deployments in multi-account structures. Qualifiers must be the same on both the toolchain role and each target role, providing a way to create multiple isolated deployment environments within the same account structure.
 
-### R 
+### R
 
 **Role Assumption**: The AWS IAM mechanism that allows one role to temporarily assume the permissions of another role. Seed-Farmer uses role assumption chains where the Toolchain Role assumes Deployment Roles in target accounts, which then assume Module Roles to deploy specific resources. This creates a secure, auditable chain of permissions across accounts.
 
@@ -88,7 +90,7 @@ This glossary provides definitions for technical terms and concepts used through
 
 **Seedkit**: The foundational infrastructure that Seed-Farmer deploys in each target account and region to enable module deployments. It includes AWS CodeBuild projects, S3 buckets for artifacts, and IAM service roles necessary for deployment execution.
 
-### T 
+### T
 
 **Target Account**: An account configured to allow Seed-Farmer to deploy modules.  Each target account must have a target role as defined by the Seed-Farmer bootstrap.
 
@@ -98,14 +100,14 @@ This glossary provides definitions for technical terms and concepts used through
 
 **Toolchain Role**: An IAM role created in the toolchain account that serves as the central orchestration role for Seed-Farmer deployments. It is assumed by users or CI/CD systems and has permissions limited to orchestration and metadata management, including access to AWS Systems Manager for module metadata and the ability to assume Deployment Roles in target accounts. The Toolchain Role follows least-privilege principles and can be configured with qualifiers and permissions boundaries for enhanced security.
 
-### U 
+### U
 
-### V 
+### V
 
-### W 
+### W
 
-### X 
+### X
 
-### Y 
+### Y
 
-### Z 
+### Z

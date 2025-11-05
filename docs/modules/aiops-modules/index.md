@@ -1,4 +1,6 @@
-# AIOps Modules
+---
+title: AIOps Modules
+---
 
 The **Artificial Intelligence Operations (AIOps)** modules provide specialized infrastructure components for building AI/ML workloads and data science platforms on AWS. These modules are designed to accelerate the deployment of machine learning infrastructure, model training, and AI operations.
 

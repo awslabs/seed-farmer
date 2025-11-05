@@ -1,4 +1,6 @@
-# Manifests
+---
+title: Manifests
+---
 
 Manifests are the foundation of Seed-Farmer deployments. They define **what** gets deployed, **where** it gets deployed, and **how** it gets configured. This page explains the purpose and structure of these manifests.
 

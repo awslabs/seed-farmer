@@ -1,4 +1,5 @@
-
-# MCP Servers
+---
+Title: MCP Servers
+---
 
 **_Coming Soon_**

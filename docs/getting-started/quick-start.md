@@ -1,4 +1,6 @@
-# Quick Start Guide for Seed-Farmer
+---
+title: Quick Start
+---
 
 This quick start guide will help you get up and running with Seed-Farmer quickly. It provides a step-by-step walkthrough of creating and deploying a simple project using [public modules](../modules/index.md).
 

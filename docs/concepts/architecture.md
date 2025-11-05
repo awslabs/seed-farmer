@@ -1,4 +1,6 @@
-# Seed-Farmer Architecture
+---
+title: Architecture
+---
 
 This page explains the overall architecture of Seed-Farmer, including its multi-account security model, deployment orchestration, and integration with AWS services.
 

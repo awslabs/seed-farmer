@@ -1,4 +1,6 @@
-# Seed-Farmer Installation
+---
+title: Installation
+---
 
 This guide will walk you through the process of installing Seed-Farmer and its dependencies.
 

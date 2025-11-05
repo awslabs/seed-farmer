@@ -1,4 +1,6 @@
-# Module Development
+---
+title: Module Development
+---
 
 This guide provides comprehensive information on developing individual modules for Seed-Farmer. It covers the practical aspects of creating modules, including required files, deployspec structure, and development best practices.
 

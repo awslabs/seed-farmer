@@ -1,4 +1,6 @@
-# Getting Started with Seed-Farmer
+---
+title: Getting Started
+---
 
 This section provides instructions to get started with Seed-Farmer and be ready to deploy an application.
 

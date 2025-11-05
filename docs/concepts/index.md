@@ -1,5 +1,6 @@
-
-# Fundamentals Concepts 
+---
+title: Concepts
+---
 
 This section explains the fundamental concepts behind Seed-Farmer, providing a deeper understanding of how the system works and its key architectural principles.
 

@@ -1,4 +1,6 @@
-# Sequence Diagrams
+---
+title: Sequence Diagrams
+---
 
 These sequence diagrams represent the order of processing of important workflows within Seed-Farmer.
 

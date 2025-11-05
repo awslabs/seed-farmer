@@ -397,3 +397,8 @@ _testing-modules.zip
 scripts_local/
 scriptslocal/
 references/
+
+.kiro/
+backup/
+
+

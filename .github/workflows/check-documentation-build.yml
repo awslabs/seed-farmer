@@ -7,7 +7,8 @@ on:
     paths:
       - "docs/**"
       - ".readthedocs.yaml"
-      - "setup.py"
+      - "mkdocs.yml"
+      - "pyproject.toml"
       - "VERSION"
       - ".github/workflows/check-documentation-build.yml"
 
@@ -18,7 +19,8 @@ on:
     paths:
       - "docs/**"
       - ".readthedocs.yaml"
-      - "setup.py"
+      - "mkdocs.yml"
+      - "pyproject.toml"
       - "VERSION"
       - ".github/workflows/check-documentation-build.yml"
   
@@ -47,10 +49,9 @@ jobs:
           python-version: '${{ steps.get-version.outputs.python-version }}'
       - name: Update pip
         run: pip install --upgrade pip
-      - name: Install Requirements for building docs
-        run: pip install -r docs/requirements-docs.txt
-      - name: Install SeedFarmer
-        run: pip install -e .
-      - name: Sphinx Build
-        working-directory: ./docs/
-        run: make html
+      - name: Install uv
+        run: pip install uv
+      - name: Install docs libraries
+        run: uv sync --group docs --frozen
+      - name: Mkdocs build
+        run: uv run mkdocs build --strict

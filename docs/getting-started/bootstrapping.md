@@ -17,7 +17,7 @@ You must have only one toolchain account bootstrapped and at least one target ac
 
 *You must have completed the [Installation](installation.md)*
 
-Please see [Bootstrapping Commands](../reference/cli-commands.md/#bootstrap-commands) or run the `--help` flag for all options.
+Please see [Bootstrapping Commands](../reference/cli-commands.md/#bootstrap or run the `--help` flag for all options.
 
 The `seedfarmer bootstrap toolchain` command sets up the toolchain account with the necessary IAM roles and permissions.  
 

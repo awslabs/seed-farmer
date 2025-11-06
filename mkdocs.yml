@@ -73,7 +73,6 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:mermaid2.fence_mermaid_custom
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:
@@ -88,7 +87,6 @@ plugins:
   - search
   - minify:
       minify_html: true
-  - mermaid2
 
 nav:
   - Home: index.md

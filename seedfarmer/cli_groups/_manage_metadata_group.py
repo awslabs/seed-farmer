@@ -43,7 +43,6 @@ def metadata() -> None:
 @metadata.command(
     name="convert",
     help="""Convert the CDK Output of the module to SeedFarmer Metadata.
-     This command is meant to be run in the deployspec only!!!
     """,
 )
 @click.option(

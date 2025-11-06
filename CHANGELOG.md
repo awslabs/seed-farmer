@@ -9,6 +9,9 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### New 
 
 ### Changes
+- removed the examples dir
+- removed the scripts dir
+- removed mermaid2 support from the docs
 
 ### Fixes
 

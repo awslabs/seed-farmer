@@ -40,7 +40,7 @@ class ModuleMetadataSupport:
         self.project = config.PROJECT
         self.ops_root_path = config.OPS_ROOT
         try:
-            with open(get_deployspec_path("module")) as module_spec_file:
+            with open(get_deployspec_path("module"), encoding="utf-8") as module_spec_file:
                 deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
             self.use_project_prefix = not deploy_spec.publish_generic_env_variables
         except Exception:
@@ -71,7 +71,7 @@ def _read_metadata_file(mms: ModuleMetadataSupport) -> Dict[str, Any]:
     if Path(p).is_file():
         _logger.info("Reading metadata file at %s", p)
         try:
-            with open(Path(mms.metadata_fullpath()), "r") as metadatafile:
+            with open(Path(mms.metadata_fullpath()), "r", encoding="utf-8") as metadatafile:
                 j = metadatafile.read()
             return cast(Dict[str, Any], json.loads(j))
         except json.decoder.JSONDecodeError:
@@ -115,7 +115,7 @@ def _read_json_file(mms: ModuleMetadataSupport, path: str) -> Tuple[str, Dict[st
     p = os.path.join(mms.get_ops_root_path(), "module", path)
     _logger.info("Reading extra file path located at %s", p)
     if os.path.isfile(p):
-        with open(p, "r") as datafile:
+        with open(p, "r", encoding="utf-8") as datafile:
             j = datafile.read()
         return p, dict(json.loads(j))
     else:
@@ -125,7 +125,7 @@ def _read_json_file(mms: ModuleMetadataSupport, path: str) -> Tuple[str, Dict[st
 def _write_metadata_file(mms: ModuleMetadataSupport, data: Dict[str, Any]) -> None:
     p = mms.metadata_fullpath()
     _logger.info("Writing metadata to %s", p)
-    with open(p, "w") as outfile:
+    with open(p, "w", encoding="utf-8") as outfile:
         outfile.write(json.dumps(data))
 
 
@@ -176,9 +176,12 @@ def convert_cdkexports(
         else:
             clean_jq_path = _clean_jq(jq_path)
             _logger.info("Pulling with jq path '%s' from %s file", clean_jq_path, json_file)
-            with open(cdk_output_path, "r") as infile, open("tmp-metadata", "w") as outfile:
+            with (
+                open(cdk_output_path, "r", encoding="utf-8") as infile,
+                open("tmp-metadata", "w", encoding="utf-8") as outfile,
+            ):
                 subprocess.run(["jq", clean_jq_path], stdin=infile, stdout=outfile, shell=False)
-            data = json.loads(open("tmp-metadata", "r").read())
+            data = json.loads(open("tmp-metadata", "r", encoding="utf-8").read())
 
     existing_metadata = _read_metadata_file(mms)
 

@@ -239,7 +239,7 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
         # Write the deployspec, even if we don't use it...for reference
         try:
             buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
-            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w", encoding="utf-8") as file:
                 # file.write(yaml.dump(buildspec))
                 yaml.dump(buildspec, file)
         except Exception as e:
@@ -408,7 +408,7 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
 
         try:
             buildspec_dir = create_output_dir(f"{bundle_id}/buildspec") if bundle_id else create_output_dir("buildspec")
-            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+            with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w", encoding="utf-8") as file:
                 file.write(yaml.dump(buildspec))
         except Exception as e:
             log_error_safely(_logger, e, f"Failed to write destroy buildspec file for {module_manifest.name}")

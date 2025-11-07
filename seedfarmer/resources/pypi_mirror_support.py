@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from typing import Dict, Optional, Tuple, cast
 
 import boto3
@@ -12,6 +13,8 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+NO_SECRET_DEFAULT = "NO_SECRET"
 
 
 def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
@@ -24,11 +27,11 @@ def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
     except ClientError as ce:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
         print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager - {ce}")
-        exit(1)
+        sys.exit(1)
     except FileNotFoundError:
         logger.info("Make sure AWW credentials are set")
         print("Make sure credentials  AWW credentials are set")
-        exit(1)
+        sys.exit(1)
     else:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 
@@ -67,20 +70,20 @@ def setup_uv(obfusctated_url: str, secured_url: str) -> None:
     os.makedirs(uv_config_path, exist_ok=True)
 
     # Write to file
-    with open(os.path.join(uv_config_path, "uv.toml"), "w") as f:
+    with open(os.path.join(uv_config_path, "uv.toml"), "w", encoding="utf-8") as f:
         f.write(toml_content)
 
 
 def main(url: str) -> None:
-    secret_name = os.environ.get("SEEDFARMER_PYPI_MIRROR_SECRET", "NO_SECRET")
+    secret_name = os.environ.get("SEEDFARMER_PYPI_MIRROR_SECRET", NO_SECRET_DEFAULT)
     # Backwards Compatibility
-    if secret_name == "NO_SECRET":
-        secret_name = os.environ.get("AWS_CODESEEDER_PYPI_MIRROR_SECRET", "NO_SECRET")
-    elif secret_name == "NO_SECRET":
-        secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", "NO_SECRET")
+    if secret_name == NO_SECRET_DEFAULT:
+        secret_name = os.environ.get("AWS_CODESEEDER_PYPI_MIRROR_SECRET", NO_SECRET_DEFAULT)
+        if secret_name == NO_SECRET_DEFAULT:
+            secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", NO_SECRET_DEFAULT)
     username = None
     password = None
-    if secret_name not in ["NO_SECRET"]:
+    if secret_name not in [NO_SECRET_DEFAULT]:
         secret_name_key = secret_name.split("::")[0] if "::" in secret_name else secret_name
         key = secret_name.split("::")[1] if "::" in secret_name else "pypi"
         creds = get_secret(secret_name=secret_name_key)

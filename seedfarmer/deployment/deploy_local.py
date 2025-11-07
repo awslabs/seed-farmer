@@ -215,7 +215,7 @@ class DeployLocalModule(DeployModule):
         )
 
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec", output_override)
-        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w", encoding="utf-8") as file:
             # file.write(yaml.dump(buildspec))
             yaml.dump(buildspec, file)
 
@@ -333,7 +333,7 @@ class DeployLocalModule(DeployModule):
         )
 
         buildspec_dir = create_output_dir(f"{bundle_id}/buildspec", output_override)
-        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w") as file:
+        with open(os.path.join(buildspec_dir, "buildspec.yaml"), "w", encoding="utf-8") as file:
             yaml.dump(buildspec, file)
 
         build_info = codebuild_local.run(

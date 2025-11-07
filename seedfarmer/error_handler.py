@@ -40,11 +40,11 @@ def print_error_message(message: str, color: str = "red") -> None:
     Simple error message printer to avoid circular imports.
     """
     if color == "red":
-        click.echo(click.style(message, fg="red", bold=True))
+        click.secho(message, fg="red", bold=True)
     elif color == "yellow":
-        click.echo(click.style(message, fg="yellow", bold=True))
+        click.secho(message, fg="yellow", bold=True)
     else:
-        click.echo(click.style(message, bold=True))
+        click.secho(message, bold=True)
 
 
 def handle_seedfarmer_error(error: Exception, context: Optional[str] = None) -> NoReturn:

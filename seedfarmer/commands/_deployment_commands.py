@@ -705,7 +705,7 @@ def deploy_deployment(
                 )
 
             deployspec_path = get_deployspec_path(str(module.get_local_path()))
-            with open(deployspec_path) as module_spec_file:
+            with open(deployspec_path, encoding="utf-8") as module_spec_file:
                 module.deploy_spec = DeploySpec(**yaml.safe_load(module_spec_file))
 
             md5_excluded_module_files = [
@@ -849,7 +849,7 @@ def apply(
     """
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
-    with open(manifest_path) as manifest_file:
+    with open(manifest_path, encoding="utf-8") as manifest_file:
         manifest_input = yaml.safe_load(manifest_file)
     ## Override all regions with the local session region if local
     if DeployModuleFactory.is_local():
@@ -894,7 +894,7 @@ def apply(
             )
         if module_group.path:
             try:
-                with open(os.path.join(config.OPS_ROOT, module_group.path)) as manifest_file:
+                with open(os.path.join(config.OPS_ROOT, module_group.path), encoding="utf-8") as manifest_file:
                     if DeployModuleFactory.is_local():
                         region = session_manager.toolchain_session.region_name
                         updated_manifests = []

@@ -32,8 +32,8 @@ def test_synth_creates_file(mocker):
     assert expected_filename == result
 
     # Verify open was called with the correct paths
-    mock_open.assert_any_call(config.SEEDKIT_TEMPLATE_PATH)
-    mock_open.assert_any_call(expected_filename, "w")
+    mock_open.assert_any_call(config.SEEDKIT_TEMPLATE_PATH, encoding="utf-8")
+    mock_open.assert_any_call(expected_filename, "w", encoding="utf-8")
 
 
 @pytest.mark.commands

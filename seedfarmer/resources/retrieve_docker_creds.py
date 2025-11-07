@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from typing import Dict, cast
 
 import boto3
@@ -26,11 +27,11 @@ def get_secret() -> Dict[str, Dict[str, str]]:
     except ClientError:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
         print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager")
-        exit(1)
+        sys.exit(1)
     except FileNotFoundError:
         logger.info("Make sure AWW credentials are set")
         print("Make sure credentials  AWW credentials are set")
-        exit(1)
+        sys.exit(1)
     else:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 

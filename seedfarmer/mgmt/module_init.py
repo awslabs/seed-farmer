@@ -14,6 +14,7 @@
 
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -58,14 +59,14 @@ def add_module_manifest(module_name: str, module_path: str) -> None:
     }
     manifest_name = f"{module_name}-group.yml"
     manifest_path = os.path.join(config.OPS_ROOT, manifest_name)
-    with open(manifest_path, "w") as f:
+    with open(manifest_path, "w", encoding="utf-8") as f:
         yaml.dump(module_manifest, f)
 
     group_definition = {"name": f"{module_name}-group", "path": manifest_name}
     deployment_yaml = os.path.join(config.OPS_ROOT, "deployment.yaml")
     # Check if the file exists
     if os.path.exists(deployment_yaml):
-        with open(deployment_yaml, "r") as file:
+        with open(deployment_yaml, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file) or {}
         if "groups" in data:
             if isinstance(data["groups"], list):
@@ -75,7 +76,7 @@ def add_module_manifest(module_name: str, module_path: str) -> None:
         else:
             data["groups"] = [group_definition]
 
-        with open(deployment_yaml, "w") as file:
+        with open(deployment_yaml, "w", encoding="utf-8") as file:
             yaml.safe_dump(data, file)
     else:
         _logger.info(f"YAML file does not exist at path: {deployment_yaml}, skipping append")
@@ -163,7 +164,7 @@ def create_project(
     """
     # Create minimal seedfarmer.yaml first if project_name is provided
     if project_name is not None:
-        with open(os.path.join(os.getcwd(), "seedfarmer.yaml"), "w") as f:
+        with open(os.path.join(os.getcwd(), "seedfarmer.yaml"), "w", encoding="utf-8") as f:
             yaml.dump({"project": project_name}, f, default_flow_style=False)
 
     project_name = project_name if project_name else config.PROJECT
@@ -173,7 +174,7 @@ def create_project(
 
     if proposed_project_path.is_dir():
         print("The targeted project / capability directory already exists. Exiting.")
-        exit(0)
+        sys.exit(0)
 
     cookiecutter(
         template=template_url,

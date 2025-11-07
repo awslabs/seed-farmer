@@ -249,7 +249,7 @@ def deploy_template(
             session=session,
         )
     else:
-        with open(filename, "r") as handle:
+        with open(filename, "r", encoding="utf-8") as handle:
             template_str = handle.read()
         changeset_id, changeset_type = _create_changeset(
             stack_name=stack_name,

@@ -492,7 +492,7 @@ def deploy_module_stack(
 
     _logger.debug("module_role_name %s", module_role_name)
 
-    with open(module_stack_path, "r") as file:
+    with open(module_stack_path, "r", encoding="utf-8") as file:
         template = load_yaml(file)
         template_parameters = template.get("Parameters", {})
 

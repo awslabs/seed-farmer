@@ -78,6 +78,7 @@ dev = [
   "werkzeug>=3.0.6",
 ]
 docs = [
+  "diagrams~=0.24.4",
   "mkdocs>=1.4.0",
   "mkdocs-click>=0.9.0",
   "mkdocs-material>=9.0.0",

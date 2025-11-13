@@ -36,11 +36,17 @@ jobs:
       - name: Install Requirements
         run: uv sync --frozen --verbose
         working-directory: ${{ github.workspace }}
-      - name: Ruff Format Check
-        run: uv run ruff format --check .
+      - name: Ruff Format Check SeedFarmer
+        run: uv run ruff format seedfarmer --check .
         working-directory: ${{ github.workspace }}
-      - name: Run ruff check
+      - name: Run ruff check SeedFarmer
         run: uv run ruff check --output-format=github .
+        working-directory: ${{ github.workspace }}
+      - name: Ruff Format Check Test
+        run: uv run ruff format test --check seedfarmer
+        working-directory: ${{ github.workspace }}
+      - name: Run ruff check Test
+        run: uv run ruff check --output-format=github test
         working-directory: ${{ github.workspace }}
       - name: Run mypy check
         run: uv run mypy ./seedfarmer

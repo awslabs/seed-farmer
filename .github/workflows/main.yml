@@ -37,13 +37,13 @@ jobs:
         run: uv sync --frozen --verbose
         working-directory: ${{ github.workspace }}
       - name: Ruff Format Check SeedFarmer
-        run: uv run ruff format seedfarmer --check .
+        run: uv run ruff format seedfarmer --check seedfarmer
         working-directory: ${{ github.workspace }}
       - name: Run ruff check SeedFarmer
-        run: uv run ruff check --output-format=github .
+        run: uv run ruff check --output-format=github seedfarmer
         working-directory: ${{ github.workspace }}
       - name: Ruff Format Check Test
-        run: uv run ruff format test --check seedfarmer
+        run: uv run ruff format test --check test
         working-directory: ${{ github.workspace }}
       - name: Run ruff check Test
         run: uv run ruff check --output-format=github test

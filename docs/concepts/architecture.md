@@ -57,9 +57,9 @@ Seed-Farmer implements a comprehensive **least-privilege security model** with m
 - **Location**: Toolchain account
 - **Purpose**: Orchestrates deployments and manages metadata
 - **Permissions**:
-  - Read/write deployment metadata in AWS Systems Manager
-  - Assume deployment roles in target accounts
-  - Manage project-level resources
+    - Read/write deployment metadata in AWS Systems Manager
+    - Assume deployment roles in target accounts
+    - Manage project-level resources
 - **Trust Policy**: Trusted by specified principals (users, CI/CD systems)
 
 #### 2. Deployment Role
@@ -67,11 +67,11 @@ Seed-Farmer implements a comprehensive **least-privilege security model** with m
 - **Location**: Each target account
 - **Purpose**: Manages deployments within a specific account
 - **Permissions**:
-  - Create and manage CodeBuild projects (seedkit)
-  - Manage S3 buckets for deployment artifacts
-  - Create and manage module-specific IAM roles
-  - Read/write access to AWS Systems Manager for module metadata
-  - Access to AWS Systems Manager Parameter Store for state management
+    - Create and manage CodeBuild projects (seedkit)
+    - Manage S3 buckets for deployment artifacts
+    - Create and manage module-specific IAM roles
+    - Read/write access to AWS Systems Manager for module metadata
+    - Access to AWS Systems Manager Parameter Store for state management
 - **Trust Policy**: Trusted by the toolchain role
 
 #### 3. Module Role
@@ -145,20 +145,20 @@ Seed-Farmer supports two execution models to accommodate different use cases:
 - **Execution Environment**: AWS CodeBuild
 - **Use Cases**: Production deployments, CI/CD pipelines
 - **Benefits**:
-  - Scalable and reliable
-  - Complete audit trail
-  - VPC and network isolation
-  - No local dependencies
+    - Scalable and reliable
+    - Complete audit trail
+    - VPC and network isolation
+    - No local dependencies
 
 #### Local Deployments (Development)
 
 - **Execution Environment**: Local Docker containers
 - **Use Cases**: Development, testing, debugging
 - **Benefits**:
-  - Fast feedback loop
-  - No AWS charges for compute
-  - Real-time output
-  - Offline development capability
+    - Fast feedback loop
+    - No AWS charges for compute
+    - Real-time output
+    - Offline development capability
 
 ### Parallel Execution
 

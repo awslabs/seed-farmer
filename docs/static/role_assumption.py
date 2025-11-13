@@ -31,17 +31,17 @@ with Diagram(
         with Cluster("Toolchain\nAccount\n(123456789012)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
             toolchain_role = IAMRole("SeedFarmer\nToolchain Role")
 
-        with Cluster("Deployment\nAccount \n(333333333333)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
+        with Cluster("Target\nAccount \n(333333333333)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
             deployment_role_c = IAMRole("SeedFarmer\nDeployment\nRole")
             codebuild_c = Codebuild("\nCodeBuild")
             module_role_c = IAMRole("SeedFarmer\nModule\nRole")
 
-        with Cluster("Deployment\nAccount \n(222222222222)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
+        with Cluster("Target\nAccount \n(222222222222)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
             deployment_role_b = IAMRole("SeedFarmer\nDeployment\nRole")
             codebuild_b = Codebuild("\nCodeBuild")
             module_role_b = IAMRole("SeedFarmer\nModule\nRole")
 
-        with Cluster("Deployment\nAccount \n(111111111111)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
+        with Cluster("Target\nAccount \n(111111111111)", graph_attr={"fontsize": "20","bgcolor":"#D3E9F5"}):
             deployment_role_a = IAMRole("SeedFarmer\nDeployment\nRole")
             codebuild_a = Codebuild("\nCodeBuild")
             module_role_a = IAMRole("SeedFarmer\nModule\nRole")

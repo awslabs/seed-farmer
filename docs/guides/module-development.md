@@ -133,10 +133,10 @@ As part of the process to promote reusability of the modules, each module is req
 
 - The description of the module
 - The inputs - parameter names
-  - Required
-  - Optional
+    - Required
+    - Optional
 - The outputs - the parameter names in JSON format
-  - Having a sample output is highly recommended so other users can quickly reference in their modules
+    - Having a sample output is highly recommended so other users can quickly reference in their modules
 
 ### Example README
 
@@ -167,7 +167,7 @@ This module creates an OpenSearch cluster
 ### Module Metadata Outputs
 
 - `OpenSearchDomainEndpoint`: the endpoint name of the OpenSearch Domain
-  `OpenSearchDomainName`: the name of the OpenSearch Domain
+- `OpenSearchDomainName`: the name of the OpenSearch Domain
 - `OpenSearchDashboardUrl`: URL of the OpenSearch cluster dashboard
 - `OpenSearchSecurityGroupId`: name of the DDB table created for OpenSearch usage
 
@@ -198,7 +198,7 @@ Typical cases when you would use a `modulestack.yaml`:
 Below is a sample template that is provided by the CLI. The `Parameters` section is populated with the input provided from the CLI when deploying.
 
 !!! warning
-    It DOES have a policy definition that is wide-open - you SHOULD CHANGE THIS - it is only a template!
+    The template does have a policy definition that is wide-open - you SHOULD CHANGE THIS - it is only a template!
 
 ```yaml
 AWSTemplateFormatVersion: 2010-09-09

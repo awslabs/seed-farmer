@@ -36,7 +36,7 @@ with Diagram(
                 ssm_toolchain = SystemsManagerParameterStore("\nSSM\nParameters")
                 secrets_toolchain = SecretsManager("\nSecrets\nManager")
 
-            with Cluster("Deployment\nAccount A\nus-east-1", graph_attr={"fontsize": "24"}):
+            with Cluster("Target\nAccount A\nus-east-1", graph_attr={"fontsize": "24"}):
                 role_a = IAMRole("SeedFarmer\nModule Role")
                 codebuild_a = Codebuild("\nCodeBuild")
                 s3_a = S3("\nS3\nBucket")
@@ -45,7 +45,7 @@ with Diagram(
                 kms_a = KMS("\nKMS")
                 deployment_role_a = IAMRole("SeedFarmer\nDeployment Role")
 
-            with Cluster("Deployment\nAccount B\nus-west-2", graph_attr={"fontsize": "24"}):
+            with Cluster("Target\nAccount B\nus-west-2", graph_attr={"fontsize": "24"}):
                 role_b = IAMRole("SeedFarmer\nModule Role")
                 codebuild_b = Codebuild("\nCodeBuild")
                 s3_b = S3("\nS3\nBucket")

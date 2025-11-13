@@ -13,6 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - removed the scripts dir
 - removed mermaid2 support from the docs
 - added encoding types to all open commands
+- generate documentation images from code
 
 ### Fixes
 

@@ -123,7 +123,7 @@ graph LR
 
 Seed-Farmer is architected for **multi-account AWS environments** with clear separation between orchestration and execution. The system uses a **toolchain account** for central orchestration and **target accounts** for actual infrastructure deployment.
 
-![Multi-Account Architecture](../static/seedfarmer-architecture_transparent.png)
+![Multi-Account Architecture](../static/seedfarmer_architecture.png)
 
 ### Key Principles
 

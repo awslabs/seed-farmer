@@ -61,7 +61,7 @@ A **module** is the fundamental deployable unit:
 - Can be deployed multiple times with different configurations
 - Exports metadata for consumption by dependent modules
 
-![Project Definition](../static/project-definition_transparent.png)
+![Project Definition](../static/project_definition.png)
 
 ## Deployment Orchestration
 

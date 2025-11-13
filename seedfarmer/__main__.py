@@ -40,7 +40,7 @@ def version() -> None:
     print(f"seed-farmer-{seedfarmer.__version__}")
 
 
-@click.command(help="Apply manifests to a SeedFarmer managed deployment")
+@click.command(name="apply", help="Apply manifests to a SeedFarmer managed deployment")
 @click.argument(
     "spec",
     type=str,
@@ -183,7 +183,7 @@ def apply(
     )
 
 
-@click.command(help="Destroy a SeedFarmer managed deployment")
+@click.command(name="destroy", help="Destroy a SeedFarmer managed deployment")
 @click.argument(
     "deployment",
     type=str,

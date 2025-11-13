@@ -231,7 +231,7 @@ There are several ways to export metadata from your module:
 
 ### Method 1: Using Seed-Farmer Metadata CLI Commands (Recommended)
 
-The [seedfarmer metadata](./cli-commands.md#metadata-commands) commands automatically handle the metadata file creation and management:
+The [seedfarmer metadata](./cli-commands.md#metadata) commands automatically handle the metadata file creation and management:
 
 ```yaml
 deploy:

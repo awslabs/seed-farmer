@@ -34,7 +34,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 def get_template(template_name: str) -> Dict[str, Any]:
-    with open((os.path.join(CLI_ROOT, f"resources/{template_name}.template")), "r") as f:
+    with open((os.path.join(CLI_ROOT, f"resources/{template_name}.template")), "r", encoding="utf-8") as f:
         role = yaml.safe_load(f)
 
     if not isinstance(role, dict):
@@ -229,7 +229,7 @@ def deploy_template(
     loc = os.path.join(os.getcwd(), "templates")
     output = os.path.join(loc, f"{stack_name}.yaml")
     os.makedirs(loc, exist_ok=True)
-    with open(output, "w") as outfile:
+    with open(output, "w", encoding="utf-8") as outfile:
         yaml.dump(template, outfile)
     try:
         # Deploy with parameters

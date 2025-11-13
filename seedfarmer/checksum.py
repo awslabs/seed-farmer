@@ -59,7 +59,7 @@ def _evaluate_file(filename: str, ignore_maps: Dict[str, Any]) -> bool:
 
 
 def _generate_file_hash(filepath: str) -> str:
-    hash = hashlib.md5()
+    hash = hashlib.md5(usedforsecurity=False)
     blocksize = 64 * 1024
 
     if not os.path.exists(filepath):
@@ -76,7 +76,9 @@ def _generate_file_hash(filepath: str) -> str:
 
 
 def _consolidate_hash(hashlist: List[str]) -> str:
-    hash = hashlib.md5()
+    hash = hashlib.md5(
+        usedforsecurity=False,
+    )
     for hashvalue in sorted(hashlist):
         hash.update(hashvalue.encode("utf-8"))
     return hash.hexdigest()

@@ -691,6 +691,6 @@ def update_deployspec(
     deployment: str, group: str, module: str, module_path: str, session: Optional[Session] = None
 ) -> None:
     d_path = mi.get_deployspec_path(module_path=module_path)
-    with open(d_path) as deploymentspec:
+    with open(d_path, encoding="utf-8") as deploymentspec:
         new_spec = DeploySpec(**yaml.safe_load(deploymentspec))
     mi.write_deployspec(deployment, group, module, new_spec.model_dump(), session=session)

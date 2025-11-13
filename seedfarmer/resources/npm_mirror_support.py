@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from typing import Dict, Optional, cast
 from urllib.parse import urlparse
 
@@ -14,6 +15,8 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+NO_SECRET_DEFAULT = "NO_SECRET"
 
 
 def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
@@ -25,11 +28,11 @@ def get_secret(secret_name: str) -> Dict[str, Dict[str, str]]:
     except ClientError as ce:
         logger.info("Secret with SecretId '%s' could not be retrieved from SecretsManager", secret_name)
         print(f"Secret with SecretId {secret_name} could not be retrieved from SecretsManager - {ce}")
-        exit(1)
+        sys.exit(1)
     except FileNotFoundError:
         logger.info("Make sure AWW credentials are set")
         print("Make sure credentials  AWW credentials are set")
-        exit(1)
+        sys.exit(1)
     else:
         return cast(Dict[str, Dict[str, str]], json.loads(get_secret_value_response.get("SecretString", "{}")))
 
@@ -48,14 +51,15 @@ def get_auth(username: Optional[str] = None, password: Optional[str] = None, ssl
 
 
 def main(url: str) -> None:
-    secret_name = os.environ.get("SEEDFARMER_NPM_MIRROR_SECRET", "NO_SECRET")
+    secret_name = os.environ.get("SEEDFARMER_NPM_MIRROR_SECRET", NO_SECRET_DEFAULT)
     # Backwards Compatibility
-    if secret_name == "NO_SECRET":
-        secret_name = os.environ.get("AWS_CODESEEDER_NPM_MIRROR_SECRET", "NO_SECRET")
-    elif secret_name == "NO_SECRET":
-        secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", "NO_SECRET")
+    if secret_name == NO_SECRET_DEFAULT:
+        secret_name = os.environ.get("AWS_CODESEEDER_NPM_MIRROR_SECRET", NO_SECRET_DEFAULT)
+        # Backwards Compatibility
+        if secret_name == NO_SECRET_DEFAULT:
+            secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", NO_SECRET_DEFAULT)
 
-    if secret_name != "NO_SECRET":
+    if secret_name != NO_SECRET_DEFAULT:
         secret_name_key = secret_name.split("::")[0] if "::" in secret_name else secret_name
         key = secret_name.split("::")[1] if "::" in secret_name else "npm"
         creds = get_secret(secret_name=secret_name_key)
@@ -67,7 +71,7 @@ def main(url: str) -> None:
                 auth = get_auth(username, password, ssl_token)
             except RuntimeError:
                 logger.error(f"The auth token could not be generated - check the secret {secret_name}")
-                exit(1)
+                sys.exit(1)
             registry_url = urlparse(url).netloc
             npm_key = f"//{registry_url}/:_auth"
             process = subprocess.Popen(

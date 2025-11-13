@@ -40,13 +40,13 @@ def synth(
 
     _logger.debug("Reading %s", config.SEEDKIT_TEMPLATE_PATH)
 
-    with open(config.SEEDKIT_TEMPLATE_PATH) as f:
+    with open(config.SEEDKIT_TEMPLATE_PATH, encoding="utf-8") as f:
         template = yaml.safe_load(f)
 
     if not synthesize:
         _logger.debug("Writing %s", output_filename)
         os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-        with open(output_filename, "w") as file:
+        with open(output_filename, "w", encoding="utf-8") as file:
             file.write(yaml.dump(template))
         return output_filename
     else:

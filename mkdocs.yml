@@ -60,6 +60,7 @@ markdown_extensions:
   - footnotes
   - meta
   - md_in_html
+  - mkdocs-click
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true

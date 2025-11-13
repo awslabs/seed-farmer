@@ -32,7 +32,7 @@ def run(
 ) -> codebuild.BuildInfo:
     # Write the environment variables to the file
     env_vars_path = os.path.join(local_deploy_path, "local.env")
-    with open(env_vars_path, "w") as f:
+    with open(env_vars_path, "w", encoding="utf-8") as f:
         for key, value in env_vars.items():
             f.write(f"{key}={value}\n")
 

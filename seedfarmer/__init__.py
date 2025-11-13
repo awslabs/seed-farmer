@@ -116,7 +116,7 @@ class Config(object):
     def _load_config_data(self) -> None:
         count = 0
         self._OPS_ROOT = os.getcwd()
-        while not os.path.exists(os.path.join(self._OPS_ROOT, self.CONFIG_FILE)):
+        while not os.path.exists(os.path.join(str(self._OPS_ROOT), self.CONFIG_FILE)):
             if count >= 4:
                 _logger.error("The seedfarmer.yaml was not found at the root of your project. Please set it and rerun.")
                 raise seedfarmer.errors.SeedFarmerException(
@@ -126,7 +126,7 @@ class Config(object):
                 self._OPS_ROOT = pathlib.Path(self._OPS_ROOT).parent  # type: ignore
                 count += 1
 
-        with open(os.path.join(self._OPS_ROOT, self.CONFIG_FILE), "r") as file:
+        with open(os.path.join(str(self._OPS_ROOT), self.CONFIG_FILE), "r", encoding="utf-8") as file:
             config_data: Dict[str, Any] = yaml.safe_load(file)
             self._project_spec = ProjectSpec(**config_data)
 
@@ -134,7 +134,7 @@ class Config(object):
                 "NEW PROJECT" if self._project_spec.description is None else self._project_spec.description
             )
             self._project_spec.project_policy_path = (
-                os.path.join(self._OPS_ROOT, self._project_spec.project_policy_path)
+                os.path.join(str(self._OPS_ROOT), self._project_spec.project_policy_path)
                 if self._project_spec.project_policy_path
                 else os.path.join(CLI_ROOT, DEFAULT_PROJECT_POLICY_PATH)
             )

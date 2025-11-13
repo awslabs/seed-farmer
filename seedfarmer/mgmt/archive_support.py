@@ -49,7 +49,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
             credentials=credentials,
             headers={"x-amz-content-sha256": hashlib.sha256("".encode("utf-8")).hexdigest()},
         )
-        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True)  # type: ignore[arg-type]
+        return requests.get(url=signed_request.url, headers=signed_request.headers, allow_redirects=True, timeout=30.0)  # type: ignore[arg-type]
 
     if secret_name:
         session: boto3.Session = SessionManager().get_or_create().toolchain_session  # type: ignore[no-redef]
@@ -62,11 +62,7 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
     else:
         auth = None
 
-    return requests.get(
-        url=archive_url,
-        allow_redirects=True,
-        auth=auth,
-    )
+    return requests.get(url=archive_url, allow_redirects=True, auth=auth, timeout=30.0)
 
 
 def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:

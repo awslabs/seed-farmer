@@ -18,6 +18,20 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 
 
+## v7.0.14 (2025-11-13)
+
+### New 
+
+### Changes
+- removed the examples dir
+- removed the scripts dir
+- removed mermaid2 support from the docs
+- added encoding types to all open commands
+- generate documentation images from code
+
+### Fixes
+
+
 ## v7.0.13 (2025-11-5)
 
 ### New 

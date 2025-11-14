@@ -51,10 +51,10 @@ theme:
     repo: fontawesome/brands/github
 
 extra_css:
-  - https://viewer.diagrams.net/js/viewer-static.min.js
   - assets/stylesheets/extra.css
 
 extra_javascript:
+  - https://viewer.diagrams.net/js/viewer-static.min.js
   - assets/js/drawio-reload.js
 
 markdown_extensions:

@@ -51,7 +51,10 @@ theme:
     repo: fontawesome/brands/github
 
 extra_css:
-  - stylesheets/extra.css
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - assets/js/drawio-reload.js
 
 markdown_extensions:
   - admonition
@@ -84,9 +87,8 @@ markdown_extensions:
       baselevel: 2
 
 plugins:
+  - drawio
   - search
-  - minify:
-      minify_html: true
 
 nav:
   - Home: index.md

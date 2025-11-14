@@ -12,12 +12,12 @@ Seed-Farmer can run on local compute and on compute within a CI/CD pipeline -- t
 
 Seed-Farmer uses a **toolchain account** and a **target account**.  Though named as _account_, these are region-specific in context:  the toolchain account and target account store their data in their designated region, respectively.
 
-<div align="center"><img src="../static/multi_account_setup.png" alt="MultiSetup"/></div>
+![AccountMulti](../static/sf-diagrams.drawio)
 
 The most basic setup is to configure your toolchain account and target account to be the same.
 This is a simple representation of the account / region setup.  The **[Bootstrapping](bootstrapping.md)** guide will follow this setup.
 
-<div align="center"><img src="../static/simple_account_setup.png" alt="SimpleSetup"/></div>
+![AccountSingle](../static/sf-diagrams.drawio)
 
 Please review the [Concepts](../concepts/index.md) in detail.
 

@@ -19,17 +19,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install uv
-        run: pip install uv
-      - name: Install Dependencies (uv)
-        run: uv pip install -e .
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/cli@v1
-        continue-on-error: true # To make sure that SARIF upload gets called
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: test --file=pyproject.toml --severity-threshold=medium --sarif-file-output=snyk.sarif
+          args: test --file=snyk.requirements.txt --severity-threshold=medium --sarif-file-output=snyk.sarif
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:

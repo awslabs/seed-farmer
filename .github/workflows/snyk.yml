@@ -32,8 +32,7 @@ jobs:
           uv pip install -r requirements.txt
       - name: Snyk scan with venv
         run: |
-          source .venv/bin/activate
-          uv pip install pysnyk
+          npm install -g snyk
           snyk test --severity-threshold=medium --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

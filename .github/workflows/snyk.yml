@@ -33,7 +33,7 @@ jobs:
       - name: Snyk scan with venv
         run: |
           source .venv/bin/activate
-          uv pip install snyk
+          uv pip install pysnyk
           snyk test --severity-threshold=medium --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

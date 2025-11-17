@@ -30,8 +30,7 @@ jobs:
           echo "$PWD/.venv/bin" >> $GITHUB_PATH
           source .venv/bin/activate
           uv pip install -r requirements.txt
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+          uv pip install snyk
       - name: Snyk scan with venv
         run: |
           source .venv/bin/activate

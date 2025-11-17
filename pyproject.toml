@@ -5,7 +5,7 @@ description = "The AWS Professional Services CLI tool SeedFarmer for GitOps supp
 authors = [{ name = "AWS Professional Services" }]
 requires-python = ">=3.9, <3.14"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "VERSION" ]
 keywords = [
     "AWS",

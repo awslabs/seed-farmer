@@ -20,6 +20,8 @@ import click
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
+from seedfarmer.errors import InvalidConfigurationError
+from seedfarmer.input_validators import InputValidator
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import (
     ISessionManager,
@@ -151,8 +153,30 @@ def taint_module(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("We are removing module data for %s of group %s in %s", module, group, deployment)
 
+    # Validate inputs
+    valid, error = InputValidator.validate_deployment_name(deployment)
+    if not valid:
+        raise InvalidConfigurationError(error)
+
+    valid, error = InputValidator.validate_group_name(group)
+    if not valid:
+        raise InvalidConfigurationError(error)
+
+    valid, error = InputValidator.validate_module_name(module)
+    if not valid:
+        raise InvalidConfigurationError(error)
+
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise InvalidConfigurationError(error)
+
     if project is None:
         project = _load_project()
+
+    valid, error = InputValidator.validate_project_name(project)
+    if not valid:
+        raise InvalidConfigurationError(error)
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 

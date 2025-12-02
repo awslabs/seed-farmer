@@ -24,6 +24,7 @@ import seedfarmer.errors
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
+from seedfarmer.input_validators import InputValidator
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 
@@ -161,8 +162,30 @@ def store_deployspec(
         in deployment {deployment} located at {path}/deployspec.yaml"""
     )
 
+    # Validate inputs
+    valid, error = InputValidator.validate_deployment_name(deployment)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    valid, error = InputValidator.validate_group_name(group)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    valid, error = InputValidator.validate_module_name(module)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
     if project is None:
         project = _load_project()
+
+    valid, error = InputValidator.validate_project_name(project)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
 
     session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):

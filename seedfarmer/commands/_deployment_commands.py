@@ -33,6 +33,7 @@ from seedfarmer.commands._parameter_commands import load_parameter_values, resol
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.deployment.deploy_factory import DeployModuleFactory
 from seedfarmer.error_handler import log_error_safely, safe_execute
+from seedfarmer.input_validators import InputValidator
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -847,6 +848,21 @@ def apply(
     ModuleDeploymentError
         seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
+    # Validate inputs
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if role_prefix:
+        valid, error = InputValidator.validate_role_prefix(role_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if enable_session_timeout:
+        valid, error = InputValidator.validate_session_timeout(session_timeout_interval)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path, encoding="utf-8") as manifest_file:
@@ -1016,6 +1032,26 @@ def destroy(
     ModuleDeploymentError
         seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
+    # Validate inputs
+    valid, error = InputValidator.validate_deployment_name(deployment_name)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if role_prefix:
+        valid, error = InputValidator.validate_role_prefix(role_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    if enable_session_timeout:
+        valid, error = InputValidator.validate_session_timeout(session_timeout_interval)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
 

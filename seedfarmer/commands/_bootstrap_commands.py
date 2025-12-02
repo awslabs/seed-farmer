@@ -28,7 +28,8 @@ import seedfarmer.services._cfn as cfn
 import seedfarmer.services._iam as iam
 from seedfarmer import CLI_ROOT, __version__
 from seedfarmer.services import create_new_session, get_region, get_sts_identity_info
-from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, get_toolchain_role_name, valid_qualifier
+from seedfarmer.input_validators import InputValidator
+from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, get_toolchain_role_name
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -60,12 +61,52 @@ def bootstrap_toolchain_account(
     synthesize: bool = False,
     as_target: bool = False,
 ) -> Optional[Dict[Any, Any]]:
-    if qualifier and not valid_qualifier(qualifier):
-        raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
+    # Validate project name
+    valid, error = InputValidator.validate_project_name(project_name)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
 
+    # Validate qualifier
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate role prefix
+    if role_prefix:
+        valid, error = InputValidator.validate_role_prefix(role_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate policy prefix
+    if policy_prefix:
+        valid, error = InputValidator.validate_policy_prefix(policy_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate role name length
+    valid, error = InputValidator.validate_role_name_length(project_name, qualifier)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate principal ARNs
     for arn in principal_arns:
-        if not re.match(r"arn:aws.*:(sts|iam)::(\d{12}|\*):.*$", arn):
-            raise seedfarmer.errors.InvalidConfigurationError(f"Trusted principal: {arn} is not a valid principal arn")
+        valid, error = InputValidator.validate_arn(arn)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(f"Trusted principal: {arn} - {error}")
+
+    # Validate permissions boundary ARN
+    if permissions_boundary_arn:
+        valid, error = InputValidator.validate_arn(permissions_boundary_arn)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(f"Permissions boundary: {error}")
+
+    # Validate policy ARNs
+    if policy_arns:
+        for arn in policy_arns:
+            valid, error = InputValidator.validate_arn(arn)
+            if not valid:
+                raise seedfarmer.errors.InvalidConfigurationError(f"Policy ARN: {arn} - {error}")
 
     role_stack_name = get_toolchain_role_name(project_name=project_name, qualifier=cast(str, qualifier))
     template = get_template("toolchain_role")
@@ -141,8 +182,46 @@ def bootstrap_target_account(
     policy_arns: Optional[List[str]] = None,
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
-    if qualifier and not valid_qualifier(qualifier):
-        raise seedfarmer.errors.InvalidConfigurationError("The Qualifier must be alphanumeric and 6 characters or less")
+    # Validate project name
+    valid, error = InputValidator.validate_project_name(project_name)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate qualifier
+    if qualifier:
+        valid, error = InputValidator.validate_qualifier(qualifier)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate role prefix
+    if role_prefix:
+        valid, error = InputValidator.validate_role_prefix(role_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate policy prefix
+    if policy_prefix:
+        valid, error = InputValidator.validate_policy_prefix(policy_prefix)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate role name length
+    valid, error = InputValidator.validate_role_name_length(project_name, qualifier)
+    if not valid:
+        raise seedfarmer.errors.InvalidConfigurationError(error)
+
+    # Validate permissions boundary ARN
+    if permissions_boundary_arn:
+        valid, error = InputValidator.validate_arn(permissions_boundary_arn)
+        if not valid:
+            raise seedfarmer.errors.InvalidConfigurationError(f"Permissions boundary: {error}")
+
+    # Validate policy ARNs
+    if policy_arns:
+        for arn in policy_arns:
+            valid, error = InputValidator.validate_arn(arn)
+            if not valid:
+                raise seedfarmer.errors.InvalidConfigurationError(f"Policy ARN: {arn} - {error}")
 
     if not session:
         session = create_new_session(profile=profile, region_name=region_name)

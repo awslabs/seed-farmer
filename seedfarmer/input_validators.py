@@ -34,7 +34,7 @@ class InputValidator:
     IAM_PATH_PATTERN = re.compile(r"^/([a-zA-Z0-9+=,.@\-_]+/)*$")
     ARN_PATTERN = re.compile(r"^arn:aws[a-z\-]*:[a-z0-9\-]+::[0-9]{12}:.*$")
     ARN_PATTERN_WITH_AWS = re.compile(r"^arn:aws[a-z\-]*:[a-z0-9\-]+::(aws|[0-9]{12}|\*):.*$")
-    ALPHANUMERIC_HYPHEN_PATTERN = re.compile(r"^[a-zA-Z0-9\-]+$")
+    AWS_RESOURCE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9+=,.@_.\-]+$")
     ALPHANUMERIC_PATTERN = re.compile(r"^[a-zA-Z0-9]+$")
 
     @staticmethod
@@ -118,8 +118,8 @@ class InputValidator:
         if len(project_name) > InputValidator.PROJECT_NAME_MAX_LENGTH:
             return False, f"Project name must be {InputValidator.PROJECT_NAME_MAX_LENGTH} characters or less"
 
-        if not InputValidator.ALPHANUMERIC_HYPHEN_PATTERN.match(project_name):
-            return False, "Project name must contain only alphanumeric characters and hyphens"
+        if not InputValidator.AWS_RESOURCE_NAME_PATTERN.match(project_name):
+            return False, "Project name contains invalid characters"
 
         if project_name.startswith("-") or project_name.endswith("-"):
             return False, "Project name cannot start or end with a hyphen"
@@ -143,8 +143,8 @@ class InputValidator:
         if len(deployment_name) > InputValidator.DEPLOYMENT_NAME_MAX_LENGTH:
             return False, f"Deployment name must be {InputValidator.DEPLOYMENT_NAME_MAX_LENGTH} characters or less"
 
-        if not InputValidator.ALPHANUMERIC_HYPHEN_PATTERN.match(deployment_name):
-            return False, "Deployment name must contain only alphanumeric characters and hyphens"
+        if not InputValidator.AWS_RESOURCE_NAME_PATTERN.match(deployment_name):
+            return False, "Deployment name contains invalid characters"
 
         if deployment_name.startswith("-") or deployment_name.endswith("-"):
             return False, "Deployment name cannot start or end with a hyphen"
@@ -168,8 +168,8 @@ class InputValidator:
         if len(group_name) > InputValidator.GROUP_NAME_MAX_LENGTH:
             return False, f"Group name must be {InputValidator.GROUP_NAME_MAX_LENGTH} characters or less"
 
-        if not InputValidator.ALPHANUMERIC_HYPHEN_PATTERN.match(group_name):
-            return False, "Group name must contain only alphanumeric characters and hyphens"
+        if not InputValidator.AWS_RESOURCE_NAME_PATTERN.match(group_name):
+            return False, "Group name contains invalid characters"
 
         if group_name.startswith("-") or group_name.endswith("-"):
             return False, "Group name cannot start or end with a hyphen"
@@ -193,8 +193,8 @@ class InputValidator:
         if len(module_name) > InputValidator.MODULE_NAME_MAX_LENGTH:
             return False, f"Module name must be {InputValidator.MODULE_NAME_MAX_LENGTH} characters or less"
 
-        if not InputValidator.ALPHANUMERIC_HYPHEN_PATTERN.match(module_name):
-            return False, "Module name must contain only alphanumeric characters and hyphens"
+        if not InputValidator.AWS_RESOURCE_NAME_PATTERN.match(module_name):
+            return False, "Module name contains invalid characters"
 
         if module_name.startswith("-") or module_name.endswith("-"):
             return False, "Module name cannot start or end with a hyphen"

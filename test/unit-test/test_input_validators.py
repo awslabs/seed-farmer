@@ -1,5 +1,3 @@
-import pytest
-
 from seedfarmer.input_validators import InputValidator
 
 
@@ -95,9 +93,9 @@ class TestProjectNameValidation:
         assert "35 characters or less" in error
 
     def test_project_name_invalid_chars(self):
-        valid, error = InputValidator.validate_project_name("my_project")
+        valid, error = InputValidator.validate_project_name("my%project")
         assert valid is False
-        assert "alphanumeric characters and hyphens" in error
+        assert "contains invalid characters" in error
 
     def test_project_name_starts_with_hyphen(self):
         valid, error = InputValidator.validate_project_name("-myproject")

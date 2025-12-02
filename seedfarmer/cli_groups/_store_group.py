@@ -24,11 +24,20 @@ import seedfarmer.errors
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, config, enable_debug
+from seedfarmer.errors import InvalidConfigurationError
 from seedfarmer.input_validators import InputValidator
 from seedfarmer.output_utils import print_bolded
 from seedfarmer.services.session_manager import SessionManager, bind_session_mgr
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _raise_if_invalid(valid: bool, error: Optional[str], prefix: str = "") -> None:
+    """Helper to raise InvalidConfigurationError if validation failed."""
+    if not valid:
+        assert error is not None
+        message = f"{prefix}{error}" if prefix else error
+        raise InvalidConfigurationError(message)
 
 
 def _load_project() -> str:
@@ -163,29 +172,19 @@ def store_deployspec(
     )
 
     # Validate inputs
-    valid, error = InputValidator.validate_deployment_name(deployment)
-    if not valid:
-        raise seedfarmer.errors.InvalidConfigurationError(error)
+    _raise_if_invalid(*InputValidator.validate_deployment_name(deployment))
 
-    valid, error = InputValidator.validate_group_name(group)
-    if not valid:
-        raise seedfarmer.errors.InvalidConfigurationError(error)
+    _raise_if_invalid(*InputValidator.validate_group_name(group))
 
-    valid, error = InputValidator.validate_module_name(module)
-    if not valid:
-        raise seedfarmer.errors.InvalidConfigurationError(error)
+    _raise_if_invalid(*InputValidator.validate_module_name(module))
 
     if qualifier:
-        valid, error = InputValidator.validate_qualifier(qualifier)
-        if not valid:
-            raise seedfarmer.errors.InvalidConfigurationError(error)
+        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
 
     if project is None:
         project = _load_project()
 
-    valid, error = InputValidator.validate_project_name(project)
-    if not valid:
-        raise seedfarmer.errors.InvalidConfigurationError(error)
+    _raise_if_invalid(*InputValidator.validate_project_name(project))
 
     session: Session = Session(profile_name=profile, region_name=region)
     if (target_account_id is not None) != (target_region is not None):

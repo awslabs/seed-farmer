@@ -302,6 +302,7 @@ class TestDeploymentRoleTemplate:
                     # Allow wildcards for services that are scoped by resource
                     # cloudformation:* is scoped to project stacks
                     # codeartifact:* is scoped to project domain/repo
-                    assert service in ["codeartifact", "cloudformation"], (
-                        f"Service-level wildcard not allowed for {service}"
-                    )
+                    assert service in [
+                        "codeartifact",
+                        "cloudformation",
+                    ], f"Service-level wildcard not allowed for {service}"

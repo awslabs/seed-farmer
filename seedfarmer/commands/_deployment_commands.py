@@ -63,14 +63,6 @@ from seedfarmer.utils import get_generic_module_deployment_role_name
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _raise_if_invalid(valid: bool, error: Optional[str], prefix: str = "") -> None:
-    """Helper to raise InvalidConfigurationError if validation failed."""
-    if not valid:
-        assert error is not None
-        message = f"{prefix}{error}" if prefix else error
-        raise seedfarmer.errors.InvalidConfigurationError(message)
-
-
 def _process_git_module_path(module: ModuleManifest) -> None:
     working_dir, module_directory, commit_hash = sf_git.clone_module_repo(module.path)
     module.set_local_path(os.path.join(working_dir, module_directory))
@@ -858,13 +850,15 @@ def apply(
     """
     # Validate inputs
     if qualifier:
-        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     if role_prefix:
-        _raise_if_invalid(*InputValidator.validate_role_prefix(role_prefix))
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     if enable_session_timeout:
-        _raise_if_invalid(*InputValidator.validate_session_timeout(session_timeout_interval))
+        InputValidator.validate_session_timeout(
+            session_timeout_interval, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path, encoding="utf-8") as manifest_file:
@@ -1035,16 +1029,18 @@ def destroy(
         seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
     # Validate inputs
-    _raise_if_invalid(*InputValidator.validate_deployment_name(deployment_name))
+    InputValidator.validate_deployment_name(deployment_name, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     if qualifier:
-        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     if role_prefix:
-        _raise_if_invalid(*InputValidator.validate_role_prefix(role_prefix))
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     if enable_session_timeout:
-        _raise_if_invalid(*InputValidator.validate_session_timeout(session_timeout_interval))
+        InputValidator.validate_session_timeout(
+            session_timeout_interval, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )
 
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)

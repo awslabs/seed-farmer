@@ -45,14 +45,6 @@ from seedfarmer.utils import load_dotenv_files
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _raise_if_invalid(valid: bool, error: Optional[str], prefix: str = "") -> None:
-    """Helper to raise InvalidConfigurationError if validation failed."""
-    if not valid:
-        assert error is not None
-        message = f"{prefix}{error}" if prefix else error
-        raise InvalidConfigurationError(message)
-
-
 def _load_project() -> str:
     try:
         _logger.info("No --project provided, attempting load from seedfarmer.yaml")
@@ -627,17 +619,17 @@ def list_modules(
     _logger.debug("We are getting modules for %s", deployment)
 
     # Validate deployment name
-    _raise_if_invalid(*InputValidator.validate_deployment_name(deployment))
+    InputValidator.validate_deployment_name(deployment, exception_type=InvalidConfigurationError)
 
     # Validate qualifier
     if qualifier:
-        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
+        InputValidator.validate_qualifier(qualifier, exception_type=InvalidConfigurationError)
 
     if project is None:
         project = _load_project()
 
     # Validate project name
-    _raise_if_invalid(*InputValidator.validate_project_name(project))
+    InputValidator.validate_project_name(project, exception_type=InvalidConfigurationError)
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 

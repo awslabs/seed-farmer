@@ -33,14 +33,6 @@ from seedfarmer.utils import get_deployment_role_name, get_toolchain_role_arn, g
 _logger: logging.Logger = logging.getLogger(__name__)
 
 
-def _raise_if_invalid(valid: bool, error: Optional[str], prefix: str = "") -> None:
-    """Helper to raise InvalidConfigurationError if validation failed."""
-    if not valid:
-        assert error is not None
-        message = f"{prefix}{error}" if prefix else error
-        raise seedfarmer.errors.InvalidConfigurationError(message)
-
-
 def get_template(template_name: str) -> Dict[str, Any]:
     with open((os.path.join(CLI_ROOT, f"resources/{template_name}.template")), "r", encoding="utf-8") as f:
         role = yaml.safe_load(f)
@@ -69,35 +61,43 @@ def bootstrap_toolchain_account(
     as_target: bool = False,
 ) -> Optional[Dict[Any, Any]]:
     # Validate project name
-    _raise_if_invalid(*InputValidator.validate_project_name(project_name))
+    InputValidator.validate_project_name(project_name, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate qualifier
     if qualifier:
-        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate role prefix
     if role_prefix:
-        _raise_if_invalid(*InputValidator.validate_role_prefix(role_prefix))
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate policy prefix
     if policy_prefix:
-        _raise_if_invalid(*InputValidator.validate_policy_prefix(policy_prefix))
+        InputValidator.validate_policy_prefix(policy_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate role name length
-    _raise_if_invalid(*InputValidator.validate_role_name_length(project_name, qualifier))
+    InputValidator.validate_role_name_length(
+        project_name, qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError
+    )
 
     # Validate principal ARNs
     for arn in principal_arns:
-        _raise_if_invalid(*InputValidator.validate_arn(arn), f"Trusted principal: {arn} - ")
+        InputValidator.validate_arn(
+            arn, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )  # f"Trusted principal: {arn} - "
 
     # Validate permissions boundary ARN
     if permissions_boundary_arn:
-        _raise_if_invalid(*InputValidator.validate_arn(permissions_boundary_arn), "Permissions boundary: ")
+        InputValidator.validate_arn(
+            permissions_boundary_arn, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )  # "Permissions boundary: "
 
     # Validate policy ARNs
     if policy_arns:
         for arn in policy_arns:
-            _raise_if_invalid(*InputValidator.validate_arn(arn), f"Policy ARN: {arn} - ")
+            InputValidator.validate_arn(
+                arn, exception_type=seedfarmer.errors.InvalidConfigurationError
+            )  # f"Policy ARN: {arn} - "
 
     role_stack_name = get_toolchain_role_name(project_name=project_name, qualifier=cast(str, qualifier))
     template = get_template("toolchain_role")
@@ -174,31 +174,37 @@ def bootstrap_target_account(
     synthesize: bool = False,
 ) -> Optional[Dict[Any, Any]]:
     # Validate project name
-    _raise_if_invalid(*InputValidator.validate_project_name(project_name))
+    InputValidator.validate_project_name(project_name, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate qualifier
     if qualifier:
-        _raise_if_invalid(*InputValidator.validate_qualifier(qualifier))
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate role prefix
     if role_prefix:
-        _raise_if_invalid(*InputValidator.validate_role_prefix(role_prefix))
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate policy prefix
     if policy_prefix:
-        _raise_if_invalid(*InputValidator.validate_policy_prefix(policy_prefix))
+        InputValidator.validate_policy_prefix(policy_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
 
     # Validate role name length
-    _raise_if_invalid(*InputValidator.validate_role_name_length(project_name, qualifier))
+    InputValidator.validate_role_name_length(
+        project_name, qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError
+    )
 
     # Validate permissions boundary ARN
     if permissions_boundary_arn:
-        _raise_if_invalid(*InputValidator.validate_arn(permissions_boundary_arn), "Permissions boundary: ")
+        InputValidator.validate_arn(
+            permissions_boundary_arn, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )  # "Permissions boundary: "
 
     # Validate policy ARNs
     if policy_arns:
         for arn in policy_arns:
-            _raise_if_invalid(*InputValidator.validate_arn(arn), f"Policy ARN: {arn} - ")
+            InputValidator.validate_arn(
+                arn, exception_type=seedfarmer.errors.InvalidConfigurationError
+            )  # f"Policy ARN: {arn} - "
 
     if not session:
         session = create_new_session(profile=profile, region_name=region_name)

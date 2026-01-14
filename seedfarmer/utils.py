@@ -221,10 +221,6 @@ def get_generic_module_deployment_role_name(
     )
 
 
-def valid_qualifier(qualifer: str) -> bool:
-    return True if ((len(qualifer) <= 6) and qualifer.isalnum()) else False
-
-
 def load_dotenv_files(root_path: str, env_files: List[str]) -> None:
     """
     Load the environment variables from the .env files

@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ## Unreleased
 
 ### Breaking Changes
+
+### New
+
+### Changes
+
+### Fixes
+
+
+## v8.0.0 (2026-01-15)
+
+### Breaking Changes
 - Dropped Python 3.9 support (EOL October 2025). Python 3.10+ is now required.
 - Updated urllib3 to >=2.6.0
 

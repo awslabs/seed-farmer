@@ -66,9 +66,20 @@ def _download_archive(archive_url: str, secret_name: Optional[str]) -> Response:
 
 
 def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
+    extracted_dir_path = os.path.normpath(extracted_dir_path)
+
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_name, "r:gz") as tar_file:
             all_members = tar_file.getmembers()
+
+            # Validate member paths to prevent path traversal
+            for member in all_members:
+                member_path = os.path.normpath(os.path.join(extracted_dir_path, member.name))
+                if not member_path.startswith(extracted_dir_path + os.sep) and member_path != extracted_dir_path:
+                    raise InvalidConfigurationError(
+                        f"Archive contains invalid path that would escape extraction directory: {member.name}"
+                    )
+
             top_level_dirs = set(member.name.split("/")[0] for member in all_members if "/" in member.name)
             if len(top_level_dirs) > 1:
                 raise InvalidConfigurationError(
@@ -82,6 +93,15 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
     else:
         with ZipFile(archive_name, "r") as zip_file:
             all_files = zip_file.namelist()
+
+            # Validate file paths to prevent path traversal
+            for file in all_files:
+                file_path = os.path.normpath(os.path.join(extracted_dir_path, file))
+                if not file_path.startswith(extracted_dir_path + os.sep) and file_path != extracted_dir_path:
+                    raise InvalidConfigurationError(
+                        f"Archive contains invalid path that would escape extraction directory: {file}"
+                    )
+
             top_level_dirs = set(name.split("/")[0] for name in all_files if "/" in name)
             if len(top_level_dirs) > 1:
                 raise InvalidConfigurationError(

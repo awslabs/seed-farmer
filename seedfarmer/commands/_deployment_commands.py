@@ -33,6 +33,7 @@ from seedfarmer.commands._parameter_commands import load_parameter_values, resol
 from seedfarmer.commands._stack_commands import create_module_deployment_role, destroy_module_deployment_role
 from seedfarmer.deployment.deploy_factory import DeployModuleFactory
 from seedfarmer.error_handler import log_error_safely, safe_execute
+from seedfarmer.input_validators import InputValidator
 from seedfarmer.mgmt.module_info import (
     get_deployspec_path,
     get_module_metadata,
@@ -847,6 +848,17 @@ def apply(
     ModuleDeploymentError
         seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
+    # Validate inputs
+    if qualifier:
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
+
+    if role_prefix:
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
+
+    if enable_session_timeout:
+        InputValidator.validate_session_timeout(
+            session_timeout_interval, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )
 
     manifest_path = os.path.join(config.OPS_ROOT, deployment_manifest_path)
     with open(manifest_path, encoding="utf-8") as manifest_file:
@@ -1016,6 +1028,20 @@ def destroy(
     ModuleDeploymentError
         seedfarmer.errors.seedfarmer_errors.ModuleDeploymentError
     """
+    # Validate inputs
+    InputValidator.validate_deployment_name(deployment_name, exception_type=seedfarmer.errors.InvalidConfigurationError)
+
+    if qualifier:
+        InputValidator.validate_qualifier(qualifier, exception_type=seedfarmer.errors.InvalidConfigurationError)
+
+    if role_prefix:
+        InputValidator.validate_role_prefix(role_prefix, exception_type=seedfarmer.errors.InvalidConfigurationError)
+
+    if enable_session_timeout:
+        InputValidator.validate_session_timeout(
+            session_timeout_interval, exception_type=seedfarmer.errors.InvalidConfigurationError
+        )
+
     project = config.PROJECT
     _logger.debug("Preparing to destroy %s", deployment_name)
 

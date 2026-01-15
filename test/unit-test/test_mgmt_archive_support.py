@@ -487,3 +487,34 @@ def test_fetch_module_repo_from_https_with_secret(
 
         # Check that the module was extracted to the correct location
         assert os.path.exists(os.path.join(archive_path, module_name, "modulestack.yaml"))
+
+
+def test_extract_archive_path_traversal():
+    """Test that path traversal attacks are blocked."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a malicious zip file with path traversal
+        malicious_zip = os.path.join(tmpdir, "malicious.zip")
+        with zipfile.ZipFile(malicious_zip, "w") as zf:
+            # Try to escape with ../../../etc/passwd
+            zf.writestr("safe_dir/../../../etc/passwd", "malicious content")
+
+        extract_dir = os.path.join(tmpdir, "extract")
+        os.makedirs(extract_dir)
+
+        # Should raise InvalidConfigurationError
+        with pytest.raises(InvalidConfigurationError, match="would escape extraction directory"):
+            archive._extract_archive(malicious_zip, extract_dir)
+
+        # Create a malicious tar.gz file
+        malicious_tar = os.path.join(tmpdir, "malicious.tar.gz")
+        with tarfile.open(malicious_tar, "w:gz") as tf:
+            # Create a tarinfo with path traversal
+            info = tarfile.TarInfo(name="safe_dir/../../../etc/passwd")
+            info.size = 17
+            tf.addfile(info, io.BytesIO(b"malicious content"))
+
+        # Should raise InvalidConfigurationError
+        with pytest.raises(InvalidConfigurationError, match="would escape extraction directory"):
+            archive._extract_archive(malicious_tar, extract_dir)

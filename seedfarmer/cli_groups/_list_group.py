@@ -25,6 +25,8 @@ import seedfarmer.mgmt.build_info as bi
 import seedfarmer.mgmt.deploy_utils as du
 import seedfarmer.mgmt.module_info as mi
 from seedfarmer import DEBUG_LOGGING_FORMAT, commands, config, enable_debug
+from seedfarmer.errors import InvalidConfigurationError
+from seedfarmer.input_validators import InputValidator
 from seedfarmer.output_utils import (
     print_bolded,
     print_dependency_list,
@@ -616,8 +618,18 @@ def list_modules(
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("We are getting modules for %s", deployment)
 
+    # Validate deployment name
+    InputValidator.validate_deployment_name(deployment, exception_type=InvalidConfigurationError)
+
+    # Validate qualifier
+    if qualifier:
+        InputValidator.validate_qualifier(qualifier, exception_type=InvalidConfigurationError)
+
     if project is None:
         project = _load_project()
+
+    # Validate project name
+    InputValidator.validate_project_name(project, exception_type=InvalidConfigurationError)
 
     load_dotenv_files(config.OPS_ROOT, env_files=env_files)
 

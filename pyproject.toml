@@ -3,7 +3,7 @@ name = "seed-farmer"
 version = "7.1.0.dev0"
 description = "The AWS Professional Services CLI tool SeedFarmer for GitOps support"
 authors = [{ name = "AWS Professional Services" }]
-requires-python = ">=3.9, <3.14"
+requires-python = ">=3.10, <3.14"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "VERSION" ]
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -39,8 +38,7 @@ dependencies = [
   "gitpython~=3.1.30",
   "gitignore-parser~=0.1.2",
   "pyyaml~=6.0.1",
-  "urllib3~=1.26.17; python_version < '3.10'",
-  "urllib3~=2.5.0; python_version >= '3.10'",
+  "urllib3>=2.6.0,<3.0",
   "certifi>=2024.7.4,<2024.9.0",
   "packaging>=23.2,<25.0",
   "mypy_extensions>=1.1.0",
@@ -145,7 +143,7 @@ exclude = [
     "seedfarmer.gitmodules"
 ]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I"]
@@ -157,7 +155,7 @@ fixable = ["ALL"]
 "test/unit-test/mock_data/*" = ["E501"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 strict = true
 ignore_missing_imports = true
 disallow_untyped_decorators = false

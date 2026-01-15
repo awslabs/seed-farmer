@@ -6,9 +6,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ## Unreleased
 
-### New 
+### Breaking Changes
+- Dropped Python 3.9 support (EOL October 2025). Python 3.10+ is now required.
+- Updated urllib3 to >=2.6.0
+
+### New
 
 ### Changes
+- Added Python 3.13 to CI test matrix
 - removed the examples dir
 - removed the scripts dir
 - removed mermaid2 support from the docs

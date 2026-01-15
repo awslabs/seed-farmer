@@ -53,7 +53,7 @@ Seed-Farmer supports various CodeBuild images:
 #### Default Image
 
 - **Image**: `aws/codebuild/amazonlinux2-x86_64-standard:5.0`
-- **Runtime**: Amazon Linux 2 with Python 3.11
+- **Runtime**: Amazon Linux 2 with Python 3.11 (modules must be compatible with Python 3.10+)
 - **Tools**: Pre-installed AWS CLI, Docker, common build tools
 
 #### Image Overrides

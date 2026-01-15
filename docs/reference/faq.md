@@ -53,7 +53,7 @@ You need to bootstrap both your toolchain account and target accounts. For detai
 
 ### What are the prerequisites for using Seed-Farmer?
 
-- Python 3.10 or later
+- Python 3.10 or later (3.10, 3.11, 3.12, and 3.13 are supported)
 - AWS CLI configured with appropriate credentials
 - AWS CDK (for CDK-based modules)
 - Docker (for local deployments)

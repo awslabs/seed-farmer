@@ -8,7 +8,7 @@ This guide will walk you through the process of installing Seed-Farmer and its d
 
 Before installing Seed-Farmer, ensure you have the following prerequisites:
 
-- **Python >=3.11** - Seed-Farmer runs in python
+- **Python >=3.10** - Seed-Farmer runs in Python (3.10, 3.11, 3.12, and 3.13 are supported)
 - **AWS CLI** - For configuring credentials on compute
 - **AWS CDK and CDK Bootstrap** (recommended) - the majority of Seed-Farmer [Public Modules](../modules/index.md) use AWS CDkv2
 - **Python Management Tool** - [uv](https://docs.astral.sh/uv/) or [pip](https://pypi.org/project/pip/)
@@ -28,9 +28,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Install Seed-Farmer as a tool.
 
 ```bash
-## you can use your preferred version of python
+## you can use any supported Python version (3.10, 3.11, 3.12, or 3.13)
 
-uv tool install --python 3.13 seed-farmer 
+uv tool install --python 3.12 seed-farmer
 
 ```
 

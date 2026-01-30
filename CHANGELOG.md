@@ -10,6 +10,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 
+- added slack notification on failure in the snyk workflow 
+
 ### Changes
 
 ### Fixes

@@ -398,6 +398,7 @@ def _deploy_validated_deployment(
 def prime_target_accounts(
     deployment_manifest: DeploymentManifest,
     update_seedkit: bool = False,
+    enable_seedkit_kms: bool = True,
     update_project_policy: bool = False,
 ) -> None:
     _logger.info("Priming Accounts")
@@ -441,6 +442,7 @@ def prime_target_accounts(
                 "account_id": account_id,
                 "region": region,
                 "update_seedkit": update_seedkit,
+                "enable_seedkit_kms": enable_seedkit_kms,
                 "update_project_policy": update_project_policy,
                 "permissions_boundary_arn": permissions_boundary_arn,
             }
@@ -932,6 +934,7 @@ def apply(
     prime_target_accounts(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
+        enable_seedkit_kms=config.enable_seedkit_kms,
         update_project_policy=update_project_policy,
     )
 

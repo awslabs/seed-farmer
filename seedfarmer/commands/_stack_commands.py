@@ -587,6 +587,7 @@ def deploy_seedkit(
     private_subnet_ids: Optional[List[str]] = None,
     security_group_ids: Optional[List[str]] = None,
     update_seedkit: Optional[bool] = False,
+    enable_seedkit_kms: bool = True,
     role_prefix: Optional[str] = None,
     policy_prefix: Optional[str] = None,
     permissions_boundary_arn: Optional[str] = None,
@@ -640,6 +641,7 @@ def deploy_seedkit(
             seedkit_args["policy_prefix"] = policy_prefix
         if permissions_boundary_arn:
             seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
+        seedkit_args["enable_seedkit_kms"] = enable_seedkit_kms
 
         sk_commands.deploy_seedkit(**seedkit_args)  # type: ignore [arg-type]
         # Go get the outputs and return them

@@ -23,11 +23,21 @@ class CuratedBuildImages:
         AL2_X86_64_STANDARD_5_0 = "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
         AL2_AARCH64_STANDARD_3_0 = "aws/codebuild/amazonlinux2-aarch64-standard:3.0"
 
-    class ImageRuntimes(Enum):
+    class ImageRuntimes:
         UBUNTU_STANDARD_6 = {"nodejs": "16", "python": "3.10", "java": "corretto17"}
         UBUNTU_STANDARD_7 = {"nodejs": "18", "python": "3.11", "java": "corretto21"}
         AL2_X86_64_STANDARD_5_0 = {"nodejs": "20", "python": "3.12", "java": "corretto21"}
         AL2_AARCH64_STANDARD_3_0 = {"nodejs": "20", "python": "3.12", "java": "corretto21"}
+
+
+class EnvironmentType:
+    _ARM_IMAGES = {"aws/codebuild/amazonlinux2-aarch64-standard:3.0"}
+
+    @staticmethod
+    def get_type(codebuild_image: Optional[str] = None) -> str:
+        if codebuild_image and codebuild_image in EnvironmentType._ARM_IMAGES:
+            return "ARM_CONTAINER"
+        return "LINUX_CONTAINER"
 
 
 def get_runtimes(
@@ -36,7 +46,7 @@ def get_runtimes(
     runtime_overrides = runtime_overrides if runtime_overrides else {}
     image_vals = [cbi.value for cbi in CuratedBuildImages.ImageEnums]
     if codebuild_image in image_vals:
-        cir_d = {cir.name: cir.value for cir in CuratedBuildImages.ImageRuntimes}
         k = CuratedBuildImages.ImageEnums(codebuild_image).name
-        return {**cir_d[k], **runtime_overrides}
+        runtimes = getattr(CuratedBuildImages.ImageRuntimes, k, {})
+        return {**runtimes, **runtime_overrides}
     return runtime_overrides

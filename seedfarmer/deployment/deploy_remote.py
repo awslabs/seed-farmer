@@ -23,7 +23,7 @@ import seedfarmer.errors
 import seedfarmer.mgmt.bundle as bundle
 import seedfarmer.services._codebuild as codebuild
 from seedfarmer import config
-from seedfarmer.commands._runtimes import get_runtimes
+from seedfarmer.commands._runtimes import EnvironmentType, get_runtimes
 from seedfarmer.deployment.deploy_base import DeployModule
 from seedfarmer.error_handler import log_error_safely
 from seedfarmer.models.deploy_responses import CodeBuildMetadata, ModuleDeploymentResponse, StatusType
@@ -190,6 +190,7 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
         )
 
+        codebuild_environment_type = EnvironmentType.get_type(codebuild_image=codebuild_image)
         bundle_id = f"{self.mdo.deployment_manifest.name}-{self.mdo.group_name}-{module_manifest.name}"
         ## NOTE: stack_outputs is the seedkit outputs
 
@@ -235,6 +236,10 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
             abort_phases_on_failure=True,
             runtime_versions=runtime_versions,
         )
+        import json
+
+        with open("/Users/dgraeber/aws-seed-group/zzz-seedfarmer-mod-testing/buildspec_current.json", "w") as f:
+            json.dump(buildspec, f, indent=4)
 
         # Write the deployspec, even if we don't use it...for reference
         try:
@@ -251,8 +256,8 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
             overrides["imageOverride"] = codebuild_image
         if self.mdo.module_role_arn:
             overrides["serviceRoleOverride"] = self.mdo.module_role_arn
-        # if codebuild_environment_type:
-        #     overrides["environmentTypeOverride"] = codebuild_environment_type
+        if codebuild_environment_type:
+            overrides["environmentTypeOverride"] = codebuild_environment_type
         if module_manifest.deploy_spec.build_type:
             overrides["computeTypeOverride"] = module_manifest.deploy_spec.build_type
         if env_vars:
@@ -378,6 +383,7 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
             module_manifest.codebuild_image if module_manifest.codebuild_image is not None else self.mdo.codebuild_image
         )
 
+        codebuild_environment_type = EnvironmentType.get_type(codebuild_image=codebuild_image)
         runtime_versions = get_runtimes(codebuild_image=codebuild_image, runtime_overrides=self.mdo.runtime_overrides)
         cmds_install = self._codebuild_install_commands(module_manifest, stack_outputs, runtime_versions)
 
@@ -419,8 +425,8 @@ log_arn=$(echo "$log_response" | jq -r '.arn')
             overrides["imageOverride"] = codebuild_image
         if self.mdo.module_role_arn:
             overrides["serviceRoleOverride"] = self.mdo.module_role_arn
-        # if codebuild_environment_type:
-        #     overrides["environmentTypeOverride"] = codebuild_environment_type
+        if codebuild_environment_type:
+            overrides["environmentTypeOverride"] = codebuild_environment_type
         if module_manifest.deploy_spec.build_type:
             overrides["computeTypeOverride"] = module_manifest.deploy_spec.build_type
         if env_vars:

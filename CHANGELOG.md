@@ -15,7 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-
+- added support for environment type override when using ARM-based images
 
 ## v8.0.0 (2026-01-15)
 

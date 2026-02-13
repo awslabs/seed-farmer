@@ -197,3 +197,64 @@ def test_destroy_seedkit_nonexistent(mocker):
     # Verify neither the bucket nor stack were deleted
     mock_delete_bucket.assert_not_called()
     mock_destroy_stack.assert_not_called()
+
+
+@pytest.mark.commands
+@pytest.mark.commands_seedkit
+def test_deploy_seedkit_uppercase_name(mocker):
+    """Test deploying a seedkit with uppercase name - should be lowercased."""
+    # Mock the seedkit_deployed function
+    mocker.patch(
+        "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
+    )
+
+    # Mock the synth function
+    mocker.patch("seedfarmer.commands._cfn_seedkit.synth", return_value="/tmp/template.yaml")
+
+    # Mock the deploy_template function
+    mock_deploy = mocker.patch("seedfarmer.services._cfn.deploy_template")
+
+    # Call the function with uppercase seedkit name
+    sc.deploy_seedkit(seedkit_name="TEST-SeedKit")
+
+    # Verify the deploy_template was called
+    mock_deploy.assert_called_once()
+    args, kwargs = mock_deploy.call_args
+
+    # Verify SeedkitName parameter is lowercased
+    parameters = kwargs["parameters"]
+    assert parameters["SeedkitName"] == "test-seedkit", "SeedkitName should be lowercased for valid S3 bucket names"
+
+
+@pytest.mark.commands
+@pytest.mark.commands_seedkit
+def test_deploy_seedkit_mixed_case_name(mocker):
+    """Test deploying a seedkit with mixed case name - should be lowercased."""
+    mocker.patch(
+        "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
+    )
+    mocker.patch("seedfarmer.commands._cfn_seedkit.synth", return_value="/tmp/template.yaml")
+    mock_deploy = mocker.patch("seedfarmer.services._cfn.deploy_template")
+
+    sc.deploy_seedkit(seedkit_name="MiXeD-CaSe")
+
+    mock_deploy.assert_called_once()
+    parameters = mock_deploy.call_args[1]["parameters"]
+    assert parameters["SeedkitName"] == "mixed-case"
+
+
+@pytest.mark.commands
+@pytest.mark.commands_seedkit
+def test_deploy_seedkit_name_with_numbers(mocker):
+    """Test deploying a seedkit with numbers in name - should be lowercased."""
+    mocker.patch(
+        "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
+    )
+    mocker.patch("seedfarmer.commands._cfn_seedkit.synth", return_value="/tmp/template.yaml")
+    mock_deploy = mocker.patch("seedfarmer.services._cfn.deploy_template")
+
+    sc.deploy_seedkit(seedkit_name="Project123-Test456")
+
+    mock_deploy.assert_called_once()
+    parameters = mock_deploy.call_args[1]["parameters"]
+    assert parameters["SeedkitName"] == "project123-test456"

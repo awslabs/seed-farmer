@@ -200,5 +200,9 @@ class Config(object):
     def set_project_name(self, project_name_param: str) -> None:
         self._project_name_param = project_name_param
 
+    def normalized_project_name(self) -> str:
+        """Return the project name in lowercase for S3 bucket compatibility."""
+        return self.PROJECT.lower()
+
 
 config = Config()

@@ -17,9 +17,10 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Fixes
 - added support for environment type override when using ARM-based images
 
-## v8.0.1 (2026-02-13)
+## v8.0.1 (2025-02-13)
 
 ### Fixes
+- Fixed CloudFormation permission errors in deployment role by correcting stack ARN pattern to include stack ID suffix
 - Fixed S3 bucket creation failure when project name contains uppercase letters in Seedkit deployment
 
 ## v8.0.0 (2026-01-15)

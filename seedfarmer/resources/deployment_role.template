@@ -147,7 +147,7 @@ Resources:
               - cloudformation:*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/${ProjectName}-*"
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/${ProjectName}-*/*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-${ProjectName}/*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-${ProjectName}/*"
             - Action:

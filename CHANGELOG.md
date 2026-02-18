@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - added support for environment type override when using ARM-based images
+- fixed CloudFormation permission errors in deployment role by correcting stack ARN pattern to include stack ID suffix
 
 ## v8.0.1 (2026-02-13)
 

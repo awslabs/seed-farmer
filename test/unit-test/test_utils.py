@@ -55,3 +55,17 @@ def test_validate_module_dependencies(env_params):
     assert replaced["name"] == "testing"
     assert replaced["toolchain_region"] == "us-east-1"
     assert replaced["target_account_mappings"][0]["account_id"] == "123456789012"
+
+
+@pytest.mark.utils_test
+def test_role_names_are_lowercase():
+    assert utils.get_toolchain_role_name("FalconProject") == "seedfarmer-falconproject-toolchain-role"
+    assert utils.get_deployment_role_name("FalconProject") == "seedfarmer-falconproject-deployment-role"
+    assert (
+        utils.get_toolchain_role_name("FalconProject", qualifier="abc123")
+        == "seedfarmer-falconproject-toolchain-role-abc123"
+    )
+    assert (
+        utils.get_deployment_role_name("FalconProject", qualifier="abc123")
+        == "seedfarmer-falconproject-deployment-role-abc123"
+    )

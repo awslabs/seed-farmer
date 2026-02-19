@@ -472,3 +472,32 @@ def test_bootstrap_target_account_with_policies(mocker, session):
         synthesize=False,
         session=session,
     )
+
+
+@pytest.mark.commands
+@pytest.mark.commands_bootstrap
+def test_bootstrap_uppercase_project_name(mocker):
+    """Test that bootstrap passes ProjectNameLower parameter for uppercase project names."""
+    mock_apply = mocker.patch("seedfarmer.commands._bootstrap_commands.apply_deploy_logic", return_value="")
+    mocker.patch("seedfarmer.commands._bootstrap_commands.bootstrap_target_account", return_value="")
+    mocker.patch(
+        "seedfarmer.commands._bootstrap_commands.get_sts_identity_info",
+        return_value=("123456789012", "arn:aws:iam::123456789012:root", "aws"),
+    )
+
+    bc.bootstrap_toolchain_account(
+        project_name="FalconProject",
+        principal_arns=["arn:aws:iam::123456789012:root"],
+        permissions_boundary_arn=None,
+        region_name="us-east-1",
+        synthesize=False,
+        as_target=False,
+    )
+
+    # Verify apply_deploy_logic was called with ProjectNameLower in parameters
+    assert mock_apply.called
+    call_kwargs = mock_apply.call_args[1]
+    parameters = call_kwargs["parameters"]
+    assert parameters["ProjectName"] == "FalconProject"
+    assert parameters["ProjectNameLower"] == "falconproject"
+    assert parameters["RoleName"] == "seedfarmer-falconproject-toolchain-role"

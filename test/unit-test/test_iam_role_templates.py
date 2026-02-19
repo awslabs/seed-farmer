@@ -170,7 +170,12 @@ class TestDeploymentRoleTemplate:
         # Verify all resources are scoped to project
         for resource in iam_statement["Resource"]:
             resource_str = resource.get("Fn::Sub", "") if isinstance(resource, dict) else resource
-            assert "${ProjectName}" in resource_str or "codeseeder-${ProjectName}" in resource_str
+            assert (
+                "${ProjectName}" in resource_str
+                or "${ProjectNameLower}" in resource_str
+                or "codeseeder-${ProjectName}" in resource_str
+                or "codeseeder-${ProjectNameLower}" in resource_str
+            )
 
     def test_iam_deny_user_management(self, deployment_role_template):
         """Verify IAM user management actions are explicitly denied."""
@@ -203,7 +208,7 @@ class TestDeploymentRoleTemplate:
         # Verify alias operations are scoped to project
         for resource in kms_alias_statement["Resource"]:
             resource_str = resource.get("Fn::Sub", "") if isinstance(resource, dict) else resource
-            assert "codeseeder-${ProjectName}" in resource_str
+            assert "codeseeder-${ProjectName}" in resource_str or "codeseeder-${ProjectNameLower}" in resource_str
 
     def test_codebuild_permissions_scoped(self, deployment_role_template):
         """Verify CodeBuild permissions are scoped to project resources."""
@@ -215,9 +220,15 @@ class TestDeploymentRoleTemplate:
         )
 
         assert codebuild_statement["Effect"] == "Allow"
-        resource = codebuild_statement["Resource"]
-        resource_str = resource.get("Fn::Sub", "") if isinstance(resource, dict) else resource
-        assert "codeseeder-${ProjectName}" in resource_str
+        resources = codebuild_statement["Resource"]
+        if isinstance(resources, dict):
+            resources = [resources]
+
+        assert any(
+            "codeseeder-${ProjectName}" in (r.get("Fn::Sub", "") if isinstance(r, dict) else r)
+            or "codeseeder-${ProjectNameLower}" in (r.get("Fn::Sub", "") if isinstance(r, dict) else r)
+            for r in resources
+        )
 
     def test_s3_permissions_scoped(self, deployment_role_template):
         """Verify S3 permissions are scoped to project buckets."""
@@ -230,7 +241,12 @@ class TestDeploymentRoleTemplate:
         # Verify all resources are scoped to project buckets
         for resource in s3_statement["Resource"]:
             resource_str = resource.get("Fn::Sub", "") if isinstance(resource, dict) else resource
-            assert "codeseeder-${ProjectName}" in resource_str or "seedfarmer-${ProjectName}" in resource_str
+            assert (
+                "codeseeder-${ProjectName}" in resource_str
+                or "codeseeder-${ProjectNameLower}" in resource_str
+                or "seedfarmer-${ProjectName}" in resource_str
+                or "seedfarmer-${ProjectNameLower}" in resource_str
+            )
 
     def test_cloudformation_permissions_scoped(self, deployment_role_template):
         """Verify CloudFormation permissions are scoped to project stacks."""
@@ -250,8 +266,11 @@ class TestDeploymentRoleTemplate:
                     # Verify stacks are scoped to project
                     assert (
                         "${ProjectName}" in resource_str
+                        or "${ProjectNameLower}" in resource_str
                         or "codeseeder-${ProjectName}" in resource_str
+                        or "codeseeder-${ProjectNameLower}" in resource_str
                         or "seedfarmer-${ProjectName}" in resource_str
+                        or "seedfarmer-${ProjectNameLower}" in resource_str
                     )
 
     def test_ssm_permissions_scoped(self, deployment_role_template):

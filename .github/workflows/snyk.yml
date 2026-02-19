@@ -31,6 +31,7 @@ jobs:
           source .venv/bin/activate
           uv pip install -r requirements.txt
       - name: Snyk scan with venv
+        id: snyk
         run: |
           npm install -g snyk
           snyk test --severity-threshold=medium --sarif-file-output=snyk.sarif
@@ -40,3 +41,14 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: snyk.sarif
+      - name: Notify Slack on Failure
+        if: steps.snyk.outcome == 'failure'
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"repository\": \"${{ github.repository }}\",
+            \"branch\": \"${{ github.ref_name }}\",
+            \"actor\": \"${{ github.actor }}\",
+            \"run_url\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}

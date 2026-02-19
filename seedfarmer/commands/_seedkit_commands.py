@@ -118,7 +118,7 @@ def deploy_seedkit(
 
     # Create parameters dictionary for CloudFormation
     parameters: Dict[str, str] = {
-        "SeedkitName": seedkit_name,
+        "SeedkitName": seedkit_name.lower(),
         "DeployId": deploy_id,
         "RolePrefix": str(kwargs.get("role_prefix", "/")),
         "PolicyPrefix": str(kwargs.get("policy_prefix", "/")),

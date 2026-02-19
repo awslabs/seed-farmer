@@ -92,7 +92,7 @@ def _get_project_managed_policy_arn(session: Optional[boto3.Session]) -> str:
 
 def _get_seedkit_resources_policy_arn(session: Optional[boto3.Session]) -> Optional[str]:
     seedkit_stack_exists, seedkit_stack_name, stack_outputs = sk_commands.seedkit_deployed(
-        seedkit_name=config.PROJECT, session=session
+        seedkit_name=config.normalized_project_name(), session=session
     )
     if seedkit_stack_exists:
         return cast(str, stack_outputs.get("SeedkitResourcesPolicyArn"))
@@ -617,7 +617,9 @@ def deploy_seedkit(
         The ARN of the permissions boundary to attach to seedkit role
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
-    stack_exists, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+    stack_exists, _, stack_outputs = sk_commands.seedkit_deployed(
+        seedkit_name=config.normalized_project_name(), session=session
+    )
     deploy_codeartifact = bool(stack_outputs.get("CodeArtifactRepository")) or bool(deploy_codeartifact)
 
     if stack_exists and not update_seedkit:
@@ -626,7 +628,7 @@ def deploy_seedkit(
         _logger.debug("Initializing / Updating SeedKit for Account/Region: %s/%s", account_id, region)
 
         seedkit_args = {
-            "seedkit_name": config.PROJECT,
+            "seedkit_name": config.normalized_project_name(),
             "deploy_codeartifact": deploy_codeartifact,
             "session": session,
             "vpc_id": vpc_id,
@@ -643,7 +645,9 @@ def deploy_seedkit(
 
         sk_commands.deploy_seedkit(**seedkit_args)  # type: ignore [arg-type]
         # Go get the outputs and return them
-        _, _, stack_outputs = sk_commands.seedkit_deployed(seedkit_name=config.PROJECT, session=session)
+        _, _, stack_outputs = sk_commands.seedkit_deployed(
+            seedkit_name=config.normalized_project_name(), session=session
+        )
     return dict(stack_outputs)
 
 
@@ -661,7 +665,7 @@ def destroy_seedkit(account_id: str, region: str) -> None:
     """
     session = SessionManager().get_or_create().get_deployment_session(account_id=account_id, region_name=region)
     _logger.debug("Destroying SeedKit for Account/Region: %s/%s", account_id, region)
-    sk_commands.destroy_seedkit(seedkit_name=config.PROJECT, session=session)
+    sk_commands.destroy_seedkit(seedkit_name=config.normalized_project_name(), session=session)
 
 
 def force_manage_policy_attach(

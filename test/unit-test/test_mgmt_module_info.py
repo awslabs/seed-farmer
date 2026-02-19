@@ -294,7 +294,16 @@ def test_get_module_stack_names(mocker, session):
 
     mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="1234")
     mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="1234dade")
-    mi.get_module_stack_names(deployment_name="myapp", group_name="test", module_name="mymodule", session=session)
+
+    # Ensure module stack/role names preserve project case for SCP/prefix-sensitive environments.
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="Falcon")
+
+    stack_name, role_name = mi.get_module_stack_names(
+        deployment_name="myapp", group_name="test", module_name="mymodule", session=session
+    )
+
+    assert stack_name.startswith("Falcon-myapp-test-mymodule")
+    assert role_name.startswith("Falcon-myapp-test-mymodule")
 
 
 @pytest.mark.mgmt

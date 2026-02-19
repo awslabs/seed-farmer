@@ -7,6 +7,9 @@ Parameters:
   DeploymentName:
     Type: String
     Description: The name of the deployment
+  ProjectNameLower:
+    Type: String
+    Description: Lowercase project name for compatibility with lowercase-named resources
 Resources:
   ProjectPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -45,6 +48,7 @@ Resources:
               - ssm:DeleteParameters
             Resource:
               - Fn::Sub: "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}*"
+              - Fn::Sub: "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectNameLower}*"
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -55,6 +59,7 @@ Resources:
               - logs:GetQueryResults
             Resource:
               - Fn::Sub: "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
+              - Fn::Sub: "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectNameLower}*"
           - Effect: Allow
             Action:
               - ssm:GetParameter
@@ -65,6 +70,7 @@ Resources:
               - iam:UpdateAssumeRolePolicy
             Resource:
               - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectName}*"
+              - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectNameLower}*"
           - Effect: Allow
             Action:
               - "iam:PassRole"
@@ -80,7 +86,9 @@ Resources:
             Effect: Allow
             Resource:
             - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*"
-            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*/*" 
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectName}*/*"
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectNameLower}*"
+            - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectNameLower}*/*"
         Version: '2012-10-17'
 
 Outputs:

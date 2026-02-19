@@ -88,10 +88,13 @@ def test_deploy_managed_policy_stack_exists(session_manager, mocker):
 @pytest.mark.commands_stack
 def test_deploy_managed_policy_stack_not_exists(session_manager, mocker):
     mocker.patch("seedfarmer.commands._stack_commands.cfn.does_stack_exist", return_value=[False, {}])
-    mocker.patch("seedfarmer.commands._stack_commands.cfn.deploy_template", return_value=None)
+    deploy_template_mock = mocker.patch("seedfarmer.commands._stack_commands.cfn.deploy_template", return_value=None)
     sc.deploy_managed_policy_stack(
         deployment_manifest=DeploymentManifest(**deployment_yaml), account_id="123456789012", region="us-east-1"
     )
+
+    assert deploy_template_mock.call_args.kwargs["parameters"]["ProjectName"] == "test"
+    assert deploy_template_mock.call_args.kwargs["parameters"]["ProjectNameLower"] == "test"
 
 
 @pytest.mark.commands
@@ -257,3 +260,32 @@ def test_get_module_stack_info(session_manager, mocker):
     sc.get_module_stack_info(
         deployment_name="myapp", group_name="group", module_name="module", account_id="123456789012", region="us-east-1"
     )
+
+
+
+@pytest.mark.commands
+@pytest.mark.commands_stack
+def test_stack_names_lowercase_for_uppercase_project(mocker):
+    """Stack names remain lowercase even when project name has uppercase characters."""
+    from seedfarmer.commands._stack_commands import StackInfo
+
+    mocker.patch.object(type(sc.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="FalconProject")
+
+    info = StackInfo()
+
+    assert info.PROJECT_MANAGED_POLICY_CFN_NAME == "falconproject-managed-policy"
+    assert info.SEEDFARMER_BUCKET_STACK_NAME == "seedfarmer-falconproject-artifacts"
+
+
+@pytest.mark.commands
+@pytest.mark.commands_stack
+def test_stack_names_lowercase_for_lowercase_project(mocker):
+    """Lowercase project names continue to produce lowercase stack names."""
+    from seedfarmer.commands._stack_commands import StackInfo
+
+    mocker.patch.object(type(sc.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="lowercase")
+
+    info = StackInfo()
+
+    assert info.PROJECT_MANAGED_POLICY_CFN_NAME == "lowercase-managed-policy"
+    assert info.SEEDFARMER_BUCKET_STACK_NAME == "seedfarmer-lowercase-artifacts"

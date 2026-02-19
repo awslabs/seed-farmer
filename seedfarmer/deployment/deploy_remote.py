@@ -91,7 +91,16 @@ class DeployRemoteModule(DeployModule):
         install.append("pip install uv --disable-pip-version-check --quiet --root-user-action=ignore")
         install.append("export PATH=$PATH:~/.local/bin")
         install.append(f"uv venv ~/.venv --python {python_version} --seed --quiet")
-        install.append(f"uv tool install seed-farmer=={seedfarmer.__version__} --quiet")
+
+        cli_version = os.getenv("SEEDFARMER_CODEBUILD_CLI_VERSION", seedfarmer.__version__)
+        if ".dev" in cli_version and "SEEDFARMER_CODEBUILD_CLI_VERSION" not in os.environ:
+            _logger.warning(
+                "Detected non-published SeedFarmer version %s for CodeBuild. Falling back to 8.0.1 for build container CLI.",
+                cli_version,
+            )
+            cli_version = "8.0.1"
+
+        install.append(f"uv tool install seed-farmer=={cli_version} --quiet")
 
         return install
 

@@ -247,7 +247,7 @@ def deploy_bucket_storage_stack(
             stack_name=bucket_stack_name,
             filename=config.BUCKET_STORAGE_PATH,
             seedkit_tag=config.PROJECT.lower(),
-            parameters={"ProjectName": config.PROJECT.lower(), "BucketName": bucket_name[:63]},
+            parameters={"ProjectName": config.PROJECT, "BucketName": bucket_name[:63]},
             session=session,
         )
         stack_exists, output = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
@@ -295,7 +295,11 @@ def deploy_managed_policy_stack(
             stack_name=info.PROJECT_MANAGED_POLICY_CFN_NAME,
             filename=project_managed_policy_template,
             seedkit_tag=deployment_manifest.name,
-            parameters={"ProjectName": config.PROJECT.lower(), "DeploymentName": str(deployment_manifest.name)},
+            parameters={
+                "ProjectName": config.PROJECT,
+                "ProjectNameLower": config.PROJECT.lower(),
+                "DeploymentName": str(deployment_manifest.name),
+            },
             session=session,
         )
 

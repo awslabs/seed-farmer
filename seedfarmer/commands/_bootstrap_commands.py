@@ -107,6 +107,7 @@ def bootstrap_toolchain_account(
     role_prefix_value = role_prefix if role_prefix else "/"
     parameters: Dict[str, str] = {
         "ProjectName": project_name,
+        "ProjectNameLower": project_name.lower(),
         "RoleName": role_stack_name,
         "RolePrefix": role_prefix_value,
         "SeedFarmerVersion": __version__,
@@ -229,6 +230,7 @@ def bootstrap_target_account(
         "RolePrefix": role_prefix_value,
         "PolicyPrefix": policy_prefix_value,
         "ProjectName": project_name,
+        "ProjectNameLower": project_name.lower(),
         "RoleName": role_stack_name,
         "ToolchainRoleArn": toolchain_role_arn,
         "SeedFarmerVersion": __version__,

@@ -202,7 +202,7 @@ def test_destroy_seedkit_nonexistent(mocker):
 @pytest.mark.commands
 @pytest.mark.commands_seedkit
 def test_deploy_seedkit_uppercase_name(mocker):
-    """Test deploying a seedkit with uppercase name - should be lowercased."""
+    """Test deploying a seedkit with uppercase name - should preserve case."""
     # Mock the seedkit_deployed function
     mocker.patch(
         "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
@@ -221,15 +221,16 @@ def test_deploy_seedkit_uppercase_name(mocker):
     mock_deploy.assert_called_once()
     args, kwargs = mock_deploy.call_args
 
-    # Verify SeedkitName parameter is lowercased
+    # Verify SeedkitName parameter preserves original case
     parameters = kwargs["parameters"]
-    assert parameters["SeedkitName"] == "test-seedkit", "SeedkitName should be lowercased for valid S3 bucket names"
+    assert parameters["SeedkitName"] == "TEST-SeedKit", "SeedkitName should preserve original case"
+    assert parameters["SeedkitNameLower"] == "test-seedkit", "SeedkitNameLower should be lowercase for S3"
 
 
 @pytest.mark.commands
 @pytest.mark.commands_seedkit
 def test_deploy_seedkit_mixed_case_name(mocker):
-    """Test deploying a seedkit with mixed case name - should be lowercased."""
+    """Test deploying a seedkit with mixed case name - should preserve case."""
     mocker.patch(
         "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
     )
@@ -240,13 +241,14 @@ def test_deploy_seedkit_mixed_case_name(mocker):
 
     mock_deploy.assert_called_once()
     parameters = mock_deploy.call_args[1]["parameters"]
-    assert parameters["SeedkitName"] == "mixed-case"
+    assert parameters["SeedkitName"] == "MiXeD-CaSe"
+    assert parameters["SeedkitNameLower"] == "mixed-case"
 
 
 @pytest.mark.commands
 @pytest.mark.commands_seedkit
 def test_deploy_seedkit_name_with_numbers(mocker):
-    """Test deploying a seedkit with numbers in name - should be lowercased."""
+    """Test deploying a seedkit with numbers in name - should preserve case."""
     mocker.patch(
         "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
     )
@@ -257,4 +259,5 @@ def test_deploy_seedkit_name_with_numbers(mocker):
 
     mock_deploy.assert_called_once()
     parameters = mock_deploy.call_args[1]["parameters"]
-    assert parameters["SeedkitName"] == "project123-test456"
+    assert parameters["SeedkitName"] == "Project123-Test456"
+    assert parameters["SeedkitNameLower"] == "project123-test456"

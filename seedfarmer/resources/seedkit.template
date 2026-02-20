@@ -8,6 +8,9 @@ Parameters:
   SeedkitName:
     Type: String
     Description: Name of the seedkit
+  SeedkitNameLower:
+    Type: String
+    Description: Lowercase name of the seedkit for S3 bucket
   DeployId:
     Type: String
     Description: Unique deployment identifier
@@ -88,7 +91,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
-        Fn::Sub: codeseeder-${SeedkitName}-${AWS::AccountId}-${DeployId}
+        Fn::Sub: codeseeder-${SeedkitNameLower}-${AWS::AccountId}-${DeployId}
       Tags:
         - Key: codeseeder-seedkit-name
           Value: 

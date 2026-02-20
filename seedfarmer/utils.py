@@ -167,7 +167,7 @@ def generate_codebuild_url(account_id: str, region: str, codebuild_id: str, part
 
 
 def get_toolchain_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
-    name = f"seedfarmer-{project_name}-toolchain-role"
+    name = f"seedfarmer-{project_name.lower()}-toolchain-role"
     return f"{name}-{qualifier}" if qualifier else name
 
 
@@ -186,7 +186,7 @@ def get_toolchain_role_arn(
 
 
 def get_deployment_role_name(project_name: str, qualifier: Optional[str] = None) -> str:
-    name = f"seedfarmer-{project_name}-deployment-role"
+    name = f"seedfarmer-{project_name.lower()}-deployment-role"
     return f"{name}-{qualifier}" if qualifier else name
 
 

@@ -5,6 +5,9 @@ Parameters:
   ProjectName:
     Type: String
     Description: Name of the project
+  ProjectNameLower:
+    Type: String
+    Description: Lowercase name of the project for S3 buckets
   RoleName:
     Type: String
     Description: Name of the role to create

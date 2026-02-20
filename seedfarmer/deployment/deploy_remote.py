@@ -91,6 +91,7 @@ class DeployRemoteModule(DeployModule):
         install.append("pip install uv --disable-pip-version-check --quiet --root-user-action=ignore")
         install.append("export PATH=$PATH:~/.local/bin")
         install.append(f"uv venv ~/.venv --python {python_version} --seed --quiet")
+
         install.append(f"uv tool install seed-farmer=={seedfarmer.__version__} --quiet")
 
         return install

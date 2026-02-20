@@ -14,6 +14,21 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v8.0.2 (2026-02-19)
+
+### Breaking Changes
+
+### New
+
+### Changes
+- Added uppercase namespace support while preserving lowercase-safe naming for core/bootstrap infrastructure.
+- Preserved case for module deployment role/stack prefix path to support SCP/prefix-sensitive environments.
+
+### Fixes
+- Added dual-case IAM/CloudFormation/S3/SSM policy scoping (`ProjectName` + `ProjectNameLower`) to prevent mixed-case permission gaps.
+- Stabilized remote CodeBuild CLI install fallback for non-published dev builds.
+- Updated unit tests for mixed-case template/policy behavior and managed policy parameter expectations.
+
 ## v8.0.1 (2025-02-13)
 
 ### New

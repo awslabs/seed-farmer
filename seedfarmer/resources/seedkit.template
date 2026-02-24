@@ -49,6 +49,13 @@ Parameters:
     Type: String
     Description: Permission Boundary to set on the role
     Default: ""
+  EnableSeedkitKMS:
+    Type: String
+    Description: Enable creation of KMS key for seedkit
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
 
 Conditions:
   HasManagedPolicies:
@@ -85,6 +92,10 @@ Conditions:
       - Fn::Equals:
           - Ref: PermissionsBoundaryArn
           - ""
+  EnableSeedkitKMSEnabled:
+    Fn::Equals:
+      - Ref: EnableSeedkitKMS
+      - "true"
 
 Resources:
   Bucket:
@@ -104,9 +115,18 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
+        Fn::If:
+          - EnableSeedkitKMSEnabled
+          - ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: aws:kms
+                  KMSMasterKeyID:
+                    Fn::GetAtt:
+                      - KmsKey
+                      - Arn
+          - ServerSideEncryptionConfiguration:
+              - ServerSideEncryptionByDefault:
+                  SSEAlgorithm: AES256
       LifecycleConfiguration:
         Rules:
           - Id: CleaningUp
@@ -187,19 +207,25 @@ Resources:
               - ssm:DescribeParameters
             Resource:
               - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:*
-          - Effect: Allow
-            Action:
-              - kms:*
-            Resource:
-              - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/codeseeder-${SeedkitName}*
-              - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
-          - Effect: Allow
-            Action:
-              - sts:GetServiceBearerToken
-            Resource: '*'
-            Condition:
-              StringEquals:
-                sts:AWSServiceName: codeartifact.amazonaws.com
+          - Fn::If:
+              - EnableSeedkitKMSEnabled
+              - Effect: Allow
+                Action:
+                  - kms:*
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/codeseeder-${SeedkitName}*
+                  - Fn::Sub: arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*
+              - Ref: AWS::NoValue
+          - Fn::If:
+              - DeployCodeArtifactEnabled
+              - Effect: Allow
+                Action:
+                  - sts:GetServiceBearerToken
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    sts:AWSServiceName: codeartifact.amazonaws.com
+              - Ref: AWS::NoValue
           - Effect: Allow
             Action:
               - codecommit:*
@@ -212,25 +238,31 @@ Resources:
               - Fn::Sub: arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:codeseeder-${SeedkitName}-*
               - Fn::Sub: arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*-docker-credentials*
               - Fn::Sub: arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*-mirror-credentials*
-          - Effect: Allow
-            Action:
-              - codeartifact:Create*
-              - codeartifact:DeleteDomain
-              - codeartifact:DeleteRepository
-              - codeartifact:Describe*
-              - codeartifact:Get*
-              - codeartifact:List*
-              - codeartifact:TagResource
-              - codeartifact:Associate*
-            Resource:
-              - Fn::Sub: arn:${AWS::Partition}:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/aws-codeseeder-${SeedkitName}*
-              - Fn::Sub: arn:${AWS::Partition}:codeartifact:${AWS::Region}:${AWS::AccountId}:repository/aws-codeseeder-${SeedkitName}*
-          - Effect: Allow
-            Action:
-              - codeartifact:GetAuthorizationToken
-              - codeartifact:GetRepositoryEndpoint
-              - codeartifact:ReadFromRepository
-            Resource: '*'
+          - Fn::If:
+              - DeployCodeArtifactEnabled
+              - Effect: Allow
+                Action:
+                  - codeartifact:Create*
+                  - codeartifact:DeleteDomain
+                  - codeartifact:DeleteRepository
+                  - codeartifact:Describe*
+                  - codeartifact:Get*
+                  - codeartifact:List*
+                  - codeartifact:TagResource
+                  - codeartifact:Associate*
+                Resource:
+                  - Fn::Sub: arn:${AWS::Partition}:codeartifact:${AWS::Region}:${AWS::AccountId}:domain/aws-codeseeder-${SeedkitName}*
+                  - Fn::Sub: arn:${AWS::Partition}:codeartifact:${AWS::Region}:${AWS::AccountId}:repository/aws-codeseeder-${SeedkitName}*
+              - Ref: AWS::NoValue
+          - Fn::If:
+              - DeployCodeArtifactEnabled
+              - Effect: Allow
+                Action:
+                  - codeartifact:GetAuthorizationToken
+                  - codeartifact:GetRepositoryEndpoint
+                  - codeartifact:ReadFromRepository
+                Resource: '*'
+              - Ref: AWS::NoValue
           - Effect: Allow
             Action:
               - s3:List*
@@ -399,6 +431,7 @@ Resources:
 
   KmsKeyAlias:
     Type: AWS::KMS::Alias
+    Condition: EnableSeedkitKMSEnabled
     Properties:
       AliasName: 
         Fn::Sub: alias/codeseeder-${SeedkitName}-${DeployId}
@@ -407,6 +440,7 @@ Resources:
 
   KmsKey:
     Type: AWS::KMS::Key
+    Condition: EnableSeedkitKMSEnabled
     Properties:
       EnableKeyRotation: true
       Tags:
@@ -490,6 +524,7 @@ Outputs:
         Fn::Sub: codeseeder-${SeedkitName}-bucket
 
   KmsKeyArn:
+    Condition: EnableSeedkitKMSEnabled
     Value:
       Fn::GetAtt:
         - KmsKey

@@ -32,6 +32,7 @@ class ProjectSpec(CamelModel):
     project_policy_path: Optional[str] = None
     seedfarmer_version: Optional[Union[int, str]] = None
     manifest_validation_fail_on_unknown_fields: bool = False
+    enable_seedkit_kms: bool = True
 
     @model_validator(mode="after")
     def check_for_extra_fields(self) -> "ProjectSpec":

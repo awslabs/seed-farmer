@@ -62,15 +62,16 @@ def deploy_seedkit(
     security_group_ids: Optional[List[str]] = None,
     permissions_boundary_arn: Optional[str] = None,
     synthesize: bool = False,
+    enable_seedkit_kms: bool = True,
     **kwargs: Dict[str, Any],
 ) -> None:
     """Deploys the seedkit resources into the environment.
 
     Resources deployed include: S3 Bucket, CodeArtifact Domain, CodeArtifact Repository, CodeBuild Project,
-    IAM Role, IAM Managed Policy, and KMS Key. All resource names will include the seedkit_name and IAM Role and Policy
-    grant least privilege access to only the resources associated with this Seedkit. Seedkits are deployed to an
-    AWS Region, names on global resources (S3, IAM) include a region identifier to avoid conflicts and ensure the same
-    Seedkit name can be deployed to multiple regions.
+    IAM Role, IAM Managed Policy, and KMS Key (if enabled). All resource names will include the seedkit_name
+    and IAM Role and Policy grant least privilege access to only the resources associated with this Seedkit.
+    Seedkits are deployed to an AWS Region, names on global resources (S3, IAM) include a region identifier
+    to avoid conflicts and ensure the same Seedkit name can be deployed to multiple regions.
 
     Parameters
     ----------
@@ -97,6 +98,8 @@ def deploy_seedkit(
         If using a permissions boundary, the arn of that policy to be provided
     synthesize: bool
         Synthesize seedkit template only. Do not deploy. False by default.
+    enable_seedkit_kms: bool
+        Whether to create a KMS key for the seedkit. Default is True.
     """
     deploy_id: Optional[str] = None
     stack_exists, stack_name, stack_outputs = seedkit_deployed(seedkit_name=seedkit_name, session=session)
@@ -145,6 +148,9 @@ def deploy_seedkit(
     # Only add SubnetIds if it's not None
     if subnet_ids:
         parameters["SubnetIds"] = ",".join(subnet_ids)
+
+    # Add EnableSeedkitKMS parameter
+    parameters["EnableSeedkitKMS"] = str(enable_seedkit_kms).lower()
 
     if not synthesize:
         assert template_filename is not None, "Template filename is required"

@@ -7,7 +7,7 @@ Parameters:
     Description: Name of the project
   ProjectNameLower:
     Type: String
-    Description: Lowercase name of the project for S3 buckets
+    Description: Lowercase name of the project (used for S3, SSM, KMS, CodeBuild, CloudFormation, and other lowercase-named resources)
   RoleName:
     Type: String
     Description: Name of the role to create
@@ -85,7 +85,6 @@ Resources:
               - kms:Create*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:kms:*:${AWS::AccountId}:alias/codeseeder-${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:kms:*:${AWS::AccountId}:alias/codeseeder-${ProjectNameLower}-*"
               Sid: DeploymentKMSAlias
             - Action:
@@ -119,20 +118,12 @@ Resources:
               Effect: Allow
               Resource:
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectName}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectNameLower}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/codeseeder-${ProjectNameLower}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${ProjectName}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${ProjectNameLower}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/codeseeder-${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/codeseeder-${ProjectNameLower}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/${ProjectName}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/${ProjectNameLower}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/codeseeder-${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*/codeseeder-${ProjectNameLower}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/${ProjectName}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/${ProjectNameLower}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/codeseeder-${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/*/codeseeder-${ProjectNameLower}-*"
               Sid: DeploymentIAM
             - Action:
@@ -143,7 +134,6 @@ Resources:
               - codebuild:StartBuild
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:codebuild:*:${AWS::AccountId}:project/codeseeder-${ProjectName}*"
                 - Fn::Sub: "arn:${AWS::Partition}:codebuild:*:${AWS::AccountId}:project/codeseeder-${ProjectNameLower}*"
               Sid: DeploymentCodeBuild
             - Action:
@@ -160,11 +150,8 @@ Resources:
               - cloudformation:*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/${ProjectName}-*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/${ProjectNameLower}-*"
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-${ProjectName}/*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-${ProjectNameLower}/*"
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-${ProjectName}/*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-${ProjectNameLower}/*"
             - Action:
               - s3:CreateBucket
@@ -205,7 +192,7 @@ Resources:
               - ssm:Get*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/${ProjectName}/*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/${ProjectNameLower}/*"
             - Effect: Allow
               Action:
               - logs:CreateLogStream
@@ -216,7 +203,6 @@ Resources:
               - logs:GetQueryResults
               - logs:DescribeLogStreams
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectName}*"
                 - Fn::Sub: "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:/aws/codebuild/codeseeder-${ProjectNameLower}*"
             - Action:
               - cloudformation:Create*
@@ -224,15 +210,14 @@ Resources:
               - cloudformation:DeleteStack
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-${ProjectName}*/*"
-                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-${ProjectName}*/*" 
+                - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-codeseeder-${ProjectNameLower}*/*"
                 - Fn::Sub: "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/seedfarmer-${ProjectNameLower}*/*"
             - Action:
               - codeartifact:*
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-${ProjectName}"
-                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-${ProjectName}*"
+                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:domain/aws-codeseeder-${ProjectNameLower}"
+                - Fn::Sub: "arn:${AWS::Partition}:codeartifact:*:${AWS::AccountId}:repository/aws-codeseeder-${ProjectNameLower}*"
             - Action:
               - iam:CreateAccessKey
               - iam:CreateLoginProfile

@@ -295,15 +295,176 @@ def test_get_module_stack_names(mocker, session):
     mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="1234")
     mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="1234dade")
 
-    # Ensure module stack/role names preserve project case for SCP/prefix-sensitive environments.
+    # Stack name is lowercase for CF consistency; role name preserves case for IAM/SCP.
     mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="Falcon")
 
     stack_name, role_name = mi.get_module_stack_names(
         deployment_name="myapp", group_name="test", module_name="mymodule", session=session
     )
 
-    assert stack_name.startswith("Falcon-myapp-test-mymodule")
-    assert role_name.startswith("Falcon-myapp-test-mymodule")
+    assert stack_name == "falcon-myapp-test-mymodule-iam-policy"  # lowercase CF stack name
+    assert role_name == "Falcon-myapp-test-mymodule-1234dade"  # preserve case IAM role name
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_uppercase_project(mocker, session):
+    # 1.1.2 / 6.4 — all-uppercase project: stack lowercase, role preserves case
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="abcd")
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="MYPROJ")
+
+    stack_name, role_name = mi.get_module_stack_names(
+        deployment_name="myapp", group_name="test", module_name="mymodule", session=session
+    )
+
+    assert stack_name == "myproj-myapp-test-mymodule-iam-policy"
+    assert role_name == "MYPROJ-myapp-test-mymodule-deadbeef"
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_lowercase_project(mocker, session):
+    # 1.1.3 — all-lowercase project: no change in behaviour (regression)
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="abcd")
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="myproj")
+
+    stack_name, role_name = mi.get_module_stack_names(
+        deployment_name="myapp", group_name="test", module_name="mymodule", session=session
+    )
+
+    assert stack_name == "myproj-myapp-test-mymodule-iam-policy"
+    assert role_name == "myproj-myapp-test-mymodule-deadbeef"
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_hash_divergence(mocker, session):
+    # 1.1.6 — for a mixed-case project the stack hash (from lowercase) differs from role hash (from original case)
+    import hashlib
+
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="Falcon")
+
+    stack_name, role_name = mi.get_module_stack_names(
+        deployment_name="myapp", group_name="test", module_name="mymodule", session=session
+    )
+
+    # Compute expected hashes directly to confirm the inputs differ between stack and role
+    resource_name_lower = "falcon-myapp-test-mymodule"
+    role_base = "Falcon-myapp-test-mymodule"
+    expected_stack_hash = hashlib.sha1(resource_name_lower.encode("UTF-8"), usedforsecurity=False).hexdigest()[:4]
+    expected_role_hash = hashlib.sha1(role_base.encode("UTF-8"), usedforsecurity=False).hexdigest()[:4]
+
+    assert expected_stack_hash != expected_role_hash
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_stack_truncation(mocker, session):
+    # 1.1.4 / 6.2 — resource_name > 117 chars triggers stack name truncation with hash
+    # stack threshold: len(resource_name) > 128 - 11 = 117
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="zzzz")
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="p")
+
+    # Build a name that is exactly 118 chars (> 117): "p-" + 116 chars of components
+    long_module = "m" * 114  # "p-" + "d-g-" + 114 = 2 + 4 + 114 = 120 > 117
+    stack_name, _ = mi.get_module_stack_names(
+        deployment_name="d", group_name="g", module_name=long_module, session=session
+    )
+
+    assert len(stack_name) <= 128
+    assert stack_name.endswith("-zzzz-iam-policy")
+
+    # Boundary: exactly 117 chars — no truncation
+    long_module_boundary = "m" * 111  # "p-" + "d-g-" + 111 = 117
+    stack_name_boundary, _ = mi.get_module_stack_names(
+        deployment_name="d", group_name="g", module_name=long_module_boundary, session=session
+    )
+    assert stack_name_boundary == f"p-d-g-{'m' * 111}-iam-policy"
+    assert len(stack_name_boundary) == 128
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_role_truncation(mocker, session):
+    # 1.1.5 / 6.3 — role_base > 55 chars triggers role name truncation with hash
+    # role threshold: len(role_base) > 64 - 9 = 55
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="zzzz")
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="P")
+
+    # Build a role_base that is exactly 56 chars (> 55): "P-" + 54 chars of components
+    long_module = "m" * 52  # "P-" + "d-g-" + 52 = 2 + 4 + 52 = 58 > 55
+    _, role_name = mi.get_module_stack_names(
+        deployment_name="d", group_name="g", module_name=long_module, session=session
+    )
+
+    assert len(role_name) <= 64
+    assert "-zzzz-deadbeef" in role_name
+
+    # Boundary: exactly 55 chars — no truncation
+    long_module_boundary = "m" * 49  # "P-" + "d-g-" + 49 = 55
+    _, role_name_boundary = mi.get_module_stack_names(
+        deployment_name="d", group_name="g", module_name=long_module_boundary, session=session
+    )
+    assert role_name_boundary == f"P-d-g-{'m' * 49}-deadbeef"
+    assert len(role_name_boundary) == 64
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_get_module_stack_names_hyphen_numbers_project(mocker, session):
+    # 6.1 — project name with hyphens/numbers: .lower() is a no-op, no artifact introduced
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch("seedfarmer.mgmt.module_info.generate_hash", return_value="abcd")
+    mocker.patch("seedfarmer.mgmt.module_info.generate_session_hash", return_value="deadbeef")
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="my-proj2")
+
+    stack_name, role_name = mi.get_module_stack_names(
+        deployment_name="myapp", group_name="test", module_name="mymodule", session=session
+    )
+
+    assert stack_name == "my-proj2-myapp-test-mymodule-iam-policy"
+    assert role_name == "my-proj2-myapp-test-mymodule-deadbeef"
+    assert "--" not in stack_name
+    assert "--" not in role_name
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_module_info
+def test_ssm_key_functions_use_lowercase_project(mocker, session):
+    """SSM parameter key functions must use normalized (lowercase) project name."""
+    import seedfarmer.mgmt.module_info as mi
+
+    mocker.patch.object(type(mi.config), "PROJECT", new_callable=mocker.PropertyMock, return_value="Falcon")
+
+    assert mi._metadata_key("dep", "grp", "mod").startswith("/falcon/")
+    assert mi._deployment_key("dep").startswith("/falcon/")
+    assert mi._manifest_key("dep", "grp", "mod").startswith("/falcon/")
+    assert mi._group_key("dep", "grp").startswith("/falcon/")
+    assert mi._deployment_manifest_key("dep").startswith("/falcon/")
+    # Ensure no uppercase project name leaks into SSM paths
+    for fn in [
+        lambda: mi._metadata_key("d", "g", "m"),
+        lambda: mi._md5_module_key("d", "g", "m", mi.ModuleConst.BUNDLE),
+        lambda: mi._deployspec_key("d", "g", "m"),
+        lambda: mi._deployment_key("d"),
+    ]:
+        assert "/Falcon/" not in fn()
 
 
 @pytest.mark.mgmt

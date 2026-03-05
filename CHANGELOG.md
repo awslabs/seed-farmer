@@ -9,8 +9,13 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Breaking Changes
 
 ### New
+- Support for preserving project name case on module IAM role and policy names to meet SCP prefix requirements (e.g. `Falcon-{deployment}-{group}-{module}-*`). Previously, all resource names including module IAM roles were forced to lowercase. Now, module IAM roles and policies retain the original project name case while seedfarmer infrastructure roles (`seedfarmer-{project}-toolchain-role`, `seedfarmer-{project}-deployment-role`) and all other resources (stacks, S3, SSM, KMS, CodeBuild, CloudWatch, CodeArtifact) continue to use lowercase.
 
 ### Changes
+- IAM policy templates (`deployment_role.template`, `toolchain_role.template`, `projectpolicy.yaml`) now use `${ProjectNameLower}` exclusively for case-insensitive services. `${ProjectName}` is retained only for IAM role/policy names and STS assume-role.
+- SSM parameter paths now use lowercase project name for consistency with IAM policy ARNs.
+- `SEEDFARMER_PROJECT_NAME` environment variable passed to modules now uses lowercase project name for CDK stack naming consistency.
+- `projectpolicy.yaml` now sets an explicit `ManagedPolicyName` using `${ProjectName}` prefix to ensure the IAM policy name matches the deployment role's `policy/${ProjectName}-*` pattern.
 
 ### Fixes
 

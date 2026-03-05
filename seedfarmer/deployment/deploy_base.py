@@ -99,7 +99,9 @@ class DeployModule:
         _logger.debug(f"use_project_prefix: {use_project_prefix}")
         _logger.debug(f"env_vars: {env_vars}")
 
-        env_vars[DeployModule.seedfarmer_param("PROJECT_NAME", None, use_project_prefix)] = config.PROJECT
+        env_vars[DeployModule.seedfarmer_param("PROJECT_NAME", None, use_project_prefix)] = (
+            config.normalized_project_name()
+        )
         env_vars[DeployModule.seedfarmer_param("DEPLOYMENT_NAME", None, use_project_prefix)] = str(
             self.mdo.deployment_manifest.name
         )

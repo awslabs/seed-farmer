@@ -7,7 +7,7 @@ Parameters:
     Description: Name of the project
   ProjectNameLower:
     Type: String
-    Description: Lowercase name of the project for S3 buckets
+    Description: Lowercase name of the project (used for S3, SSM, STS, and other lowercase-named resources)
   RoleName:
     Type: String
     Description: Name of the role to create
@@ -72,8 +72,8 @@ Resources:
               - sts:GetSessionToken
               Effect: Allow
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-${ProjectName}*"
-                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-${ProjectName}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/seedfarmer-${ProjectNameLower}*"
+                - Fn::Sub: "arn:${AWS::Partition}:iam::*:role/*/seedfarmer-${ProjectNameLower}*"
               Sid: ToolChainSTS
             - Action:
               - ssm:Put*
@@ -84,7 +84,7 @@ Resources:
               - ssm:Get*
               Effect: Allow
               Resource:
-                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/${ProjectName}/*"
+                Fn::Sub: "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/${ProjectNameLower}/*"
               Sid: ToolChainSSM
             - Action:
               - ssm:Describe*
@@ -103,7 +103,8 @@ Resources:
               Action:
                 - s3:GetObject*
               Resource:
-                - Fn::Sub: "arn:${AWS::Partition}:s3:::${ProjectName}-*/*"
+                - Fn::Sub: "arn:${AWS::Partition}:s3:::seedfarmer-${ProjectNameLower}-*/*"
+                - Fn::Sub: "arn:${AWS::Partition}:s3:::codeseeder-${ProjectNameLower}-*/*"
       PermissionsBoundary:
         Fn::If:
           - HasPermissionsBoundary

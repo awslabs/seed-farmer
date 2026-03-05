@@ -399,6 +399,7 @@ def prime_target_accounts(
     deployment_manifest: DeploymentManifest,
     update_seedkit: bool = False,
     update_project_policy: bool = False,
+    enable_self_access_logs: bool = False,
 ) -> None:
     _logger.info("Priming Accounts")
 
@@ -443,6 +444,7 @@ def prime_target_accounts(
                 "update_seedkit": update_seedkit,
                 "update_project_policy": update_project_policy,
                 "permissions_boundary_arn": permissions_boundary_arn,
+                "enable_self_access_logs": enable_self_access_logs,
             }
             if role_prefix:
                 param_d["role_prefix"] = role_prefix
@@ -794,6 +796,7 @@ def apply(
     update_seedkit: bool = False,
     update_project_policy: bool = False,
     local: bool = False,
+    enable_self_access_logs: bool = False,
 ) -> None:
     """
     apply
@@ -933,6 +936,7 @@ def apply(
         deployment_manifest=deployment_manifest,
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
+        enable_self_access_logs=enable_self_access_logs,
     )
 
     module_info_index = du.populate_module_info_index(deployment_manifest=deployment_manifest)
@@ -1063,6 +1067,7 @@ def destroy(
             deployment_manifest=destroy_manifest,
             update_seedkit=False,
             update_project_policy=False,
+            enable_self_access_logs=False,
         )
         destroy_deployment(
             destroy_manifest,

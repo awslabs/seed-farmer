@@ -139,6 +139,13 @@ def version() -> None:
     show_default=True,
     type=bool,
 )
+@click.option(
+    "--enable-self-access-logs/--no-enable-self-access-logs",
+    default=False,
+    help="Enable S3 self access logging to access-logs/ prefix for seedkit and artifact buckets",
+    show_default=True,
+    type=bool,
+)
 @safe_execute("Deployment Apply")
 def apply(
     spec: str,
@@ -155,6 +162,7 @@ def apply(
     update_seedkit: bool,
     update_project_policy: bool,
     local: bool,
+    enable_self_access_logs: bool,
 ) -> None:
     """Apply manifests to a SeedFarmer managed deployment"""
     if debug:
@@ -180,6 +188,7 @@ def apply(
         update_seedkit=update_seedkit,
         update_project_policy=update_project_policy,
         local=local,
+        enable_self_access_logs=enable_self_access_logs,
     )
 
 

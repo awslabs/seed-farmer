@@ -243,11 +243,18 @@ def deploy_bucket_storage_stack(
             limit = len(f"seedfarmer--{config.PROJECT.lower()}-no-delete")
             sm_hash = generate_hash(string=f"{config.PROJECT.lower()}-{region}-{account_id}", length=63 - limit)
             bucket_name = f"seedfarmer-{config.PROJECT.lower()}-{sm_hash}-no-delete"
+        
+        parameters = {
+            "ProjectName": config.PROJECT,
+            "BucketName": bucket_name[:63],
+            "EnableSelfAccessLogs": "true" if kwargs.get("enable_self_access_logs", False) else "false",
+        }
+        
         cfn.deploy_template(
             stack_name=bucket_stack_name,
             filename=config.BUCKET_STORAGE_PATH,
             seedkit_tag=config.PROJECT.lower(),
-            parameters={"ProjectName": config.PROJECT, "BucketName": bucket_name[:63]},
+            parameters=parameters,
             session=session,
         )
         stack_exists, output = cfn.does_stack_exist(stack_name=bucket_stack_name, session=session)
@@ -638,6 +645,7 @@ def deploy_seedkit(
             "vpc_id": vpc_id,
             "subnet_ids": private_subnet_ids,
             "security_group_ids": security_group_ids,
+            "enable_self_access_logs": kwargs.get("enable_self_access_logs", False),
         }
 
         if role_prefix:

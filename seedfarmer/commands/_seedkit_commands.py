@@ -124,6 +124,7 @@ def deploy_seedkit(
         "RolePrefix": str(kwargs.get("role_prefix", "/")),
         "PolicyPrefix": str(kwargs.get("policy_prefix", "/")),
         "DeployCodeArtifact": str(deploy_codeartifact).lower(),
+        "EnableSelfAccessLogs": "true" if kwargs.get("enable_self_access_logs", False) else "false",
     }
 
     # Only add ManagedPolicyArns if it's not None

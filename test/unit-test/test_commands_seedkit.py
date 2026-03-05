@@ -125,6 +125,27 @@ def test_deploy_seedkit_new(mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_seedkit
+def test_deploy_seedkit_with_enable_self_access_logs(mocker):
+    """Test deploying a seedkit with enable_self_access_logs."""
+    mocker.patch(
+        "seedfarmer.commands._seedkit_commands.seedkit_deployed", return_value=(False, "seedkit-test-stack", {})
+    )
+    mocker.patch("seedfarmer.commands._cfn_seedkit.synth", return_value="/tmp/template.yaml")
+    mocker.patch("random.choice", side_effect=lambda x: x[0])
+    mock_deploy = mocker.patch("seedfarmer.services._cfn.deploy_template")
+
+    sc.deploy_seedkit(
+        seedkit_name="test-seedkit",
+        enable_self_access_logs=True,
+    )
+
+    mock_deploy.assert_called_once()
+    parameters = mock_deploy.call_args.kwargs["parameters"]
+    assert parameters["EnableSelfAccessLogs"] == "true"
+
+
+@pytest.mark.commands
+@pytest.mark.commands_seedkit
 def test_deploy_seedkit_synthesize(mocker):
     """Test synthesizing a seedkit template without deploying."""
     # Mock the seedkit_deployed function

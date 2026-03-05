@@ -655,7 +655,7 @@ def deploy_seedkit(
         if permissions_boundary_arn:
             seedkit_args["permissions_boundary_arn"] = permissions_boundary_arn
 
-        sk_commands.deploy_seedkit(**seedkit_args)  # type: ignore [arg-type]
+        sk_commands.deploy_seedkit(**seedkit_args)
         # Go get the outputs and return them
         _, _, stack_outputs = sk_commands.seedkit_deployed(
             seedkit_name=config.normalized_project_name(), session=session

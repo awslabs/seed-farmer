@@ -243,13 +243,13 @@ def deploy_bucket_storage_stack(
             limit = len(f"seedfarmer--{config.PROJECT.lower()}-no-delete")
             sm_hash = generate_hash(string=f"{config.PROJECT.lower()}-{region}-{account_id}", length=63 - limit)
             bucket_name = f"seedfarmer-{config.PROJECT.lower()}-{sm_hash}-no-delete"
-        
+
         parameters = {
             "ProjectName": config.PROJECT,
             "BucketName": bucket_name[:63],
             "EnableSelfAccessLogs": "true" if kwargs.get("enable_self_access_logs", False) else "false",
         }
-        
+
         cfn.deploy_template(
             stack_name=bucket_stack_name,
             filename=config.BUCKET_STORAGE_PATH,

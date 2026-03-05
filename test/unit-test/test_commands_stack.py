@@ -224,18 +224,18 @@ def test_destroy_seedkit(session_manager, mocker):
 @pytest.mark.commands_stack
 def test_deploy_bucket_storage_stack_with_enable_self_access_logs(session_manager, mocker):
     # First call returns False (stack doesn't exist), second call returns True with bucket name
-    does_stack_exist_mock = mocker.patch(
+    mocker.patch(
         "seedfarmer.commands._stack_commands.cfn.does_stack_exist",
-        side_effect=[(False, {}), (True, {"Bucket": "test-bucket"})]
+        side_effect=[(False, {}), (True, {"Bucket": "test-bucket"})],
     )
     deploy_template_mock = mocker.patch("seedfarmer.commands._stack_commands.cfn.deploy_template", return_value=None)
-    
+
     result = sc.deploy_bucket_storage_stack(
         account_id="123456789012",
         region="us-east-1",
         enable_self_access_logs=True,
     )
-    
+
     deploy_template_mock.assert_called_once()
     assert deploy_template_mock.call_args.kwargs["parameters"]["EnableSelfAccessLogs"] == "true"
     assert result == "test-bucket"
@@ -268,7 +268,7 @@ def test_deploy_seedkit_no_exists(session_manager, mocker):
         "seedfarmer.commands._stack_commands.sk_commands.seedkit_deployed",
         return_value=(False, "stackname", {"CodeArtifactRepository": "asdfsfa"}),
     )
-    deploy_mock = mocker.patch("seedfarmer.commands._stack_commands.sk_commands.deploy_seedkit", return_value=None)
+    mocker.patch("seedfarmer.commands._stack_commands.sk_commands.deploy_seedkit", return_value=None)
     sc.deploy_seedkit(
         account_id="123456789012",
         region="us-east-1",

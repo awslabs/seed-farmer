@@ -108,6 +108,26 @@ def test_apply_with_prefix(session_manager, mocker):
 
 @pytest.mark.commands
 @pytest.mark.commands_deployment
+def test_apply_with_enable_self_access_logs(session_manager, mocker):
+    mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
+    prime_mock = mocker.patch("seedfarmer.commands._deployment_commands.prime_target_accounts", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.populate_module_info_index", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.filter_deploy_destroy", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.du.validate_module_dependencies", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.destroy_deployment", return_value=None)
+    mocker.patch("seedfarmer.commands._deployment_commands.deploy_deployment", return_value=None)
+    dc.apply(
+        deployment_manifest_path="test/unit-test/mock_data/manifests/module-test/deployment-hc.yaml",
+        enable_self_access_logs=True,
+        dryrun=True,
+    )
+    prime_mock.assert_called_once()
+    assert prime_mock.call_args.kwargs["enable_self_access_logs"] is True
+
+
+@pytest.mark.commands
+@pytest.mark.commands_deployment
 def test_apply_duplicate_account_mappings_ok(session_manager, mocker):
     mocker.patch("seedfarmer.commands._deployment_commands.write_deployment_manifest", return_value=None)
     mocker.patch("concurrent.futures.ThreadPoolExecutor.map", return_value=[])

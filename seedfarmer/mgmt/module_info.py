@@ -73,7 +73,7 @@ def get_all_deployments(session: Optional[Session] = None) -> List[str]:
     List[str]
         A list of the deployments in the account
     """
-    prefix = f"/{config.PROJECT}"
+    prefix = f"/{config.normalized_project_name()}"
     _filter = f"{ModuleConst.MANIFEST.value}"
     ret = set()
     params = ssm.list_parameters_with_filter(prefix=prefix, contains_string=_filter, session=session)
@@ -144,7 +144,7 @@ def get_deployed_modules(
     List[str]
         A list of the names of the modules in the group
     """
-    prefix = f"/{config.PROJECT}/{deployment}/{group}"
+    prefix = f"/{config.normalized_project_name()}/{deployment}/{group}"
     _filter = f"{ModuleConst.MD5.value}/{ModuleConst.BUNDLE.value}"
     params = params_cache.keys() if params_cache else ssm.list_parameters_with_filter(prefix, _filter, session=session)
     ret: List[str] = []
@@ -738,35 +738,35 @@ def remove_deployed_deployment_manifest(deployment: str, session: Optional[Sessi
 
 
 def _metadata_key(deployment: str, group: str, module: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{module}/{ModuleConst.METADATA.value}"
 
 
 def _md5_module_key(deployment: str, group: str, module: str, type: ModuleConst) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MD5.value}/{type.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{module}/{ModuleConst.MD5.value}/{type.value}"
 
 
 def _md5_group_key(deployment: str, group: str, type: ModuleConst) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{ModuleConst.MD5.value}/{type.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{ModuleConst.MD5.value}/{type.value}"
 
 
 def _deployspec_key(deployment: str, group: str, module: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.DEPLOYSPEC.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{module}/{ModuleConst.DEPLOYSPEC.value}"
 
 
 def _manifest_key(deployment: str, group: str, module: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{module}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{module}/{ModuleConst.MANIFEST.value}"
 
 
 def _group_key(deployment: str, group: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{group}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{group}/{ModuleConst.MANIFEST.value}"
 
 
 def _deployment_manifest_key(deployment: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{ModuleConst.MANIFEST.value}"
 
 
 def _deployed_deployment_manifest_key(deployment: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/{ModuleConst.MANIFEST.value}/{ModuleConst.DEPLOYED.value}"
+    return f"/{config.normalized_project_name()}/{deployment}/{ModuleConst.MANIFEST.value}/{ModuleConst.DEPLOYED.value}"
 
 
 def _all_module_keys(deployment: str, group: str, module: str) -> List[str]:
@@ -785,7 +785,7 @@ def _all_group_keys(deployment: str, group: str) -> List[str]:
 
 
 def _deployment_key(deployment: str) -> str:
-    return f"/{config.PROJECT}/{deployment}/"
+    return f"/{config.normalized_project_name()}/{deployment}/"
 
 
 def _fetch_helper(
@@ -800,23 +800,27 @@ def _fetch_helper(
 def get_module_stack_names(
     deployment_name: str, group_name: str, module_name: str, session: Optional[Session] = None
 ) -> Tuple[str, str]:
-    resource_name = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}"
-    resource_hash = generate_hash(string=resource_name, length=4)
-    # Max length of a Stack Name is 128 chars, -iam-policy is 11 chars, resource_hash plus "-" is 5 chars
-    # If the resource_name and "-iam-policy" is too long, truncate and use a resource_hash for uniqueness
+    # Stack name: lowercase for CloudFormation consistency
+    resource_name = f"{config.PROJECT.lower()}-{deployment_name}-{group_name}-{module_name}"
+    # Max length of a Stack Name is 128 chars, -iam-policy is 11 chars, stack_hash plus "-" is 5 chars
+    # If the resource_name and "-iam-policy" is too long, truncate and use a stack_hash for uniqueness
+    stack_hash = generate_hash(string=resource_name, length=4)
     module_stack_name = (
-        f"{resource_name[: 128 - 11 - 5]}-{resource_hash}-iam-policy"
+        f"{resource_name[: 128 - 11 - 5]}-{stack_hash}-iam-policy"
         if len(resource_name) > (128 - 11)
         else f"{resource_name}-iam-policy"
     )
 
-    # Max length of a a Role Name is 64 chars, session_hash plus "-" is 9 chars, resource_hash plus "-" is 5 chars
-    # If the resource_name and session_hash is too long, truncate and use a resource_hash for uniqueness
+    # Role name: preserve PROJECT case for IAM/SCP
+    # Max length of a Role Name is 64 chars, session_hash plus "-" is 9 chars, role_hash plus "-" is 5 chars
+    # If the role_base and session_hash is too long, truncate and use a role_hash for uniqueness
+    role_base = f"{config.PROJECT}-{deployment_name}-{group_name}-{module_name}"
+    role_hash = generate_hash(string=role_base, length=4)
     session_hash = generate_session_hash(session=session)
     module_role_name = (
-        f"{resource_name[: 64 - 9 - 5]}-{resource_hash}-{session_hash}"
-        if len(resource_name) > (64 - 9)
-        else f"{resource_name}-{session_hash}"
+        f"{role_base[: 64 - 9 - 5]}-{role_hash}-{session_hash}"
+        if len(role_base) > (64 - 9)
+        else f"{role_base}-{session_hash}"
     )
 
     return module_stack_name, module_role_name

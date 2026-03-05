@@ -223,11 +223,14 @@ def test_destroy_seedkit(session_manager, mocker):
 @pytest.mark.commands
 @pytest.mark.commands_stack
 def test_deploy_bucket_storage_stack_with_enable_self_access_logs(session_manager, mocker):
-    mocker.patch("seedfarmer.commands._stack_commands.cfn.does_stack_exist", return_value=(False, {}))
+    # First call returns False (stack doesn't exist), second call returns True with bucket name
+    does_stack_exist_mock = mocker.patch(
+        "seedfarmer.commands._stack_commands.cfn.does_stack_exist",
+        side_effect=[(False, {}), (True, {"Bucket": "test-bucket"})]
+    )
     deploy_template_mock = mocker.patch("seedfarmer.commands._stack_commands.cfn.deploy_template", return_value=None)
-    mocker.patch("seedfarmer.commands._stack_commands.cfn.does_stack_exist", return_value=(True, {"Bucket": "test-bucket"}))
     
-    sc.deploy_bucket_storage_stack(
+    result = sc.deploy_bucket_storage_stack(
         account_id="123456789012",
         region="us-east-1",
         enable_self_access_logs=True,
@@ -235,6 +238,7 @@ def test_deploy_bucket_storage_stack_with_enable_self_access_logs(session_manage
     
     deploy_template_mock.assert_called_once()
     assert deploy_template_mock.call_args.kwargs["parameters"]["EnableSelfAccessLogs"] == "true"
+    assert result == "test-bucket"
 
 
 # get_module_stack_info

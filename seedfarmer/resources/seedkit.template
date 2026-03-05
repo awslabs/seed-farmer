@@ -49,6 +49,10 @@ Parameters:
     Type: String
     Description: Permission Boundary to set on the role
     Default: ""
+  AccessLoggingPrefix:
+    Type: String
+    Description: S3 key prefix for access logs
+    Default: 'access-logs/'
 
 Conditions:
   HasManagedPolicies:
@@ -107,6 +111,8 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        LogFilePrefix: !Ref AccessLoggingPrefix
       LifecycleConfiguration:
         Rules:
           - Id: CleaningUp

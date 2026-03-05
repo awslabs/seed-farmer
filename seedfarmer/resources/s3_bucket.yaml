@@ -8,6 +8,11 @@ Parameters:
     Type: String
     Description: The name of the Bucket
     MaxLength: 64
+  AccessLoggingPrefix:
+    Type: String
+    Description: S3 key prefix for access logs
+    Default: 'access-logs/'
+
 Resources:
   Bucket:
     Type: AWS::S3::Bucket
@@ -29,6 +34,8 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        LogFilePrefix: !Ref AccessLoggingPrefix
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy

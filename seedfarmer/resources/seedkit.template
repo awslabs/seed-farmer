@@ -49,8 +49,23 @@ Parameters:
     Type: String
     Description: Permission Boundary to set on the role
     Default: ""
+  AccessLoggingPrefix:
+    Type: String
+    Description: S3 key prefix for access logs
+    Default: 'access-logs/'
+  EnableSelfAccessLogs:
+    Type: String
+    Description: Enable S3 self access logging to access-logs/ prefix
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
 
 Conditions:
+  SelfAccessLogsEnabled:
+    Fn::Equals:
+      - Ref: EnableSelfAccessLogs
+      - "true"
   HasManagedPolicies:
     Fn::Not:
       - Fn::Equals:
@@ -107,6 +122,12 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        Fn::If:
+          - SelfAccessLogsEnabled
+          - LogFilePrefix:
+              Ref: AccessLoggingPrefix
+          - Ref: "AWS::NoValue"
       LifecycleConfiguration:
         Rules:
           - Id: CleaningUp
@@ -142,6 +163,25 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': "false"
+          - Fn::If:
+            - SelfAccessLogsEnabled
+            - Sid: S3ServerAccessLogsPolicy
+              Effect: Allow
+              Principal:
+                Service: logging.s3.amazonaws.com
+              Action: s3:PutObject
+              Resource:
+                Fn::Sub: '${Bucket.Arn}/${AccessLoggingPrefix}*'
+              Condition:
+                StringEquals:
+                  aws:SourceAccount:
+                    Ref: AWS::AccountId
+                ArnLike:
+                  aws:SourceArn:
+                    Fn::GetAtt:
+                      - Bucket
+                      - Arn
+            - Ref: "AWS::NoValue"
 
   SeedkitResourcesPolicy:
     Type: AWS::IAM::ManagedPolicy

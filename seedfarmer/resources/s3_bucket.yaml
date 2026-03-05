@@ -8,6 +8,23 @@ Parameters:
     Type: String
     Description: The name of the Bucket
     MaxLength: 64
+  AccessLoggingPrefix:
+    Type: String
+    Description: S3 key prefix for access logs
+    Default: 'access-logs/'
+  EnableSelfAccessLogs:
+    Type: String
+    Description: Enable S3 self access logging to access-logs/ prefix
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+
+Conditions:
+  SelfAccessLogsEnabled: !Equals 
+    - !Ref EnableSelfAccessLogs
+    - "true"
+
 Resources:
   Bucket:
     Type: AWS::S3::Bucket
@@ -29,6 +46,10 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration: !If
+        - SelfAccessLogsEnabled
+        - LogFilePrefix: !Ref AccessLoggingPrefix
+        - !Ref "AWS::NoValue"
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -54,6 +75,20 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': "false"
+          - !If
+            - SelfAccessLogsEnabled
+            - Sid: S3ServerAccessLogsPolicy
+              Effect: Allow
+              Principal:
+                Service: logging.s3.amazonaws.com
+              Action: s3:PutObject
+              Resource: !Sub '${Bucket.Arn}/${AccessLoggingPrefix}*'
+              Condition:
+                StringEquals:
+                  aws:SourceAccount: !Ref AWS::AccountId
+                ArnLike:
+                  aws:SourceArn: !GetAtt Bucket.Arn
+            - !Ref "AWS::NoValue"
 
 Outputs:
   Bucket:

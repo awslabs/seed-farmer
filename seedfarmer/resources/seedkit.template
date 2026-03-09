@@ -447,6 +447,8 @@ Resources:
 
   KmsKey:
     Type: AWS::KMS::Key
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       EnableKeyRotation: true
       Tags:

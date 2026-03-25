@@ -34,6 +34,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - `projectpolicy.yaml` now sets an explicit `ManagedPolicyName` using `${ProjectName}` prefix to ensure the IAM policy name matches the deployment role's `policy/${ProjectName}-*` pattern.
 
 ### Fixes
+- added `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain` to KMSKey in seedkit template
 
 ## v8.0.2 (2026-02-19)
 

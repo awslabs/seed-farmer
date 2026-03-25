@@ -18,6 +18,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - `projectpolicy.yaml` now sets an explicit `ManagedPolicyName` using `${ProjectName}` prefix to ensure the IAM policy name matches the deployment role's `policy/${ProjectName}-*` pattern.
 
 ### Fixes
+- updated docs to indicate the secrets manager naming pattern for mirror authenticate
 
 ## v8.0.3 (2026-03-05)
 

@@ -50,7 +50,7 @@ class DeployLocalModule(DeployModule):
             "/var/scripts/retrieve_docker_creds.py && echo 'Docker logins successful' || echo 'Docker logins failed'"
         )
 
-        if pypi_mirror is not None:
+        if pypi_mirror:
             install.append("mv $CODEBUILD_SRC_DIR/bundle/pypi_mirror_support.py /var/scripts/pypi_mirror_support.py")
             install.append(f"/var/scripts/pypi_mirror_support.py {pypi_mirror} && echo 'Pypi Mirror Set'")
 

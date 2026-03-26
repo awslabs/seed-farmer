@@ -83,7 +83,7 @@ def main(url: str) -> None:
             secret_name = os.environ.get("AWS_CODESEEDER_MIRROR_SECRET", NO_SECRET_DEFAULT)
     username = None
     password = None
-    if secret_name not in [NO_SECRET_DEFAULT]:
+    if secret_name and secret_name not in [NO_SECRET_DEFAULT]:
         secret_name_key = secret_name.split("::")[0] if "::" in secret_name else secret_name
         key = secret_name.split("::")[1] if "::" in secret_name else "pypi"
         creds = get_secret(secret_name=secret_name_key)

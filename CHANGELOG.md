@@ -19,6 +19,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 - updated docs to indicate the secrets manager naming pattern for mirror authenticate
+- fixed pypi and npm mirror scripts to treat empty strings as unset, preventing build failures when using env var substitution with empty defaults
 
 ## v8.0.3 (2026-03-05)
 

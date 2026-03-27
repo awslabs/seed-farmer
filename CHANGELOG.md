@@ -13,7 +13,14 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-- updated docs to indicate the secrets manager naming pattern for mirror authenticate
+
+## v8.0.4 (2026-03-27)
+
+### Changes
+- updated docs to indicate the secrets manager naming pattern for mirror authentication
+
+### Fixes
+- added `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain` to KMS key in seedkit template
 - fixed pypi and npm mirror scripts to treat empty strings as unset, preventing build failures when using env var substitution with empty defaults
 
 ## v8.0.3 (2026-03-05)

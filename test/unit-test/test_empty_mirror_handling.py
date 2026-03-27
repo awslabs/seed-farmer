@@ -21,11 +21,26 @@ from unittest import mock
 import pytest
 
 
+def _cleanup_pip_uv_npm_config():
+    """Reset pip, uv, and npm config that mirror scripts may have set."""
+    subprocess.run(["pip", "config", "unset", "global.index-url"], capture_output=True)
+    uv_toml = os.path.expanduser("~/.config/uv/uv.toml")
+    if os.path.exists(uv_toml):
+        os.remove(uv_toml)
+    subprocess.run(["npm", "config", "delete", "registry"], capture_output=True)
+    npmrc = os.path.expanduser("~/.npmrc")
+    if os.path.exists(npmrc):
+        os.remove(npmrc)
+
+
 @pytest.mark.mirror
 class TestPypiMirrorSupport:
     """Tests for pypi_mirror_support.py empty string handling."""
 
     SCRIPT = os.path.join(os.path.dirname(__file__), "..", "..", "seedfarmer", "resources", "pypi_mirror_support.py")
+
+    def teardown_method(self):
+        _cleanup_pip_uv_npm_config()
 
     def test_empty_secret_name_skips_secrets_manager(self):
         """Empty string SEEDFARMER_PYPI_MIRROR_SECRET should not call Secrets Manager."""
@@ -63,6 +78,9 @@ class TestNpmMirrorSupport:
 
     SCRIPT = os.path.join(os.path.dirname(__file__), "..", "..", "seedfarmer", "resources", "npm_mirror_support.py")
 
+    def teardown_method(self):
+        _cleanup_pip_uv_npm_config()
+
     def test_empty_secret_name_skips_secrets_manager(self):
         """Empty string SEEDFARMER_NPM_MIRROR_SECRET should not call Secrets Manager."""
         env = os.environ.copy()
@@ -92,7 +110,6 @@ class TestInstallCommandsMirrorHandling:
             module_name,
             os.path.join(os.path.dirname(__file__), "..", "..", "seedfarmer", "deployment", f"{module_name}.py"),
         )
-        # Mock the problematic imports
         with mock.patch.dict(
             "sys.modules",
             {

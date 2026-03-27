@@ -123,7 +123,19 @@ pypiMirrorSecret: prod/pypi-credentials
 
 #### PyPI Mirror Authentication
 
-For authenticated PyPI mirrors, store credentials in AWS Secrets Manager:
+For authenticated PyPI mirrors, store credentials in AWS Secrets Manager. 
+
+By default, Seed-Farmer can read a secret from AWS SecretsManager if the secret is named with a particular pattern: `*-mirror-credentials-*`.  
+
+For example, the following are valid AWS Secrets Manager names and can be read by Seed-Farmer:
+
+```bash
+
+myprojectname-mirror-credentials
+hey-mirror-credentials-dev
+myprojectname-credentials-qa
+
+```
 
 **Secret Structure**:
 
@@ -178,7 +190,19 @@ npmMirrorSecret: prod/npm-credentials
 
 #### NPM Mirror Authentication
 
-For authenticated NPM mirrors, store credentials in AWS Secrets Manager:
+For authenticated NPM mirrors, store credentials in AWS Secrets Manager
+
+By default, Seed-Farmer can read a secret from AWS SecretsManager if the secret is named with a particular pattern: `*-mirror-credentials-*`.  
+
+For example, the following are valid AWS Secrets Manager names and can be read by Seed-Farmer:
+
+```bash
+
+myprojectname-mirror-credentials
+hey-mirror-credentials-dev
+myprojectname-credentials-qa
+
+```
 
 **Basic Authentication**:
 

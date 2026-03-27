@@ -14,6 +14,15 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+## v8.0.4 (2026-03-27)
+
+### Changes
+- updated docs to indicate the secrets manager naming pattern for mirror authentication
+
+### Fixes
+- added `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain` to KMS key in seedkit template
+- fixed pypi and npm mirror scripts to treat empty strings as unset, preventing build failures when using env var substitution with empty defaults
+
 ## v8.0.3 (2026-03-05)
 
 ### Breaking Changes
@@ -29,6 +38,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 - `projectpolicy.yaml` now sets an explicit `ManagedPolicyName` using `${ProjectName}` prefix to ensure the IAM policy name matches the deployment role's `policy/${ProjectName}-*` pattern.
 
 ### Fixes
+- added `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain` to KMSKey in seedkit template
 
 ## v8.0.2 (2026-02-19)
 

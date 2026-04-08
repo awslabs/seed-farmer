@@ -392,7 +392,8 @@ def _deploy_validated_deployment(
     else:
         _logger.info(" All modules in %s up to date", deployment_manifest.name)
     # Write the deployment manifest once completed to preserve group order
-    du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
+    if not dryrun:
+        du.write_deployed_deployment_manifest(deployment_manifest=deployment_manifest)
 
 
 def prime_target_accounts(

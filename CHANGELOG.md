@@ -13,6 +13,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
+
+
+## v8.0.5 (2026-04-08)
+
+### Breaking Changes
+
+### New
+
+### Changes
+
+### Fixes
 - using dry-run when removing modules on `apply` will not overwrite the `deployed' manifest in SSM
 
 ## v8.0.4 (2026-03-27)

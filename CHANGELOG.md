@@ -3,8 +3,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
-
 ## Unreleased
+
+### Breaking Changes
+
+### New
+
+### Changes
+
+### Fixes
+
+
+## v8.0.6 (2026-05-08)
 
 ### Breaking Changes
 

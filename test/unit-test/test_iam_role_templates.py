@@ -459,7 +459,7 @@ class TestProjectPolicyTemplate:
         props = projectpolicy_template["Resources"]["ProjectPolicy"]["Properties"]
         assert "ManagedPolicyName" in props
         name_sub = props["ManagedPolicyName"]["Fn::Sub"]
-        assert "${ProjectName}-managed-policy" == name_sub
+        assert "${ProjectName}-managed-policy-${AWS::Region}" == name_sub
 
     def test_ssm_uses_lowercase_only(self, projectpolicy_template):
         """SSM resources use ${ProjectNameLower} — no SCP requirement, lowercase for consistency."""

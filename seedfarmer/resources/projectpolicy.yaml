@@ -15,7 +15,7 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName:
-        Fn::Sub: "${ProjectName}-managed-policy"
+        Fn::Sub: "${ProjectName}-managed-policy-${AWS::Region}"
       Description: Managed Policy granting access to build a project
       Path: /
       PolicyDocument:

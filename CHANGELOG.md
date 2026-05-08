@@ -3,7 +3,6 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
-
 ## Unreleased
 
 ### Breaking Changes
@@ -14,6 +13,17 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+
+## v8.0.6 (2026-05-08)
+
+### Breaking Changes
+
+### New
+
+### Changes
+
+### Fixes
+- `resources/projectpolicy.yaml` had a policy global naming conflict, postpend the region to the name
 
 ## v8.0.5 (2026-04-08)
 

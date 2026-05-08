@@ -13,7 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 ### Changes
 
 ### Fixes
-
+- `resources/projectpolicy.yaml` had a policy global naming conflict, postpend the region to the name
 
 ## v8.0.5 (2026-04-08)
 

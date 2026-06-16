@@ -9,6 +9,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### New
 
+### Changes
+
+### Fixes
+
+## v8.0.7 (2026-06-16)
+
+### Breaking Changes
+
+### New
+
 * Python `3.14` compatibility added
 
 ### Changes

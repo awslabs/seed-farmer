@@ -88,6 +88,13 @@ class DeployRemoteModule(DeployModule):
             install.append("export UV_INDEX_CODEARTIFACT_USERNAME=aws")
             install.append('export UV_INDEX_CODEARTIFACT_PASSWORD="$CODEARTIFACT_AUTH_TOKEN"')
 
+            # Configure npm to use CodeArtifact if an npm repository exists
+            install.append(
+                f"aws codeartifact login --tool npm --domain {domain} --repository npm "
+                f"--region {region} 2>/dev/null && echo 'NPM CodeArtifact configured' "
+                "|| echo 'No npm CodeArtifact repo (skipped)'"
+            )
+
         install.append("pip install uv --disable-pip-version-check --quiet --root-user-action=ignore")
         install.append("export PATH=$PATH:~/.local/bin")
         install.append(f"uv venv ~/.venv --python {python_version} --seed --quiet")

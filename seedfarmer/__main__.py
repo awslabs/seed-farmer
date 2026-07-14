@@ -210,7 +210,7 @@ def store_module_metadata(
     if debug:
         enable_debug(format=DEBUG_LOGGING_FORMAT)
     _logger.debug("Writing metadata for module %s in deployment %s", module, deployment)
-    d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
+    d = yaml.safe_load(sys.stdin.read())
     if d:
         mi.write_metadata(deployment=deployment, group=group, module=module, data=d)
     else:

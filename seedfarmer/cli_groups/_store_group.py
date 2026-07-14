@@ -234,7 +234,7 @@ def store_module_metadata(
             .get_deployment_session(account_id=target_account_id, region_name=target_region)
         )
 
-    d = yaml.load(sys.stdin.read(), Loader=utils.CfnSafeYamlLoader)
+    d = yaml.safe_load(sys.stdin.read())
     if d:
         mi.write_metadata(deployment=deployment, group=group, module=module, data=d, session=session)
     else:

@@ -38,7 +38,7 @@ def get_toolchain_template(
     permissions_boundary_arn: Optional[str] = None,
 ) -> Dict[Any, Any]:
     with open((os.path.join(CLI_ROOT, "resources/toolchain_role.template")), "r") as f:
-        role = yaml.load(f, CfnSafeYamlLoader)
+        role = yaml.safe_load(f)
     if principal_arn:
         role["Resources"]["ToolchainRole"]["Properties"]["AssumeRolePolicyDocument"]["Statement"][0]["Principal"][
             "AWS"
@@ -54,7 +54,7 @@ def get_deployment_template(
     toolchain_account_id: str, project_name: str, permissions_boundary_arn: Optional[str] = None
 ) -> Dict[Any, Any]:
     with open((os.path.join(CLI_ROOT, "resources/deployment_role.template")), "r") as f:
-        role = yaml.load(f, CfnSafeYamlLoader)
+        role = yaml.safe_load(f)
     if permissions_boundary_arn:
         role["Resources"]["DeploymentRole"]["Properties"]["PermissionsBoundary"] = permissions_boundary_arn
     template = Template(json.dumps(role))

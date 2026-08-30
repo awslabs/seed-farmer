@@ -44,7 +44,6 @@ dependencies = [
   "packaging>=23.2,<25.0",
   "mypy_extensions>=1.1.0",
   "boto3-stubs[cloudformation,cloudwatch,codebuild,iam,logs,s3,sts,ssm,secretsmanager,logs]>=1.39.0,<1.40.0",
-  "mypy",
   "boto3>=1.39.0,<1.40.0",
   "botocore>=1.39.0,<1.40.0",
   "cfn-flip>=1.2.3",

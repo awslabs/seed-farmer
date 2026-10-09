@@ -89,7 +89,24 @@ def _extract_archive(archive_name: str, extracted_dir_path: str) -> str:
                 embedded_dir = top_level_dirs.pop()
             else:
                 embedded_dir = ""
-            tar_file.extractall(extracted_dir_path, members=all_members)
+
+            # The "data" extraction filter rejects symlinks/hardlinks whose targets resolve outside
+            # the extraction root (including via chained links). It is available on Python 3.10.12+,
+            # 3.11.4+ and 3.12+. On older interpreters, refuse links entirely rather than extract them unsafely.
+            if hasattr(tarfile, "data_filter"):
+                try:
+                    tar_file.extractall(extracted_dir_path, members=all_members, filter="data")
+                except tarfile.FilterError as e:
+                    raise InvalidConfigurationError(
+                        f"Archive contains invalid member that would escape extraction directory: {e}"
+                    ) from e
+            else:
+                for member in all_members:
+                    if member.issym() or member.islnk():
+                        raise InvalidConfigurationError(
+                            f"Archive contains a link which is not supported on this Python version: {member.name}"
+                        )
+                tar_file.extractall(extracted_dir_path, members=all_members)
     else:
         with ZipFile(archive_name, "r") as zip_file:
             all_files = zip_file.namelist()

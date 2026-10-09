@@ -13,6 +13,8 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 ### Fixes
 
+  - tar.gz archive extraction now uses the `data` extraction filter so symlink/hardlink members cannot redirect writes outside the extraction directory; links are rejected on Python versions without `tarfile.data_filter`
+
 ## v8.0.7 (2026-06-16)
 
 ### Breaking Changes

@@ -518,3 +518,75 @@ def test_extract_archive_path_traversal():
         # Should raise InvalidConfigurationError
         with pytest.raises(InvalidConfigurationError, match="would escape extraction directory"):
             archive._extract_archive(malicious_tar, extract_dir)
+
+
+@pytest.mark.parametrize(
+    "link_type,linkname",
+    [
+        (tarfile.SYMTYPE, "../../outside"),
+        (tarfile.SYMTYPE, "/etc"),
+        (tarfile.LNKTYPE, "../outside"),
+    ],
+)
+def test_extract_archive_tar_link_escape(tmp_path, link_type, linkname):
+    """Test that tar links pointing outside the extraction root are blocked."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+
+    malicious_tar = str(tmp_path / "malicious.tar.gz")
+    with tarfile.open(malicious_tar, "w:gz") as tf:
+        link = tarfile.TarInfo(name="safe_dir/link")
+        link.type = link_type
+        link.linkname = linkname
+        tf.addfile(link)
+        payload = tarfile.TarInfo(name="safe_dir/link/pwned")
+        payload.size = 17
+        tf.addfile(payload, io.BytesIO(b"malicious content"))
+
+    extract_dir = tmp_path / "extract"
+    extract_dir.mkdir()
+
+    with pytest.raises(InvalidConfigurationError):
+        archive._extract_archive(malicious_tar, str(extract_dir))
+
+    assert not (outside / "pwned").exists()
+
+
+def test_extract_archive_tar_chained_symlink_escape(tmp_path):
+    """Test that a symlink chained through another in-root symlink cannot escape the root."""
+    malicious_tar = str(tmp_path / "malicious.tar.gz")
+    with tarfile.open(malicious_tar, "w:gz") as tf:
+        first = tarfile.TarInfo(name="safe_dir/a")
+        first.type = tarfile.SYMTYPE
+        first.linkname = "."
+        tf.addfile(first)
+        second = tarfile.TarInfo(name="safe_dir/a/a/escape")
+        second.type = tarfile.SYMTYPE
+        second.linkname = "../../.."
+        tf.addfile(second)
+
+    extract_dir = tmp_path / "extract"
+    extract_dir.mkdir()
+
+    with pytest.raises(InvalidConfigurationError):
+        archive._extract_archive(malicious_tar, str(extract_dir))
+
+
+@pytest.mark.skipif(not hasattr(tarfile, "data_filter"), reason="links are rejected without tarfile.data_filter")
+def test_extract_archive_tar_internal_symlink_allowed(tmp_path):
+    """Test that symlinks contained within the extraction root are still extracted."""
+    tar_path = str(tmp_path / "ok.tar.gz")
+    with tarfile.open(tar_path, "w:gz") as tf:
+        target = tarfile.TarInfo(name="safe_dir/target.txt")
+        target.size = 2
+        tf.addfile(target, io.BytesIO(b"ok"))
+        link = tarfile.TarInfo(name="safe_dir/link.txt")
+        link.type = tarfile.SYMTYPE
+        link.linkname = "target.txt"
+        tf.addfile(link)
+
+    extract_dir = tmp_path / "extract"
+    extract_dir.mkdir()
+
+    assert archive._extract_archive(tar_path, str(extract_dir)) == "safe_dir"
+    assert (extract_dir / "safe_dir" / "link.txt").read_text() == "ok"

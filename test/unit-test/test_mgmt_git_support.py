@@ -14,8 +14,10 @@
 
 import logging
 import os
+from pathlib import Path
 
 import pytest
+from git import Repo
 from moto import mock_aws
 
 import seedfarmer.mgmt.git_support as sf_git
@@ -95,3 +97,52 @@ def test_clone_module_repo_main(mocker):
     sf_git_dir, module_path, commit_hash = sf_git.clone_module_repo(git_path=git_path_test)
     # Make sure the pull works on an existing repo
     sf_git_dir, module_path, commit_hash = sf_git.clone_module_repo(git_path=git_path_test_redo)
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_git_support
+def test_clone_module_repo_uses_supported_gitpython_clone_api(mocker, tmp_path):
+    repo = mocker.MagicMock(spec=Repo)
+    repo.head.object.hexsha = "0123456789abcdef"
+    clone_from = mocker.patch("seedfarmer.mgmt.git_support.Repo.clone_from", return_value=repo)
+    mocker.patch.object(sf_git.config, "_OPS_ROOT", str(tmp_path))
+    mocker.patch.object(sf_git.config, "_project_spec", mocker.Mock())
+
+    working_dir, module_directory, commit_hash = sf_git.clone_module_repo(
+        "https://example.com/repository.git//modules/example?depth=1"
+    )
+
+    clone_from.assert_called_once_with(
+        "https://example.com/repository",
+        str(Path(tmp_path) / "seedfarmer.gitmodules" / "example.com_repository"),
+        branch=None,
+        depth=1,
+        allow_unsafe_protocols=False,
+    )
+    assert module_directory == "modules/example"
+    assert commit_hash == "0123456789abcdef"
+    assert working_dir == str(Path(tmp_path) / "seedfarmer.gitmodules" / "example.com_repository")
+
+
+@pytest.mark.mgmt
+@pytest.mark.mgmt_git_support
+def test_clone_module_repo_uses_supported_gitpython_pull_api(mocker, tmp_path):
+    working_dir = Path(tmp_path) / "seedfarmer.gitmodules" / "example.com_repository.git_main"
+    working_dir.mkdir(parents=True)
+    (working_dir / "existing-file").touch()
+
+    repo = mocker.MagicMock(spec=Repo)
+    repo.head.object.hexsha = "fedcba9876543210"
+    pull = repo.remotes.__getitem__.return_value.pull
+    mocker.patch("seedfarmer.mgmt.git_support.Repo", return_value=repo)
+    mocker.patch.object(sf_git.config, "_OPS_ROOT", str(tmp_path))
+    mocker.patch.object(sf_git.config, "_project_spec", mocker.Mock())
+
+    returned_working_dir, module_directory, commit_hash = sf_git.clone_module_repo(
+        "https://example.com/repository.git?ref=main"
+    )
+
+    pull.assert_called_once_with("main", allow_unsafe_protocols=False)
+    assert returned_working_dir == str(working_dir)
+    assert module_directory == ""
+    assert commit_hash == "fedcba9876543210"

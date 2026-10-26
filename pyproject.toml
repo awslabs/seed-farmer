@@ -1,6 +1,6 @@
 [project]
 name = "seed-farmer"
-version = "8.0.8"
+version = "8.0.9"
 description = "The AWS Professional Services CLI tool SeedFarmer for GitOps support"
 authors = [{ name = "AWS Professional Services" }]
 requires-python = ">=3.10, <3.15"
@@ -36,12 +36,12 @@ dependencies = [
   "rich>=12.4,<13.10",
   "requests>=2.28,<2.33",
   "python-dotenv>=0.21,<1.1",
-  "gitpython~=3.1.30",
+  "gitpython>=3.2.1",
   "gitignore-parser~=0.1.2",
   "pyyaml~=6.0.1",
   "urllib3>=2.6.0,<3.0",
   "certifi>=2024.7.4,<2024.9.0",
-  "packaging>=23.2,<25.0",
+  "packaging>=26.3",
   "mypy_extensions>=1.1.0",
   "boto3-stubs[cloudformation,cloudwatch,codebuild,iam,logs,s3,sts,ssm,secretsmanager,logs]>=1.39.0,<1.40.0",
   "boto3>=1.39.0,<1.40.0",

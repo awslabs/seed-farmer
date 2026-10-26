@@ -16,6 +16,19 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
   - relaxed GitPython and packaging dependency constraints so downstream consumers can install patched versions
 
 
+## v8.0.9 (2026-10-26)
+
+### Breaking Changes
+
+### New
+
+### Changes
+
+### Fixes
+
+  - relaxed GitPython and packaging dependency constraints so downstream consumers can install patched versions
+
+
 ## v8.0.8 (2026-10-09)
 
 ### Breaking Changes

@@ -2380,7 +2380,7 @@ wheels = [
 
 [[package]]
 name = "seed-farmer"
-version = "8.1.0.dev0"
+version = "8.0.9"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
